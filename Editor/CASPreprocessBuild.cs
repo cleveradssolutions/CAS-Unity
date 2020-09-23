@@ -411,6 +411,7 @@ namespace CAS.UEditor
                         return null;
                     }
                 }
+                EditorUtility.ClearProgressBar();
                 EditorUtility.DisplayProgressBar( casTitle, "Write CAS settings", 0.7f );
                 if (string.IsNullOrEmpty( loader.error ))
                 {
