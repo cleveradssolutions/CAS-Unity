@@ -35,8 +35,8 @@ namespace CAS.UEditor
         public const string androidLibPropTemplateFile = "CASLibProperties.txt";
         public const string iosSKAdNetworksTemplateFile = "CASSKAdNetworks.txt";
 
-        public const string githubURL = "https://github.com/cleveradssolutions/CAS-Android";
-        public const string supportURL = "https://github.com/cleveradssolutions/CAS-Android#support";
+        public const string githubURL = "https://github.com/cleveradssolutions/CAS-Unity";
+        public const string supportURL = "https://github.com/cleveradssolutions/CAS-Unity#support";
         public const string websiteURL = "https://cleveradssolutions.com";
         public const string configuringPrivacyURL = "https://github.com/cleveradssolutions/CAS-iOS#step-5-configuring-privacy-controls";
 

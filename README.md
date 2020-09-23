@@ -24,17 +24,17 @@ The Clever Ads Solutions Unity plugin enables Unity developers to easily serve M
  4.  [Initialize CAS SDK](#step-4-initialize-cas-sdk)  
  5.  [Implement CAS Events](#step-5-implement-cas-events)  
  6.  [Implement our Ad Units](#step-6-implement-our-ad-units)  
- 6.1 [Load an Ad](#load-an-ad)
- 6.2 [Check Ad Availability](#check-ad-availability)
- 6.3 [Show the ad](#show-the-ad)
+ 6.1 [Load an Ad](#load-an-ad)  
+ 6.2 [Check Ad Availability](#check-ad-availability)  
+ 6.3 [Show the ad](#show-the-ad)  
  7.  [Include native platforms](#step-7-include-native-platforms)  
- 7.1 [Include Android](#include-android)
- 7.2 [Include iOS](#include-ios)
+ 7.1 [Include Android](#include-android)  
+ 7.2 [Include iOS](#include-ios)  
  8.  [Adding App-ads.txt file of our partners (Optional)](#step-8-adding-app-ads-txt-file-of-our-partners)  
  9.  [Mediation partners](#mediation-partners)  
- 10.  [GitHub issue tracker](#github-issue-tracker)
+ 10.  [GitHub issue tracker](#github-issue-tracker)  
  11.  [Support](#support)  
- 12.  [License](#license)
+ 12.  [License](#license)  
 
 ## Step 1 Add the CAS package to Your Project
 if you are using Unity 2018.4 or newer then you can add CAS SDK to your Unity project using the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html), or you can import the package manually.
@@ -56,14 +56,14 @@ Modify `Packages/manifest.json`  to the following form:
     ],
     "dependencies": {
         "com.cleversolutions.ads.unity" : "https://github.com/cleveradssolutions/CAS-Unity.git",
-        // Other dependencies
+        Other dependencies
     }
 }
 ```
 > Note that some other SDKs, such as the Firebase SDK, may contain [EDM4U](https://github.com/googlesamples/unity-jar-resolver) in their .unitypackage. Check if `Assets/ExternalDependencyManager` or `Assets/PlayServicesResolver` folders exist. If these folders exist, remove them before installing any CAS SDK through Unity Package Manager.
 
 ### Manual installation
-1. Download latest [CleverAdsSolutions.unitypackage](#todo)
+1. Download latest [CleverAdsSolutions.unitypackage](https://github.com/cleveradssolutions/CAS-Unity/releases/latest)
 2. In your open Unity project, navigate to **Assets > Import Package > Custom Package**.
 3. In the *Import Unity Package* window, make sure all of the files are selected and click **Import**.
 
