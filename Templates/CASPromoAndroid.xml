@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dependencies>
+    <androidPackages>
+        <androidPackage spec="com.cleversolutions.ads:cas-promo:1.+">
+            <repositories>
+                <repository>https://dl.bintray.com/cleveradssolutions/CAS-Android</repository>
+            </repositories>
+        </androidPackage>
+    </androidPackages>
+</dependencies>

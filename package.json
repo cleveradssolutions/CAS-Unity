@@ -1,0 +1,22 @@
+{
+    "name": "com.cleversolutions.ads.unity",
+    "version": "1.5.0",
+    "displayName": "CleverAdsSolutions",
+    "description": "Clever Ads Solutions Unity wrapper for mobile ads on platforms Android and iOS.",
+    "unity": "2017.4",
+    "dependencies": {
+        "com.google.external-dependency-manager": "1.2.159"
+    },
+    "keywords": [
+        "CAS",
+        "Ads",
+        "CleverAds",
+        "MobileAds",
+        "Mediation"
+    ],
+    "author": {
+        "name": "CleverAdsSolutions",
+        "email": "support@cleveradssolutions.com",
+        "url": "https://cleveradssolutions.com"
+    }
+}

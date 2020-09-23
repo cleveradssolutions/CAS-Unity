@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dependencies>
+    <iosPods>
+    <iosPod name="CleverAdsSolutions-Promo" version="~> 1.5.2">
+      <sources>
+        <source>https://github.com/CocoaPods/Specs.git</source>
+        <source>https://github.com/cleveradssolutions/CAS-Specs.git</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+</dependencies>
