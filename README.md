@@ -98,8 +98,8 @@ Select the banner size to initialize.
 |      320x50      |    Standard Banner   | Phones and Tablets |      Banner      |
 |      728x90      |    IAB Leaderboard   |       Tablets      |    Leaderboard   |
 |      300x250     | IAB Medium Rectangle | Phones and Tablets | MediumRectangle |
-| Provided width x Adaptive height | Adaptive banner | Phones and Tablets | AdaptiveBanner |
-| Screen width x (50 or 90) | Smart Banner | Phones and Tablets | SmartBanner |
+| Adaptive | Adaptive banner | Phones and Tablets | AdaptiveBanner |
+| 320x50 or 728x90 | Smart Banner | Phones and Tablets | SmartBanner |
 
 **Adaptive banners** are the next generation of responsive ads, maximizing performance by optimizing ad size for each device.  
 To pick the best ad size, adaptive banners use fixed aspect ratios instead of fixed heights. This results in banner ads that occupy a more consistent portion of the screen across devices and provide opportunities for improved performance. [You can read more in this article.](https://developers.google.com/admob/android/banner/adaptive)  
