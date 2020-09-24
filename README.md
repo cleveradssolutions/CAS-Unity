@@ -55,7 +55,7 @@ Modify `Packages/manifest.json`  to the following form:
       }
     ],
     "dependencies": {
-        "com.cleversolutions.ads.unity" : "https://github.com/cleveradssolutions/CAS-Unity.git",
+        "com.cleversolutions.ads.unity" : "https://github.com/cleveradssolutions/CAS-Unity.git#1.5.0",
         Other dependencies
     }
 }
