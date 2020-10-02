@@ -17,6 +17,7 @@ namespace CAS.iOS
         private LoadingManagerMode _loadingMode = LoadingManagerMode.Optimal;
         private bool _iOSAppPauseOnBackground = true;
         private List<string> _testDeviceIds = new List<string>();
+        private bool _allowInterstitialAdsWhenVideoCostAreLower = false;
 
         public bool analyticsCollectionEnabled
         {
@@ -165,6 +166,19 @@ namespace CAS.iOS
         {
             get { return CASFactory.isExecuteEventsOnUnityThread; }
             set { CASFactory.isExecuteEventsOnUnityThread = value; }
+        }
+
+        public bool allowInterstitialAdsWhenVideoCostAreLower
+        {
+            get { return _allowInterstitialAdsWhenVideoCostAreLower; }
+            set
+            {
+                if (_allowInterstitialAdsWhenVideoCostAreLower != value)
+                {
+                    _allowInterstitialAdsWhenVideoCostAreLower = value;
+                    CASExterns.CASUsetInterstitialAdsWhenVideoCostAreLower( value );
+                }
+            }
         }
     }
 }

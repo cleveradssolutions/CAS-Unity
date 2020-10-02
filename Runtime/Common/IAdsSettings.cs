@@ -136,6 +136,7 @@ namespace CAS
         /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
         /// You can use <see cref="EventExecutor.Add(Action)"/> to schedule each calls on the next Update() loop.
         /// OR enable this property to automatically schedule all calls on the next Update() loop.
+        /// 
         /// Disabled by default.
         /// </summary>
         bool isExecuteEventsOnUnityThread { get; set; }
@@ -143,8 +144,19 @@ namespace CAS
         /// <summary>
         /// Indicates if the Unity app should be paused when a full screen ad (interstitial
         /// or rewarded video ad) is displayed.
+        /// 
         /// Enabled by default.
         /// </summary>
         bool iOSAppPauseOnBackground { get; set; }
+
+        /// <summary>
+        /// This option will compare ad cost and serve regular interstitial ads
+        /// when rewarded video ads are expected to generate less revenue.
+        /// Interstitial Ads does not require to watch the video to the end,
+        /// but the <see cref="IMediationManager.OnRewardedAdCompleted"/> callback will be triggered in any case.
+        ///
+        /// Disabled by default.
+        /// </summary>
+        bool allowInterstitialAdsWhenVideoCostAreLower { get; set; }
     }
 }

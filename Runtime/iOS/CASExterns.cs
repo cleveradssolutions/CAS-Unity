@@ -36,9 +36,6 @@ namespace CAS.iOS
         internal static extern void CASUSetTaggedWithAudience( int audience );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUSetWaitConsentToInitialize( bool wait );
-
-        [DllImport( "__Internal" )]
         internal static extern void CASUSetDebugMode( bool mode );
 
         [DllImport( "__Internal" )]
@@ -46,6 +43,9 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetLoadingWithMode( int mode );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUsetInterstitialAdsWhenVideoCostAreLower( bool allow );
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetiOSAppPauseOnBackground( bool pause );
@@ -141,6 +141,15 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetBannerPosition( IntPtr manager, int bannerPos );
+
+        [DllImport( "__Internal" )]
+        internal static extern float CASUGetBannerHeightInPixels( IntPtr manager );
+
+        [DllImport( "__Internal" )]
+        internal static extern float CASUGetBannerWidthInPixels( IntPtr manager );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSetLastPageAdContent( IntPtr manager, string contentJson );
         #endregion
     }
 }

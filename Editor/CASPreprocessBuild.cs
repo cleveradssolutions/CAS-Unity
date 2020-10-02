@@ -121,13 +121,13 @@ namespace CAS.UEditor
                     Debug.LogWarning( CASEditorUtils.logTag + "We recomended use Gradle Build system. " +
                         "Enable PlayerSettings> Publishing Settings> Custom Gradle Template" );
 
-                if (PlayerSettings.Android.minSdkVersion == AndroidSdkVersions.AndroidApiLevel16)
+                if (PlayerSettings.Android.minSdkVersion < AndroidSdkVersions.AndroidApiLevel19)
                 {
-                    const string message = "CAS required minimum API level 17.";
-                    if (EditorUtility.DisplayDialog( "CAS Preprocess Build", message, "Cancel build", "Set API 17" ))
+                    const string message = "CAS required minimum SDK API level 19 (KitKat).";
+                    if (EditorUtility.DisplayDialog( "CAS Preprocess Build", message, "Cancel build", "Set API 19" ))
                         CASEditorUtils.StopBuildWithMessage( message, BuildTarget.NoTarget );
 
-                    PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel17;
+                    PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel19;
                 }
             }
             else if (target == BuildTarget.iOS)

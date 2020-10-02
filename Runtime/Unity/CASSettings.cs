@@ -16,6 +16,7 @@ namespace CAS.Unity
         public bool isMutedAdSounds { get; set; }
         public LoadingManagerMode loadingMode { get; set; }
         public bool iOSAppPauseOnBackground { get; set; }
+        public bool allowInterstitialAdsWhenVideoCostAreLower { get; set; }
 
         public float lastInterImpressionTimestamp = float.MinValue;
 
@@ -41,5 +42,5 @@ namespace CAS.Unity
             get { return CASFactory.isExecuteEventsOnUnityThread; }
             set { CASFactory.isExecuteEventsOnUnityThread = value; }
         }
-    }
+        }
 }

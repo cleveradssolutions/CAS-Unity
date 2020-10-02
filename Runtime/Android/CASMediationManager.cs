@@ -16,6 +16,7 @@ namespace CAS.Android
 
         private AdSize _bannerSize = AdSize.Banner;
         private AdPosition _bannerPosition = AdPosition.Undefined;
+        private LastPageAdContent _lastPageAdContent = null;
 
         public string managerID { get; }
         public bool isTestAdMode { get; }
@@ -168,6 +169,20 @@ namespace CAS.Android
             }
         }
 
+        public LastPageAdContent lastPageAdContent
+        {
+            get { return _lastPageAdContent; }
+            set
+            {
+                if(value != _lastPageAdContent)
+                {
+                    _lastPageAdContent = value;
+                    string json = value == null ? null : JsonUtility.ToJson( value );
+                    managerBridge.Call( "setLastPageAdContent", json );
+                }
+            }
+        }
+
         public string GetLastActiveMediation( AdType adType )
         {
             return managerBridge.Call<string>( "getLastActiveMediation", ( int )adType );
@@ -201,6 +216,16 @@ namespace CAS.Android
         public void ShowAd( AdType adType )
         {
             managerBridge.Call( "showAd", ( int )adType );
+        }
+
+        public float GetBannerHeightInPixels()
+        {
+            return managerBridge.Call<int>( "getBannerHeightInPixels" );
+        }
+
+        public float GetBannerWidthInPixels()
+        {
+            return managerBridge.Call<int>( "getBannerWidthInPixels" );
         }
     }
 }

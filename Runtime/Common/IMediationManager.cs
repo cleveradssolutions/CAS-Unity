@@ -89,7 +89,17 @@ namespace CAS
         bool isTestAdMode { get; }
 
         /// <summary>
-        /// Get last active mediation ad name of selected [type].
+        /// The latest free ad page for your own promotion.
+        /// This ad page will be displayed when there is no paid ad to show or internet availability.
+        ///
+        /// **Attention!** Impressions and clicks of this ad page will not be billed.
+        ///
+        /// By default, this page will not be displayed while the ad content is NULL.
+        /// </summary>
+        LastPageAdContent lastPageAdContent { get; set; }
+
+        /// <summary>
+        /// Get last active mediation ad name of selected <see cref="AdType"/>.
         /// Can return Empty Sting.
         /// </summary>
         string GetLastActiveMediation( AdType adType );
@@ -105,19 +115,6 @@ namespace CAS
         /// </summary>
         void SetEnableAd( AdType adType, bool enabled );
         #endregion
-
-        /// <summary>
-        /// The size of the Banner Ad.
-        /// We recommended set once immediately after <see cref="MobileAds.Initialize(string, AdFlags, bool, InitCompleteAction)"/>.
-        /// If active <see cref="LoadingManagerMode.Manual"/>
-        /// then please call <see cref="LoadAd(AdType)"/> each banner size changed.
-        /// </summary>
-        AdSize bannerSize { get; set; }
-
-        /// <summary>
-        /// The position of the Banner Ad using <see cref="AdPosition"/>.
-        /// </summary>
-        AdPosition bannerPosition { get; set; }
 
         /// <summary>
         /// Manual load <see cref="AdType"/> Ad.
@@ -138,9 +135,34 @@ namespace CAS
         /// </summary>
         void ShowAd( AdType adType );
 
+        #region Banner Ad
+        /// <summary>
+        /// The size of the Banner Ad.
+        /// We recommended set once immediately after <see cref="MobileAds.Initialize(string, AdFlags, bool, InitCompleteAction)"/>.
+        /// If active <see cref="LoadingManagerMode.Manual"/>
+        /// then please call <see cref="LoadAd(AdType)"/> each banner size changed.
+        /// </summary>
+        AdSize bannerSize { get; set; }
+
+        /// <summary>
+        /// The position of the Banner Ad using <see cref="AdPosition"/>.
+        /// </summary>
+        AdPosition bannerPosition { get; set; }
+
         /// <summary>
         /// Hide banner from screen. Call <see cref="ShowAd(AdType)"/> for <see cref="AdType.Banner"/> to show again.
         /// </summary>
         void HideBanner();
+
+        /// <summary>
+        /// The Banner Ad Height in pixels of current <see cref="AdSize"/>
+        /// </summary>
+        float GetBannerHeightInPixels();
+
+        /// <summary>
+        /// The Banner Ad Width in pixels of current <see cref="AdSize"/>
+        /// </summary>
+        float GetBannerWidthInPixels();
+        #endregion
     }
 }

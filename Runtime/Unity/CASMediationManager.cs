@@ -19,6 +19,7 @@ namespace CAS.Unity
 
         public string managerID { get { return "Dummy"; } }
         public bool isTestAdMode { get { return true; } }
+        public LastPageAdContent lastPageAdContent { get; set; }
 
         public AdSize bannerSize
         {
@@ -153,6 +154,17 @@ namespace CAS.Unity
                     break;
             }
         }
+
+        public float GetBannerHeightInPixels()
+        {
+            return CalculateAdSizeOnScreen( _bannerSize ).y;
+        }
+
+        public float GetBannerWidthInPixels()
+        {
+            return CalculateAdSizeOnScreen( _bannerSize ).x;
+        }
+
         #endregion
 
         #region Skip frame on call SDK

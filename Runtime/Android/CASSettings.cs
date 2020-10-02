@@ -17,6 +17,7 @@ namespace CAS.Android
         private bool _isMutedAdSounds = false;
         private LoadingManagerMode _loadingMode = LoadingManagerMode.Optimal;
         private List<string> _testDeviceIds = new List<string>();
+        private bool _allowInterstitialAdsWhenVideoCostAreLower = false;
 
         private AndroidJavaClass settingsBridge;
 
@@ -179,6 +180,19 @@ namespace CAS.Android
         {
             get { return false; }
             set {  /*Only for iOS*/ }
+        }
+
+        public bool allowInterstitialAdsWhenVideoCostAreLower
+        {
+            get { return _allowInterstitialAdsWhenVideoCostAreLower; }
+            set
+            {
+                if (_allowInterstitialAdsWhenVideoCostAreLower != value)
+                {
+                    _allowInterstitialAdsWhenVideoCostAreLower = value;
+                    settingsBridge.CallStatic( "allowInterInsteadOfRewarded", value );
+                }
+            }
         }
     }
 }

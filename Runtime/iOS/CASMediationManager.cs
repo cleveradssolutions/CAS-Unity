@@ -14,6 +14,7 @@ namespace CAS.iOS
         private InitCompleteAction _initCompleteAction;
         private AdSize _bannerSize = AdSize.Banner;
         private AdPosition _bannerPosition = AdPosition.Undefined;
+        private LastPageAdContent _lastPageAdContent = null;
 #if CAS_EXPIREMENTAL_ORIENTATION
         private bool[] autorotateOrientation = new bool[4];
 #endif
@@ -115,6 +116,20 @@ namespace CAS.iOS
             }
         }
 
+        public LastPageAdContent lastPageAdContent
+        {
+            get { return _lastPageAdContent; }
+            set
+            {
+                if (_lastPageAdContent != value)
+                {
+                    _lastPageAdContent = value;
+                    string json = value == null ? "" : JsonUtility.ToJson( value );
+                    CASExterns.CASUSetLastPageAdContent( _managerPtr, json );
+                }
+            }
+        }
+
         public string GetLastActiveMediation( AdType adType )
         {
             return CASExterns.CASUGetLastActiveMediationWithType( _managerPtr, ( int )adType );
@@ -152,6 +167,16 @@ namespace CAS.iOS
                 PrepareScreenOrientation();
 #endif
             CASExterns.CASUShowAdWithType( _managerPtr, ( int )adType );
+        }
+
+        public float GetBannerHeightInPixels()
+        {
+            return CASExterns.CASUGetBannerHeightInPixels( _managerPtr );
+        }
+
+        public float GetBannerWidthInPixels()
+        {
+            return CASExterns.CASUGetBannerWidthInPixels( _managerPtr );
         }
 
 #if CAS_EXPIREMENTAL_ORIENTATION
