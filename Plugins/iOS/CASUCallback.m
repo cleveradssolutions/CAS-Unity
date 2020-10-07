@@ -31,7 +31,7 @@
 #if __has_include("UnityInterface.h")
     if (fullScreenAd) {
         if ([CASUPluginUtil pauseOnBackground]) {
-            UnityPause(NO);
+            UnityPause(YES);
         }
     }
 #endif
@@ -46,10 +46,8 @@
 - (void)didShowAdFailedWithError:(NSString *)error {
 #if __has_include("UnityInterface.h")
     if (fullScreenAd) {
-        if ([CASUPluginUtil pauseOnBackground]) {
-            if (UnityIsPaused()) {
-                UnityPause(NO);
-            }
+        if (UnityIsPaused()) {
+            UnityPause(NO);
         }
     }
 #endif
@@ -77,23 +75,24 @@
 }
 
 - (void)didClosedAd {
+    // didClosedAd is called from CAS internal thread
+    dispatch_async(dispatch_get_main_queue(), ^{
 #if __has_include("UnityInterface.h")
-    if (fullScreenAd) {
-        if ([CASUPluginUtil pauseOnBackground]) {
+        if (fullScreenAd) {
             if (UnityIsPaused()) {
                 UnityPause(NO);
             }
         }
-    }
 #endif
-    if (self.didClosedCallback) {
-        if (self.client) {
-            self.didClosedCallback(self.client);
+        if (self.didClosedCallback) {
+            if (self.client) {
+                self.didClosedCallback(self.client);
+            }
         }
-    }
+    });
 }
 
-- (void)log:(NSString *)eventName :(NSDictionary<NSString *,id> *)map{
+- (void)log:(NSString *)eventName:(NSDictionary<NSString *, id> *)map {
 #if __has_include(<FirebaseAnalytics/FIRAnalytics.h>)
     [FIRAnalytics logEventWithName:eventName parameters:map];
 #else

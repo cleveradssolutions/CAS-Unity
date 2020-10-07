@@ -8,6 +8,8 @@ using System.IO;
 using System.Xml.Linq;
 using System.Linq;
 using System;
+using System.Reflection;
+using Utils = CAS.UEditor.CASEditorUtils;
 
 #if UNITY_2018_1_OR_NEWER
 using UnityEditor.Build.Reporting;
@@ -23,7 +25,7 @@ namespace CAS.UEditor
     {
         private const string casTitle = "CAS Preprocess Build";
         #region IPreprocessBuild
-        public int callbackOrder { get { return 0; } }
+        public int callbackOrder { get { return -25000; } }
 
 #if UNITY_2018_1_OR_NEWER
         public void OnPreprocessBuild( BuildReport report )
@@ -51,30 +53,27 @@ namespace CAS.UEditor
             if (target != BuildTarget.Android && target != BuildTarget.iOS)
                 return;
 
-            var settings = CASEditorUtils.GetSettingsAsset( target );
+            var settings = Utils.GetSettingsAsset( target );
             if (!settings)
-                CASEditorUtils.StopBuildWithMessage( "Settings not found. Please use menu Assets/CleverAdsSolutions/Settings " +
+                Utils.StopBuildWithMessage( "Settings not found. Please use menu Assets/CleverAdsSolutions/Settings " +
                     "for create and set settings to build.", target );
 
             string admobAppId;
-
             if (settings.testAdMode)
             {
-                const string message = "CAS Mediation work in Test Ad mode.";
-                if (EditorUtility.DisplayDialog( casTitle, message, "Cancel build", "Continue" ))
-                    CASEditorUtils.StopBuildWithMessage( "Cancel build with Test Ad mode", target );
+                DialogOrCancel( "CAS Mediation work in Test Ad mode.", BuildTarget.NoTarget );
 
                 if (target == BuildTarget.Android)
                 {
-                    admobAppId = CASEditorUtils.androidAdmobSampleAppID;
+                    admobAppId = Utils.androidAdmobSampleAppID;
                 }
                 else
                 {
-                    admobAppId = CASEditorUtils.iosAdmobSampleAppID;
+                    admobAppId = Utils.iosAdmobSampleAppID;
                     try
                     {
-                        if (File.Exists( CASEditorUtils.iosResSettingsPath ))
-                            File.Delete( CASEditorUtils.iosResSettingsPath );
+                        if (File.Exists( Utils.iosResSettingsPath ))
+                            File.Delete( Utils.iosResSettingsPath );
                     }
                     catch (Exception e)
                     {
@@ -84,49 +83,41 @@ namespace CAS.UEditor
             }
             else
             {
-                if (settings.managerIds.Length == 0)
-                {
-                    CASEditorUtils.OpenSettingsWindow( target );
+                if (settings.managerIds == null || settings.managerIds.Length == 0 || string.IsNullOrEmpty( settings.managerIds[0] ))
                     StopBuildIDNotFound( target );
-                }
-
-                if (string.IsNullOrEmpty( settings.managerIds[0] ))
-                {
-                    CASEditorUtils.OpenSettingsWindow( target );
-                    StopBuildIDNotFound( target );
-                }
 
                 admobAppId = DownloadRemoteSettings( settings.managerIds[0], "US", target );
             }
 
             if (string.IsNullOrEmpty( admobAppId ))
-                CASEditorUtils.StopBuildWithMessage( "CAS server provides wrong settings for managerID " + settings.managerIds[0] +
+                Utils.StopBuildWithMessage( "CAS server provides wrong settings for managerID " + settings.managerIds[0] +
                     ". Please try using a different identifier in the first place or contact support.", target );
 
             if (admobAppId.IndexOf( '~' ) < 0)
-                CASEditorUtils.StopBuildWithMessage( "CAS server provides invalid Admob App Id not match pattern ca-app-pub-0000000000000000~0000000000. " +
+                Utils.StopBuildWithMessage( "CAS server provides invalid Admob App Id not match pattern ca-app-pub-0000000000000000~0000000000. " +
                     "Please try using a different identifier in the first place or contact support.", target );
 
             if (target == BuildTarget.Android)
             {
                 EditorUtility.DisplayProgressBar( casTitle, "Validate CAS Android Build Settings", 0.8f );
+
+                const string deprecatedPluginPath = "Assets/Plugins/CAS";
+                if (AssetDatabase.IsValidFolder( deprecatedPluginPath ))
+                {
+                    AssetDatabase.DeleteAsset( deprecatedPluginPath );
+                    Debug.Log( "Removed deprecated plugin: " + deprecatedPluginPath );
+                }
+
                 CopyTemplateIfNeedToAndroidLib(
-                    CASEditorUtils.androidLibPropTemplateFile, CASEditorUtils.androidLibPropertiesPath );
+                    Utils.androidLibPropTemplateFile, Utils.androidLibPropertiesPath );
 
                 SetAdmobAppIdToAndroidManifest( admobAppId, false );
 
-                if (File.Exists( CASEditorUtils.mainGradlePath ))
-                    ConfigurateGradleSettings();
-                else
-                    Debug.LogWarning( CASEditorUtils.logTag + "We recomended use Gradle Build system. " +
-                        "Enable PlayerSettings> Publishing Settings> Custom Gradle Template" );
+                ConfigurateGradleSettings();
 
                 if (PlayerSettings.Android.minSdkVersion < AndroidSdkVersions.AndroidApiLevel19)
                 {
-                    const string message = "CAS required minimum SDK API level 19 (KitKat).";
-                    if (EditorUtility.DisplayDialog( "CAS Preprocess Build", message, "Cancel build", "Set API 19" ))
-                        CASEditorUtils.StopBuildWithMessage( message, BuildTarget.NoTarget );
-
+                    DialogOrCancel( "CAS required minimum SDK API level 19 (KitKat).", BuildTarget.NoTarget, "Set API 19" );
                     PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel19;
                 }
             }
@@ -134,80 +125,100 @@ namespace CAS.UEditor
             {
                 EditorUtility.DisplayProgressBar( casTitle, "Validate CAS iOS Build Settings", 0.8f );
                 if (PlayerSettings.iOS.sdkVersion == iOSSdkVersion.SimulatorSDK)
-                {
-                    const string message = "To use CAS on iOS Simulator, you need apply Scripting Define Symbols: TARGET_OS_SIMULATOR.";
-                    if (EditorUtility.DisplayDialog( "CAS Preprocess Build", message, "Cancel build", "Continue" ))
-                        CASEditorUtils.StopBuildWithMessage( message, BuildTarget.NoTarget );
-                }
+                    DialogOrCancel( "To use CAS on iOS Simulator, you need apply Scripting Define Symbols: TARGET_OS_SIMULATOR.", BuildTarget.NoTarget );
 
-                if (CASEditorUtils.IsDependencyFileExists( CASEditorUtils.promoTemplateDependency, BuildTarget.iOS )
-                    && !CASEditorUtils.IsFirebaseServiceExist( "dynamic" ))
-                {
-                    const string message = "CAS Cross-promotion uses deep links to track conversions. Please add Firebase Deep Link dependency to the project.";
-                    if (EditorUtility.DisplayDialog( "CAS Preprocess Build", message, "Cancel build", "Continue" ))
-                        CASEditorUtils.StopBuildWithMessage( message, BuildTarget.NoTarget );
-                }
+                if (Utils.IsDependencyFileExists( Utils.promoTemplateDependency, BuildTarget.iOS )
+                    && !Utils.IsFirebaseServiceExist( "dynamic" ))
+                    DialogOrCancel( "CAS Cross-promotion uses deep links to track conversions. Please add Firebase Deep Link dependency to the project.", BuildTarget.NoTarget );
 
-                if (!File.Exists( CASEditorUtils.iosResSettingsPath ))
+                if (!File.Exists( Utils.iosResSettingsPath ))
                 {
-                    var appIdSettings = new CASEditorUtils.AdmobAppIdData();
+                    var appIdSettings = new Utils.AdmobAppIdData();
                     appIdSettings.admob_app_id = admobAppId;
-                    File.WriteAllText( CASEditorUtils.iosResSettingsPath, JsonUtility.ToJson( appIdSettings ) );
-                    AssetDatabase.ImportAsset( CASEditorUtils.iosResSettingsPath );
+                    File.WriteAllText( Utils.iosResSettingsPath, JsonUtility.ToJson( appIdSettings ) );
+                    AssetDatabase.ImportAsset( Utils.iosResSettingsPath );
                 }
             }
 
             EditorUtility.DisplayProgressBar( casTitle, "Validate CAS Dependencies", 0.9f );
+            bool allowReimportDeps = PlayerPrefs.GetInt( Utils.editorReimportDepsOnBuildPrefs, 1 ) == 1;
             string activeDependencyError = null;
             if (settings.audienceTagged == Audience.Children)
             {
-                if (!CASEditorUtils.IsDependencyFileExists( CASEditorUtils.generalTemplateDependency, target ))
+                if (!Utils.IsDependencyFileExists( Utils.generalTemplateDependency, target ))
                     activeDependencyError = "Ad Children Audience required CAS General Depencency. " +
                         "Please use menu Assets/CleverAdsSolutions/Settings for enable it.";
+                else if (allowReimportDeps)
+                    Utils.TryActivateDependencies( Utils.generalTemplateDependency, target );
 
-                if (CASEditorUtils.IsDependencyFileExists( CASEditorUtils.teenTemplateDependency, target ))
+                if (Utils.IsDependencyFileExists( Utils.teenTemplateDependency, target ))
                     activeDependencyError = "Ad Children Audience not allowed active CAS Teen Depencency. " +
                         "Please use menu Assets/CleverAdsSolutions/Settings for disable it.";
             }
             else
             {
-                if (!CASEditorUtils.IsDependencyFileExists( CASEditorUtils.teenTemplateDependency, target ))
+                if (!Utils.IsDependencyFileExists( Utils.teenTemplateDependency, target ))
                     activeDependencyError = "Ad " + settings.audienceTagged.ToString() +
                         " Audience required CAS Teen Depencency. " +
                         "Please use menu Assets/CleverAdsSolutions/Settings for enable it.";
+                else if (allowReimportDeps)
+                    Utils.TryActivateDependencies( Utils.teenTemplateDependency, target );
 
-                if (CASEditorUtils.IsDependencyFileExists( CASEditorUtils.generalTemplateDependency, target ))
+                if (Utils.IsDependencyFileExists( Utils.generalTemplateDependency, target ))
                     activeDependencyError = "Ad " + settings.audienceTagged.ToString() +
                         " Audience not allowed active CAS General Depencency. " +
                         "Please use menu Assets/CleverAdsSolutions/Settings for disable it.";
             }
 
             if (!string.IsNullOrEmpty( activeDependencyError ))
+                DialogOrCancel( activeDependencyError, target );
+
+            if (allowReimportDeps && Utils.IsDependencyFileExists( Utils.promoTemplateDependency, target ))
+                Utils.TryActivateDependencies( Utils.promoTemplateDependency, target );
+
+            if (settings.bannerSize == AdSize.Banner && Utils.IsPortraitOrientation())
             {
-                if (EditorUtility.DisplayDialog( casTitle, activeDependencyError,
-                        "Cancel build", "Continue" ))
-                    CASEditorUtils.StopBuildWithMessage( activeDependencyError, target );
+                DialogOrCancel( "For portrait applications, we recommend using the adaptive banner size." +
+                        "This will allow you to get more expensive advertising.", target );
             }
 
-            if (settings.bannerSize == AdSize.Banner && CASEditorUtils.IsPortraitOrientation())
+            if (target == BuildTarget.Android && allowReimportDeps)
             {
-                if (EditorUtility.DisplayDialog( "CAS Preprocess Build",
-                        "For portrait applications, we recommend using the adaptive banner size." +
-                        "This will allow you to get more expensive advertising.",
-                        "Set Adaptive size",
-                        "Continue" ))
-                    CASEditorUtils.StopBuildWithMessage( "Cancel build for change Banner size", target );
+                bool success = true;
+                try
+                {
+                    var resolverType = Type.GetType( "GooglePlayServices.PlayServicesResolver, Google.JarResolver", false );
+                    if (resolverType != null)
+                    {
+                        var autoResolve = ( bool )resolverType.GetProperty( "AutomaticResolutionEnabled",
+                            BindingFlags.Public | BindingFlags.Static )
+                            .GetValue( null );
+                        if (!autoResolve)
+                        {
+                            success = ( bool )resolverType.GetMethod( "ResolveSync", BindingFlags.Public | BindingFlags.Static, null,
+                                new[] { typeof( bool ) }, null )
+                                .Invoke( null, new object[] { true } );
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning( Utils.logTag + "GooglePlayServices.PlayServicesResolver error: " + e.Message );
+                }
+                if (!success)
+                    Utils.StopBuildWithMessage( "Cancel build: Resolution Failed. See the log for details.", BuildTarget.NoTarget );
             }
-            Debug.Log( CASEditorUtils.logTag + "Preprocess Build done." );
+
+            Debug.Log( Utils.logTag + "Preprocess Build done." );
             EditorUtility.DisplayProgressBar( "Hold on", "Prepare components...", 0.95f );
         }
 
-        private static string ConfigurateGradleSettings()
+        private static void ConfigurateGradleSettings()
         {
             //const string enabledAndroidX = "\"android.useAndroidX\", true";
             //const string enabledResolveInGradle = "// Android Resolver Dependencies";
 
-            //string gradle = File.ReadAllText( CASEditorUtils.mainGradlePath );
+            //string gradle = File.ReadAllText( Utils.mainGradlePath );
 
             //if (gradle.Contains( enabledResolveInGradle ) && !gradle.Contains( enabledAndroidX ))
             //{
@@ -220,7 +231,7 @@ namespace CAS.UEditor
 
             const string multidexConfig = "multiDexEnabled true";
 
-            const string dependencies = "implementation fileTree";
+            const string dependencies = "implementation ";
             const string defaultConfig = "defaultConfig";
 
             const string sourceCompatibility = "sourceCompatibility JavaVersion.VERSION_1_8";
@@ -228,14 +239,55 @@ namespace CAS.UEditor
 
             const string excludeOption = "exclude 'META-INF/proguard/androidx-annotations.pro'";
 
+#if UNITY_2019_3_OR_NEWER
+            if (File.Exists( Utils.projectGradlePath ))
+            {
+                try
+                {
+                    var projectGradle = new List<string>( File.ReadAllLines( Utils.projectGradlePath ) );
+                    projectGradle = UpdateGradlePluginVersion( projectGradle );
+                    File.WriteAllLines( Utils.projectGradlePath, projectGradle.ToArray() );
+                    AssetDatabase.ImportAsset( Utils.projectGradlePath );
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException( e );
+                }
+            }
+            else if (RequestUpdateGradleVersion( "" ))
+            {
+                Utils.StopBuildWithMessage(
+                        "Build failed because CAS could not update Gradle plugin version in Unity 2019.3 without " +
+                        "Custom Base Gradle Template. Please enable 'Custom Base Gradle Template' found under " +
+                        "'Player Settings > Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
+            }
 
-            var gradle = new List<string>( File.ReadAllLines( CASEditorUtils.mainGradlePath ) );
-            // Find Dependency
+            const string gradlePath = Utils.launcherGradlePath;
+            if (!File.Exists( gradlePath ))
+                Utils.StopBuildWithMessage(
+                    "Build failed because CAS could not enable MultiDEX in Unity 2019.3 without " +
+                    "Custom Launcher Gradle Template. Please enable 'Custom Launcher Gradle Template' found under " +
+                    "'Player Settings > Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
+            List<string> gradle = new List<string>( File.ReadAllLines( gradlePath ) );
+#else
+            const string gradlePath = Utils.mainGradlePath;
+            if (!File.Exists( gradlePath ))
+            {
+                Debug.LogWarning( Utils.logTag + "We recomended use Gradle Build system. " +
+                        "Enable PlayerSettings> Publishing Settings> Custom Gradle Template" );
+                return;
+            }
+
+            List<string> gradle = new List<string>( File.ReadAllLines( gradlePath ) );
+            gradle = UpdateGradlePluginVersion( gradle );
+#endif
+
             int line = 0;
+            // Find Dependency
             while (line < gradle.Count && !gradle[line++].Contains( dependencies )) { }
 
             if (line >= gradle.Count)
-                CASEditorUtils.StopBuildWithMessage( "Not found Dependencies scope in Gradle template. " +
+                Utils.StopBuildWithMessage( "Not found Dependencies scope in Gradle template. " +
                     "Please try delete and create new mainTemplate.gradle", BuildTarget.NoTarget );
 
             // chek exist
@@ -245,7 +297,7 @@ namespace CAS.UEditor
                 if (gradle[line].Contains( multidexObsoleted ))
                 {
                     gradle[line] = "    " + multidexImplementation;
-                    Debug.Log( CASEditorUtils.logTag + "Replace dependency " + multidexObsoleted +
+                    Debug.Log( Utils.logTag + "Replace dependency " + multidexObsoleted +
                         " to " + multidexImplementation );
                     multidexExist = true;
                     break;
@@ -255,15 +307,23 @@ namespace CAS.UEditor
                     multidexExist = true;
                     break;
                 }
+
                 line++;
             }
 
             // write dependency
             if (!multidexExist)
             {
-                gradle.Insert( line, "    " + multidexImplementation );
-                Debug.Log( CASEditorUtils.logTag + "Append dependency " + multidexImplementation );
-                line++;
+                if (EditorUtility.DisplayDialog( "CAS Preprocess Build",
+                        "Including the CAS SDK may cause the 64K limit on methods that can be packaged in an Android dex file to be breached" +
+                        "Do you want to use the MultiDex support library to building your app correctly?",
+                        "Enable MultiDex", "Continue" ))
+                {
+                    gradle.Insert( line, "    " + multidexImplementation );
+                    Debug.Log( Utils.logTag + "Append dependency " + multidexImplementation );
+                    line++;
+                    multidexExist = true;
+                }
             }
 
             var sourceCompatibilityExist = false;
@@ -282,20 +342,26 @@ namespace CAS.UEditor
             }
 
             if (line >= gradle.Count)
-                CASEditorUtils.StopBuildWithMessage( "Not found Default Config scope in Gradle template. " +
+                Utils.StopBuildWithMessage( "Not found Default Config scope in Gradle template. " +
                     "Please try delete and create new mainTemplate.gradle", BuildTarget.NoTarget );
 
             if (!sourceCompatibilityExist)
             {
-                gradle.InsertRange( line, new[] {
-                    "	compileOptions {",
-                    "        " + sourceCompatibility,
-                    "        " + targetCompatibility,
-                    "	}",
-                    ""
-                } );
-                Debug.Log( CASEditorUtils.logTag + "Append Compile options to use Java Version 1.8." );
-                line += 5;
+                if (EditorUtility.DisplayDialog( "CAS Preprocess Build",
+                        "CAS SDK requires for correct operation to determine the Java version in Gradle." +
+                        "Do you want to use Java 1.8?",
+                        "Set Java version", "Continue" ))
+                {
+                    gradle.InsertRange( line, new[] {
+                        "	compileOptions {",
+                        "        " + sourceCompatibility,
+                        "        " + targetCompatibility,
+                        "	}",
+                        ""
+                    } );
+                    Debug.Log( Utils.logTag + "Append Compile options to use Java Version 1.8." );
+                    line += 5;
+                }
             }
 
             if (!packagingOptExist)
@@ -306,45 +372,104 @@ namespace CAS.UEditor
                     "	}",
                     ""
                 } );
-                Debug.Log( CASEditorUtils.logTag + "Append Packaging options to exclude duplicate files." );
+                Debug.Log( Utils.logTag + "Append Packaging options to exclude duplicate files." );
                 line += 4;
             }
 
             // Find multidexEnable
-            var multidexEnabled = false;
-            while (line < gradle.Count && !gradle[line].Contains( "}" ))
+            if (multidexExist)
             {
-                if (gradle[line].Contains( multidexConfig ))
+                var defaultConfigLine = line;
+                var multidexEnabled = false;
+                while (line < gradle.Count)
                 {
-                    multidexEnabled = true;
-                    break;
+                    if (gradle[line].Contains( multidexConfig ))
+                    {
+                        multidexEnabled = true;
+                        break;
+                    }
+                    line++;
                 }
+
+                if (!multidexEnabled)
+                {
+                    gradle.Insert( defaultConfigLine + 1, "        " + multidexConfig );
+                    Debug.Log( Utils.logTag + "Enable Multidex in Default Config" );
+                }
+            }
+
+            File.WriteAllLines( gradlePath, gradle.ToArray() );
+            AssetDatabase.ImportAsset( gradlePath );
+        }
+
+        private static List<string> UpdateGradlePluginVersion( List<string> gradle )
+        {
+            const string gradlePluginVersion = "classpath 'com.android.tools.build:gradle:";
+            int line = 0;
+            // Find Gradle Plugin Version
+            while (line < gradle.Count && !gradle[line].Contains( gradlePluginVersion ))
+            {
                 line++;
             }
 
-            if (!multidexEnabled)
+            if (line < gradle.Count)
             {
-                gradle.Insert( line, "        " + multidexConfig );
-                Debug.Log( CASEditorUtils.logTag + "Enable Multidex in Default Config" );
+                var versionLine = gradle[line];
+                var index = versionLine.IndexOf( gradlePluginVersion );
+                if (index > 0)
+                {
+                    var verStr = versionLine.Substring( index + gradlePluginVersion.Length, 5 );
+                    try
+                    {
+                        System.Version version = new System.Version( verStr );
+                        if (version.Major == 4)
+                        {
+                            if (version.Minor == 0 & version.Build < 1 && RequestUpdateGradleVersion( version.ToString() ))
+                                gradle[line] = versionLine.Remove( versionLine.Length - 2 ) + "1'";
+                        }
+                        else
+                        {
+                            switch (version.Minor)
+                            {
+                                case 3:
+                                case 4:
+                                    if (version.Build < 3 && RequestUpdateGradleVersion( version.ToString() ))
+                                        gradle[line] = versionLine.Remove( versionLine.Length - 2 ) + "3'";
+                                    break;
+                                case 5:
+                                case 6:
+                                    if (version.Build < 4 && RequestUpdateGradleVersion( version.ToString() ))
+                                        gradle[line] = versionLine.Remove( versionLine.Length - 2 ) + "4'";
+                                    break;
+                            }
+                        }
+                    }
+                    catch { }
+                }
             }
+            return gradle;
+        }
 
-            File.WriteAllLines( CASEditorUtils.mainGradlePath, gradle.ToArray() );
-            AssetDatabase.ImportAsset( CASEditorUtils.mainGradlePath );
-            return null;
+        private static bool RequestUpdateGradleVersion( string version = "" )
+        {
+            return EditorUtility.DisplayDialog( "CAS Preprocess Build",
+                        "Android Gradle plugin " + version + " are not supports targeting Android 11. " +
+                        "Do you want to upgrade to version with fix?",
+                        "Update", "Continue" );
         }
 
         private static void CopyTemplateIfNeedToAndroidLib( string template, string path )
         {
             if (!File.Exists( path ))
             {
-                if (!AssetDatabase.IsValidFolder( CASEditorUtils.androidLibFolderPath ))
+                if (!AssetDatabase.IsValidFolder( Utils.androidLibFolderPath ))
                 {
-                    Directory.CreateDirectory( CASEditorUtils.androidLibFolderPath );
-                    AssetDatabase.ImportAsset( CASEditorUtils.androidLibFolderPath );
+                    Directory.CreateDirectory( Utils.androidLibFolderPath );
+                    AssetDatabase.ImportAsset( Utils.androidLibFolderPath );
                 }
-                var templateFile = CASEditorUtils.GetTemplatePath( template );
-                if (templateFile == null || !CASEditorUtils.TryCopyFile( templateFile, path ))
-                    CASEditorUtils.StopBuildWithMessage( "Build failed", BuildTarget.NoTarget );
+                var templateFile = Utils.GetTemplatePath( template );
+                if (templateFile == null || !Utils.TryCopyFile( templateFile, path ))
+                    Utils.StopBuildWithMessage( "Build failed", BuildTarget.NoTarget );
             }
         }
 
@@ -353,10 +478,10 @@ namespace CAS.UEditor
             const string metaAdmobApplicationID = "com.google.android.gms.ads.APPLICATION_ID";
             XNamespace ns = "http://schemas.android.com/apk/res/android";
 
-            string manifestPath = Path.GetFullPath( CASEditorUtils.androidLibManifestPath );
+            string manifestPath = Path.GetFullPath( Utils.androidLibManifestPath );
 
             CopyTemplateIfNeedToAndroidLib(
-                    CASEditorUtils.androidLibManifestTemplateFile, CASEditorUtils.androidLibManifestPath );
+                    Utils.androidLibManifestTemplateFile, Utils.androidLibManifestPath );
 
             try
             {
@@ -386,18 +511,19 @@ namespace CAS.UEditor
                 Debug.LogException( e );
             }
             if (newFile)
-                CASEditorUtils.StopBuildWithMessage(
+                Utils.StopBuildWithMessage(
                     "AndroidManifest.xml is not valid. Try re-importing the plugin.", BuildTarget.Android );
 
-            Debug.LogWarning( CASEditorUtils.logTag + "AndroidManifest.xml is not valid. Created new file by template." );
-            AssetDatabase.DeleteAsset( CASEditorUtils.androidLibManifestPath );
+            Debug.LogWarning( Utils.logTag + "AndroidManifest.xml is not valid. Created new file by template." );
+            AssetDatabase.DeleteAsset( Utils.androidLibManifestPath );
             SetAdmobAppIdToAndroidManifest( admobAppId, true );
         }
 
         public static string DownloadRemoteSettings( string managerID, string country, BuildTarget platform )
         {
             string title = "Download CAS settings for " + platform.ToString();
-            string url = CASEditorUtils.BuildRemoteUrl( managerID, country, platform );
+            string url = Utils.BuildRemoteUrl( managerID, country, platform );
+            string message = null;
 
             using (var loader = UnityWebRequest.Get( url ))
             {
@@ -408,40 +534,60 @@ namespace CAS.UEditor
                         Mathf.Repeat( ( float )EditorApplication.timeSinceStartup, 1.0f ) ))
                     {
                         loader.Dispose();
-                        return null;
+                        message = "Update CAS Settings canceled";
+                        break;
                     }
                 }
                 EditorUtility.ClearProgressBar();
-                EditorUtility.DisplayProgressBar( casTitle, "Write CAS settings", 0.7f );
-                if (string.IsNullOrEmpty( loader.error ))
+
+                if (message == null)
                 {
-                    string content = loader.downloadHandler.text.Trim();
-                    if (string.IsNullOrEmpty( content ))
+                    if (string.IsNullOrEmpty( loader.error ))
                     {
-                        CASEditorUtils.StopBuildWithMessage( "Server have no settings for " + managerID +
-                            " Please try using a different identifier in the first place or contact support.", platform );
+                        EditorUtility.DisplayProgressBar( casTitle, "Write CAS settings", 0.7f );
+                        var content = loader.downloadHandler.text.Trim();
+                        if (string.IsNullOrEmpty( content ))
+                            Utils.StopBuildWithMessage( "Server have no settings for " + managerID +
+                                " Please try using a different identifier in the first place or contact support." +
+                                " To test build please use Test Ad Mode in settings.", platform );
+
+                        return ApplySettingsContent( content, platform );
                     }
                     else
                     {
-                        if (platform == BuildTarget.Android)
-                            CASEditorUtils.WriteToFile( content, CASEditorUtils.androidResSettingsPath );
-                        else
-                            CASEditorUtils.WriteToFile( content, CASEditorUtils.iosResSettingsPath );
-
-                        return CASEditorUtils.GetAdmobAppIdFromJson( content );
+                        message = "Server response " + loader.responseCode + ": " + loader.error;
                     }
                 }
-                else
-                {
-                    Debug.LogError( CASEditorUtils.logTag + " Server connect rrror " + loader.responseCode + ": " + loader.error );
-                }
             }
+            if (EditorUtility.DisplayDialog( casTitle, message, "Select settings file", "Cancel Build" ))
+            {
+                var filePath = EditorUtility.OpenFilePanelWithFilters(
+                    "Select CAS Settings file for build", "", new[] { "json" } );
+                if (!string.IsNullOrEmpty( filePath ))
+                    return ApplySettingsContent( File.ReadAllText( filePath ), platform );
+            }
+            Utils.StopBuildWithMessage( message, BuildTarget.NoTarget );
             return null;
+        }
+
+        private static string ApplySettingsContent( string content, BuildTarget target )
+        {
+            if (target == BuildTarget.Android)
+                Utils.WriteToFile( content, Utils.androidResSettingsPath );
+            else
+                Utils.WriteToFile( content, Utils.iosResSettingsPath );
+            return Utils.GetAdmobAppIdFromJson( content );
+        }
+
+        private static void DialogOrCancel( string message, BuildTarget target, string btn = "Continue" )
+        {
+            if (!EditorUtility.DisplayDialog( casTitle, message, btn, "Cancel build" ))
+                Utils.StopBuildWithMessage( "Cancel build: " + message, target );
         }
 
         private static void StopBuildIDNotFound( BuildTarget target )
         {
-            CASEditorUtils.StopBuildWithMessage( "Settings not found manager ids for " + target.ToString() +
+            Utils.StopBuildWithMessage( "Settings not found manager ids for " + target.ToString() +
                         " platform. For a successful build, you need to specify at least one ID" +
                         " that you use in the project. To test integration, you can use test mode.", target );
         }

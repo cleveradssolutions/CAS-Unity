@@ -48,6 +48,7 @@
         self.interstitialCallback.client = client;
         self.rewardedCallback = [[CASUCallback alloc] initForFullScreen:YES];
         self.rewardedCallback.client = client;
+        self.bannerActiveSize = [self.mediationManager getBannerSize];
 
         [CASAnalytics setHandler:self.bannerCallback];
     }
@@ -111,26 +112,39 @@
 }
 
 - (void)setBannerSize:(NSInteger)sizeId {
+    CASSize *targetSize;
     switch (sizeId) {
         case 1:
-            [_mediationManager setBannerWithSize:CASSize.banner];
+            targetSize = CASSize.banner;
             break;
         case 2:
-            [_mediationManager setBannerWithSize:[CASSize getAdaptiveBannerInContainer:[self unityGLViewController].view]];
+            targetSize = [CASSize getAdaptiveBannerInContainer:[self unityGLViewController].view];
             break;
         case 3:
-            [_mediationManager setBannerWithSize:[CASSize getSmartBanner]];
+            targetSize = [CASSize getSmartBanner];
             break;
         case 4:
-            [_mediationManager setBannerWithSize:CASSize.leaderboard];
+            targetSize = CASSize.leaderboard;
             break;
         case 5:
-            [_mediationManager setBannerWithSize:CASSize.mediumRectangle];
+            targetSize = CASSize.mediumRectangle;
             break;
         default:
             NSLog(@"[CAS] Framework bridge call change banner size with unknown id: %zd", sizeId);
-            break;
+            return;
     }
+    if (self.bannerActiveSize.height != targetSize.height || self.bannerActiveSize.width != targetSize.width) {
+        self.bannerActiveSize = targetSize;
+        [_mediationManager setBannerWithSize:targetSize];
+    }
+}
+
+- (CGFloat)bannerHeightInPixels {
+    return CGRectGetHeight(CGRectStandardize(CGRectMake(0, 0, self.bannerActiveSize.width, self.bannerActiveSize.height))) * [UIScreen mainScreen].nativeScale;
+}
+
+- (CGFloat)bannerWidthInPixels {
+    return CGRectGetWidth(CGRectStandardize(CGRectMake(0, 0, self.bannerActiveSize.width, self.bannerActiveSize.height))) * [UIScreen mainScreen].nativeScale;
 }
 
 - (void)setBannerPosition:(NSInteger)positionId {
@@ -241,8 +255,12 @@
     result.active = YES;
 }
 
+- (void)setLastPageAdFor:(NSString *)content {
+    self.mediationManager.lastPageAdContent = [CASLastPageAdContent createFrom:content];
+}
+
 - (void)onAdLoaded:(enum CASType)adType {
-    if (self.didAdLoadedCallback && self.client) {
+    if (self.didAdLoadedCallback) {
         if (self.client) {
             self.didAdLoadedCallback(self.client, (NSInteger)adType);
         }

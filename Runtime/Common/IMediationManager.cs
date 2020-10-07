@@ -92,7 +92,7 @@ namespace CAS
         /// The latest free ad page for your own promotion.
         /// This ad page will be displayed when there is no paid ad to show or internet availability.
         ///
-        /// **Attention!** Impressions and clicks of this ad page will not be billed.
+        /// **Attention!** Impressions and clicks on this ad page don't make money.
         ///
         /// By default, this page will not be displayed while the ad content is NULL.
         /// </summary>

@@ -1,6 +1,7 @@
 ﻿#if UNITY_IOS || CASDeveloper
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -161,9 +162,12 @@ namespace CAS.UEditor
                 EditorUtility.DisplayProgressBar( casTitle, "Apply Crosspromo Dynamic Links", 0.9f );
                 var identifier = Application.identifier;
                 var productName = identifier.Substring( identifier.LastIndexOf( "." ) + 1 );
-
-                var entitlements = new ProjectCapabilityManager(
-                    projectPath, productName + ".entitlements", PBXProject.GetUnityTargetName() );
+#if UNITY_2019_3_OR_NEWER
+                string target = null; // Use Default
+#else
+                string target = PBXProject.GetUnityTargetName();
+#endif
+                var entitlements = new ProjectCapabilityManager( projectPath, productName + ".entitlements", target );
 
                 var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
                 var dynamicLinks = new List<string>( casSettings.managerIds.Length );

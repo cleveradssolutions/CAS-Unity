@@ -11,9 +11,9 @@
 
 @interface CASUCallback : NSObject<CASCallback, CASAnalyticsHandler>
 
-- (id)initForFullScreen:(BOOL)isFullScreen;
+- (id _Nonnull )initForFullScreen:(BOOL)isFullScreen;
 
-@property (nonatomic, assign) CASUTypeManagerClientRef *client;
+@property (nonatomic, assign) CASUTypeManagerClientRef _Nullable * _Nullable client;
 @property (nonatomic, assign, nullable) CASUWillShownWithAdCallback willShownCallback;
 @property (nonatomic, assign, nullable) CASUDidShowAdFailedWithErrorCallback didShowFailedCallback;
 @property (nonatomic, assign, nullable) CASUDidCompletedAdCallback didCompleteCallback;

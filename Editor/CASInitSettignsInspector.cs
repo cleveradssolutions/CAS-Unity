@@ -2,6 +2,7 @@
 using System;
 using UnityEngine;
 using UnityEditor;
+using UnityEditorInternal;
 
 namespace CAS.UEditor
 {
@@ -19,10 +20,12 @@ namespace CAS.UEditor
         private SerializedProperty bannerSizeProp;
         private SerializedProperty locationUsageDescriptionProp;
 
+        private ReorderableList managerIdsList;
         private BuildTarget platform;
         private bool promoDependencyExist;
         private bool teenDependencyExist;
         private bool generalDependencyExist;
+        private bool reimportDependencyOnBuild;
 
         private int editorRuntimeActiveAdFlags;
         private Vector2 mediationNetworkScroll;
@@ -58,7 +61,8 @@ namespace CAS.UEditor
             bannerSizeProp = props.FindProperty( "bannerSize" );
             locationUsageDescriptionProp = props.FindProperty( "locationUsageDescription" );
 
-            editorRuntimeActiveAdFlags = PlayerPrefs.GetInt( CASEditorUtils.editorRuntomeActiveAdPrefs, -1 );
+            editorRuntimeActiveAdFlags = PlayerPrefs.GetInt( CASEditorUtils.editorRuntimeActiveAdPrefs, -1 );
+            reimportDependencyOnBuild = PlayerPrefs.GetInt( CASEditorUtils.editorReimportDepsOnBuildPrefs, 1 ) == 1;
 
             string assetName = target.name;
             if (assetName.EndsWith( BuildTarget.Android.ToString() ))
@@ -71,7 +75,27 @@ namespace CAS.UEditor
             generalDependencyExist = CASEditorUtils.IsDependencyFileExists( CASEditorUtils.generalTemplateDependency, platform );
             teenDependencyExist = CASEditorUtils.IsDependencyFileExists( CASEditorUtils.teenTemplateDependency, platform );
             promoDependencyExist = CASEditorUtils.IsDependencyFileExists( CASEditorUtils.promoTemplateDependency, platform );
+
+            managerIdsList = new ReorderableList( props, managerIdsProp, true, true, true, true )
+            {
+                drawHeaderCallback = DrawListHeader,
+                drawElementCallback = DrawListElement
+            };
         }
+
+        private void DrawListHeader( Rect rect )
+        {
+            EditorGUI.LabelField( rect, "Manager ID's" );
+        }
+
+        private void DrawListElement( Rect rect, int index, bool isActive, bool isFocused )
+        {
+            var item = managerIdsProp.GetArrayElementAtIndex( index );
+            rect.yMin += 1;
+            rect.yMax -= 1;
+            item.stringValue = EditorGUI.TextField( rect, item.stringValue );
+        }
+
 
         public override void OnInspectorGUI()
         {
@@ -79,7 +103,8 @@ namespace CAS.UEditor
             obj.UpdateIfRequiredOrScript();
             EditorGUILayout.PropertyField( testAdModeProp );
             EditorGUI.BeginDisabledGroup( testAdModeProp.boolValue );
-            EditorGUILayout.PropertyField( managerIdsProp, true );
+            DrawSeparator();
+            managerIdsList.DoLayoutList();
             OnManagerIDVerificationGUI();
             EditorGUI.EndDisabledGroup();
 
@@ -104,7 +129,7 @@ namespace CAS.UEditor
             DrawSeparator();
             interstitialIntervalProp.intValue = Math.Max( 0,
                 EditorGUILayout.IntField( "Interstitial impression interval(sec):", interstitialIntervalProp.intValue ) );
-            
+
             DrawSeparator();
             OnLoadingModeGUI();
             EditorGUILayout.PropertyField( debugModeProp );
@@ -116,6 +141,9 @@ namespace CAS.UEditor
             DrawSeparator();
             OnAllowedAdNetworksGUI();
 
+            DrawSeparator();
+            OnBuildSettingsGUI();
+           
             DrawSeparator();
             OnCASAboutGUI();
             obj.ApplyModifiedProperties();
@@ -185,7 +213,7 @@ namespace CAS.UEditor
                         "Please use Android Resolver after the change.",
                         MessageType.Error );
                     if (GUILayout.Button( "Activate", GUILayout.Height( 38 ) ))
-                        if (ActivateDependencies( CASEditorUtils.generalTemplateDependency ))
+                        if (CASEditorUtils.TryActivateDependencies( CASEditorUtils.generalTemplateDependency, platform ))
                             generalDependencyExist = true;
                     EditorGUILayout.EndHorizontal();
                 }
@@ -226,7 +254,7 @@ namespace CAS.UEditor
                         " require Teen CAS Dependencies to be activated. " +
                         "Please use Android Resolver after the change.", MessageType.Error );
                     if (GUILayout.Button( "Activate", GUILayout.Height( 38 ) ))
-                        if (ActivateDependencies( CASEditorUtils.teenTemplateDependency ))
+                        if (CASEditorUtils.TryActivateDependencies( CASEditorUtils.teenTemplateDependency, platform ))
                             teenDependencyExist = true;
                     EditorGUILayout.EndHorizontal();
                 }
@@ -334,7 +362,7 @@ namespace CAS.UEditor
             EditorGUI.EndDisabledGroup();
         }
 
-        private static void DrawEffectiveSlider( string label, float performVal )
+        private void DrawEffectiveSlider( string label, float performVal )
         {
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space( 15.0f );
@@ -354,11 +382,11 @@ namespace CAS.UEditor
                 editorRuntimeActiveAdFlags = Convert.ToInt32(
                     EditorGUILayout.EnumFlagsField( "Editor runtime Active ad", ( AdFlags )editorRuntimeActiveAdFlags ) );
                 if (EditorGUI.EndChangeCheck())
-                    PlayerPrefs.SetInt( CASEditorUtils.editorRuntomeActiveAdPrefs, editorRuntimeActiveAdFlags );
+                    PlayerPrefs.SetInt( CASEditorUtils.editorRuntimeActiveAdPrefs, editorRuntimeActiveAdFlags );
             }
         }
 
-        private static void OnCASAboutGUI()
+        private void OnCASAboutGUI()
         {
             EditorGUILayout.LabelField( "CAS Unity wrapper version: " + MobileAds.wrapperVersion );
             EditorGUILayout.BeginHorizontal();
@@ -382,24 +410,24 @@ namespace CAS.UEditor
                 }
                 else
                 {
-                    if (ActivateDependencies( CASEditorUtils.promoTemplateDependency ))
+                    if (CASEditorUtils.TryActivateDependencies( CASEditorUtils.promoTemplateDependency, platform ))
                         promoDependencyExist = true;
                 }
             }
-            if(platform == BuildTarget.Android)
+            if (platform == BuildTarget.Android)
             {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.HelpBox( "Changing this flag will change the project dependencies. " +
                     "Please use Android Resolver after the change.", MessageType.None );
                 EditorGUI.indentLevel--;
-            }    
+            }
         }
 
         private void OnAllowedAdNetworksGUI()
         {
             var audience = ( Audience )audienceTaggedProp.enumValueIndex;
             mediationNetworkScroll = EditorGUILayout.BeginScrollView( mediationNetworkScroll,
-                GUILayout.ExpandHeight( false ), GUILayout.MinHeight(EditorGUIUtility.singleLineHeight * 5.5f) );
+                GUILayout.ExpandHeight( false ), GUILayout.MinHeight( EditorGUIUtility.singleLineHeight * 5.5f ) );
 
             EditorGUILayout.LabelField( "Allowed partners networks for " + audience.ToString() + " audience" );
             EditorGUILayout.BeginHorizontal();
@@ -435,19 +463,13 @@ namespace CAS.UEditor
             EditorGUILayout.EndScrollView();
         }
 
-
-
-        private bool ActivateDependencies( string template )
+        private void OnBuildSettingsGUI()
         {
-            CASEditorUtils.CreateFolderInAssets( "Editor" );
-
-            string fromPath = CASEditorUtils.GetTemplatePath( template + platform.ToString() + ".xml" );
-            if (string.IsNullOrEmpty( fromPath ))
-                return false;
-
-            string dest = CASEditorUtils.editorFolderPath + "/"
-                + template + platform.ToString() + CASEditorUtils.dependenciesExtension;
-            return CASEditorUtils.TryCopyFile( fromPath, dest );
+            if (reimportDependencyOnBuild != EditorGUILayout.ToggleLeft( "Force reimport CAS dependencies on build.", reimportDependencyOnBuild ))
+            {
+                reimportDependencyOnBuild = !reimportDependencyOnBuild;
+                PlayerPrefs.SetInt( CASEditorUtils.editorReimportDepsOnBuildPrefs, reimportDependencyOnBuild ? 1 : 0 );
+            }
         }
 
         private bool DeactivateDependencies( string template )
@@ -455,7 +477,6 @@ namespace CAS.UEditor
             return AssetDatabase.DeleteAsset( CASEditorUtils.editorFolderPath + "/"
                 + template + platform.ToString() + CASEditorUtils.dependenciesExtension );
         }
-
 
         private struct PartnerNetwork
         {

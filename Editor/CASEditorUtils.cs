@@ -16,7 +16,8 @@ namespace CAS.UEditor
         public const string androidAdmobSampleAppID = "ca-app-pub-3940256099942544~3347511713";
         public const string iosAdmobSampleAppID = "ca-app-pub-3940256099942544~1458002511";
 
-        public const string editorRuntomeActiveAdPrefs = "typesadsavailable";
+        public const string editorRuntimeActiveAdPrefs = "typesadsavailable";
+        public const string editorReimportDepsOnBuildPrefs = "cas_reimport_deps_on_build";
         public const string rootCASFolderPath = "Assets/CleverAdsSolutions";
         public const string editorFolderPath = rootCASFolderPath + "/Editor";
         public const string androidLibFolderPath = "Assets/Plugins/Android/CASPlugin.androidlib";
@@ -41,6 +42,8 @@ namespace CAS.UEditor
         public const string configuringPrivacyURL = "https://github.com/cleveradssolutions/CAS-iOS#step-5-configuring-privacy-controls";
 
         public const string mainGradlePath = "Assets/Plugins/Android/mainTemplate.gradle";
+        public const string launcherGradlePath = "Assets/Plugins/Android/launcherTemplate.gradle";
+        public const string projectGradlePath = "Assets/Plugins/Android/baseProjectTemplate.gradle";
 
         private const string locationUsageDefaultDescription = "Your data will be used to provide you a better and personalized ad experience.";
         #endregion
@@ -105,6 +108,7 @@ namespace CAS.UEditor
                 }
                 else if (platform == BuildTarget.iOS)
                 {
+                    asset.managerIds = new string[] { "" };
                     asset.locationUsageDescription = locationUsageDefaultDescription;
                     asset.interstitialInterval = 90;
                 }
@@ -140,6 +144,18 @@ namespace CAS.UEditor
                 }
             }
             return path;
+        }
+
+        public static bool TryActivateDependencies( string template, BuildTarget platform )
+        {
+            CreateFolderInAssets( "Editor" );
+
+            string fromPath = GetTemplatePath( template + platform.ToString() + ".xml" );
+            if (string.IsNullOrEmpty( fromPath ))
+                return false;
+
+            string dest = editorFolderPath + "/" + template + platform.ToString() + dependenciesExtension;
+            return TryCopyFile( fromPath, dest );
         }
 
         public static bool TryCopyFile( string source, string dest )

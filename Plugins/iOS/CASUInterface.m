@@ -77,11 +77,6 @@ void CASUSetTaggedWithAudience(NSInteger audience)
     [[CAS settings] setTaggedWithAudience:(CASAudience)audience ];
 }
 
-void CASUSetWaitConsentToInitialize(BOOL wait)
-{
-    [[CAS settings] setWaitConsentToInitialize];
-}
-
 void CASUSetDebugMode(BOOL mode)
 {
     [[CAS settings] setDebugMode:mode ];
@@ -95,6 +90,11 @@ void CASUSetMuteAdSoundsTo(BOOL muted)
 void CASUSetLoadingWithMode(NSInteger mode)
 {
     [[CAS settings] setLoadingWithMode:(CASLoadingManagerMode)mode];
+}
+
+void CASUsetInterstitialAdsWhenVideoCostAreLower(BOOL allow)
+{
+    [[CAS settings] setInterstitialAdsWhenVideoCostAreLowerWithAllow:allow];
 }
 
 void CASUSetiOSAppPauseOnBackground(BOOL pause)
@@ -242,4 +242,22 @@ void CASUSetBannerPosition(CASUTypeManagerRef manager, NSInteger bannerPos)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     [internalManager setBannerPosition:bannerPos];
+}
+
+float CASUGetBannerHeightInPixels(CASUTypeManagerRef manager)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    return internalManager.bannerHeightInPixels;
+}
+
+float CASUGetBannerWidthInPixels(CASUTypeManagerRef manager)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    return internalManager.bannerWidthInPixels;
+}
+
+void CASUSetLastPageAdContent(CASUTypeManagerRef manager, const char *contentJson)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    [internalManager setLastPageAdFor:CASUStringFromUTF8String(contentJson)];
 }

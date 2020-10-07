@@ -4,16 +4,15 @@ The Clever Ads Solutions Unity plugin enables Unity developers to easily serve M
 [![GitHub package.json version](https://img.shields.io/github/package-json/v/cleveradssolutions/CAS-Unity?label=Unity%20Package)](https://github.com/cleveradssolutions/CAS-Unity/releases/latest)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/CleverAdsSolutions/CAS-Android?label=CAS%20Android)](https://github.com/cleveradssolutions/CAS-Android)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/CleverAdsSolutions/CAS-iOS?label=CAS%20iOS)](https://github.com/cleveradssolutions/CAS-iOS)
-[![App-ads.txt](https://img.shields.io/badge/App--ads.txt-Sep%2017%2C%202020-orange)](https://cleveradssolutions.com/app-ads.txt)
+[![App-ads.txt](https://img.shields.io/endpoint?url=https://cleveradssolutions.com/AppAdsTxtShiled.json)](https://cleveradssolutions.com/app-ads.txt)
 
 ## Requirements
 ### Unity
-- Unity Editor version: 2017.4, Unity 2018.4, Unity 2019.2,
+- Unity Editor version: 2017.4, 2018.4, 2019, 2020.1,
 > You can try any version you want, however, non-recommended versions can lead to unexpected errors.
 ### Android
-- Android version 4.2 (API level 17) and up
-- Gradle 3.4 and up
-- Your platform must be AndroidX or 
+- Android version 4.4 (API level 19) and up
+- Gradle 3.4.3 and up
 ### iOS
 - XCode version 12 and up
 - iOS version 10 and up
@@ -60,7 +59,7 @@ Modify `Packages/manifest.json`  to the following form:
       }
     ],
     "dependencies": {
-        "com.cleversolutions.ads.unity" : "https://github.com/cleveradssolutions/CAS-Unity.git#1.5.0",
+        "com.cleversolutions.ads.unity" : "https://github.com/cleveradssolutions/CAS-Unity.git#1.6.0",
         Other dependencies
     }
 }
@@ -82,7 +81,7 @@ The quickest way to testing is to enable Test Ad Mode. These ad are not associat
 Add your Clever Ads Solutions manager Id's.
 > If you haven't created an CAS account and registered an manager yet,  now's a great time to do so at [cleveradssolutions.com](https://cleveradssolutions.com). If you're just looking to experiment with the SDK, though, you can use the Test Ad Mode above.  
 
-#### Allowed ads in app
+#### Allowed ads types in app
 To improve the performance of your application, we recommend that you only allow ad types that will actually be used in the application. For example: Banner and Interstitial ad.  
 
 The processes of ad types can be disabled/enabled at any time using following method:
@@ -118,7 +117,13 @@ Change the banner size using the following method:
 CAS.MobileAds.manager.bannerSize = bannerSize;
 ```
 
-> If you use Manual [Loading Manager Mode](#loading-mode) then please call [Load an Ad](#load-an-ad) each banner size changed.
+> If you use Manual [Loading Manager Mode](#loading-mode) then please call [Load an Ad](#load-an-ad) each banner size changed.  
+
+You can get the current banner size in pixels at any time using the following methods:
+```c#
+float height = CAS.MobileAds.manager.GetBannerHeightInPixels();
+float width = CAS.MobileAds.manager.GetBannerWidthInPixels();
+```
 
 #### Banner Refresh rate
 An ad unit’s automatic refresh rate (in seconds) determines how often a new ad request is generated for that ad unit.  
@@ -185,6 +190,7 @@ Change the Debug Mode flag at any time using the following method:
 ```c#
 CAS.MobileAds.settings.isDebugMode = enabled;
 ```
+Disabled by default.
 
 #### Cross Promotion enabled
 Cross promotion is an app marketing strategy in which app developers promote one of their titles on another one of their titles. Cross promoting is especially effective for developers with large portfolios of games as a means to move users across titles and use the opportunity to scale each of their apps. This is most commonly used by hyper-casual publishers who have relatively low retention, and use cross promotion to keep users within their app portfolio.  
@@ -202,12 +208,14 @@ Change the analytics collection flag at any time using the following method:
 ```c#
 CAS.MobileAds.settings.analyticsCollectionEnabled = enabled;
 ```
+Disabled by default.  
 
 #### Muted Ads Sounds
 Sounds in ads mute state.  
 ```c#
 CAS.MobileAds.settings.isMutedAdSounds = mute;
 ```
+Disabled by default.  
 
 #### Execute Events On Unity Thread
 Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
@@ -219,6 +227,7 @@ OR enable `isExecuteEventsOnUnityThread` property to automatically schedule all 
 ```c#
 CAS.MobileAds.settings.isExecuteEventsOnUnityThread = enable;
 ```
+Disabled by default.  
 
 #### Test Device Ids
 Identifiers corresponding to test devices which will always request test ads.
@@ -226,6 +235,28 @@ The test device identifier for the current device is logged to the console when 
 ```c#
 CAS.MobileAds.settings.SetTestDeviceIds(testDeviceIds);
 ```
+
+#### Allow Interstitial Ads When Video Cost Are Lower
+This option will compare ad cost and serve regular interstitial ads when rewarded video ads are expected to generate less revenue.  
+Interstitial Ads does not require to watch the video to the end, but the OnRewardedAdCompleted callback will be triggered in any case.  
+
+Change the flag at any time using the following method:
+```c#
+CAS.MobileAds.settings.allowInterstitialAdsWhenVideoCostAreLower = allow;
+```
+Disabled by default.  
+
+#### Last Page Ad
+The latest free ad page for your own promotion.  
+This ad page will be displayed when there is no paid ad to show or internet availability.  
+
+**Attention!** Impressions and clicks on this ad page don't make money.  
+
+Change the `LastPageAdContent` at any time using the following method:
+```c#
+CAS.MobileAds.manager.lastPageAdContent = new LastPageAdContent(...);
+```
+By default, this page will not be displayed while the ad content is NULL.  
 
 #### iOS Location Usage Description
 **Property for iOS only.**  
@@ -250,6 +281,7 @@ Indicates if the Unity app should be automatically paused when a full screen ad 
 ```c#
 CAS.MobileAds.settings.iOSAppPauseOnBackground = pause;
 ```
+Enabled by default.
 
 ## Step 3 Privacy Laws
 This documentation is provided for compliance with various privacy laws. If you are collecting consent from your users, you can make use of APIs discussed below to inform CAS and all downstream consumers of this information.  
@@ -457,12 +489,22 @@ The Clever Ads Solutions Unity plugin is distributed with the [EDM4U](https://gi
 Using [EDM4U](https://github.com/googlesamples/unity-jar-resolver), you will be able to avoid downloading the Android artifacts into your project. Instead, the artifacts will be added to your gradle file during the compilation. 
 To enable this process, follow these steps: 
 1. Go to: `Player Settings > Publishing Settings > Build`
-2. Select `Custom Gradle Template`
+2. Select `Custom Main Gradle Template` checkmark
 3. Go to: `Assets > External Dependency Manager > Android > Settings`  
-4. Select `Patch mainTemplate.gradle`
+4. Select `Patch mainTemplate.gradle` checkmark
+4. Select `Use Jetfier` checkmark
 5. Save your changes, by pressing `OK`
 
 In the Unity editor, select `Assets > External Dependency Manager > Android Resolver > Resolve`. The Unity External Dependency Manager library will append dependencies to `mainTemplate.gradle` of your Unity app.
+
+#### Support of Unity 2019.3+ 
+Since Unity 2019.3+ the Gradle build system has been redesigned and this requires some additional steps:  
+1. Go to: `Player Settings > Publishing Settings > Build`  
+2. Select `Custom Launcher Gradle Template` checkmark to enable MultiDEX.  
+> You can read more about MuliDex on the [Android Deleveloper page](https://developer.android.com/studio/build/multidex).  
+3. Select `Custom Base Gradle Template` checkmark to update Gradle plugin with fix support Android 11.  
+> You can read more about fix Gradle plugin with support Android 11 on the [Android Deleveloper page](https://android-developers.googleblog.com/2020/07/preparing-your-build-for-package-visibility-in-android-11.html).  
+4. Select `Custom Gradle Properties Template` to use Jetfier by EDM4U.  
 
 #### Update AndroidManifest Permissions
 Add the following permissions to your `Assets/Plugins/Android/AndroidManifest.xml` file inside the `manifest` tag but outside the tag `application`:
@@ -490,7 +532,8 @@ Add the following permissions to your `Assets/Plugins/Android/AndroidManifest.xm
     ...
 </manifest>
 ```
-If you do not find the manifest file [Plugins/Android/AndroidManifest.xml](#todo), you can take it from the example.
+If you do not find the manifest file [Plugins/Android/AndroidManifest.xml](#todo), you can take it from the example.  
+Or Unity 2019.3+ makes it possible to activate in `Player Settings > Publishing Settings > Build > Custom Main Manifest` checkmark.  
 
 Some SDK may require a default permission, so please use the following lines to limit it.
 ```xml

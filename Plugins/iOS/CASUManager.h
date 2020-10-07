@@ -6,31 +6,37 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <CoreGraphics/CoreGraphics.h>
 #import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
 #import "CASUCallback.h"
 
 @interface CASUManager : NSObject<CASLoadDelegate>
 
-- (id)initWithAppID:(NSString *)appID
-             enable:(NSUInteger)types
-             demoAd:(BOOL)demoAd
-          forClient:(CASUTypeManagerClientRef *)client
-             onInit:(nullable CASUInitializationCompleteCallback)onInit;
+- (id _Nonnull)initWithAppID:(NSString *_Nullable)appID
+                      enable:(NSUInteger)types
+                      demoAd:(BOOL)demoAd
+                   forClient:(CASUTypeManagerClientRef _Nullable *_Nullable)client
+                      onInit:(nullable CASUInitializationCompleteCallback)onInit;
 
 @property (nonatomic, strong, nonnull) CASMediationManager *mediationManager;
 @property (nonatomic, strong, nonnull) CASBannerView *bannerView;
+@property (nonatomic, strong, nonnull) CASSize *bannerActiveSize;
 
 @property (nonatomic, strong, nullable) CASUCallback *bannerCallback;
 @property (nonatomic, strong, nullable) CASUCallback *interstitialCallback;
 @property (nonatomic, strong, nullable) CASUCallback *rewardedCallback;
 
-@property (nonatomic, assign) CASUTypeManagerClientRef *client;
+@property (nonatomic, assign) CASUTypeManagerClientRef _Nullable *_Nullable client;
 @property (nonatomic, assign, nullable) CASUDidAdLoadedCallback didAdLoadedCallback;
 @property (nonatomic, assign, nullable) CASUDidAdFailedToLoadCallback didAdFailedToLoadCallback;
+
+@property (nonatomic, readonly) CGFloat bannerHeightInPixels;
+@property (nonatomic, readonly) CGFloat bannerWidthInPixels;
 
 - (void)load:(CASType)type;
 - (void)show:(CASType)type;
 - (void)hideBanner;
 - (void)setBannerSize:(NSInteger)sizeId;
 - (void)setBannerPosition:(NSInteger)positionId;
+- (void)setLastPageAdFor:(NSString *_Nullable)content;
 @end
