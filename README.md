@@ -8,7 +8,7 @@ The Clever Ads Solutions Unity plugin enables Unity developers to easily serve M
 
 ## Requirements
 ### Unity
-- Unity Editor version: 2017.4, 2018.4, 2019, 2020.1,
+- Unity Editor version: 2017.4, 2018.4, 2019, 2020.1  
 > You can try any version you want, however, non-recommended versions can lead to unexpected errors.
 ### Android
 - Android version 4.4 (API level 19) and up
@@ -71,17 +71,21 @@ Modify `Packages/manifest.json`  to the following form:
 2. In your open Unity project, navigate to **Assets > Import Package > Custom Package**.
 3. In the *Import Unity Package* window, make sure all of the files are selected and click **Import**.
 
+## CAS Unity Demo App
+The Integration Demo application demonstrate how to integrate the CAS in your app.  
+[Repository Unity Sample Application](https://github.com/cleveradssolutions/CAS-Unity-Sample)
+
 ## Step 2 Configuring CAS SDK
 In your open Unity project, navigate to **Assets > CleverAdsSolutions > Settings** to create and modify build settings.
 
-#### Test Ad Mode  
+### Test Ad Mode  
 The quickest way to testing is to enable Test Ad Mode. These ad are not associated with your account, so there's no risk of your account generating invalid traffic when using these ad units.
 
-#### Manager Ids  
+### Manager Ids  
 Add your Clever Ads Solutions manager Id's.
 > If you haven't created an CAS account and registered an manager yet,  now's a great time to do so at [cleveradssolutions.com](https://cleveradssolutions.com). If you're just looking to experiment with the SDK, though, you can use the Test Ad Mode above.  
 
-#### Allowed ads types in app
+### Allowed ads types in app
 To improve the performance of your application, we recommend that you only allow ad types that will actually be used in the application. For example: Banner and Interstitial ad.  
 
 The processes of ad types can be disabled/enabled at any time using following method:
@@ -89,12 +93,12 @@ The processes of ad types can be disabled/enabled at any time using following me
 CAS.MobileAds.manager.SetEnableAd(adType, enabled);
 ```
 
-#### Audience Tagged
+### Audience Tagged
 Choose the audience your game is targeting.   
 In addition to targeting ads, on Google Play has restrictions games participate in the family apps program. These games can only serve ads from certified ad networks. [More about Families Ads Program](https://support.google.com/googleplay/android-developer/answer/9283445).  
 Changing this setting will change the project dependencies. Please follow the instructions provided in the settings window.
 
-#### Banner Size
+### Banner Size
 Select the banner size to initialize.  
 
 | Size in dp (WxH) |      Description     |    Availability    |  CASSize constant |
@@ -125,7 +129,7 @@ float height = CAS.MobileAds.manager.GetBannerHeightInPixels();
 float width = CAS.MobileAds.manager.GetBannerWidthInPixels();
 ```
 
-#### Banner Refresh rate
+### Banner Refresh rate
 An ad unit’s automatic refresh rate (in seconds) determines how often a new ad request is generated for that ad unit.  
 > Ad requests should not be made when the device screen is turned off.  
 We recomended using refresh rate 30 seconds. However, you can choose any value you want longer than 10 seconds.  
@@ -135,7 +139,7 @@ Change the banner automatic refresh rate using the following method:
 CAS.MobileAds.settings.bannerRefreshInterval = refreshInterval;
 ```
 
-#### Interstitial impression interval
+### Interstitial impression interval
 You can limit the posting of an interstitial ad to a period of time in seconds after the ad is closed, during which display attempts will fail.
 
 Change the interstitial ad impression interval using the following method:
@@ -160,7 +164,7 @@ void OnRewardedAdClosed(){
 
 > During interval after ad closed display attempts will fire event `OnInterstitialAdFailedToShow`.
 
-#### Loading mode
+### Loading mode
 Select CAS mediation processing mode of ad requests.
 |        Mode        |  Load*  | Impact on App performance | Memory usage |        Actual ads*       |
 |:------------------:|:------:|:-------------------------:|:------------:|:------------------------:|
@@ -182,7 +186,7 @@ Change the Clever Ads Solution processing mode using the following method:
 CAS.MobileAds.settings.loadingMode = mode;
 ```
 
-#### Debug mode
+### Debug mode
 The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdc with tag `CAS`.  
 Disabling Debug Mode may improve application performance.  
 
@@ -192,14 +196,14 @@ CAS.MobileAds.settings.isDebugMode = enabled;
 ```
 Disabled by default.
 
-#### Cross Promotion enabled
+### Cross Promotion enabled
 Cross promotion is an app marketing strategy in which app developers promote one of their titles on another one of their titles. Cross promoting is especially effective for developers with large portfolios of games as a means to move users across titles and use the opportunity to scale each of their apps. This is most commonly used by hyper-casual publishers who have relatively low retention, and use cross promotion to keep users within their app portfolio.  
 
 Start your cross promotion campaign with CAS [here](https://cleveradssolutions.com).
 
 > Changing this flag will change the project dependencies. Please use **Assets > External Dependency Manager > Android Resolver > Resolve** after the change.  
 
-#### Analytics Collection
+### Analytics Collection
 If your application uses Google Analytics (Firebase) then Clever Ads Solutions collects ad impressions and states analytics.  
 **This flag has no effect on ad revenue.**  
 Disabling analytics collection may save internet traffic and improve application performance.  
@@ -210,14 +214,14 @@ CAS.MobileAds.settings.analyticsCollectionEnabled = enabled;
 ```
 Disabled by default.  
 
-#### Muted Ads Sounds
+### Muted Ads Sounds
 Sounds in ads mute state.  
 ```c#
 CAS.MobileAds.settings.isMutedAdSounds = mute;
 ```
 Disabled by default.  
 
-#### Execute Events On Unity Thread
+### Execute Events On Unity Thread
 Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
 You can use EventExecutor to schedule each calls on the next `Update()` loop:
 ```c#
@@ -229,14 +233,14 @@ CAS.MobileAds.settings.isExecuteEventsOnUnityThread = enable;
 ```
 Disabled by default.  
 
-#### Test Device Ids
+### Test Device Ids
 Identifiers corresponding to test devices which will always request test ads.
 The test device identifier for the current device is logged to the console when the first ad request is made.
 ```c#
 CAS.MobileAds.settings.SetTestDeviceIds(testDeviceIds);
 ```
 
-#### Allow Interstitial Ads When Video Cost Are Lower
+### Allow Interstitial Ads When Video Cost Are Lower
 This option will compare ad cost and serve regular interstitial ads when rewarded video ads are expected to generate less revenue.  
 Interstitial Ads does not require to watch the video to the end, but the OnRewardedAdCompleted callback will be triggered in any case.  
 
@@ -246,7 +250,7 @@ CAS.MobileAds.settings.allowInterstitialAdsWhenVideoCostAreLower = allow;
 ```
 Disabled by default.  
 
-#### Last Page Ad
+### Last Page Ad
 The latest free ad page for your own promotion.  
 This ad page will be displayed when there is no paid ad to show or internet availability.  
 
@@ -258,7 +262,7 @@ CAS.MobileAds.manager.lastPageAdContent = new LastPageAdContent(...);
 ```
 By default, this page will not be displayed while the ad content is NULL.  
 
-#### iOS Location Usage Description
+### iOS Location Usage Description
 **Property for iOS only.**  
 iOS 14 and above requires publishers to obtain permission to track the user's device across applications.  
 To display the App Tracking Transparency authorization request for accessing the IDFA, update your Info.plist to add the NSUserTrackingUsageDescription key with a custom message describing your usage.  
@@ -275,7 +279,7 @@ For more information, see [Apple's developer documentation](https://developer.ap
 
 > **Important!** CAS does not provide legal advice. Therefore, the information on this page is not a substitute for seeking your own legal counsel to determine the legal requirements of your business and processes, and how to address them.
 
-#### iOS App Pause On Background
+### iOS App Pause On Background
 **Property for iOS only.**  
 Indicates if the Unity app should be automatically paused when a full screen ad (Interstitial or Rewarded video ad) is displayed.
 ```c#
@@ -532,7 +536,7 @@ Add the following permissions to your `Assets/Plugins/Android/AndroidManifest.xm
     ...
 </manifest>
 ```
-If you do not find the manifest file [Plugins/Android/AndroidManifest.xml](#todo), you can take it from the example.  
+If you do not find the manifest file [Plugins/Android/AndroidManifest.xml](https://github.com/cleveradssolutions/CAS-Unity-Sample/blob/master/Assets/Plugins/Android/AndroidManifest.xml), you can take it from the example.  
 Or Unity 2019.3+ makes it possible to activate in `Player Settings > Publishing Settings > Build > Custom Main Manifest` checkmark.  
 
 Some SDK may require a default permission, so please use the following lines to limit it.
