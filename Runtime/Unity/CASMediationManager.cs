@@ -16,11 +16,27 @@ namespace CAS.Unity
         private InitCompleteAction initCompleteAction;
         private AdPosition _bannerPosition = AdPosition.Undefined;
         private AdSize _bannerSize = AdSize.Banner;
+        private LastPageAdContent _lastPageAdContent;
 
         public string managerID { get { return "Dummy"; } }
         public bool isTestAdMode { get { return true; } }
-        public LastPageAdContent lastPageAdContent { get; set; }
-
+        public LastPageAdContent lastPageAdContent
+        {
+            get { return _lastPageAdContent; }
+            set
+            {
+                _lastPageAdContent = value;
+                if (value == null)
+                    Debug.Log( "CAS Last Page Ad content cleared" );
+                else
+                    Debug.Log( "CAS Last Page Ad apply content:" +
+                        "\n- Headline:" + value.headline +
+                        "\n- DestinationURL:" + value.destinationURL +
+                        "\n- ImageURL:" + value.imageURL +
+                        "\n- IconURL:" + value.iconURL +
+                        "\n- AdText:" + value.adText );
+            }
+        }
         public AdSize bannerSize
         {
             get { return _bannerSize; }
