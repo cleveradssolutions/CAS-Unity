@@ -49,19 +49,19 @@ Add the **Game Package Registry by Google**  and CAS dependency to your Unity pr
 Modify `Packages/manifest.json`  to the following form:
 ```json
 {
-    "scopedRegistries": [
-      {
-        "name": "Game Package Registry by Google",
-        "url": "https://unityregistry-pa.googleapis.com",
-        "scopes": [
-          "com.google"
-        ]
-      }
-    ],
-    "dependencies": {
-        "com.cleversolutions.ads.unity" : "https://github.com/cleveradssolutions/CAS-Unity.git#1.6.0",
-        Other dependencies
-    }
+"scopedRegistries": [
+  {
+    "name": "Game Package Registry by Google",
+    "url": "https://unityregistry-pa.googleapis.com",
+    "scopes": [
+      "com.google"
+    ]
+  }
+],
+"dependencies": {
+    "com.cleversolutions.ads.unity" : "https://github.com/cleveradssolutions/CAS-Unity.git#1.6.1",
+    "Other" : "dependencies"
+}
 }
 ```
 > Note that some other SDKs, such as the Firebase SDK, may contain [EDM4U](https://github.com/googlesamples/unity-jar-resolver) in their .unitypackage. Check if `Assets/ExternalDependencyManager` or `Assets/PlayServicesResolver` folders exist. If these folders exist, remove them before installing any CAS SDK through Unity Package Manager.
