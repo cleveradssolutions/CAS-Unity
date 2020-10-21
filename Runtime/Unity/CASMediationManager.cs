@@ -30,11 +30,11 @@ namespace CAS.Unity
                     Debug.Log( "CAS Last Page Ad content cleared" );
                 else
                     Debug.Log( "CAS Last Page Ad apply content:" +
-                        "\n- Headline:" + value.headline +
-                        "\n- DestinationURL:" + value.destinationURL +
-                        "\n- ImageURL:" + value.imageURL +
-                        "\n- IconURL:" + value.iconURL +
-                        "\n- AdText:" + value.adText );
+                        "\n- Headline:" + value.Headline +
+                        "\n- DestinationURL:" + value.DestinationURL +
+                        "\n- ImageURL:" + value.ImageURL +
+                        "\n- IconURL:" + value.IconURL +
+                        "\n- AdText:" + value.AdText );
             }
         }
         public AdSize bannerSize

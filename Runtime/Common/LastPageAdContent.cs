@@ -7,15 +7,15 @@ namespace CAS
     public class LastPageAdContent
     {
         [SerializeField]
-        private string _headline;
+        private string headline = string.Empty;
         [SerializeField]
-        private string _adText;
+        private string adText = string.Empty;
         [SerializeField]
-        private string _destinationURL;
+        private string destinationURL = string.Empty;
         [SerializeField]
-        private string _imageURL;
+        private string imageURL = string.Empty;
         [SerializeField]
-        private string _iconURL;
+        private string iconURL = string.Empty;
 
         /// <summary>
         /// The latest free ad page for your own promotion.
@@ -31,17 +31,17 @@ namespace CAS
         /// <param name="iconURL">Enter the direct URL of the icon or logo (Small square picture). Optional property.</param>
         public LastPageAdContent( string headline, string adText, string destinationURL, string imageURL, string iconURL )
         {
-            _headline = headline;
-            _adText = adText;
-            _destinationURL = destinationURL;
-            _imageURL = imageURL;
-            _iconURL = iconURL;
+            this.headline = headline;
+            this.adText = adText;
+            this.destinationURL = destinationURL;
+            this.imageURL = imageURL;
+            this.iconURL = iconURL;
         }
 
-        public string headline { get { return _headline; } }
-        public string adText { get { return _adText; } }
-        public string destinationURL { get { return _destinationURL; } }
-        public string imageURL { get { return _imageURL; } }
-        public string iconURL { get { return _iconURL; } }
+        public string Headline { get { return headline; } }
+        public string AdText { get { return adText; } }
+        public string DestinationURL { get { return destinationURL; } }
+        public string ImageURL { get { return imageURL; } }
+        public string IconURL { get { return iconURL; } }
     }
 }

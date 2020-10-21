@@ -19,7 +19,7 @@
                       onInit:(nullable CASUInitializationCompleteCallback)onInit;
 
 @property (nonatomic, strong, nonnull) CASMediationManager *mediationManager;
-@property (nonatomic, strong, nonnull) CASBannerView *bannerView;
+@property (nonatomic, strong, nullable) CASBannerView *bannerView;
 @property (nonatomic, strong, nonnull) CASSize *bannerActiveSize;
 
 @property (nonatomic, strong, nullable) CASUCallback *bannerCallback;

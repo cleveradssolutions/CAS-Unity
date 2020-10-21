@@ -14,7 +14,7 @@
 
 @implementation CASUManager
 {
-    BOOL bannerAttached;
+    NSInteger bannerPositionId;
 }
 
 - (id)initWithAppID:(NSString *)appID
@@ -24,12 +24,12 @@
              onInit:(CASUInitializationCompleteCallback)onInit {
     self = [super init];
     if (self) {
-        bannerAttached = NO;
         self.client = client;
-        self.mediationManager = [CAS createWithManagerID:appID
-                                             enableTypes:types
-                                              demoAdMode:demoAd
-                                                  onInit:^(BOOL succses, NSString *_Nullable error) {
+        self.mediationManager =
+            [CAS createWithManagerID:appID
+                         enableTypes:types
+                          demoAdMode:demoAd
+                              onInit:^(BOOL succses, NSString *_Nullable error) {
             if (onInit) {
                 if (error) {
                     onInit(client, succses, [error cStringUsingEncoding:NSUTF8StringEncoding]);
@@ -39,9 +39,6 @@
             }
         }];
 
-        self.bannerView = [[CASBannerView alloc] initWithManager:_mediationManager];
-        self.bannerView.translatesAutoresizingMaskIntoConstraints = NO;
-        self.bannerView.rootViewController = [self unityGLViewController];
         self.bannerCallback = [[CASUCallback alloc] initForFullScreen:NO];
         self.bannerCallback.client = client;
         self.interstitialCallback = [[CASUCallback alloc] initForFullScreen:YES];
@@ -58,7 +55,11 @@
 - (void)load:(CASType)type {
     switch (type) {
         case CASTypeBanner:
-            [_bannerView loadNextAd];
+            if (!self.bannerView) {
+                [self createBannerView];
+                [self.bannerView setHidden:YES];
+            }
+            [self.bannerView loadNextAd];
             break;
         case CASTypeInterstitial:
             [_mediationManager loadInterstitial];
@@ -74,23 +75,12 @@
 - (void)show:(CASType)type {
     switch (type) {
         case CASTypeBanner:
-            if (bannerAttached) {
-                _bannerView.hidden = NO;
+            if (self.bannerView) {
+                [self.bannerView setHidden:NO];
             } else {
-                [_bannerView removeFromSuperview];
-
-                /// Align the bannerView in the Unity view bounds.
-                UIView *unityView = [self unityGLViewController].view;
-
-                [unityView addSubview:self.bannerView];
-                _bannerView.hidden = NO;
-                bannerAttached = YES;
+                [self createBannerView];
             }
-            if (self.bannerView.adPostion == CASPositionUndefined) {
-                [self setBannerPosition:CASPositionBottomCenter];
-            } else {
-                [self setBannerPosition:self.bannerView.adPostion];
-            }
+            [self setBannerPosition:bannerPositionId];
             break;
         case CASTypeInterstitial:
             [_mediationManager showFromRootViewController:[self unityGLViewController]
@@ -105,9 +95,19 @@
     }
 }
 
+- (void)createBannerView {
+    /// Align the bannerView in the Unity view bounds.
+    UIViewController *unityController = [self unityGLViewController];
+    UIView *unityView = unityController.view;
+    self.bannerView = [[CASBannerView alloc] initWithManager:_mediationManager];
+    self.bannerView.translatesAutoresizingMaskIntoConstraints = NO;
+    self.bannerView.rootViewController = unityController;
+    [unityView addSubview:self.bannerView];
+}
+
 - (void)hideBanner {
-    if (bannerAttached) {
-        _bannerView.hidden = YES;
+    if (self.bannerView) {
+        [self.bannerView setHidden:YES];
     }
 }
 
@@ -135,7 +135,7 @@
     }
     if (self.bannerActiveSize.height != targetSize.height || self.bannerActiveSize.width != targetSize.width) {
         self.bannerActiveSize = targetSize;
-        [_mediationManager setBannerWithSize:targetSize];
+        [_mediationManager setBannerSize:targetSize];
     }
 }
 
@@ -148,9 +148,10 @@
 }
 
 - (void)setBannerPosition:(NSInteger)positionId {
-    CASPosition newPos = (CASPosition)positionId;
-    self.bannerView.adPostion = newPos;
-
+    bannerPositionId = positionId;
+    if (!self.bannerView) {
+        return;
+    }
     UIView *unityView = self.bannerView.superview;
     if (unityView) {
         for (NSLayoutConstraint *constraint in unityView.constraints) {
@@ -160,8 +161,8 @@
             }
         }
 
-        switch (newPos) {
-            case CASPositionTopCenter:
+        switch (positionId) {
+            case 0:
                 if (@available(iOS 11, *)) {
                     [self addVerticalConstraintsFor:_bannerView.topAnchor
                                                  to:unityView.safeAreaLayoutGuide.topAnchor];
@@ -174,7 +175,7 @@
                                                    to:unityView.centerXAnchor];
                 }
                 break;
-            case CASPositionTopLeft:
+            case 1:
                 if (@available(iOS 11, *)) {
                     [self addVerticalConstraintsFor:_bannerView.topAnchor
                                                  to:unityView.safeAreaLayoutGuide.topAnchor];
@@ -187,7 +188,7 @@
                                                    to:unityView.leftAnchor];
                 }
                 break;
-            case CASPositionTopRight:
+            case 2:
                 if (@available(iOS 11, *)) {
                     [self addVerticalConstraintsFor:_bannerView.topAnchor
                                                  to:unityView.safeAreaLayoutGuide.topAnchor];
@@ -200,7 +201,7 @@
                                                    to:unityView.rightAnchor];
                 }
                 break;
-            case CASPositionBottomLeft:
+            case 4:
                 if (@available(iOS 11, *)) {
                     [self addVerticalConstraintsFor:_bannerView.bottomAnchor to:unityView.safeAreaLayoutGuide.bottomAnchor];
                     [self addHorizontalConstraintsFor:_bannerView.leftAnchor
@@ -212,7 +213,7 @@
                                                    to:unityView.leftAnchor];
                 }
                 break;
-            case CASPositionBottomRight:
+            case 5:
                 if (@available(iOS 11, *)) {
                     [self addVerticalConstraintsFor:_bannerView.bottomAnchor
                                                  to:unityView.safeAreaLayoutGuide.bottomAnchor];

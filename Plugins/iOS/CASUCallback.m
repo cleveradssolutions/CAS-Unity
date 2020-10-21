@@ -76,20 +76,18 @@
 
 - (void)didClosedAd {
     // didClosedAd is called from CAS internal thread
-    dispatch_async(dispatch_get_main_queue(), ^{
 #if __has_include("UnityInterface.h")
-        if (fullScreenAd) {
-            if (UnityIsPaused()) {
-                UnityPause(NO);
-            }
+    if (fullScreenAd) {
+        if (UnityIsPaused()) {
+            UnityPause(NO);
         }
+    }
 #endif
-        if (self.didClosedCallback) {
-            if (self.client) {
-                self.didClosedCallback(self.client);
-            }
+    if (self.didClosedCallback) {
+        if (self.client) {
+            self.didClosedCallback(self.client);
         }
-    });
+    }
 }
 
 - (void)log:(NSString *)eventName:(NSDictionary<NSString *, id> *)map {
