@@ -86,7 +86,7 @@ namespace CAS.UEditor
                 if (settings.managerIds == null || settings.managerIds.Length == 0 || string.IsNullOrEmpty( settings.managerIds[0] ))
                     StopBuildIDNotFound( target );
 
-                admobAppId = DownloadRemoteSettings( settings.managerIds[0], "US", target );
+                admobAppId = Utils.DownloadRemoteSettings( settings.managerIds[0], Utils.preferredCountry, target );
             }
 
             if (string.IsNullOrEmpty( admobAppId ))
@@ -517,66 +517,6 @@ namespace CAS.UEditor
             Debug.LogWarning( Utils.logTag + "AndroidManifest.xml is not valid. Created new file by template." );
             AssetDatabase.DeleteAsset( Utils.androidLibManifestPath );
             SetAdmobAppIdToAndroidManifest( admobAppId, true );
-        }
-
-        public static string DownloadRemoteSettings( string managerID, string country, BuildTarget platform )
-        {
-            string title = "Download CAS settings for " + platform.ToString();
-            string url = Utils.BuildRemoteUrl( managerID, country, platform );
-            string message = null;
-
-            using (var loader = UnityWebRequest.Get( url ))
-            {
-                loader.SendWebRequest();
-                while (!loader.isDone)
-                {
-                    if (EditorUtility.DisplayCancelableProgressBar( casTitle, title,
-                        Mathf.Repeat( ( float )EditorApplication.timeSinceStartup, 1.0f ) ))
-                    {
-                        loader.Dispose();
-                        message = "Update CAS Settings canceled";
-                        break;
-                    }
-                }
-                EditorUtility.ClearProgressBar();
-
-                if (message == null)
-                {
-                    if (string.IsNullOrEmpty( loader.error ))
-                    {
-                        EditorUtility.DisplayProgressBar( casTitle, "Write CAS settings", 0.7f );
-                        var content = loader.downloadHandler.text.Trim();
-                        if (string.IsNullOrEmpty( content ))
-                            Utils.StopBuildWithMessage( "Server have no settings for " + managerID +
-                                " Please try using a different identifier in the first place or contact support." +
-                                " To test build please use Test Ad Mode in settings.", platform );
-
-                        return ApplySettingsContent( content, platform );
-                    }
-                    else
-                    {
-                        message = "Server response " + loader.responseCode + ": " + loader.error;
-                    }
-                }
-            }
-            if (EditorUtility.DisplayDialog( casTitle, message, "Select settings file", "Cancel Build" ))
-            {
-                var filePath = EditorUtility.OpenFilePanelWithFilters(
-                    "Select CAS Settings file for build", "", new[] { "json" } );
-                if (!string.IsNullOrEmpty( filePath ))
-                    return ApplySettingsContent( File.ReadAllText( filePath ), platform );
-            }
-            Utils.StopBuildWithMessage( message, BuildTarget.NoTarget );
-            return null;
-        }
-
-        private static string ApplySettingsContent( string content, BuildTarget target )
-        {
-            if (target == BuildTarget.Android)
-                Utils.WriteToFile( content, Utils.androidResSettingsPath );
-            else
-                Utils.WriteToFile( content, Utils.iosResSettingsPath );
-            return Utils.GetAdmobAppIdFromJson( content );
         }
 
         private static void DialogOrCancel( string message, BuildTarget target, string btn = "Continue" )

@@ -44,8 +44,11 @@ namespace CAS.UEditor
         public const string mainGradlePath = "Assets/Plugins/Android/mainTemplate.gradle";
         public const string launcherGradlePath = "Assets/Plugins/Android/launcherTemplate.gradle";
         public const string projectGradlePath = "Assets/Plugins/Android/baseProjectTemplate.gradle";
+        public const string packageManifestPath = "Packages/manifest.json";
 
         private const string locationUsageDefaultDescription = "Your data will be used to provide you a better and personalized ad experience.";
+
+        public const string preferredCountry = "BR"; // ISO2: US, RU ...
         #endregion
 
         [Serializable]
@@ -70,13 +73,11 @@ namespace CAS.UEditor
 
         public static bool IsFirebaseServiceExist( string service )
         {
-            //analytics
             if (AssetDatabase.FindAssets( "Firebase." + service ).Length > 0)
                 return true;
 
-            const string packageManifest = "Packages/manifest.json";
-            return File.Exists( packageManifest ) && File.ReadAllText( packageManifest )
-                .Contains( "com.google.firebase." + service );
+            return File.Exists( packageManifestPath ) &&
+                File.ReadAllText( packageManifestPath ).Contains( "com.google.firebase." + service );
         }
 
         public static void OpenSettingsWindow( BuildTarget target )
@@ -261,6 +262,66 @@ namespace CAS.UEditor
             for (int i = 0; i < hashBytes.Length; i++)
                 hashString.Append( Convert.ToString( hashBytes[i], 16 ).PadLeft( 2, '0' ) );
             return hashString.ToString().PadLeft( 32, '0' );
+        }
+
+        public static string DownloadRemoteSettings( string managerID, string country, BuildTarget platform )
+        {
+            const string title = "Update CAS remote settings";
+            string url = BuildRemoteUrl( managerID, country, platform );
+            string message = null;
+
+            using (var loader = UnityWebRequest.Get( url ))
+            {
+                loader.SendWebRequest();
+                while (!loader.isDone)
+                {
+                    if (EditorUtility.DisplayCancelableProgressBar( title, title,
+                        Mathf.Repeat( ( float )EditorApplication.timeSinceStartup, 1.0f ) ))
+                    {
+                        loader.Dispose();
+                        message = "Update CAS Settings canceled";
+                        break;
+                    }
+                }
+                EditorUtility.ClearProgressBar();
+
+                if (message == null)
+                {
+                    if (string.IsNullOrEmpty( loader.error ))
+                    {
+                        EditorUtility.DisplayProgressBar( title, "Write CAS settings", 0.7f );
+                        var content = loader.downloadHandler.text.Trim();
+                        if (string.IsNullOrEmpty( content ))
+                            StopBuildWithMessage( "Server have no settings for " + managerID +
+                                " Please try using a different identifier in the first place or contact support." +
+                                " To test build please use Test Ad Mode in settings.", platform );
+
+                        return ApplySettingsContent( content, platform );
+                    }
+                    else
+                    {
+                        message = "Server response " + loader.responseCode + ": " + loader.error;
+                    }
+                }
+            }
+            if (EditorUtility.DisplayDialog( title, message, "Select settings file", "Cancel Build" ))
+            {
+                var filePath = EditorUtility.OpenFilePanelWithFilters(
+                    "Select CAS Settings file for build", "", new[] { "json" } );
+                if (!string.IsNullOrEmpty( filePath ))
+                    return ApplySettingsContent( File.ReadAllText( filePath ), platform );
+            }
+            StopBuildWithMessage( message, BuildTarget.NoTarget );
+            return null;
+        }
+
+        public static string ApplySettingsContent( string content, BuildTarget target )
+        {
+            if (target == BuildTarget.Android)
+                WriteToFile( content, androidResSettingsPath );
+            else
+                WriteToFile( content, iosResSettingsPath );
+            return GetAdmobAppIdFromJson( content );
         }
     }
 }
