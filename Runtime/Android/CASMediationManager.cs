@@ -6,99 +6,98 @@ namespace CAS.Android
 {
     internal class CASMediationManager : IMediationManager
     {
-        private AdCallbackProxy bannerProxy;
-        private AdCallbackProxy interstitialProxy;
-        private AdCallbackProxy rewardedProxy;
-        private AdLoadCallbackProxy adLoadProxy;
-        public InitializationListenerProxy initializationListener;
-
-        private AndroidJavaObject managerBridge;
+        private AdCallbackProxy _bannerProxy;
+        private AdCallbackProxy _interstitialProxy;
+        private AdCallbackProxy _rewardedProxy;
+        private AdLoadCallbackProxy _adLoadProxy;
+        private AndroidJavaObject _managerBridge;
 
         private AdSize _bannerSize = AdSize.Banner;
-        private AdPosition _bannerPosition = AdPosition.Undefined;
+        private AdPosition _bannerPosition = AdPosition.BottomCenter;
         private LastPageAdContent _lastPageAdContent = null;
 
+        public InitializationListenerProxy initializationListener;
         public string managerID { get; }
         public bool isTestAdMode { get; }
 
         #region Ad Events
         public event CASTypedEvent OnLoadedAd
         {
-            add { adLoadProxy.OnLoadedAd += value; }
-            remove { adLoadProxy.OnLoadedAd -= value; }
+            add { _adLoadProxy.OnLoadedAd += value; }
+            remove { _adLoadProxy.OnLoadedAd -= value; }
         }
         public event CASTypedEventWithError OnFailedToLoadAd
         {
-            add { adLoadProxy.OnFailedToLoadAd += value; }
-            remove { adLoadProxy.OnFailedToLoadAd -= value; }
+            add { _adLoadProxy.OnFailedToLoadAd += value; }
+            remove { _adLoadProxy.OnFailedToLoadAd -= value; }
         }
 
         public event Action OnBannerAdShown
         {
-            add { bannerProxy.OnAdShown += value; }
-            remove { bannerProxy.OnAdShown -= value; }
+            add { _bannerProxy.OnAdShown += value; }
+            remove { _bannerProxy.OnAdShown -= value; }
         }
         public event CASEventWithError OnBannerAdFailedToShow
         {
-            add { bannerProxy.OnAdFailedToShow += value; }
-            remove { bannerProxy.OnAdFailedToShow -= value; }
+            add { _bannerProxy.OnAdFailedToShow += value; }
+            remove { _bannerProxy.OnAdFailedToShow -= value; }
         }
         public event Action OnBannerAdClicked
         {
-            add { bannerProxy.OnAdClicked += value; }
-            remove { bannerProxy.OnAdClicked -= value; }
+            add { _bannerProxy.OnAdClicked += value; }
+            remove { _bannerProxy.OnAdClicked -= value; }
         }
         public event Action OnBannerAdHidden
         {
-            add { bannerProxy.OnAdClosed += value; }
-            remove { bannerProxy.OnAdClosed -= value; }
+            add { _bannerProxy.OnAdClosed += value; }
+            remove { _bannerProxy.OnAdClosed -= value; }
         }
 
         public event Action OnInterstitialAdShown
         {
-            add { interstitialProxy.OnAdShown += value; }
-            remove { interstitialProxy.OnAdShown -= value; }
+            add { _interstitialProxy.OnAdShown += value; }
+            remove { _interstitialProxy.OnAdShown -= value; }
         }
         public event CASEventWithError OnInterstitialAdFailedToShow
         {
-            add { interstitialProxy.OnAdFailedToShow += value; }
-            remove { interstitialProxy.OnAdFailedToShow -= value; }
+            add { _interstitialProxy.OnAdFailedToShow += value; }
+            remove { _interstitialProxy.OnAdFailedToShow -= value; }
         }
         public event Action OnInterstitialAdClicked
         {
-            add { interstitialProxy.OnAdClicked += value; }
-            remove { interstitialProxy.OnAdClicked -= value; }
+            add { _interstitialProxy.OnAdClicked += value; }
+            remove { _interstitialProxy.OnAdClicked -= value; }
         }
         public event Action OnInterstitialAdClosed
         {
-            add { interstitialProxy.OnAdClosed += value; }
-            remove { interstitialProxy.OnAdClosed -= value; }
+            add { _interstitialProxy.OnAdClosed += value; }
+            remove { _interstitialProxy.OnAdClosed -= value; }
         }
 
         public event Action OnRewardedAdShown
         {
-            add { rewardedProxy.OnAdShown += value; }
-            remove { rewardedProxy.OnAdShown -= value; }
+            add { _rewardedProxy.OnAdShown += value; }
+            remove { _rewardedProxy.OnAdShown -= value; }
         }
         public event CASEventWithError OnRewardedAdFailedToShow
         {
-            add { rewardedProxy.OnAdFailedToShow += value; }
-            remove { rewardedProxy.OnAdFailedToShow -= value; }
+            add { _rewardedProxy.OnAdFailedToShow += value; }
+            remove { _rewardedProxy.OnAdFailedToShow -= value; }
         }
         public event Action OnRewardedAdClicked
         {
-            add { rewardedProxy.OnAdClicked += value; }
-            remove { rewardedProxy.OnAdClicked -= value; }
+            add { _rewardedProxy.OnAdClicked += value; }
+            remove { _rewardedProxy.OnAdClicked -= value; }
         }
         public event Action OnRewardedAdCompleted
         {
-            add { rewardedProxy.OnAdCompleted += value; }
-            remove { rewardedProxy.OnAdCompleted -= value; }
+            add { _rewardedProxy.OnAdCompleted += value; }
+            remove { _rewardedProxy.OnAdCompleted -= value; }
         }
         public event Action OnRewardedAdClosed
         {
-            add { rewardedProxy.OnAdClosed += value; }
-            remove { rewardedProxy.OnAdClosed -= value; }
+            add { _rewardedProxy.OnAdClosed += value; }
+            remove { _rewardedProxy.OnAdClosed -= value; }
         }
         #endregion
 
@@ -108,39 +107,44 @@ namespace CAS.Android
             this.isTestAdMode = isDemoAdMode;
         }
 
-        ~CASMediationManager() {
-            managerBridge.Call( "freeManager" );
+        ~CASMediationManager()
+        {
+            try
+            {
+                _managerBridge.Call( "freeManager" );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
 
         public void CreateManager( AdFlags enableAd, InitCompleteAction initCompleteAction )
         {
-            bannerProxy = new AdCallbackProxy();
-            interstitialProxy = new AdCallbackProxy();
-            rewardedProxy = new AdCallbackProxy();
-            adLoadProxy = new AdLoadCallbackProxy();
+            _bannerProxy = new AdCallbackProxy();
+            _interstitialProxy = new AdCallbackProxy();
+            _rewardedProxy = new AdCallbackProxy();
+            _adLoadProxy = new AdLoadCallbackProxy();
 
             if (initCompleteAction != null)
                 initializationListener = new InitializationListenerProxy( this, initCompleteAction );
 
-            var androidSettings = MobileAds.settings as CASSettings;
-            androidSettings.SetUnityVersion();
-
             AndroidJavaClass playerClass = new AndroidJavaClass( CASJavaProxy.UnityActivityClassName );
             AndroidJavaObject activity = playerClass.GetStatic<AndroidJavaObject>( "currentActivity" );
 
-            managerBridge = new AndroidJavaObject( CASJavaProxy.NativeBridgeClassName,
+            _managerBridge = new AndroidJavaObject( CASJavaProxy.NativeBridgeClassName,
                 activity,
                 managerID,
                 ( int )enableAd,
                 isTestAdMode,
                 initializationListener );
 
-            managerBridge.Call( "setListeners",
-                bannerProxy,
-                interstitialProxy,
-                rewardedProxy );
+            _managerBridge.Call( "setListeners",
+                _bannerProxy,
+                _interstitialProxy,
+                _rewardedProxy );
 
-            managerBridge.Call( "addAdLoadListener", adLoadProxy );
+            _managerBridge.Call( "addAdLoadListener", _adLoadProxy );
         }
 
         public AdSize bannerSize
@@ -151,7 +155,7 @@ namespace CAS.Android
                 if (_bannerSize != value && _bannerSize != 0)
                 {
                     _bannerSize = value;
-                    managerBridge.Call( "setBannerSizeId", ( int )value );
+                    _managerBridge.Call( "setBannerSizeId", ( int )value );
                 }
             }
         }
@@ -164,7 +168,7 @@ namespace CAS.Android
                 if (_bannerPosition != value && value != AdPosition.Undefined)
                 {
                     _bannerPosition = value;
-                    managerBridge.Call( "setBannerPositionId", ( int )value );
+                    _managerBridge.Call( "setBannerPositionId", ( int )value );
                 }
             }
         }
@@ -174,58 +178,58 @@ namespace CAS.Android
             get { return _lastPageAdContent; }
             set
             {
-                if(value != _lastPageAdContent)
+                if (value != _lastPageAdContent)
                 {
                     _lastPageAdContent = value;
                     string json = value == null ? null : JsonUtility.ToJson( value );
-                    managerBridge.Call( "setLastPageAdContent", json );
+                    _managerBridge.Call( "setLastPageAdContent", json );
                 }
             }
         }
 
         public string GetLastActiveMediation( AdType adType )
         {
-            return managerBridge.Call<string>( "getLastActiveMediation", ( int )adType );
+            return _managerBridge.Call<string>( "getLastActiveMediation", ( int )adType );
         }
 
         public void HideBanner()
         {
-            managerBridge.Call( "hideBanner" );
+            _managerBridge.Call( "hideBanner" );
         }
 
         public bool IsEnabledAd( AdType adType )
         {
-            return managerBridge.Call<bool>( "isEnabled", ( int )adType );
+            return _managerBridge.Call<bool>( "isEnabled", ( int )adType );
         }
 
         public bool IsReadyAd( AdType adType )
         {
-            return managerBridge.Call<bool>( "isAdReady", ( int )adType );
+            return _managerBridge.Call<bool>( "isAdReady", ( int )adType );
         }
 
         public void LoadAd( AdType adType )
         {
-            managerBridge.Call( "loadAd", ( int )adType );
+            _managerBridge.Call( "loadAd", ( int )adType );
         }
 
         public void SetEnableAd( AdType adType, bool enabled )
         {
-            managerBridge.Call( "enableAd", ( int )adType, enabled );
+            _managerBridge.Call( "enableAd", ( int )adType, enabled );
         }
 
         public void ShowAd( AdType adType )
         {
-            managerBridge.Call( "showAd", ( int )adType );
+            _managerBridge.Call( "showAd", ( int )adType );
         }
 
         public float GetBannerHeightInPixels()
         {
-            return managerBridge.Call<int>( "getBannerHeightInPixels" );
+            return _managerBridge.Call<int>( "getBannerHeightInPixels" );
         }
 
         public float GetBannerWidthInPixels()
         {
-            return managerBridge.Call<int>( "getBannerWidthInPixels" );
+            return _managerBridge.Call<int>( "getBannerWidthInPixels" );
         }
     }
 }

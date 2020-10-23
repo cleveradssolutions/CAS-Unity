@@ -20,11 +20,11 @@ namespace CAS.Unity
 
         public float lastInterImpressionTimestamp = float.MinValue;
 
-        private List<string> testDeviceIds = new List<string>();
+        private List<string> _testDeviceIds = new List<string>();
 
         public List<string> GetTestDeviceIds()
         {
-            return testDeviceIds;
+            return _testDeviceIds;
         }
 
         public void RestartInterstitialInterval()
@@ -34,7 +34,7 @@ namespace CAS.Unity
 
         public void SetTestDeviceIds( List<string> testDeviceIds )
         {
-            this.testDeviceIds = testDeviceIds;
+            _testDeviceIds = testDeviceIds;
         }
 
         public bool isExecuteEventsOnUnityThread
@@ -42,5 +42,5 @@ namespace CAS.Unity
             get { return CASFactory.isExecuteEventsOnUnityThread; }
             set { CASFactory.isExecuteEventsOnUnityThread = value; }
         }
-        }
+    }
 }

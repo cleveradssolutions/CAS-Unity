@@ -8,9 +8,8 @@ namespace CAS.Android
     internal static class CASJavaProxy
     {
         #region Clever Ads Solutions SDK class names
-        internal const string NativeBridgeClassName = "com.cleversolutions.ads.platforms.CASBridge";
-        internal const string NativeSettingsClassName = "com.cleversolutions.ads.platforms.CASBridgeSettings";
-        internal const string NativeStatusListenerClassName = "com.cleversolutions.ads.platforms.CASBridgeStatusListener";
+        internal const string NativeBridgeClassName = "com.cleversolutions.ads.unity.CASBridge";
+        internal const string NativeSettingsClassName = "com.cleversolutions.ads.unity.CASBridgeSettings";
         internal const string AdCallbackClassName = "com.cleversolutions.ads.AdCallback";
         internal const string AdLoadCallbackClassName = "com.cleversolutions.ads.AdLoadCallback";
         internal const string OnInitializationListenerClassName = "com.cleversolutions.ads.OnInitializationListener";
@@ -31,7 +30,7 @@ namespace CAS.Android
 
     internal class InitializationListenerProxy : AndroidJavaProxy
     {
-        private CASMediationManager manager;
+        private readonly CASMediationManager manager;
         private InitCompleteAction initCompleteAction;
 
         public InitializationListenerProxy(

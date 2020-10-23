@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
+using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
 {
@@ -26,6 +27,8 @@ namespace CAS.UEditor
         private bool teenDependencyExist;
         private bool generalDependencyExist;
         private bool reimportDependencyOnBuild;
+        private bool allowedPackageUpdate;
+        private string newCASVersion;
 
         private int editorRuntimeActiveAdFlags;
         private Vector2 mediationNetworkScroll;
@@ -61,8 +64,8 @@ namespace CAS.UEditor
             bannerSizeProp = props.FindProperty( "bannerSize" );
             locationUsageDescriptionProp = props.FindProperty( "locationUsageDescription" );
 
-            editorRuntimeActiveAdFlags = PlayerPrefs.GetInt( CASEditorUtils.editorRuntimeActiveAdPrefs, -1 );
-            reimportDependencyOnBuild = PlayerPrefs.GetInt( CASEditorUtils.editorReimportDepsOnBuildPrefs, 1 ) == 1;
+            editorRuntimeActiveAdFlags = PlayerPrefs.GetInt( Utils.editorRuntimeActiveAdPrefs, -1 );
+            reimportDependencyOnBuild = PlayerPrefs.GetInt( Utils.editorReimportDepsOnBuildPrefs, 1 ) == 1;
 
             string assetName = target.name;
             if (assetName.EndsWith( BuildTarget.Android.ToString() ))
@@ -72,15 +75,18 @@ namespace CAS.UEditor
             else
                 platform = BuildTarget.NoTarget;
 
-            generalDependencyExist = CASEditorUtils.IsDependencyFileExists( CASEditorUtils.generalTemplateDependency, platform );
-            teenDependencyExist = CASEditorUtils.IsDependencyFileExists( CASEditorUtils.teenTemplateDependency, platform );
-            promoDependencyExist = CASEditorUtils.IsDependencyFileExists( CASEditorUtils.promoTemplateDependency, platform );
+            generalDependencyExist = Utils.IsDependencyFileExists( Utils.generalTemplateDependency, platform );
+            teenDependencyExist = Utils.IsDependencyFileExists( Utils.teenTemplateDependency, platform );
+            promoDependencyExist = Utils.IsDependencyFileExists( Utils.promoTemplateDependency, platform );
 
             managerIdsList = new ReorderableList( props, managerIdsProp, true, true, true, true )
             {
                 drawHeaderCallback = DrawListHeader,
                 drawElementCallback = DrawListElement
             };
+
+            allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
+            newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
         }
 
         private void DrawListHeader( Rect rect )
@@ -143,7 +149,7 @@ namespace CAS.UEditor
 
             DrawSeparator();
             OnBuildSettingsGUI();
-           
+
             DrawSeparator();
             OnCASAboutGUI();
             obj.ApplyModifiedProperties();
@@ -213,7 +219,7 @@ namespace CAS.UEditor
                         "Please use Android Resolver after the change.",
                         MessageType.Error );
                     if (GUILayout.Button( "Activate", GUILayout.Height( 38 ) ))
-                        if (CASEditorUtils.TryActivateDependencies( CASEditorUtils.generalTemplateDependency, platform ))
+                        if (Utils.TryActivateDependencies( Utils.generalTemplateDependency, platform ))
                             generalDependencyExist = true;
                     EditorGUILayout.EndHorizontal();
                 }
@@ -224,7 +230,7 @@ namespace CAS.UEditor
                         "Please use Android Resolver after the change.",
                         MessageType.Error );
                     if (GUILayout.Button( "Deactivate", GUILayout.Height( 38 ) ))
-                        if (DeactivateDependencies( CASEditorUtils.teenTemplateDependency ))
+                        if (DeactivateDependencies( Utils.teenTemplateDependency ))
                             teenDependencyExist = false;
                     EditorGUILayout.EndHorizontal();
                 }
@@ -243,7 +249,7 @@ namespace CAS.UEditor
                         "Please use Android Resolver after the change.",
                         MessageType.Error );
                     if (GUILayout.Button( "Deactivate", GUILayout.Height( 38 ) ))
-                        if (DeactivateDependencies( CASEditorUtils.generalTemplateDependency ))
+                        if (DeactivateDependencies( Utils.generalTemplateDependency ))
                             generalDependencyExist = false;
                     EditorGUILayout.EndHorizontal();
                 }
@@ -254,7 +260,7 @@ namespace CAS.UEditor
                         " require Teen CAS Dependencies to be activated. " +
                         "Please use Android Resolver after the change.", MessageType.Error );
                     if (GUILayout.Button( "Activate", GUILayout.Height( 38 ) ))
-                        if (CASEditorUtils.TryActivateDependencies( CASEditorUtils.teenTemplateDependency, platform ))
+                        if (Utils.TryActivateDependencies( Utils.teenTemplateDependency, platform ))
                             teenDependencyExist = true;
                     EditorGUILayout.EndHorizontal();
                 }
@@ -294,7 +300,7 @@ namespace CAS.UEditor
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.HelpBox( "NSUserTrackingUsageDescription key with a custom message describing your usage. Can be empty.", MessageType.None );
             if (GUILayout.Button( "Info", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( CASEditorUtils.configuringPrivacyURL );
+                Application.OpenURL( Utils.configuringPrivacyURL );
             EditorGUILayout.EndHorizontal();
             EditorGUI.indentLevel--;
         }
@@ -382,20 +388,42 @@ namespace CAS.UEditor
                 editorRuntimeActiveAdFlags = Convert.ToInt32(
                     EditorGUILayout.EnumFlagsField( "Editor runtime Active ad", ( AdFlags )editorRuntimeActiveAdFlags ) );
                 if (EditorGUI.EndChangeCheck())
-                    PlayerPrefs.SetInt( CASEditorUtils.editorRuntimeActiveAdPrefs, editorRuntimeActiveAdFlags );
+                    PlayerPrefs.SetInt( Utils.editorRuntimeActiveAdPrefs, editorRuntimeActiveAdFlags );
             }
         }
 
         private void OnCASAboutGUI()
         {
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField( "CAS Unity wrapper version: " + MobileAds.wrapperVersion );
+            if (GUILayout.Button( "Check for Updates", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
+            {
+                newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, true );
+                string message = string.IsNullOrEmpty( newCASVersion ) ? "You are using the latest version."
+                    : "There is a new version " + newCASVersion + " of the CAS Unity available for update.";
+                EditorUtility.DisplayDialog( "Check for Updates", message, "OK" );
+            }
+            EditorGUILayout.EndHorizontal();
+            if (!string.IsNullOrEmpty( newCASVersion ))
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.HelpBox( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", MessageType.Warning );
+                var layoutParams = new[] { GUILayout.Height( 38 ), GUILayout.ExpandWidth( false ) };
+#if UNITY_2018_4_OR_NEWER
+                if (allowedPackageUpdate && GUILayout.Button( "Update", layoutParams ))
+                    UnityEditor.PackageManager.Client.Add( Utils.gitUnityRepoURL + "#" + newCASVersion );
+#endif
+                if (GUILayout.Button( "Releases", layoutParams ))
+                    Application.OpenURL( Utils.gitUnityRepoURL + "/releases" );
+                EditorGUILayout.EndHorizontal();
+            }
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button( "GitHub", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( CASEditorUtils.githubURL );
+                Application.OpenURL( Utils.gitUnityRepoURL );
             if (GUILayout.Button( "Support", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( CASEditorUtils.supportURL );
+                Application.OpenURL( Utils.supportURL );
             if (GUILayout.Button( "cleveradssolutions.com", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( CASEditorUtils.websiteURL );
+                Application.OpenURL( Utils.websiteURL );
             EditorGUILayout.EndHorizontal();
         }
 
@@ -405,12 +433,12 @@ namespace CAS.UEditor
             {
                 if (promoDependencyExist)
                 {
-                    if (DeactivateDependencies( CASEditorUtils.promoTemplateDependency ))
+                    if (DeactivateDependencies( Utils.promoTemplateDependency ))
                         promoDependencyExist = false;
                 }
                 else
                 {
-                    if (CASEditorUtils.TryActivateDependencies( CASEditorUtils.promoTemplateDependency, platform ))
+                    if (Utils.TryActivateDependencies( Utils.promoTemplateDependency, platform ))
                         promoDependencyExist = true;
                 }
             }
@@ -468,14 +496,14 @@ namespace CAS.UEditor
             if (reimportDependencyOnBuild != EditorGUILayout.ToggleLeft( "Force reimport CAS dependencies on build.", reimportDependencyOnBuild ))
             {
                 reimportDependencyOnBuild = !reimportDependencyOnBuild;
-                PlayerPrefs.SetInt( CASEditorUtils.editorReimportDepsOnBuildPrefs, reimportDependencyOnBuild ? 1 : 0 );
+                PlayerPrefs.SetInt( Utils.editorReimportDepsOnBuildPrefs, reimportDependencyOnBuild ? 1 : 0 );
             }
         }
 
         private bool DeactivateDependencies( string template )
         {
-            return AssetDatabase.DeleteAsset( CASEditorUtils.editorFolderPath + "/"
-                + template + platform.ToString() + CASEditorUtils.dependenciesExtension );
+            return AssetDatabase.DeleteAsset( Utils.editorFolderPath + "/"
+                + template + platform.ToString() + Utils.dependenciesExtension );
         }
 
         private struct PartnerNetwork

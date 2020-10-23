@@ -11,7 +11,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "1.6.8";
+        public const string wrapperVersion = "1.6.9";
 
         private static IAdsSettings _settings;
 

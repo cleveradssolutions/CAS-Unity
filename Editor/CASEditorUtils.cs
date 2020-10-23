@@ -18,6 +18,8 @@ namespace CAS.UEditor
 
         public const string editorRuntimeActiveAdPrefs = "typesadsavailable";
         public const string editorReimportDepsOnBuildPrefs = "cas_reimport_deps_on_build";
+        public const string editorLatestVersionPrefs = "cas_last_ver_";
+        public const string editorLatestVersionTimestampPrefs = "cas_last_ver_time_";
         public const string rootCASFolderPath = "Assets/CleverAdsSolutions";
         public const string editorFolderPath = rootCASFolderPath + "/Editor";
         public const string androidLibFolderPath = "Assets/Plugins/Android/CASPlugin.androidlib";
@@ -36,10 +38,14 @@ namespace CAS.UEditor
         public const string androidLibPropTemplateFile = "CASLibProperties.txt";
         public const string iosSKAdNetworksTemplateFile = "CASSKAdNetworks.txt";
 
-        public const string githubURL = "https://github.com/cleveradssolutions/CAS-Unity";
-        public const string supportURL = "https://github.com/cleveradssolutions/CAS-Unity#support";
+        private const string gitRootURL = "https://github.com/cleveradssolutions/";
+        public const string gitUnityRepo = "CAS-Unity";
+        public const string gitAndroidRepo = "CAS-Android";
+        public const string gitiOSRepo = "CAS-iSO";
+        public const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
+        public const string supportURL = gitRootURL + gitUnityRepo + "#support";
         public const string websiteURL = "https://cleveradssolutions.com";
-        public const string configuringPrivacyURL = "https://github.com/cleveradssolutions/CAS-iOS#step-5-configuring-privacy-controls";
+        public const string configuringPrivacyURL = gitRootURL + gitiOSRepo + "#step-5-configuring-privacy-controls";
 
         public const string mainGradlePath = "Assets/Plugins/Android/mainTemplate.gradle";
         public const string launcherGradlePath = "Assets/Plugins/Android/launcherTemplate.gradle";
@@ -55,6 +61,12 @@ namespace CAS.UEditor
         internal class AdmobAppIdData
         {
             public string admob_app_id = null;
+        }
+
+        [Serializable]
+        internal class GitVersionInfo
+        {
+            public string tag_name = null;
         }
 
         #region Menu items
@@ -76,8 +88,13 @@ namespace CAS.UEditor
             if (AssetDatabase.FindAssets( "Firebase." + service ).Length > 0)
                 return true;
 
+            return IsPackageExist( "com.google.firebase." + service );
+        }
+
+        public static bool IsPackageExist( string package )
+        {
             return File.Exists( packageManifestPath ) &&
-                File.ReadAllText( packageManifestPath ).Contains( "com.google.firebase." + service );
+                File.ReadAllText( packageManifestPath ).Contains( package );
         }
 
         public static void OpenSettingsWindow( BuildTarget target )
@@ -275,7 +292,7 @@ namespace CAS.UEditor
                 loader.SendWebRequest();
                 while (!loader.isDone)
                 {
-                    if (EditorUtility.DisplayCancelableProgressBar( title, title,
+                    if (EditorUtility.DisplayCancelableProgressBar( title, managerID,
                         Mathf.Repeat( ( float )EditorApplication.timeSinceStartup, 1.0f ) ))
                     {
                         loader.Dispose();
@@ -322,6 +339,107 @@ namespace CAS.UEditor
             else
                 WriteToFile( content, iosResSettingsPath );
             return GetAdmobAppIdFromJson( content );
+        }
+
+        public static string GetNewVersionOrNull( string repo, string currVersion, bool force )
+        {
+            try
+            {
+                var newVerStr = GetLatestVersion( repo, force );
+                if (newVerStr != null && newVerStr != currVersion)
+                {
+                    var currVer = new System.Version( currVersion );
+                    var newVer = new System.Version( newVerStr );
+                    if (currVer < newVer)
+                        return newVerStr;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+            return null;
+        }
+
+        public static string GetLatestVersion( string repo, bool force )
+        {
+            if (!force && !HasTimePassed( editorLatestVersionTimestampPrefs + repo, 1, false ))
+            {
+                var last = PlayerPrefs.GetString( editorLatestVersionPrefs + repo );
+                if (!string.IsNullOrEmpty( last ))
+                    return last;
+            }
+
+            const string title = "Get latest CAS version info";
+            string url = "https://api.github.com/repos/cleveradssolutions/" + repo + "/releases/latest";
+
+            using (var loader = UnityWebRequest.Get( url ))
+            {
+                loader.SendWebRequest();
+                try
+                {
+                    while (!loader.isDone)
+                    {
+                        if (EditorUtility.DisplayCancelableProgressBar( title, repo,
+                            Mathf.Repeat( ( float )EditorApplication.timeSinceStartup, 1.0f ) ))
+                        {
+                            loader.Dispose();
+                            return null;
+                        }
+                    }
+                }
+                finally
+                {
+                    EditorUtility.ClearProgressBar();
+                }
+
+                if (string.IsNullOrEmpty( loader.error ))
+                {
+                    var content = loader.downloadHandler.text;
+                    var versionInfo = JsonUtility.FromJson<GitVersionInfo>( content );
+                    if (!string.IsNullOrEmpty( versionInfo.tag_name ))
+                    {
+                        PlayerPrefs.SetString( editorLatestVersionPrefs + repo, versionInfo.tag_name );
+                        EditorPrefs.SetString( editorLatestVersionTimestampPrefs + repo, DateTime.Now.ToBinary().ToString() );
+                    }
+                    return versionInfo.tag_name;
+                }
+                else
+                {
+                    Debug.LogError( logTag + "Response " + loader.responseCode + ": " + loader.error );
+                }
+            }
+
+            return null;
+        }
+
+        public static bool HasTimePassed( string prefKey, int days, bool projectOnly )
+        {
+            string pref;
+            if (projectOnly)
+                pref = PlayerPrefs.GetString( prefKey, string.Empty );
+            else
+                pref = EditorPrefs.GetString( prefKey, string.Empty );
+
+            if (string.IsNullOrEmpty( pref ))
+            {
+                return true;
+            }
+            else
+            {
+                DateTime checkTime;
+                try
+                {
+                    long binartDate = long.Parse( pref );
+                    checkTime = DateTime.FromBinary( binartDate );
+                }
+                catch
+                {
+                    return true;
+                }
+                checkTime = checkTime.Add( TimeSpan.FromDays( days ) );
+                return DateTime.Compare( DateTime.Now, checkTime ) > 0; // Now time is later than checkTime
+            }
         }
     }
 }

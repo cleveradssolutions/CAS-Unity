@@ -13,7 +13,7 @@ namespace CAS.iOS
         private IntPtr _managerClientPtr;
         private InitCompleteAction _initCompleteAction;
         private AdSize _bannerSize = AdSize.Banner;
-        private AdPosition _bannerPosition = AdPosition.Undefined;
+        private AdPosition _bannerPosition = AdPosition.BottomCenter;
         private LastPageAdContent _lastPageAdContent = null;
 #if CAS_EXPIREMENTAL_ORIENTATION
         private bool[] autorotateOrientation = new bool[4];
@@ -48,7 +48,14 @@ namespace CAS.iOS
 
         ~CASMediationManager()
         {
-            CASExterns.CASUFreeManager( _managerPtr );
+            try
+            {
+                CASExterns.CASUFreeManager( _managerPtr );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
 
         public void CreateManager( AdFlags enableAd, InitCompleteAction initCompleteAction )

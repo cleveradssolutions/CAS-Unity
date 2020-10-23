@@ -14,7 +14,9 @@
 
 @implementation CASUManager
 {
-    NSInteger bannerPositionId;
+    NSInteger bannerPositionId = 3;
+    NSLayoutConstraint *horizontalConstraint = nil;
+    NSLayoutConstraint *verticalConstraint = nil;
 }
 
 - (id)initWithAppID:(NSString *)appID
@@ -76,6 +78,7 @@
     switch (type) {
         case CASTypeBanner:
             if (self.bannerView) {
+                self.bannerView.delegate = self.bannerCallback;
                 [self.bannerView setHidden:NO];
             } else {
                 [self createBannerView];
@@ -102,6 +105,7 @@
     self.bannerView = [[CASBannerView alloc] initWithManager:_mediationManager];
     self.bannerView.translatesAutoresizingMaskIntoConstraints = NO;
     self.bannerView.rootViewController = unityController;
+    self.bannerView.delegate = self.bannerCallback;
     [unityView addSubview:self.bannerView];
 }
 
@@ -154,89 +158,82 @@
     }
     UIView *unityView = self.bannerView.superview;
     if (unityView) {
-        for (NSLayoutConstraint *constraint in unityView.constraints) {
-            if ([ constraint.identifier isEqualToString:@"casUHorizontalPos"]
-                || [ constraint.identifier isEqualToString:@"casUVerticalPos"]) {
-                [unityView removeConstraint:constraint];
-            }
-        }
-
         switch (positionId) {
             case 0:
                 if (@available(iOS 11, *)) {
-                    [self addVerticalConstraintsFor:_bannerView.topAnchor
-                                                 to:unityView.safeAreaLayoutGuide.topAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.centerXAnchor
-                                                   to:unityView.safeAreaLayoutGuide.centerXAnchor];
+                    [self setVerticalFor:_bannerView.topAnchor
+                                      to:unityView.safeAreaLayoutGuide.topAnchor];
+                    [self setHorizontalFor:_bannerView.centerXAnchor
+                                        to:unityView.safeAreaLayoutGuide.centerXAnchor];
                 } else {
-                    [self addVerticalConstraintsFor:_bannerView.topAnchor
-                                                 to:unityView.topAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.centerXAnchor
-                                                   to:unityView.centerXAnchor];
+                    [self setVerticalFor:_bannerView.topAnchor
+                                      to:unityView.topAnchor];
+                    [self setHorizontalFor:_bannerView.centerXAnchor
+                                        to:unityView.centerXAnchor];
                 }
                 break;
             case 1:
                 if (@available(iOS 11, *)) {
-                    [self addVerticalConstraintsFor:_bannerView.topAnchor
-                                                 to:unityView.safeAreaLayoutGuide.topAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.leftAnchor
-                                                   to:unityView.safeAreaLayoutGuide.leftAnchor];
+                    [self setVerticalFor:_bannerView.topAnchor
+                                      to:unityView.safeAreaLayoutGuide.topAnchor];
+                    [self setHorizontalFor:_bannerView.leftAnchor
+                                        to:unityView.safeAreaLayoutGuide.leftAnchor];
                 } else {
-                    [self addVerticalConstraintsFor:_bannerView.topAnchor
-                                                 to:unityView.topAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.leftAnchor
-                                                   to:unityView.leftAnchor];
+                    [self setVerticalFor:_bannerView.topAnchor
+                                      to:unityView.topAnchor];
+                    [self setHorizontalFor:_bannerView.leftAnchor
+                                        to:unityView.leftAnchor];
                 }
                 break;
             case 2:
                 if (@available(iOS 11, *)) {
-                    [self addVerticalConstraintsFor:_bannerView.topAnchor
-                                                 to:unityView.safeAreaLayoutGuide.topAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.rightAnchor
-                                                   to:unityView.safeAreaLayoutGuide.rightAnchor];
+                    [self setVerticalFor:_bannerView.topAnchor
+                                      to:unityView.safeAreaLayoutGuide.topAnchor];
+                    [self setHorizontalFor:_bannerView.rightAnchor
+                                        to:unityView.safeAreaLayoutGuide.rightAnchor];
                 } else {
-                    [self addVerticalConstraintsFor:_bannerView.topAnchor
-                                                 to:unityView.topAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.rightAnchor
-                                                   to:unityView.rightAnchor];
+                    [self setVerticalFor:_bannerView.topAnchor
+                                      to:unityView.topAnchor];
+                    [self setHorizontalFor:_bannerView.rightAnchor
+                                        to:unityView.rightAnchor];
                 }
                 break;
             case 4:
                 if (@available(iOS 11, *)) {
-                    [self addVerticalConstraintsFor:_bannerView.bottomAnchor to:unityView.safeAreaLayoutGuide.bottomAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.leftAnchor
-                                                   to:unityView.safeAreaLayoutGuide.leftAnchor];
+                    [self setVerticalFor:_bannerView.bottomAnchor to:unityView.safeAreaLayoutGuide.bottomAnchor];
+                    [self setHorizontalFor:_bannerView.leftAnchor
+                                        to:unityView.safeAreaLayoutGuide.leftAnchor];
                 } else {
-                    [self addVerticalConstraintsFor:_bannerView.bottomAnchor
-                                                 to:unityView.bottomAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.leftAnchor
-                                                   to:unityView.leftAnchor];
+                    [self setVerticalFor:_bannerView.bottomAnchor
+                                      to:unityView.bottomAnchor];
+                    [self setHorizontalFor:_bannerView.leftAnchor
+                                        to:unityView.leftAnchor];
                 }
                 break;
             case 5:
                 if (@available(iOS 11, *)) {
-                    [self addVerticalConstraintsFor:_bannerView.bottomAnchor
-                                                 to:unityView.safeAreaLayoutGuide.bottomAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.rightAnchor
-                                                   to:unityView.safeAreaLayoutGuide.rightAnchor];
+                    [self setVerticalFor:_bannerView.bottomAnchor
+                                      to:unityView.safeAreaLayoutGuide.bottomAnchor];
+                    [self setHorizontalFor:_bannerView.rightAnchor
+                                        to:unityView.safeAreaLayoutGuide.rightAnchor];
                 } else {
-                    [self addVerticalConstraintsFor:_bannerView.bottomAnchor
-                                                 to:unityView.bottomAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.rightAnchor
-                                                   to:unityView.rightAnchor];
+                    [self setVerticalFor:_bannerView.bottomAnchor
+                                      to:unityView.bottomAnchor];
+                    [self setHorizontalFor:_bannerView.rightAnchor
+                                        to:unityView.rightAnchor];
                 }
                 break;
             default:
                 if (@available(iOS 11, *)) {
-                    [self addVerticalConstraintsFor:_bannerView.bottomAnchor
-                                                 to:unityView.safeAreaLayoutGuide.bottomAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.centerXAnchor
-                                                   to:unityView.safeAreaLayoutGuide.centerXAnchor];
+                    [self setVerticalFor:_bannerView.bottomAnchor
+                                      to:unityView.safeAreaLayoutGuide.bottomAnchor];
+                    [self setHorizontalFor:_bannerView.centerXAnchor
+                                        to:unityView.safeAreaLayoutGuide.centerXAnchor];
                 } else {
-                    [self addVerticalConstraintsFor:_bannerView.bottomAnchor
-                                                 to:unityView.bottomAnchor];
-                    [self addHorizontalConstraintsFor:_bannerView.centerXAnchor
-                                                   to:unityView.centerXAnchor];
+                    [self setVerticalFor:_bannerView.bottomAnchor
+                                      to:unityView.bottomAnchor];
+                    [self setHorizontalFor:_bannerView.centerXAnchor
+                                        to:unityView.centerXAnchor];
                 }
                 break;
         }
@@ -244,16 +241,20 @@
     }
 }
 
-- (void)addHorizontalConstraintsFor:(NSLayoutXAxisAnchor *)subview to:(NSLayoutXAxisAnchor *)container {
-    NSLayoutConstraint *result = [subview constraintEqualToAnchor:container];
-    result.identifier = @"casUHorizontalPos";
-    result.active = YES;
+- (void)setHorizontalFor:(NSLayoutXAxisAnchor *)subview to:(NSLayoutXAxisAnchor *)container {
+    if (horizontalConstraint) {
+        horizontalConstraint.active = false;
+    }
+    horizontalConstraint = [subview constraintEqualToAnchor:container];
+    horizontalConstraint.active = YES;
 }
 
-- (void)addVerticalConstraintsFor:(NSLayoutYAxisAnchor *)subview to:(NSLayoutYAxisAnchor *)container {
-    NSLayoutConstraint *result = [subview constraintEqualToAnchor:container];
-    result.identifier = @"casUVerticalPos";
-    result.active = YES;
+- (void)setVerticalFor:(NSLayoutYAxisAnchor *)subview to:(NSLayoutYAxisAnchor *)container {
+    if (verticalConstraint) {
+        verticalConstraint.active = false;
+    }
+    verticalConstraint = [subview constraintEqualToAnchor:container];
+    verticalConstraint.active = YES;
 }
 
 - (void)setLastPageAdFor:(NSString *)content {

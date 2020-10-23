@@ -1,5 +1,15 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.6.9] - 2020-10-23
+### Features
+- Added check for updates of CAS Unity in Settings window.
+- Added warnings about incorrect position and size values of the banner for the Unity Editor.
+### Changes
+- The Android CAS wrapper for Unity has been moved to a separate library: `Plugins/Android/libs/cas-unity.jar`
+- The default Banner Ad position is `BottomCenter` instead of `Undefined`. 
+### Bug Fixes
+- iOS Banner Ad callbacks.
+
 ## [1.6.8] - 2020-10-21
 ### Dependencies
 - Wraps [Android 1.6.8+ SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

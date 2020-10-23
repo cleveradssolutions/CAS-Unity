@@ -58,6 +58,10 @@ namespace CAS.UEditor
                 Utils.StopBuildWithMessage( "Settings not found. Please use menu Assets/CleverAdsSolutions/Settings " +
                     "for create and set settings to build.", target );
 
+            var newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
+            if (newCASVersion != null)
+                DialogOrCancel( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", target );
+
             string admobAppId;
             if (settings.testAdMode)
             {
