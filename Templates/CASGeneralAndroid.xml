@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <dependencies>
   <androidPackages>
-    <androidPackage spec="com.cleversolutions.ads:cas-sdk-general:1.6.9+">
+    <androidPackage spec="com.cleversolutions.ads:cas-sdk-general:1.6.8+">
       <repositories>
         <repository>https://dl.bintray.com/cleveradssolutions/CAS-Android</repository>
         <repository>https://adcolony.bintray.com/AdColony</repository>
