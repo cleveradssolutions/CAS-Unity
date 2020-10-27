@@ -411,7 +411,26 @@ namespace CAS.UEditor
                 var layoutParams = new[] { GUILayout.Height( 38 ), GUILayout.ExpandWidth( false ) };
 #if UNITY_2018_4_OR_NEWER
                 if (allowedPackageUpdate && GUILayout.Button( "Update", layoutParams ))
-                    UnityEditor.PackageManager.Client.Add( Utils.gitUnityRepoURL + "#" + newCASVersion );
+                {
+                    var request = UnityEditor.PackageManager.Client.Add( Utils.gitUnityRepoURL + ".git#" + newCASVersion );
+                    try
+                    {
+                        while (!request.IsCompleted)
+                        {
+                            if (EditorUtility.DisplayCancelableProgressBar(
+                                "Update Package Manager dependency", "Clever Ads Solutions " + newCASVersion, 0.5f ))
+                                break;
+                        }
+                        if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
+                            Debug.Log( "Package Manager: Update " + request.Result.displayName );
+                        else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
+                            Debug.LogError( request.Error.message );
+                    }
+                    finally
+                    {
+                        EditorUtility.ClearProgressBar();
+                    }
+                }
 #endif
                 if (GUILayout.Button( "Releases", layoutParams ))
                     Application.OpenURL( Utils.gitUnityRepoURL + "/releases" );

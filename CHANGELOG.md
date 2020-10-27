@@ -3,6 +3,7 @@
 ## [1.6.10] - 2020-10-27
 ### Bug Fixes
 - iOS build errors.
+- Update Package Manager version from Settings Window.
 
 ## [1.6.9] - 2020-10-23
 ### Features
