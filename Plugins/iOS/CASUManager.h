@@ -9,6 +9,7 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
 #import "CASUCallback.h"
+#import <UIKit/UIKit.h>
 
 @interface CASUManager : NSObject<CASLoadDelegate>
 
@@ -25,6 +26,9 @@
 @property (nonatomic, strong, nullable) CASUCallback *bannerCallback;
 @property (nonatomic, strong, nullable) CASUCallback *interstitialCallback;
 @property (nonatomic, strong, nullable) CASUCallback *rewardedCallback;
+
+@property (nonatomic, strong, nullable) NSLayoutConstraint *horizontalConstraint;
+@property (nonatomic, strong, nullable) NSLayoutConstraint *verticalConstraint;
 
 @property (nonatomic, assign) CASUTypeManagerClientRef _Nullable *_Nullable client;
 @property (nonatomic, assign, nullable) CASUDidAdLoadedCallback didAdLoadedCallback;

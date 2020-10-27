@@ -7,16 +7,13 @@
 
 #import <Foundation/Foundation.h>
 #import "CASUManager.h"
-#import <UIKit/UIKit.h>
 #if __has_include("UnityAppController.h")
 #import "UnityAppController.h"
 #endif
 
 @implementation CASUManager
 {
-    NSInteger bannerPositionId = 3;
-    NSLayoutConstraint *horizontalConstraint = nil;
-    NSLayoutConstraint *verticalConstraint = nil;
+    NSInteger bannerPositionId;
 }
 
 - (id)initWithAppID:(NSString *)appID
@@ -41,6 +38,7 @@
             }
         }];
 
+        bannerPositionId = 3;
         self.bannerCallback = [[CASUCallback alloc] initForFullScreen:NO];
         self.bannerCallback.client = client;
         self.interstitialCallback = [[CASUCallback alloc] initForFullScreen:YES];
@@ -242,19 +240,19 @@
 }
 
 - (void)setHorizontalFor:(NSLayoutXAxisAnchor *)subview to:(NSLayoutXAxisAnchor *)container {
-    if (horizontalConstraint) {
-        horizontalConstraint.active = false;
+    if (self.horizontalConstraint) {
+        self.horizontalConstraint.active = false;
     }
-    horizontalConstraint = [subview constraintEqualToAnchor:container];
-    horizontalConstraint.active = YES;
+    self.horizontalConstraint = [subview constraintEqualToAnchor:container];
+    self.horizontalConstraint.active = YES;
 }
 
 - (void)setVerticalFor:(NSLayoutYAxisAnchor *)subview to:(NSLayoutYAxisAnchor *)container {
-    if (verticalConstraint) {
-        verticalConstraint.active = false;
+    if (self.verticalConstraint) {
+        self.verticalConstraint.active = false;
     }
-    verticalConstraint = [subview constraintEqualToAnchor:container];
-    verticalConstraint.active = YES;
+    self.verticalConstraint = [subview constraintEqualToAnchor:container];
+    self.verticalConstraint.active = YES;
 }
 
 - (void)setLastPageAdFor:(NSString *)content {

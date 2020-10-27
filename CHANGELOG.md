@@ -1,5 +1,9 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.6.10] - 2020-10-27
+### Bug Fixes
+- iOS build errors.
+
 ## [1.6.9] - 2020-10-23
 ### Features
 - Added check for updates of CAS Unity in Settings window.
