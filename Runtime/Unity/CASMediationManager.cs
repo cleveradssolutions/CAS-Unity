@@ -167,6 +167,7 @@ namespace CAS.Unity
             switch (adType)
             {
                 case AdType.Banner:
+                    _bannerRequired = true;
                     EventExecutor.Add( CallShowBanner );
                     break;
                 case AdType.Interstitial:
@@ -202,7 +203,6 @@ namespace CAS.Unity
 
         private void CallShowBanner()
         {
-            _bannerRequired = true;
             if (( enabledTypes & AdFlags.Banner ) != AdFlags.Banner)
             {
                 CASFactory.ExecuteEvent( OnBannerAdFailedToShow, "Manager is disabled!" );
@@ -396,6 +396,8 @@ namespace CAS.Unity
         private void DidBannerLoaded()
         {
             loadedTypes |= AdFlags.Banner;
+            if (_bannerRequired)
+                EventExecutor.Add( CallShowBanner );
             CASFactory.ExecuteEvent( OnLoadedAd, ( int )AdType.Banner );
         }
 
