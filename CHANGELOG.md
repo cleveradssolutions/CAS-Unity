@@ -1,5 +1,14 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.6.11] - 2020-10-27
+### Dependencies
+- Wraps [Android 1.6.11+ SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- Wraps [iOS 1.6.11+ SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- Android wrapper optimizations.
+### Bug Fixes
+- `LastPageAdContent` passe to Android CAS.
+
 ## [1.6.10] - 2020-10-27
 ### Bug Fixes
 - iOS build errors.
