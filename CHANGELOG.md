@@ -1,5 +1,9 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.6.12] - 2020-11-02
+### Bug Fixes
+- `Assets/CleverAdsSolutions/Settings` are applied in any case, even when `CAS.MobileAds.settings` is not used.
+
 ## [1.6.11] - 2020-10-27
 ### Dependencies
 - Wraps [Android 1.6.11+ SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

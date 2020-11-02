@@ -11,7 +11,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "1.6.11";
+        public const string wrapperVersion = "1.6.12";
 
         private static IAdsSettings _settings;
 
@@ -23,7 +23,7 @@ namespace CAS
             get
             {
                 if (_settings == null)
-                    _settings = CASFactory.CreateSettigns();
+                    _settings = CASFactory.CreateSettigns( CASFactory.LoadInitSettingsFromResources() );
                 return _settings;
             }
         }
@@ -69,6 +69,8 @@ namespace CAS
                     initCompleteAction( true, null );
                 return manager;
             }
+            if (_settings == null)
+                _settings = CASFactory.CreateSettigns( CASFactory.LoadInitSettingsFromResources() );
             EventExecutor.Initialize();
             var instance = CASFactory.CreateManager( managerID, enableAd, testAdMode, initCompleteAction );
             manager = instance;
@@ -128,6 +130,8 @@ namespace CAS
                         "Please use Assets/CleverAdsSolutions/Settings menu and set manager ID." );
                 managerID = initSettings.managerIds[managerIndex];
             }
+            if (_settings == null)
+                _settings = CASFactory.CreateSettigns( initSettings );
             var manager = Initialize( managerID,
                                       initSettings.allowedAdFlags & enableAd,
                                       initSettings.testAdMode,

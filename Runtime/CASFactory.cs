@@ -8,7 +8,7 @@ namespace CAS
     {
         internal static volatile bool isExecuteEventsOnUnityThread = false;
 
-        internal static IAdsSettings CreateSettigns()
+        internal static IAdsSettings CreateSettigns( CASInitSettings initSettings )
         {
             IAdsSettings settings = null;
 #if !TARGET_OS_SIMULATOR
@@ -23,7 +23,6 @@ namespace CAS
             if (settings == null)
                 settings = new CAS.Unity.CASSettings();
 
-            var initSettings = LoadInitSettingsFromResources();
             if (initSettings)
             {
                 settings.isDebugMode = initSettings.debugMode;

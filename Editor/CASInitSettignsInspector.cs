@@ -32,6 +32,7 @@ namespace CAS.UEditor
 
         private int editorRuntimeActiveAdFlags;
         private Vector2 mediationNetworkScroll;
+        private GUIStyle boxScopeStyle;
 
         private readonly PartnerNetwork[] mediationPartners = new PartnerNetwork[]
         {
@@ -102,20 +103,23 @@ namespace CAS.UEditor
             item.stringValue = EditorGUI.TextField( rect, item.stringValue );
         }
 
-
         public override void OnInspectorGUI()
         {
             var obj = serializedObject;
             obj.UpdateIfRequiredOrScript();
+            BeginBoxScope();
             EditorGUILayout.PropertyField( testAdModeProp );
             EditorGUI.BeginDisabledGroup( testAdModeProp.boolValue );
-            DrawSeparator();
             managerIdsList.DoLayoutList();
             OnManagerIDVerificationGUI();
             EditorGUI.EndDisabledGroup();
 
             allowedAdFlagsProp.intValue = Convert.ToInt32(
                EditorGUILayout.EnumFlagsField( "Allowed ads in app", ( AdFlags )allowedAdFlagsProp.intValue ) );
+
+            GUILayout.Label( "These settings are required for initialization with: CAS.MobileAds.InitializeFromResources(0)",
+                EditorStyles.miniLabel );
+            EndBoxScope();
 
             DrawSeparator();
             bool isChildrenAudience = OnAudienceGUIActiveChildren();
@@ -523,6 +527,23 @@ namespace CAS.UEditor
         {
             return AssetDatabase.DeleteAsset( Utils.editorFolderPath + "/"
                 + template + platform.ToString() + Utils.dependenciesExtension );
+        }
+
+        private void BeginBoxScope()
+        {
+            if (boxScopeStyle == null)
+            {
+                boxScopeStyle = new GUIStyle( EditorStyles.helpBox );
+                var p = boxScopeStyle.padding;
+                p.right += 3;
+                p.left += 3;
+            }
+            EditorGUILayout.BeginVertical( boxScopeStyle );
+        }
+
+        private void EndBoxScope()
+        {
+            EditorGUILayout.EndVertical();
         }
 
         private struct PartnerNetwork
