@@ -375,7 +375,7 @@ public class CleverAdsSolutionsDemoScript : MonoBehaviour
             // Ad types can be enabled manually after initialize by IMediationManager.SetEnableAd
             enableAd: AdFlags.Everything,
             // Optional Enable demo mode that will always request test ads. Set FALSE for release!  
-            testAdMode: true,
+            testAdMode: !releaseBuild,
             // Optional subscribe to initialization done
             initCompleteAction: (success, error) => { 
                 // CAS manager initialization done  
