@@ -591,9 +591,9 @@ To enable this process, follow these steps:
 1. Go to: `Player Settings > Publishing Settings > Build`
 2. Select `Custom Main Gradle Template` checkmark to configure dependencies.
 3. [Unity 2019.3+] Select `Custom Launcher Gradle Template` checkmark to enable MultiDEX.  
-> You can read more about MuliDex on the [Android Deleveloper page](https://developer.android.com/studio/build/multidex).  
+You can read more about MuliDex on the [Android Deleveloper page](https://developer.android.com/studio/build/multidex).  
 4. [Unity 2019.3+] Select `Custom Base Gradle Template` checkmark to update Gradle plugin with fix support Android 11.  
-> You can read more about fix Gradle plugin with support Android 11 on the [Android Deleveloper page](https://android-developers.googleblog.com/2020/07/preparing-your-build-for-package-visibility-in-android-11.html).  
+You can read more about fix Gradle plugin with support Android 11 on the [Android Deleveloper page](https://android-developers.googleblog.com/2020/07/preparing-your-build-for-package-visibility-in-android-11.html).  
 5. [Unity 2019.3+] Select `Custom Gradle Properties Template` to use Jetfier by EDM4U.
 6. Go to: `Assets > External Dependency Manager > Android > Settings`  
 7. Select `Patch mainTemplate.gradle` checkmark
@@ -651,10 +651,7 @@ About Google Ads App ID [here](https://developers.google.com/admob/android/quick
 ### Include iOS
 Make sure that Cocoapods is installed. 
 In the Unity editor, select: `Assets > External Dependency Manager > iOS Resolver > Install Cocoapods`  
-
-[Request App Tracking Transparency authorization](#ios-location-usage-description)  
-
-</details>
+ 
 <details><summary><b>Configuring App Transport Security (Optional)</b></summary>
 
 With the release of iOS 9 Apple introduced ATS, which requires apps to make secure network connections via SSL and enforces HTTPS connections through its requirements on the SSL version, encryption cipher, and key length. At this time, CAS highly recommends disabling ATS in your application. Please note that, while CAS fully supports HTTPS, some of our advertisers and 3rd party ad tracking providers do not. Therefore enabling ATS may result in a reduction in fill rate.
@@ -726,4 +723,4 @@ Skype: zanzavital
 mailto:support@cleveradssolutions.com  
 
 ## License
-The CAS iOS-SDK is available under a commercial license. See the LICENSE file for more info.
+The CAS Unity plugin is available under a commercial license. See the LICENSE file for more info.
