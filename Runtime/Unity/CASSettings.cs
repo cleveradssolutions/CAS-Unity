@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace CAS.Unity
 {
-    internal class CASSettings : IAdsSettings
+    internal class CASSettings : IAdsSettings, ITargetingOptions
     {
         public bool analyticsCollectionEnabled { get; set; }
         public int bannerRefreshInterval { get; set; }
@@ -17,6 +17,10 @@ namespace CAS.Unity
         public LoadingManagerMode loadingMode { get; set; }
         public bool iOSAppPauseOnBackground { get; set; }
         public bool allowInterstitialAdsWhenVideoCostAreLower { get; set; }
+        public bool trackLocationEnabled { get; set; }
+
+        public Gender gender { get; set; }
+        public int age { get; set; }
 
         public float lastInterImpressionTimestamp = float.MinValue;
 
@@ -42,5 +46,6 @@ namespace CAS.Unity
             get { return CASFactory.isExecuteEventsOnUnityThread; }
             set { CASFactory.isExecuteEventsOnUnityThread = value; }
         }
+
     }
 }

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace CAS.Android
 {
-    internal class CASSettings : IAdsSettings
+    internal class CASSettings : IAdsSettings, ITargetingOptions
     {
         private bool _analyticsCollectionEnabled = false;
         private int _bannerRefreshInterval = 30;
@@ -18,6 +18,9 @@ namespace CAS.Android
         private LoadingManagerMode _loadingMode = LoadingManagerMode.Optimal;
         private List<string> _testDeviceIds = new List<string>();
         private bool _allowInterstitialAdsWhenVideoCostAreLower = false;
+
+        private Gender _gender = Gender.Unknown;
+        private int _age = 0;
 
         private AndroidJavaClass settingsBridge;
 
@@ -37,6 +40,11 @@ namespace CAS.Android
         public string GetSDKVersion()
         {
             return settingsBridge.CallStatic<string>( "getSDKVersion" );
+        }
+
+        public void ValidateIntegration()
+        {
+            settingsBridge.CallStatic( "validateIntegration" );
         }
 
         public bool analyticsCollectionEnabled
@@ -185,6 +193,12 @@ namespace CAS.Android
             set {  /*Only for iOS*/ }
         }
 
+        public bool trackLocationEnabled
+        {
+            get { return false; }
+            set {  /*Only for iOS*/ }
+        }
+
         public bool allowInterstitialAdsWhenVideoCostAreLower
         {
             get { return _allowInterstitialAdsWhenVideoCostAreLower; }
@@ -194,6 +208,32 @@ namespace CAS.Android
                 {
                     _allowInterstitialAdsWhenVideoCostAreLower = value;
                     settingsBridge.CallStatic( "allowInterInsteadOfRewarded", value );
+                }
+            }
+        }
+
+        public Gender gender
+        {
+            get { return _gender; }
+            set
+            {
+                if (_gender != value)
+                {
+                    _gender = value;
+                    settingsBridge.CallStatic( "setUserGender", ( int )value );
+                }
+            }
+        }
+
+        public int age
+        {
+            get { return _age; }
+            set
+            {
+                if (_age != value)
+                {
+                    _age = value;
+                    settingsBridge.CallStatic( "setUserAge", value );
                 }
             }
         }

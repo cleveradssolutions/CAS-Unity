@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
+using System.IO;
 using UnityEngine;
 
 namespace CAS
@@ -7,6 +7,8 @@ namespace CAS
     internal static class CASFactory
     {
         internal static volatile bool isExecuteEventsOnUnityThread = false;
+
+        internal static IAdsSettings _settings;
 
         internal static IAdsSettings CreateSettigns( CASInitSettings initSettings )
         {
@@ -34,12 +36,24 @@ namespace CAS
             return settings;
         }
 
+        internal static IAdsSettings GetAdsSettings()
+        {
+            if (_settings == null)
+                _settings = CreateSettigns( LoadInitSettingsFromResources() );
+            return _settings;
+        }
+
+        internal static ITargetingOptions GetTargetingOptions()
+        {
+            return ( ITargetingOptions )GetAdsSettings();
+        }
+
         internal static string GetSDKVersion()
         {
 #if UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {
-                var androidSettings = MobileAds.settings as CAS.Android.CASSettings;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
                 return androidSettings.GetSDKVersion();
             }
 #elif UNITY_IOS && !TARGET_OS_SIMULATOR
@@ -49,6 +63,58 @@ namespace CAS
             return MobileAds.wrapperVersion;
         }
 
+
+        internal static IMediationManager Initialize(
+            string managerID,
+            AdFlags enableAd = AdFlags.Everything,
+            bool testAdMode = false,
+            InitCompleteAction initCompleteAction = null )
+        {
+            if (string.IsNullOrEmpty( managerID ))
+                throw new ArgumentNullException( "managerID", "Manager ID is empty" );
+            if (MobileAds.manager != null && MobileAds.manager.managerID == managerID)
+            {
+                if (initCompleteAction != null)
+                    initCompleteAction( true, null );
+                return MobileAds.manager;
+            }
+            if (_settings == null)
+                _settings = CreateSettigns( LoadInitSettingsFromResources() );
+            EventExecutor.Initialize();
+            return CreateManager( managerID, enableAd, testAdMode, initCompleteAction );
+        }
+
+        internal static IMediationManager InitializeFromResources(
+            int managerIndex, AdFlags enableAd, InitCompleteAction initCompleteAction = null )
+        {
+            var initSettings = LoadInitSettingsFromResources();
+
+            if (!initSettings)
+                throw new FileNotFoundException( "No settings found in resources. " +
+                    "Please use Assets/CleverAdsSolutions/Settings menu for create settings asset." );
+            string managerID;
+            if (Application.isEditor || initSettings.testAdMode)
+            {
+                managerID = "demo";
+            }
+            else
+            {
+                if (initSettings.managerIds.Length - 1 < managerIndex || string.IsNullOrEmpty( initSettings.managerIds[managerIndex] ))
+                    throw new ArgumentNullException( "managerIds", "Manager ID is empty. " +
+                        "Please use Assets/CleverAdsSolutions/Settings menu and set manager ID." );
+                managerID = initSettings.managerIds[managerIndex];
+            }
+            if (MobileAds.manager != null && MobileAds.manager.managerID == managerID)
+            {
+                if (initCompleteAction != null)
+                    initCompleteAction( true, null );
+                return MobileAds.manager;
+            }
+            EventExecutor.Initialize();
+            var manager = CreateManager( managerID, initSettings.allowedAdFlags & enableAd, initSettings.testAdMode, initCompleteAction );
+            manager.bannerSize = initSettings.bannerSize;
+            return manager;
+        }
 
         internal static IMediationManager CreateManager(
             string managerID, AdFlags enableAd, bool demoAdMode, InitCompleteAction initCompleteAction )
@@ -74,6 +140,17 @@ namespace CAS
             if (manager == null)
                 throw new NotSupportedException( "Current platform: " + Application.platform.ToString() );
             return manager;
+        }
+
+        internal static void ValidateIntegration()
+        {
+#if UNITY_ANDROID
+            if (Application.platform == RuntimePlatform.Android)
+            {
+                var androidSettings = MobileAds.settings as CAS.Android.CASSettings;
+                androidSettings.ValidateIntegration();
+            }
+#endif
         }
 
         internal static CASInitSettings LoadInitSettingsFromResources()

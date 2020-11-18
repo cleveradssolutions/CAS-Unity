@@ -92,7 +92,7 @@ void CASUSetLoadingWithMode(NSInteger mode)
     [[CAS settings] setLoadingWithMode:(CASLoadingManagerMode)mode];
 }
 
-void CASUsetInterstitialAdsWhenVideoCostAreLower(BOOL allow)
+void CASUSetInterstitialAdsWhenVideoCostAreLower(BOOL allow)
 {
     [[CAS settings] setInterstitialAdsWhenVideoCostAreLowerWithAllow:allow];
 }
@@ -100,6 +100,21 @@ void CASUsetInterstitialAdsWhenVideoCostAreLower(BOOL allow)
 void CASUSetiOSAppPauseOnBackground(BOOL pause)
 {
     [CASUPluginUtil setPauseOnBackground:pause];
+}
+
+void CASUSetTrackLocationEnabled(BOOL enabled)
+{
+    [[CAS settings] setTrackLocationWithEnabled:enabled];
+}
+
+void CASUSetUserGender(NSInteger gender)
+{
+    [[CAS targetingOptions] setGender:(Gender)gender];
+}
+
+void CASUSetUserAge(NSInteger age)
+{
+    [[CAS targetingOptions] setAge:age];
 }
 
 const char * CASUGetSDKVersion()

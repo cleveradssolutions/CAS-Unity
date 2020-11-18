@@ -142,14 +142,6 @@ namespace CAS
         bool isExecuteEventsOnUnityThread { get; set; }
 
         /// <summary>
-        /// Indicates if the Unity app should be paused when a full screen ad (interstitial
-        /// or rewarded video ad) is displayed.
-        /// 
-        /// Enabled by default.
-        /// </summary>
-        bool iOSAppPauseOnBackground { get; set; }
-
-        /// <summary>
         /// This option will compare ad cost and serve regular interstitial ads
         /// when rewarded video ads are expected to generate less revenue.
         /// Interstitial Ads does not require to watch the video to the end,
@@ -158,5 +150,22 @@ namespace CAS
         /// Disabled by default.
         /// </summary>
         bool allowInterstitialAdsWhenVideoCostAreLower { get; set; }
+
+        /// <summary>
+        /// The SDK automatically collects location data if the user allowed the app to track the location.
+        ///
+        /// Only iOS supported right now.
+        /// 
+        /// Disabled by default.
+        /// </summary>
+        bool trackLocationEnabled { get; set; }
+
+        /// <summary>
+        /// Indicates if the Unity app should be paused when a full screen ad (interstitial
+        /// or rewarded video ad) is displayed.
+        /// 
+        /// Enabled by default.
+        /// </summary>
+        bool iOSAppPauseOnBackground { get; set; }
     }
 }

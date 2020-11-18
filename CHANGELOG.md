@@ -1,8 +1,42 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.7.1] - 2020-11-18
+### Features
+- Add Advanced Integration to the `Assets > CleverAdsSolutions > Settings` window.  
+CAS support partial integration of the third party mediation sdk you really need.  
+To do this, use any combination of partial dependencies. No additional code is required for each partner network.
+> Please contact us if you intend to use any additional third party mediation.
+- Add targeting options to inform our servers of the users details:
+```csharp
+CAS.MobileAds.targetingOptions.gender = CAS.Gender.Male;
+CAS.MobileAds.targetingOptions.age = 12;
+```
+- [iOS] Add `trackLocationEnabled` to enable automatically collects location data if the user allowed the app to track the location.
+```csharp
+CAS.MobileAds.settings.trackLocationEnabled = true;
+```
+- [iOS] Optimization of event calling in main thread.
+- [Android] Add [Validate of native Integration](https://github.com/cleveradssolutions/CAS-Android#step-7-verify-your-integration) in runtime. Find log information by tag: `CASIntegrationHelper`
+```csharp
+CAS.MobileAds.ValidateIntegration();
+```
+> Once you’ve successfully verified your integration, please remember to remove the integration helper from your code.
+- [Android] Add Resolve Android Dependencies by EDM4U button to the `Assets > CleverAdsSolutions > Adnroid Settings`.
+> Changin dependencies will change the project settings. Please use Android Resolve after the change complete.
+### Changes
+- Deprecation of `CASGeneral, CASTeen, CASPromo` dependencies in favor of the new system.
+- Cross Promotion dependency moved to Advanced Integration.
+- [iOS] NSUserTrackingUsageDescription is empty by default.
+- [iOS] The storage location for temporary settings for iOS build has been changed to `Assets/CleverAdsSolutions/Editor/ios_cas_settings`.
+### Added new optional third party mediation
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+- [MyTarget](https://target.my.com/) 
+- [MobFox](https://www.mobfox.com/)
+- [Amazon Ads](https://advertising.amazon.com/)
+
 ## [1.6.12] - 2020-11-02
 ### Bug Fixes
-- `Assets/CleverAdsSolutions/Settings` are applied in any case, even when `CAS.MobileAds.settings` is not used.
+- `Assets > CleverAdsSolutions > Settings` are applied in any case, even when `CAS.MobileAds.settings` is not used.
 
 ## [1.6.11] - 2020-10-27
 ### Dependencies

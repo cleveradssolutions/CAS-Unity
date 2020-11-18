@@ -244,33 +244,61 @@ namespace CAS.iOS
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillShownWithAdCallback ) )]
         private static void BannerWillShownWithAdCallback( IntPtr client )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnBannerAdShown );
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if (instance != null && instance.OnBannerAdShown != null)
+                    instance.OnBannerAdShown();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidShowAdFailedWithErrorCallback ) )]
         private static void BannerDidShowAdFailedWithErrorCallback( IntPtr client, string error )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnBannerAdFailedToShow, error );
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if (instance != null && instance.OnBannerAdFailedToShow != null)
+                    instance.OnBannerAdFailedToShow( error );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClickedAdCallback ) )]
         private static void BannerDidClickedAdCallback( IntPtr client )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnBannerAdClicked );
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if (instance != null && instance.OnBannerAdClicked != null)
+                    instance.OnBannerAdClicked();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClosedAdCallback ) )]
         private static void BannerDidClosedAdCallback( IntPtr client )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnBannerAdHidden );
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if (instance != null && instance.OnBannerAdHidden != null)
+                    instance.OnBannerAdHidden();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
         #endregion
 
@@ -278,42 +306,66 @@ namespace CAS.iOS
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillShownWithAdCallback ) )]
         private static void InterstitialWillShownWithAdCallback( IntPtr client )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnInterstitialAdShown );
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if (instance != null && instance.OnInterstitialAdShown != null)
+                    instance.OnInterstitialAdShown();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidShowAdFailedWithErrorCallback ) )]
         private static void InterstitialDidShowAdFailedWithErrorCallback( IntPtr client, string error )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
+            try
             {
+                var instance = IntPtrToManagerClient( client );
 #if CAS_EXPIREMENTAL_ORIENTATION
                 EventExecutor.Add( instance.RestoreScreenOrientation );
 #endif
-                CASFactory.ExecuteEvent( instance.OnInterstitialAdFailedToShow, error );
+                if (instance != null && instance.OnInterstitialAdFailedToShow != null)
+                    instance.OnInterstitialAdFailedToShow( error );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
             }
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClickedAdCallback ) )]
         private static void InterstitialDidClickedAdCallback( IntPtr client )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnInterstitialAdClicked );
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if (instance != null && instance.OnInterstitialAdClicked != null)
+                    instance.OnInterstitialAdClicked();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClosedAdCallback ) )]
         private static void InterstitialDidClosedAdCallback( IntPtr client )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
+            try
             {
+                var instance = IntPtrToManagerClient( client );
 #if CAS_EXPIREMENTAL_ORIENTATION
                 EventExecutor.Add( instance.RestoreScreenOrientation );
 #endif
-                CASFactory.ExecuteEvent( instance.OnInterstitialAdClosed );
+                if (instance != null && instance.OnInterstitialAdClosed != null)
+                    instance.OnInterstitialAdClosed();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
             }
         }
         #endregion
@@ -322,50 +374,82 @@ namespace CAS.iOS
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillShownWithAdCallback ) )]
         private static void RewardedWillShownWithAdCallback( IntPtr client )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnRewardedAdShown );
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if (instance != null && instance.OnRewardedAdShown != null)
+                    instance.OnRewardedAdShown();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidShowAdFailedWithErrorCallback ) )]
         private static void RewardedDidShowAdFailedWithErrorCallback( IntPtr client, string error )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
+            try
             {
+                var instance = IntPtrToManagerClient( client );
+
 #if CAS_EXPIREMENTAL_ORIENTATION
                 EventExecutor.Add( instance.RestoreScreenOrientation );
 #endif
-                CASFactory.ExecuteEvent( instance.OnRewardedAdFailedToShow, error );
+                if (instance != null && instance.OnRewardedAdFailedToShow != null)
+                    instance.OnRewardedAdFailedToShow( error );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
             }
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClickedAdCallback ) )]
         private static void RewardedDidClickedAdCallback( IntPtr client )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnRewardedAdClicked );
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if (instance != null && instance.OnRewardedAdClicked != null)
+                    instance.OnRewardedAdClicked();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidCompletedAdCallback ) )]
         private static void RewardedDidCompletedAdCallback( IntPtr client )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnRewardedAdCompleted );
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if (instance != null && instance.OnRewardedAdCompleted != null)
+                    instance.OnRewardedAdCompleted();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClosedAdCallback ) )]
         private static void RewardedDidClosedAdCallback( IntPtr client )
         {
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
+            try
             {
+                var instance = IntPtrToManagerClient( client );
 #if CAS_EXPIREMENTAL_ORIENTATION
-                EventExecutor.Add( instance.RestoreScreenOrientation );
+            EventExecutor.Add( instance.RestoreScreenOrientation );
 #endif
-                CASFactory.ExecuteEvent( instance.OnRewardedAdClosed );
+                if (instance != null && instance.OnRewardedAdClosed != null)
+                    instance.OnRewardedAdClosed();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
             }
         }
         #endregion

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace CAS.iOS
 {
-    internal class CASSettings : IAdsSettings
+    internal class CASSettings : IAdsSettings, ITargetingOptions
     {
         private bool _analyticsCollectionEnabled = false;
         private int _bannerRefreshInterval = 30;
@@ -18,6 +18,10 @@ namespace CAS.iOS
         private bool _iOSAppPauseOnBackground = true;
         private List<string> _testDeviceIds = new List<string>();
         private bool _allowInterstitialAdsWhenVideoCostAreLower = false;
+        private bool _trackLocationEnabled = false;
+
+        private Gender _gender = Gender.Unknown;
+        private int _age = 0;
 
         public bool analyticsCollectionEnabled
         {
@@ -176,7 +180,46 @@ namespace CAS.iOS
                 if (_allowInterstitialAdsWhenVideoCostAreLower != value)
                 {
                     _allowInterstitialAdsWhenVideoCostAreLower = value;
-                    CASExterns.CASUsetInterstitialAdsWhenVideoCostAreLower( value );
+                    CASExterns.CASUSetInterstitialAdsWhenVideoCostAreLower( value );
+                }
+            }
+        }
+
+        public bool trackLocationEnabled
+        {
+            get { return _trackLocationEnabled; }
+            set
+            {
+                if (_trackLocationEnabled != value)
+                {
+                    _trackLocationEnabled = value;
+                    CASExterns.CASUSetTrackLocationEnabled( value );
+                }
+            }
+        }
+
+        public Gender gender
+        {
+            get { return _gender; }
+            set
+            {
+                if (_gender != value)
+                {
+                    _gender = value;
+                    CASExterns.CASUSetUserGender( ( int )value );
+                }
+            }
+        }
+
+        public int age
+        {
+            get { return _age; }
+            set
+            {
+                if (_age != value)
+                {
+                    _age = value;
+                    CASExterns.CASUSetUserAge( value );
                 }
             }
         }

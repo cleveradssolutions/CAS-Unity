@@ -15,6 +15,7 @@ namespace CAS
         public int interstitialInterval = 30;
         public LoadingManagerMode loadingMode = LoadingManagerMode.Optimal;
         public bool debugMode;
-        public string locationUsageDescription;
+        public string trackingUsageDescription;
+        public bool trackLocationEnabled;
     }
 }

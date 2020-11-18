@@ -11,21 +11,14 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "1.6.12";
-
-        private static IAdsSettings _settings;
+        public const string wrapperVersion = "1.7.1";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
         /// </summary>
         public static IAdsSettings settings
         {
-            get
-            {
-                if (_settings == null)
-                    _settings = CASFactory.CreateSettigns( CASFactory.LoadInitSettingsFromResources() );
-                return _settings;
-            }
+            get { return CASFactory.GetAdsSettings(); }
         }
 
         /// <summary>
@@ -33,6 +26,17 @@ namespace CAS
         /// May be NULL before the first initialization in the session.
         /// </summary>
         public static IMediationManager manager { get; private set; }
+
+        /// <summary>
+        /// You can now easily tailor the way you serve your ads to fit a specific audience!
+        /// You’ll need to inform our servers of the users’ details
+        /// so the SDK will know to serve ads according to the segment the user belongs to.
+        /// **Attention:** Must be set before initializing the SDK.
+        /// </summary>
+        public static ITargetingOptions targetingOptions
+        {
+            get { return CASFactory.GetTargetingOptions(); }
+        }
 
         /// <summary>
         /// Return Native SDK version else <see cref="wrapperVersion"/> for Unity Editor.
@@ -60,39 +64,7 @@ namespace CAS
             bool testAdMode = false,
             InitCompleteAction initCompleteAction = null )
         {
-            if (string.IsNullOrEmpty( managerID ))
-                throw new ArgumentNullException( "managerID", "Manager ID is empty" );
-
-            if (manager != null && manager.managerID == managerID)
-            {
-                if (initCompleteAction != null)
-                    initCompleteAction( true, null );
-                return manager;
-            }
-            if (_settings == null)
-                _settings = CASFactory.CreateSettigns( CASFactory.LoadInitSettingsFromResources() );
-            EventExecutor.Initialize();
-            var instance = CASFactory.CreateManager( managerID, enableAd, testAdMode, initCompleteAction );
-            manager = instance;
-            return instance;
-        }
-
-        /// <summary>
-        /// Initialize new <see cref="IMediationManager"/> and save to <see cref="manager"/> field.
-        /// Initialize settings will be used from Resources asset.
-        /// Use menu Assets/CleverAdsSolutions/Settings for change settings.
-        /// Initialize can be called for different identifiers to create different managers.
-        /// After initialization, advertising content of <paramref name="enableAd"/> is loading automatically.
-        /// </summary>
-        /// <param name="managerIndex">CAS manager (Placement) index in Initialize settings array.</param>
-        /// <param name="initCompleteAction">Initialization complete action</param>
-        /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
-        /// <exception cref="NotSupportedException">Not supported runtime platform</exception>
-        /// <exception cref="FileNotFoundException">No settings found in resources</exception>
-        public static IMediationManager InitializeFromResources(
-            int managerIndex = 0, InitCompleteAction initCompleteAction = null )
-        {
-            return InitializeFromResources( managerIndex, AdFlags.Everything, initCompleteAction );
+            return manager = CASFactory.Initialize( managerID, enableAd, testAdMode, initCompleteAction );
         }
 
         /// <summary>
@@ -111,34 +83,29 @@ namespace CAS
         /// <exception cref="NotSupportedException">Not supported runtime platform</exception>
         /// <exception cref="FileNotFoundException">No settings found in resources</exception>
         public static IMediationManager InitializeFromResources(
-            int managerIndex, AdFlags enableAd, InitCompleteAction initCompleteAction = null )
+            int managerIndex = 0,
+            AdFlags enableAd = AdFlags.Everything,
+            InitCompleteAction initCompleteAction = null )
         {
-            var initSettings = CASFactory.LoadInitSettingsFromResources();
+            return manager = CASFactory.InitializeFromResources( managerIndex, enableAd, initCompleteAction );
+        }
 
-            if (!initSettings)
-                throw new FileNotFoundException( "No settings found in resources. " +
-                    "Please use Assets/CleverAdsSolutions/Settings menu for create settings asset." );
-            string managerID;
-            if (Application.isEditor || initSettings.testAdMode)
-            {
-                managerID = "demo";
-            }
-            else
-            {
-                if (initSettings.managerIds.Length - 1 < managerIndex || string.IsNullOrEmpty( initSettings.managerIds[managerIndex] ))
-                    throw new ArgumentNullException( "managerIds", "Manager ID is empty. " +
-                        "Please use Assets/CleverAdsSolutions/Settings menu and set manager ID." );
-                managerID = initSettings.managerIds[managerIndex];
-            }
-            if (_settings == null)
-                _settings = CASFactory.CreateSettigns( initSettings );
-            var manager = Initialize( managerID,
-                                      initSettings.allowedAdFlags & enableAd,
-                                      initSettings.testAdMode,
-                                      initCompleteAction );
-
-            manager.bannerSize = initSettings.bannerSize;
-            return manager;
+        /// <summary>
+        /// [Support Android only right now]
+        /// 
+        /// The CAS SDK provides an easy way to verify that you’ve successfully integrated any additional adapters;
+        /// it also makes sure all required dependencies and frameworks were added for the various mediated ad networks.
+        /// After you have finished your integration, call the following static method
+        /// and confirm that all networks you have implemented are marked as VERIFIED.
+        ///
+        /// Find log information by tag: CASIntegrationHelper
+        ///
+        /// Once you’ve successfully verified your integration,
+        /// please remember to remove the integration helper from your code.
+        /// </summary>
+        public static void ValidateIntegration()
+        {
+            CASFactory.ValidateIntegration();
         }
     }
 }

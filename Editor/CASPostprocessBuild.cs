@@ -80,8 +80,8 @@ namespace CAS.UEditor
             #region Write NSUserTrackingUsageDescription
             EditorUtility.DisplayProgressBar( casTitle, "Write NSUserTrackingUsageDescription to Info.plist", 0.5f );
             var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
-            if (casSettings && !string.IsNullOrEmpty( casSettings.locationUsageDescription ))
-                plist.root.SetString( "NSUserTrackingUsageDescription", casSettings.locationUsageDescription );
+            if (casSettings && !string.IsNullOrEmpty( casSettings.trackingUsageDescription ))
+                plist.root.SetString( "NSUserTrackingUsageDescription", casSettings.trackingUsageDescription );
             #endregion
 
             #region Write SKAdNetworks
@@ -152,7 +152,7 @@ namespace CAS.UEditor
 
         private static void ApplyCrosspromoDynamicLinks( string projectPath )
         {
-            if (!CASEditorUtils.IsDependencyFileExists( CASEditorUtils.promoTemplateDependency, BuildTarget.iOS ))
+            if (!CASEditorUtils.IsDependencyExists( CASEditorUtils.promoDependency, BuildTarget.iOS ))
                 return;
             if (!CASEditorUtils.IsFirebaseServiceExist( "dynamic" ))
                 return;

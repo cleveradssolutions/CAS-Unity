@@ -85,11 +85,13 @@
             break;
         case CASTypeInterstitial:
             [_mediationManager showFromRootViewController:[self unityGLViewController]
-                                                     type:type callback:_interstitialCallback];
+                                                     type:CASTypeInterstitial
+                                                 callback:_interstitialCallback];
             break;
         case CASTypeRewarded:
             [_mediationManager showFromRootViewController:[self unityGLViewController]
-                                                     type:type callback:_rewardedCallback];
+                                                     type:CASTypeRewarded
+                                                 callback:_rewardedCallback];
             break;
         default:
             break;

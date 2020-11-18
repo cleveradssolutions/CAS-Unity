@@ -45,10 +45,19 @@ namespace CAS.iOS
         internal static extern void CASUSetLoadingWithMode( int mode );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUsetInterstitialAdsWhenVideoCostAreLower( bool allow );
+        internal static extern void CASUSetInterstitialAdsWhenVideoCostAreLower( bool allow );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSetTrackLocationEnabled( bool enabled );
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetiOSAppPauseOnBackground( bool pause );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSetUserGender( int gender );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSetUserAge( int age );
 
         [DllImport( "__Internal" )]
         internal static extern string CASUGetSDKVersion();

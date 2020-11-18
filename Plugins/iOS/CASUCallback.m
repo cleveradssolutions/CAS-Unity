@@ -75,7 +75,6 @@
 }
 
 - (void)didClosedAd {
-    // didClosedAd is called from CAS internal thread
 #if __has_include("UnityInterface.h")
     if (fullScreenAd) {
         if (UnityIsPaused()) {

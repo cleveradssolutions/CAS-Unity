@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using UnityEditor;
 using UnityEditor.Build;
@@ -17,7 +18,6 @@ namespace CAS.UEditor
         public const string iosAdmobSampleAppID = "ca-app-pub-3940256099942544~1458002511";
 
         public const string editorRuntimeActiveAdPrefs = "typesadsavailable";
-        public const string editorReimportDepsOnBuildPrefs = "cas_reimport_deps_on_build";
         public const string editorLatestVersionPrefs = "cas_last_ver_";
         public const string editorLatestVersionTimestampPrefs = "cas_last_ver_time_";
         public const string rootCASFolderPath = "Assets/CleverAdsSolutions";
@@ -27,32 +27,31 @@ namespace CAS.UEditor
         public const string androidLibManifestPath = androidLibFolderPath + "/AndroidManifest.xml";
         public const string androidLibPropertiesPath = androidLibFolderPath + "/project.properties";
 
-        public const string iosResSettingsPath = "Temp/UnityTempFile-cassettings";
+        public const string iosResSettingsPath = editorFolderPath + "/ios_cas_settings";
 
-        public const string generalTemplateDependency = "CASGeneral";
-        public const string teenTemplateDependency = "CASTeen";
-        public const string promoTemplateDependency = "CASPromo";
+        public const string generalDeprecateDependency = "General";
+        public const string teenDeprecateDependency = "Teen";
+        public const string promoDeprecateDependency = "Promo";
+        public const string promoDependency = "CrossPromotion";
         public const string dependenciesExtension = "Dependencies.xml";
 
         public const string androidLibManifestTemplateFile = "CASManifest.xml";
         public const string androidLibPropTemplateFile = "CASLibProperties.txt";
         public const string iosSKAdNetworksTemplateFile = "CASSKAdNetworks.txt";
 
-        private const string gitRootURL = "https://github.com/cleveradssolutions/";
+        public const string gitRootURL = "https://github.com/cleveradssolutions/";
         public const string gitUnityRepo = "CAS-Unity";
-        public const string gitAndroidRepo = "CAS-Android";
-        public const string gitiOSRepo = "CAS-iSO";
         public const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
-        public const string supportURL = gitRootURL + gitUnityRepo + "#support";
+        public const string supportURL = gitUnityRepoURL + "#support";
+        public const string configuringPrivacyURL = gitUnityRepoURL + "#step-2-configuring-cas-sdk";
         public const string websiteURL = "https://cleveradssolutions.com";
-        public const string configuringPrivacyURL = gitRootURL + gitiOSRepo + "#step-5-configuring-privacy-controls";
 
         public const string mainGradlePath = "Assets/Plugins/Android/mainTemplate.gradle";
         public const string launcherGradlePath = "Assets/Plugins/Android/launcherTemplate.gradle";
         public const string projectGradlePath = "Assets/Plugins/Android/baseProjectTemplate.gradle";
         public const string packageManifestPath = "Packages/manifest.json";
 
-        private const string locationUsageDefaultDescription = "Your data will be used to provide you a better and personalized ad experience.";
+        public const string locationUsageDefaultDescription = "Your data will be used to provide you a better and personalized ad experience.";
 
         public const string preferredCountry = "BR"; // ISO2: US, RU ...
         #endregion
@@ -127,7 +126,6 @@ namespace CAS.UEditor
                 else if (platform == BuildTarget.iOS)
                 {
                     asset.managerIds = new string[] { "" };
-                    asset.locationUsageDescription = locationUsageDefaultDescription;
                     asset.interstitialInterval = 90;
                 }
                 AssetDatabase.CreateAsset( asset, assetPath );
@@ -143,9 +141,14 @@ namespace CAS.UEditor
                 AssetDatabase.CreateFolder( rootCASFolderPath, folderName );
         }
 
-        public static bool IsDependencyFileExists( string dependency, BuildTarget platform )
+        public static bool IsDeprecateDependencyExists( string dependency, BuildTarget platform )
         {
-            return AssetDatabase.FindAssets( dependency + platform.ToString() + "Dependencies" ).Length > 0;
+            return AssetDatabase.FindAssets( "CAS" + dependency + platform.ToString() + "Dependencies" ).Length > 0;
+        }
+
+        public static bool IsDependencyExists( string dependency, BuildTarget platform )
+        {
+            return AssetDatabase.FindAssets( "CAS" + platform.ToString() + dependency + "Dependencies" ).Length > 0;
         }
 
         public static string GetTemplatePath( string templateFile )
@@ -164,16 +167,9 @@ namespace CAS.UEditor
             return path;
         }
 
-        public static bool TryActivateDependencies( string template, BuildTarget platform )
+        public static string GetDependencyPath( string name, BuildTarget platform )
         {
-            CreateFolderInAssets( "Editor" );
-
-            string fromPath = GetTemplatePath( template + platform.ToString() + ".xml" );
-            if (string.IsNullOrEmpty( fromPath ))
-                return false;
-
-            string dest = editorFolderPath + "/" + template + platform.ToString() + dependenciesExtension;
-            return TryCopyFile( fromPath, dest );
+            return editorFolderPath + "/CAS" + platform.ToString() + name + dependenciesExtension;
         }
 
         public static bool TryCopyFile( string source, string dest )
@@ -239,6 +235,44 @@ namespace CAS.UEditor
 #else
             throw new OperationCanceledException(logTag + message);
 #endif
+        }
+
+        public static bool TryResolveAndroidDependencies( bool force = true )
+        {
+            bool success = true;
+            try
+            {
+                var resolverType = Type.GetType( "GooglePlayServices.PlayServicesResolver, Google.JarResolver", false );
+                if (resolverType != null)
+                {
+                    bool autoResolve;
+                    if (force)
+                        autoResolve = false;
+                    else
+                        autoResolve = ( bool )resolverType.GetProperty( "AutomaticResolutionEnabled",
+                            BindingFlags.Public | BindingFlags.Static )
+                            .GetValue( null );
+                    if (!autoResolve)
+                    {
+                        try
+                        {
+                            EditorUtility.DisplayProgressBar( "Hold on.", "Resolve Android dependencies", 0.6f );
+                            success = ( bool )resolverType.GetMethod( "ResolveSync", BindingFlags.Public | BindingFlags.Static, null,
+                                new[] { typeof( bool ) }, null )
+                                .Invoke( null, new object[] { true } );
+                        }
+                        finally
+                        {
+                            EditorUtility.ClearProgressBar();
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning( logTag + "GooglePlayServices.PlayServicesResolver error: " + e.Message );
+            }
+            return success;
         }
 
         public static string BuildRemoteUrl( string managerID, string country, BuildTarget platform )

@@ -56,7 +56,7 @@ namespace CAS.UEditor
             var settings = Utils.GetSettingsAsset( target );
             if (!settings)
                 Utils.StopBuildWithMessage( "Settings not found. Please use menu Assets/CleverAdsSolutions/Settings " +
-                    "for create and set settings to build.", target );
+                    "to create and set settings for build.", target );
 
             var newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
             if (newCASVersion != null)
@@ -101,6 +101,14 @@ namespace CAS.UEditor
                 Utils.StopBuildWithMessage( "CAS server provides invalid Admob App Id not match pattern ca-app-pub-0000000000000000~0000000000. " +
                     "Please try using a different identifier in the first place or contact support.", target );
 
+            var dependencyManager = DependencyManager.Create( target, Audience.Mixed, false );
+            if(dependencyManager!= null)
+            {
+                if(!dependencyManager.installedAny)
+                    Utils.StopBuildWithMessage( "Dependencies of native SDK were not found. " +
+                    "Please use 'Assets/CleverAdsSolutions/Settings' menu to integrate solutions or any SDK separately.", target );
+            }
+
             if (target == BuildTarget.Android)
             {
                 EditorUtility.DisplayProgressBar( casTitle, "Validate CAS Android Build Settings", 0.8f );
@@ -128,13 +136,7 @@ namespace CAS.UEditor
             else if (target == BuildTarget.iOS)
             {
                 EditorUtility.DisplayProgressBar( casTitle, "Validate CAS iOS Build Settings", 0.8f );
-                if (PlayerSettings.iOS.sdkVersion == iOSSdkVersion.SimulatorSDK)
-                    DialogOrCancel( "To use CAS on iOS Simulator, you need apply Scripting Define Symbols: TARGET_OS_SIMULATOR.", BuildTarget.NoTarget );
-
-                if (Utils.IsDependencyFileExists( Utils.promoTemplateDependency, BuildTarget.iOS )
-                    && !Utils.IsFirebaseServiceExist( "dynamic" ))
-                    DialogOrCancel( "CAS Cross-promotion uses deep links to track conversions. Please add Firebase Deep Link dependency to the project.", BuildTarget.NoTarget );
-
+                
                 if (!File.Exists( Utils.iosResSettingsPath ))
                 {
                     var appIdSettings = new Utils.AdmobAppIdData();
@@ -144,75 +146,20 @@ namespace CAS.UEditor
                 }
             }
 
-            EditorUtility.DisplayProgressBar( casTitle, "Validate CAS Dependencies", 0.9f );
-            bool allowReimportDeps = PlayerPrefs.GetInt( Utils.editorReimportDepsOnBuildPrefs, 1 ) == 1;
-            string activeDependencyError = null;
-            if (settings.audienceTagged == Audience.Children)
-            {
-                if (!Utils.IsDependencyFileExists( Utils.generalTemplateDependency, target ))
-                    activeDependencyError = "Ad Children Audience required CAS General Depencency. " +
-                        "Please use menu Assets/CleverAdsSolutions/Settings for enable it.";
-                else if (allowReimportDeps)
-                    Utils.TryActivateDependencies( Utils.generalTemplateDependency, target );
-
-                if (Utils.IsDependencyFileExists( Utils.teenTemplateDependency, target ))
-                    activeDependencyError = "Ad Children Audience not allowed active CAS Teen Depencency. " +
-                        "Please use menu Assets/CleverAdsSolutions/Settings for disable it.";
-            }
-            else
-            {
-                if (!Utils.IsDependencyFileExists( Utils.teenTemplateDependency, target ))
-                    activeDependencyError = "Ad " + settings.audienceTagged.ToString() +
-                        " Audience required CAS Teen Depencency. " +
-                        "Please use menu Assets/CleverAdsSolutions/Settings for enable it.";
-                else if (allowReimportDeps)
-                    Utils.TryActivateDependencies( Utils.teenTemplateDependency, target );
-
-                if (Utils.IsDependencyFileExists( Utils.generalTemplateDependency, target ))
-                    activeDependencyError = "Ad " + settings.audienceTagged.ToString() +
-                        " Audience not allowed active CAS General Depencency. " +
-                        "Please use menu Assets/CleverAdsSolutions/Settings for disable it.";
-            }
-
-            if (!string.IsNullOrEmpty( activeDependencyError ))
-                DialogOrCancel( activeDependencyError, target );
-
-            if (allowReimportDeps && Utils.IsDependencyFileExists( Utils.promoTemplateDependency, target ))
-                Utils.TryActivateDependencies( Utils.promoTemplateDependency, target );
-
             if (settings.bannerSize == AdSize.Banner && Utils.IsPortraitOrientation())
             {
                 DialogOrCancel( "For portrait applications, we recommend using the adaptive banner size." +
                         "This will allow you to get more expensive advertising.", target );
             }
 
+#if false
             if (target == BuildTarget.Android && allowReimportDeps)
             {
-                bool success = true;
-                try
-                {
-                    var resolverType = Type.GetType( "GooglePlayServices.PlayServicesResolver, Google.JarResolver", false );
-                    if (resolverType != null)
-                    {
-                        var autoResolve = ( bool )resolverType.GetProperty( "AutomaticResolutionEnabled",
-                            BindingFlags.Public | BindingFlags.Static )
-                            .GetValue( null );
-                        if (!autoResolve)
-                        {
-                            success = ( bool )resolverType.GetMethod( "ResolveSync", BindingFlags.Public | BindingFlags.Static, null,
-                                new[] { typeof( bool ) }, null )
-                                .Invoke( null, new object[] { true } );
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning( Utils.logTag + "GooglePlayServices.PlayServicesResolver error: " + e.Message );
-                }
+                bool success = Utils.TryResolveAndroidDependencies();
                 if (!success)
                     Utils.StopBuildWithMessage( "Cancel build: Resolution Failed. See the log for details.", BuildTarget.NoTarget );
             }
-
+#endif
             Debug.Log( Utils.logTag + "Preprocess Build done." );
             EditorUtility.DisplayProgressBar( "Hold on", "Prepare components...", 0.95f );
         }
