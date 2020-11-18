@@ -99,6 +99,7 @@ namespace CAS.UEditor
 
             if (!deepInit)
                 return;
+            other.Clear();
             var depsAssets = AssetDatabase.FindAssets( "Dependencies" );
             for (int i = 0; i < depsAssets.Length; i++)
             {

@@ -172,6 +172,11 @@ namespace CAS.UEditor
             return editorFolderPath + "/CAS" + platform.ToString() + name + dependenciesExtension;
         }
 
+        public static string GetDeprecatedDependencyPath( string name, BuildTarget platform )
+        {
+            return editorFolderPath + "/CAS" + name + platform.ToString() + dependenciesExtension;
+        }
+
         public static bool TryCopyFile( string source, string dest )
         {
             try

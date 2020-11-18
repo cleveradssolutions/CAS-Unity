@@ -1,6 +1,9 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
 ## [1.7.1] - 2020-11-18
+### Dependencies
+- Wraps [Android 1.7.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- Wraps [iOS 1.7.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 ### Features
 - Add Advanced Integration to the `Assets > CleverAdsSolutions > Settings` window.  
 CAS support partial integration of the third party mediation sdk you really need.  

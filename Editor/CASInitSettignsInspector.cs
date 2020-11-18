@@ -344,13 +344,13 @@ namespace CAS.UEditor
                     "Please remove them and use the new dependencies below.", MessageType.Error );
                 if (GUILayout.Button( "Remove", GUILayout.ExpandWidth( false ), GUILayout.Height( 40 ) ))
                 {
-                    var generalpath = Utils.GetDependencyPath( Utils.generalDeprecateDependency, platform );
+                    var generalpath = Utils.GetDeprecatedDependencyPath( Utils.generalDeprecateDependency, platform );
                     if (File.Exists( generalpath ))
                         AssetDatabase.MoveAssetToTrash( generalpath );
-                    var teenPath = Utils.GetDependencyPath( Utils.teenDeprecateDependency, platform );
+                    var teenPath = Utils.GetDeprecatedDependencyPath( Utils.teenDeprecateDependency, platform );
                     if (File.Exists( teenPath ))
                         AssetDatabase.MoveAssetToTrash( teenPath );
-                    var promoPath = Utils.GetDependencyPath( Utils.promoDeprecateDependency, platform );
+                    var promoPath = Utils.GetDeprecatedDependencyPath( Utils.promoDeprecateDependency, platform );
                     if (File.Exists( promoPath ))
                         AssetDatabase.MoveAssetToTrash( promoPath );
                     deprecateDependenciesExist = false;
