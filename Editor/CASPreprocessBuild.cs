@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Build;
-using UnityEngine.Networking;
 using System.IO;
 using System.Xml.Linq;
 using System.Linq;
 using System;
-using System.Reflection;
 using Utils = CAS.UEditor.CASEditorUtils;
 
 #if UNITY_2018_1_OR_NEWER
@@ -102,11 +100,36 @@ namespace CAS.UEditor
                     "Please try using a different identifier in the first place or contact support.", target );
 
             var dependencyManager = DependencyManager.Create( target, Audience.Mixed, false );
-            if(dependencyManager!= null)
+            if (dependencyManager != null)
             {
-                if(!dependencyManager.installedAny)
+                if (!dependencyManager.installedAny)
                     Utils.StopBuildWithMessage( "Dependencies of native SDK were not found. " +
                     "Please use 'Assets/CleverAdsSolutions/Settings' menu to integrate solutions or any SDK separately.", target );
+
+                bool isNewerVersionExist = false;
+                for (int i = 0; i < dependencyManager.solutions.Length; i++)
+                {
+                    if (dependencyManager.solutions[i].isNewer)
+                    {
+                        isNewerVersionExist = true;
+                        break;
+                    }
+                }
+                if (!isNewerVersionExist)
+                {
+                    for (int i = 0; i < dependencyManager.networks.Length; i++)
+                    {
+                        if (dependencyManager.networks[i].isNewer)
+                        {
+                            isNewerVersionExist = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isNewerVersionExist)
+                    DialogOrCancel( "There is a new versions of the native dependencies available for update." +
+                        "Please use 'Assets/CleverAdsSolutions/Settings' menu to update.", target );
             }
 
             if (target == BuildTarget.Android)
@@ -136,7 +159,7 @@ namespace CAS.UEditor
             else if (target == BuildTarget.iOS)
             {
                 EditorUtility.DisplayProgressBar( casTitle, "Validate CAS iOS Build Settings", 0.8f );
-                
+
                 if (!File.Exists( Utils.iosResSettingsPath ))
                 {
                     var appIdSettings = new Utils.AdmobAppIdData();

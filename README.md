@@ -14,7 +14,7 @@ The Clever Ads Solutions Unity plugin enables Unity developers to easily serve M
 - Android version 4.4 (API level 19) and up
 - Gradle 3.4.3 and up
 ### iOS
-- XCode version 12 and up
+- XCode version 12.2 and up
 - iOS version 10 and up
 - Cocoapods applied
 
@@ -56,7 +56,7 @@ Modify `Packages/manifest.json`  to the following form:
   }
 ],
 "dependencies": {
-    "com.cleversolutions.ads.unity" : "https://github.com/cleveradssolutions/CAS-Unity.git#1.7.1",
+    "com.cleversolutions.ads.unity" : "https://github.com/cleveradssolutions/CAS-Unity.git#1.7.2",
     "Other" : "dependencies"
 }
 }

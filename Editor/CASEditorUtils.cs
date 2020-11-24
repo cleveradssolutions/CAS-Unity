@@ -9,17 +9,13 @@ using UnityEngine.Networking;
 
 namespace CAS.UEditor
 {
-    internal static class CASEditorUtils
+    public static class CASEditorUtils
     {
         #region Constants
-        public const string logTag = "[CleverAdsSolutions] ";
         public const string packageName = "com.cleversolutions.ads.unity";
         public const string androidAdmobSampleAppID = "ca-app-pub-3940256099942544~3347511713";
         public const string iosAdmobSampleAppID = "ca-app-pub-3940256099942544~1458002511";
 
-        public const string editorRuntimeActiveAdPrefs = "typesadsavailable";
-        public const string editorLatestVersionPrefs = "cas_last_ver_";
-        public const string editorLatestVersionTimestampPrefs = "cas_last_ver_time_";
         public const string rootCASFolderPath = "Assets/CleverAdsSolutions";
         public const string editorFolderPath = rootCASFolderPath + "/Editor";
         public const string androidLibFolderPath = "Assets/Plugins/Android/CASPlugin.androidlib";
@@ -29,37 +25,55 @@ namespace CAS.UEditor
 
         public const string iosResSettingsPath = editorFolderPath + "/ios_cas_settings";
 
-        public const string generalDeprecateDependency = "General";
-        public const string teenDeprecateDependency = "Teen";
-        public const string promoDeprecateDependency = "Promo";
         public const string promoDependency = "CrossPromotion";
-        public const string dependenciesExtension = "Dependencies.xml";
-
-        public const string androidLibManifestTemplateFile = "CASManifest.xml";
-        public const string androidLibPropTemplateFile = "CASLibProperties.txt";
-        public const string iosSKAdNetworksTemplateFile = "CASSKAdNetworks.txt";
-
-        public const string gitRootURL = "https://github.com/cleveradssolutions/";
-        public const string gitUnityRepo = "CAS-Unity";
-        public const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
-        public const string supportURL = gitUnityRepoURL + "#support";
-        public const string configuringPrivacyURL = gitUnityRepoURL + "#step-2-configuring-cas-sdk";
-        public const string websiteURL = "https://cleveradssolutions.com";
 
         public const string mainGradlePath = "Assets/Plugins/Android/mainTemplate.gradle";
         public const string launcherGradlePath = "Assets/Plugins/Android/launcherTemplate.gradle";
         public const string projectGradlePath = "Assets/Plugins/Android/baseProjectTemplate.gradle";
         public const string packageManifestPath = "Packages/manifest.json";
-
-        public const string locationUsageDefaultDescription = "Your data will be used to provide you a better and personalized ad experience.";
-
-        public const string preferredCountry = "BR"; // ISO2: US, RU ...
         #endregion
 
+        #region Internal Constants
+        internal const string gitRootURL = "https://github.com/cleveradssolutions/";
+        internal const string gitUnityRepo = "CAS-Unity";
+        internal const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
+        internal const string supportURL = gitUnityRepoURL + "#support";
+        internal const string configuringPrivacyURL = gitUnityRepoURL + "#step-2-configuring-cas-sdk";
+        internal const string websiteURL = "https://cleveradssolutions.com";
+
+        internal const string generalDeprecateDependency = "General";
+        internal const string teenDeprecateDependency = "Teen";
+        internal const string promoDeprecateDependency = "Promo";
+        internal const string dependenciesExtension = "Dependencies.xml";
+
+        internal const string logTag = "[CleverAdsSolutions] ";
+        internal const string editorRuntimeActiveAdPrefs = "typesadsavailable";
+        internal const string editorLatestVersionPrefs = "cas_last_ver_";
+        internal const string editorLatestVersionTimestampPrefs = "cas_last_ver_time_";
+        internal const string androidLibManifestTemplateFile = "CASManifest.xml";
+        internal const string androidLibPropTemplateFile = "CASLibProperties.txt";
+        internal const string iosSKAdNetworksTemplateFile = "CASSKAdNetworks.txt";
+
+        internal const string locationUsageDefaultDescription = "Your data will be used to provide you a better and personalized ad experience.";
+
+        internal const string preferredCountry = "BR"; // ISO2: US, RU ...
+        #endregion
+
+        #region Internal structures
         [Serializable]
         internal class AdmobAppIdData
         {
             public string admob_app_id = null;
+            public int[] Banner = null;
+            public int[] Interstitial = null;
+            public int[] Rewarded = null;
+
+            public bool IsDisabled()
+            {
+                return (Interstitial == null || Interstitial.Length < 5)
+                    && ( Banner == null || Banner.Length < 5 )
+                    && ( Rewarded == null || Rewarded.Length < 5 );
+            }
         }
 
         [Serializable]
@@ -67,6 +81,7 @@ namespace CAS.UEditor
         {
             public string tag_name = null;
         }
+        #endregion
 
         #region Menu items
         [MenuItem( "Assets/CleverAdsSolutions/Android Settings..." )]
@@ -82,32 +97,7 @@ namespace CAS.UEditor
         }
         #endregion
 
-        public static bool IsFirebaseServiceExist( string service )
-        {
-            if (AssetDatabase.FindAssets( "Firebase." + service ).Length > 0)
-                return true;
-
-            return IsPackageExist( "com.google.firebase." + service );
-        }
-
-        public static bool IsPackageExist( string package )
-        {
-            return File.Exists( packageManifestPath ) &&
-                File.ReadAllText( packageManifestPath ).Contains( package );
-        }
-
-        public static void OpenSettingsWindow( BuildTarget target )
-        {
-            var asset = GetSettingsAsset( target );
-            Selection.activeObject = asset;
-            EditorGUIUtility.PingObject( asset );
-        }
-
-        public static string GetAdmobAppIdFromJson( string json )
-        {
-            return JsonUtility.FromJson<AdmobAppIdData>( json ).admob_app_id;
-        }
-
+        #region Public API
         public static CASInitSettings GetSettingsAsset( BuildTarget platform )
         {
             if (!AssetDatabase.IsValidFolder( "Assets/Resources" ))
@@ -133,113 +123,14 @@ namespace CAS.UEditor
             return asset;
         }
 
-        public static void CreateFolderInAssets( string folderName )
-        {
-            if (!AssetDatabase.IsValidFolder( rootCASFolderPath ))
-                AssetDatabase.CreateFolder( "Assets", "CleverAdsSolutions" );
-            if (!AssetDatabase.IsValidFolder( rootCASFolderPath + "/" + folderName ))
-                AssetDatabase.CreateFolder( rootCASFolderPath, folderName );
-        }
-
-        public static bool IsDeprecateDependencyExists( string dependency, BuildTarget platform )
-        {
-            return AssetDatabase.FindAssets( "CAS" + dependency + platform.ToString() + "Dependencies" ).Length > 0;
-        }
-
         public static bool IsDependencyExists( string dependency, BuildTarget platform )
         {
             return AssetDatabase.FindAssets( "CAS" + platform.ToString() + dependency + "Dependencies" ).Length > 0;
         }
 
-        public static string GetTemplatePath( string templateFile )
-        {
-            string templateFolder = "/Templates/" + templateFile;
-            string path = "Packages/" + packageName + templateFolder;
-            if (!File.Exists( path ))
-            {
-                path = rootCASFolderPath + templateFolder;
-                if (!File.Exists( path ))
-                {
-                    Debug.LogError( logTag + "Template " + templateFile + " file not found. Try reimport CAS package." );
-                    return null;
-                }
-            }
-            return path;
-        }
-
         public static string GetDependencyPath( string name, BuildTarget platform )
         {
             return editorFolderPath + "/CAS" + platform.ToString() + name + dependenciesExtension;
-        }
-
-        public static string GetDeprecatedDependencyPath( string name, BuildTarget platform )
-        {
-            return editorFolderPath + "/CAS" + name + platform.ToString() + dependenciesExtension;
-        }
-
-        public static bool TryCopyFile( string source, string dest )
-        {
-            try
-            {
-                AssetDatabase.DeleteAsset( dest );
-                File.Copy( source, dest );
-                AssetDatabase.ImportAsset( dest );
-                return true;
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-                return false;
-            }
-        }
-
-        public static void WriteToFile( string data, string path )
-        {
-            try
-            {
-                var directoryPath = Path.GetDirectoryName( path );
-                if (!Directory.Exists( directoryPath ))
-                    Directory.CreateDirectory( directoryPath );
-                File.WriteAllText( path, data );
-                AssetDatabase.ImportAsset( path );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-        }
-
-        public static bool IsPortraitOrientation()
-        {
-            var orientation = PlayerSettings.defaultInterfaceOrientation;
-            if (orientation == UIOrientation.Portrait || orientation == UIOrientation.PortraitUpsideDown)
-            {
-                return true;
-            }
-            else if (orientation == UIOrientation.AutoRotation)
-            {
-                if (PlayerSettings.allowedAutorotateToPortrait
-                    && !PlayerSettings.allowedAutorotateToLandscapeRight
-                    && !PlayerSettings.allowedAutorotateToLandscapeLeft)
-                    return true;
-            }
-            return false;
-        }
-
-        public static void StopBuildWithMessage( string message, BuildTarget target )
-        {
-            EditorUtility.ClearProgressBar();
-            if (target != BuildTarget.NoTarget
-                    && EditorUtility.DisplayDialog( "CAS Stop Build", message, "Open Settings", "Close" ))
-                OpenSettingsWindow( target );
-
-#if UNITY_2018_1_OR_NEWER
-            throw new BuildFailedException( logTag + message );
-#elif UNITY_2017_1_OR_NEWER
-            throw new BuildPlayerWindow.BuildMethodException( logTag + message );
-#else
-            throw new OperationCanceledException(logTag + message);
-#endif
         }
 
         public static bool TryResolveAndroidDependencies( bool force = true )
@@ -279,8 +170,135 @@ namespace CAS.UEditor
             }
             return success;
         }
+        #endregion
 
-        public static string BuildRemoteUrl( string managerID, string country, BuildTarget platform )
+        #region Internal API
+        internal static bool IsFirebaseServiceExist( string service )
+        {
+            if (AssetDatabase.FindAssets( "Firebase." + service ).Length > 0)
+                return true;
+
+            return IsPackageExist( "com.google.firebase." + service );
+        }
+
+        internal static bool IsPackageExist( string package )
+        {
+            return File.Exists( packageManifestPath ) &&
+                File.ReadAllText( packageManifestPath ).Contains( package );
+        }
+
+        internal static void OpenSettingsWindow( BuildTarget target )
+        {
+            var asset = GetSettingsAsset( target );
+            Selection.activeObject = asset;
+            EditorGUIUtility.PingObject( asset );
+        }
+
+        internal static string GetAdmobAppIdFromJson( string json )
+        {
+            return JsonUtility.FromJson<AdmobAppIdData>( json ).admob_app_id;
+        }
+
+        internal static void CreateFolderInAssets( string folderName )
+        {
+            if (!AssetDatabase.IsValidFolder( rootCASFolderPath ))
+                AssetDatabase.CreateFolder( "Assets", "CleverAdsSolutions" );
+            if (!AssetDatabase.IsValidFolder( rootCASFolderPath + "/" + folderName ))
+                AssetDatabase.CreateFolder( rootCASFolderPath, folderName );
+        }
+
+        internal static bool IsDeprecateDependencyExists( string dependency, BuildTarget platform )
+        {
+            return AssetDatabase.FindAssets( "CAS" + dependency + platform.ToString() + "Dependencies" ).Length > 0;
+        }
+
+        internal static string GetTemplatePath( string templateFile )
+        {
+            string templateFolder = "/Templates/" + templateFile;
+            string path = "Packages/" + packageName + templateFolder;
+            if (!File.Exists( path ))
+            {
+                path = rootCASFolderPath + templateFolder;
+                if (!File.Exists( path ))
+                {
+                    Debug.LogError( logTag + "Template " + templateFile + " file not found. Try reimport CAS package." );
+                    return null;
+                }
+            }
+            return path;
+        }
+
+        internal static string GetDeprecatedDependencyPath( string name, BuildTarget platform )
+        {
+            return editorFolderPath + "/CAS" + name + platform.ToString() + dependenciesExtension;
+        }
+
+        internal static bool TryCopyFile( string source, string dest )
+        {
+            try
+            {
+                AssetDatabase.DeleteAsset( dest );
+                File.Copy( source, dest );
+                AssetDatabase.ImportAsset( dest );
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+                return false;
+            }
+        }
+
+        internal static void WriteToFile( string data, string path )
+        {
+            try
+            {
+                var directoryPath = Path.GetDirectoryName( path );
+                if (!Directory.Exists( directoryPath ))
+                    Directory.CreateDirectory( directoryPath );
+                File.WriteAllText( path, data );
+                AssetDatabase.ImportAsset( path );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+        }
+
+        internal static bool IsPortraitOrientation()
+        {
+            var orientation = PlayerSettings.defaultInterfaceOrientation;
+            if (orientation == UIOrientation.Portrait || orientation == UIOrientation.PortraitUpsideDown)
+            {
+                return true;
+            }
+            else if (orientation == UIOrientation.AutoRotation)
+            {
+                if (PlayerSettings.allowedAutorotateToPortrait
+                    && !PlayerSettings.allowedAutorotateToLandscapeRight
+                    && !PlayerSettings.allowedAutorotateToLandscapeLeft)
+                    return true;
+            }
+            return false;
+        }
+
+        internal static void StopBuildWithMessage( string message, BuildTarget target )
+        {
+            EditorUtility.ClearProgressBar();
+            if (target != BuildTarget.NoTarget
+                    && EditorUtility.DisplayDialog( "CAS Stop Build", message, "Open Settings", "Close" ))
+                OpenSettingsWindow( target );
+
+#if UNITY_2018_1_OR_NEWER
+            throw new BuildFailedException( logTag + message );
+#elif UNITY_2017_1_OR_NEWER
+            throw new BuildPlayerWindow.BuildMethodException( logTag + message );
+#else
+            throw new OperationCanceledException(logTag + message);
+#endif
+        }
+
+        internal static string BuildRemoteUrl( string managerID, string country, BuildTarget platform )
         {
             string platformCode;
             switch (platform)
@@ -320,12 +338,13 @@ namespace CAS.UEditor
             return hashString.ToString().PadLeft( 32, '0' );
         }
 
-        public static string DownloadRemoteSettings( string managerID, string country, BuildTarget platform )
+        internal static string DownloadRemoteSettings( string managerID, string country, BuildTarget platform )
         {
             const string title = "Update CAS remote settings";
             string url = BuildRemoteUrl( managerID, country, platform );
             string message = null;
 
+            AdmobAppIdData data = null;
             using (var loader = UnityWebRequest.Get( url ))
             {
                 loader.SendWebRequest();
@@ -340,7 +359,6 @@ namespace CAS.UEditor
                     }
                 }
                 EditorUtility.ClearProgressBar();
-
                 if (message == null)
                 {
                     if (string.IsNullOrEmpty( loader.error ))
@@ -352,7 +370,23 @@ namespace CAS.UEditor
                                 " Please try using a different identifier in the first place or contact support." +
                                 " To test build please use Test Ad Mode in settings.", platform );
 
-                        return ApplySettingsContent( content, platform );
+                        try
+                        {
+                            data = JsonUtility.FromJson<AdmobAppIdData>( content );
+                            if (data.IsDisabled())
+                            {
+                                message = "Ads are currently disabled for your application. You can use the cached settings or try later.";
+                            }
+                            else
+                            {
+                                WriteSettingsForPlatform( content, platform );
+                                return data.admob_app_id;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            message = e.ToString();
+                        }
                     }
                     else
                     {
@@ -360,27 +394,58 @@ namespace CAS.UEditor
                     }
                 }
             }
-            if (EditorUtility.DisplayDialog( title, message, "Select settings file", "Cancel Build" ))
+            var cachePath = platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
+            if (data != null || File.Exists( cachePath ))
             {
-                var filePath = EditorUtility.OpenFilePanelWithFilters(
-                    "Select CAS Settings file for build", "", new[] { "json" } );
+                var dialogResponse = EditorUtility.DisplayDialogComplex( title, message, "Use cache", "Cancel Build", "Select settings file" );
+                if (dialogResponse == 0)
+                {
+                    if (data == null)
+                        return GetAdmobAppIdFromJson( File.ReadAllText( cachePath ) );
+                    // This content will be not save to cache
+                    return data.admob_app_id;
+                }
+                if (dialogResponse == 1)
+                {
+                    StopBuildWithMessage( message, BuildTarget.NoTarget );
+                    return null;
+                }
+            }
+            else if (!EditorUtility.DisplayDialog( title, message, "Select settings file", "Cancel Build" ))
+            {
+                StopBuildWithMessage( message, BuildTarget.NoTarget );
+                return null;
+            }
+
+            var filePath = EditorUtility.OpenFilePanelWithFilters(
+                "Select CAS Settings file for build", "", new[] { "Settings file", "json" } );
+            try
+            {
                 if (!string.IsNullOrEmpty( filePath ))
-                    return ApplySettingsContent( File.ReadAllText( filePath ), platform );
+                {
+                    var content = File.ReadAllText( filePath );
+                    WriteSettingsForPlatform( content, platform );
+                    return GetAdmobAppIdFromJson( content );
+                }
+            }
+            catch
+            {
+                StopBuildWithMessage( "Selected wrong file: " + filePath, BuildTarget.NoTarget );
+                return null;
             }
             StopBuildWithMessage( message, BuildTarget.NoTarget );
             return null;
         }
 
-        public static string ApplySettingsContent( string content, BuildTarget target )
+        private static void WriteSettingsForPlatform( string content, BuildTarget target )
         {
             if (target == BuildTarget.Android)
                 WriteToFile( content, androidResSettingsPath );
             else
                 WriteToFile( content, iosResSettingsPath );
-            return GetAdmobAppIdFromJson( content );
         }
 
-        public static string GetNewVersionOrNull( string repo, string currVersion, bool force )
+        internal static string GetNewVersionOrNull( string repo, string currVersion, bool force )
         {
             try
             {
@@ -400,7 +465,7 @@ namespace CAS.UEditor
             return null;
         }
 
-        public static string GetLatestVersion( string repo, bool force )
+        internal static string GetLatestVersion( string repo, bool force )
         {
             if (!force && !HasTimePassed( editorLatestVersionTimestampPrefs + repo, 1, false ))
             {
@@ -414,6 +479,7 @@ namespace CAS.UEditor
 
             using (var loader = UnityWebRequest.Get( url ))
             {
+                loader.timeout = 30;
                 loader.SendWebRequest();
                 try
                 {
@@ -452,7 +518,7 @@ namespace CAS.UEditor
             return null;
         }
 
-        public static bool HasTimePassed( string prefKey, int days, bool projectOnly )
+        internal static bool HasTimePassed( string prefKey, int days, bool projectOnly )
         {
             string pref;
             if (projectOnly)
@@ -480,5 +546,6 @@ namespace CAS.UEditor
                 return DateTime.Compare( DateTime.Now, checkTime ) > 0; // Now time is later than checkTime
             }
         }
+        #endregion
     }
 }
