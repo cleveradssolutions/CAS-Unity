@@ -17,6 +17,9 @@ The Clever Ads Solutions Unity plugin enables Unity developers to easily serve M
 - XCode version 12.2 and up
 - iOS version 10 and up
 - Cocoapods applied
+### CAS Unity Demo App
+The Integration Demo application demonstrate how to integrate the CAS in your app.  
+[Repository Unity Sample Application](https://github.com/cleveradssolutions/CAS-Unity-Sample)
 
 # Table of contents
  1.  [Add the CAS package to Your Project](#step-1-add-the-cas-package-to-your-project)  
@@ -34,10 +37,6 @@ The Clever Ads Solutions Unity plugin enables Unity developers to easily serve M
  8.  [GitHub issue tracker](#github-issue-tracker)  
  9.  [Support](#support)  
  10.  [License](#license)  
-
-### CAS Unity Demo App
-The Integration Demo application demonstrate how to integrate the CAS in your app.  
-[Repository Unity Sample Application](https://github.com/cleveradssolutions/CAS-Unity-Sample)
 
 ## Step 1 Add the CAS package to Your Project
 if you are using Unity 2018.4 or newer then you can add CAS SDK to your Unity project using the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html), or you can import the package manually.
@@ -61,7 +60,7 @@ Modify `Packages/manifest.json`  to the following form:
 ],
 "dependencies": {
     "com.cleversolutions.ads.unity" 
-        : "https://github.com/cleveradssolutions/CAS-Unity.git#1.8.0",
+        : "https://github.com/cleveradssolutions/CAS-Unity.git#1.8.1",
     ...
 }
 }
@@ -314,7 +313,7 @@ Disabled by default.
 
 You can now easily tailor the way you serve your ads to fit a specific audience!  
 You’ll need to inform our servers of the users’ details so the SDK will know to serve ads according to the segment the user belongs to.  
-```csharp
+```c#
 // Set user gender
 CAS.MobileAds.targetingOptions.gender = CAS.Gender.Male;
 // Set user age. Limitation: 1-99 and 0 is 'unknown'
@@ -490,7 +489,7 @@ public class CleverAdsSolutionsDemoScript : MonoBehaviour
 
 The CAS SDK provides an easy way to verify that you’ve successfully integrated any additional adapters; it also makes sure all required dependencies and frameworks were added for the various mediated ad networks.   
 After you have finished your integration, call the following static method and confirm that all networks you have implemented are marked as VERIFIED:  
-```java
+```c#
 CAS.validateIntegration();
 ```
 Find log information by tag: **CASIntegrationHelper**
@@ -601,7 +600,7 @@ manager.bannerPosition = adPosition;
 
 To show the ad, call the following method with AdType of ad you want.
 ```c#
-manager.ShowAd(adType);
+manager.ShowAd(AdType.Banner);
 ```
 
 To hide Banner Ad from screen, call the following method:

@@ -51,6 +51,7 @@ namespace CAS.UEditor
         internal const string editorRuntimeActiveAdPrefs = "typesadsavailable";
         internal const string editorLatestVersionPrefs = "cas_last_ver_";
         internal const string editorLatestVersionTimestampPrefs = "cas_last_ver_time_";
+        internal const string editorIgnoreMultidexPrefs = "cas_ignore_multidex";
         internal const string androidLibManifestTemplateFile = "CASManifest.xml";
         internal const string androidLibPropTemplateFile = "CASLibProperties.txt";
         internal const string iosSKAdNetworksTemplateFile = "CASSKAdNetworks.txt";

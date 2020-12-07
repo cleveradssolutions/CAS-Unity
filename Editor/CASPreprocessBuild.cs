@@ -199,6 +199,8 @@ namespace CAS.UEditor
             //        "Project should use Gradle tools version 3.4+." );
             //}
 
+            bool multidexRequired = true; //TODO: Open API change state
+
             const string multidexObsoleted = "implementation 'com.android.support:multidex:1.0.3'";
             const string multidexImplementation = "implementation 'androidx.multidex:multidex:2.0.1'";
 
@@ -235,6 +237,9 @@ namespace CAS.UEditor
                         "'Player Settings > Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
             }
 
+            if (!multidexRequired)
+                return;
+
             const string gradlePath = Utils.launcherGradlePath;
             if (!File.Exists( gradlePath ))
                 Utils.StopBuildWithMessage(
@@ -242,6 +247,7 @@ namespace CAS.UEditor
                     "Custom Launcher Gradle Template. Please enable 'Custom Launcher Gradle Template' found under " +
                     "'Player Settings > Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
             List<string> gradle = new List<string>( File.ReadAllLines( gradlePath ) );
+
 #else
             const string gradlePath = Utils.mainGradlePath;
             if (!File.Exists( gradlePath ))
@@ -263,39 +269,42 @@ namespace CAS.UEditor
                 Utils.StopBuildWithMessage( "Not found Dependencies scope in Gradle template. " +
                     "Please try delete and create new mainTemplate.gradle", BuildTarget.NoTarget );
 
-            // chek exist
-            bool multidexExist = false;
-            while (line < gradle.Count && !gradle[line].Contains( "}" ))
+            bool multidexExist = !multidexRequired;
+            if (multidexRequired)
             {
-                if (gradle[line].Contains( multidexObsoleted ))
+                // chek exist
+                while (line < gradle.Count && !gradle[line].Contains( "}" ))
                 {
-                    gradle[line] = "    " + multidexImplementation;
-                    Debug.Log( Utils.logTag + "Replace dependency " + multidexObsoleted +
-                        " to " + multidexImplementation );
-                    multidexExist = true;
-                    break;
-                }
-                if (gradle[line].Contains( multidexImplementation ))
-                {
-                    multidexExist = true;
-                    break;
-                }
+                    if (gradle[line].Contains( multidexObsoleted ))
+                    {
+                        gradle[line] = "    " + multidexImplementation;
+                        Debug.Log( Utils.logTag + "Replace dependency " + multidexObsoleted +
+                            " to " + multidexImplementation );
+                        multidexExist = true;
+                        break;
+                    }
+                    if (gradle[line].Contains( multidexImplementation ))
+                    {
+                        multidexExist = true;
+                        break;
+                    }
 
-                line++;
-            }
-
-            // write dependency
-            if (!multidexExist)
-            {
-                if (EditorUtility.DisplayDialog( "CAS Preprocess Build",
-                        "Including the CAS SDK may cause the 64K limit on methods that can be packaged in an Android dex file to be breached" +
-                        "Do you want to use the MultiDex support library to building your app correctly?",
-                        "Enable MultiDex", "Continue" ))
-                {
-                    gradle.Insert( line, "    " + multidexImplementation );
-                    Debug.Log( Utils.logTag + "Append dependency " + multidexImplementation );
                     line++;
-                    multidexExist = true;
+                }
+
+                // write dependency
+                if (!multidexExist)
+                {
+                    if (EditorUtility.DisplayDialog( "CAS Preprocess Build",
+                            "Including the CAS SDK may cause the 64K limit on methods that can be packaged in an Android dex file to be breached" +
+                            "Do you want to use the MultiDex support library to building your app correctly?",
+                            "Enable MultiDex", "Continue" ))
+                    {
+                        gradle.Insert( line, "    " + multidexImplementation );
+                        Debug.Log( Utils.logTag + "Append dependency " + multidexImplementation );
+                        line++;
+                        multidexExist = true;
+                    }
                 }
             }
 

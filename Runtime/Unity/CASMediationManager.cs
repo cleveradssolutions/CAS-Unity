@@ -114,6 +114,11 @@ namespace CAS.Unity
 
         public bool IsReadyAd( AdType adType )
         {
+            if (!IsEnabledAd( adType ))
+                return false;
+            if (adType == AdType.Interstitial
+                && _settings.lastInterImpressionTimestamp + MobileAds.settings.interstitialInterval > Time.time)
+                return false;
             var flag = GetFlag( adType );
             return ( loadedTypes & flag ) == flag;
         }

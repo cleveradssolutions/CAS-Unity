@@ -30,6 +30,7 @@ namespace CAS.UEditor
         private bool allowedPackageUpdate;
         private string newCASVersion;
         private bool deprecateDependenciesExist;
+        private bool usingMultidexOnBuild;
 
         private int editorRuntimeActiveAdFlags;
         private GUIStyle boxScopeStyle = null;
@@ -72,6 +73,7 @@ namespace CAS.UEditor
 
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
             newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
+            usingMultidexOnBuild = PlayerPrefs.GetInt( Utils.editorIgnoreMultidexPrefs, 0 ) == 0;
 
             dependencyManager = DependencyManager.Create( platform, ( Audience )audienceTaggedProp.enumValueIndex, true );
         }
@@ -133,6 +135,13 @@ namespace CAS.UEditor
 
             EditorGUILayout.PropertyField( debugModeProp );
             OnEditroRuntimeActiveAdGUI();
+            //if(usingMultidexOnBuild != EditorGUILayout.Toggle("Use MultiDex", usingMultidexOnBuild )){
+            //    usingMultidexOnBuild = !usingMultidexOnBuild;
+            //    if (usingMultidexOnBuild)
+            //        PlayerPrefs.DeleteKey( Utils.editorIgnoreMultidexPrefs );
+            //    else
+            //        PlayerPrefs.SetInt( Utils.editorIgnoreMultidexPrefs, 1 );
+            //}
 
             DrawSeparator();
             DeprecatedDependenciesGUI();

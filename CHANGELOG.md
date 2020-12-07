@@ -1,5 +1,13 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.8.1] - 2020-12-07
+### Dependencies
+- [Android] Wraps [1.8.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+### Changes
+- The `IsAdReady` check now takes into account the interval between Interstitial ad impressions.
+### Bug Fixes
+- [Android] Lost point to AdCallback of Interstitial and Rewarded ad.
+
 ## [1.8.0] - 2020-12-07
 ### Dependencies
 - [Android] Wraps [1.8.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
