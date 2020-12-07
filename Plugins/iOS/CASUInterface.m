@@ -10,6 +10,9 @@
 #import "CASUManager.h"
 #import "CASUTypes.h"
 #import "CASUPluginUtil.h"
+#if __has_include("UnityAppController.h")
+#import "UnityAppController.h"
+#endif
 
 static NSString * CASUStringFromUTF8String(const char *bytes)
 {
@@ -115,6 +118,27 @@ void CASUSetUserGender(NSInteger gender)
 void CASUSetUserAge(NSInteger age)
 {
     [[CAS targetingOptions] setAge:age];
+}
+
+void CASUValidateIntegration()
+{
+    [CAS validateIntegration];
+}
+
+void CASUOpenDebugger()
+{
+#if __has_include("UnityAppController.h")
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"CASDebugger" bundle:nil];
+    if (storyboard) {
+        UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"DebuggerController"];
+        if (vc) {
+            UIViewController *root = ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;
+            [root presentViewController:vc animated:YES completion:nil];
+            return;
+        }
+    }
+#endif
+    NSLog(@"[CAS] Framework bridge cant find CASDebugger.h");
 }
 
 const char * CASUGetSDKVersion()

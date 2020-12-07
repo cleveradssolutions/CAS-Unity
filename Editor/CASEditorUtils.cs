@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -70,7 +71,7 @@ namespace CAS.UEditor
 
             public bool IsDisabled()
             {
-                return (Interstitial == null || Interstitial.Length < 5)
+                return ( Interstitial == null || Interstitial.Length < 5 )
                     && ( Banner == null || Banner.Length < 5 )
                     && ( Rewarded == null || Rewarded.Length < 5 );
             }
@@ -463,6 +464,37 @@ namespace CAS.UEditor
                 Debug.LogException( e );
             }
             return null;
+        }
+
+        internal static HashSet<string> GetCrossPromoAlias( BuildTarget platform )
+        {
+            var result = new HashSet<string>();
+            if (!IsDependencyExists( promoDependency, platform ))
+                return result;
+
+            string pattern = "alias\\\": \\\""; //: "iOSBundle\\\": \\\"";
+            string cachePath = platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
+
+            if (File.Exists( cachePath ))
+            {
+                try
+                {
+                    string content = File.ReadAllText( cachePath );
+                    int beginIndex = content.IndexOf( pattern );
+                    while (beginIndex > 0)
+                    {
+                        beginIndex += pattern.Length;
+                        var endIndex = content.IndexOf( '\\', beginIndex );
+                        result.Add( content.Substring( beginIndex, endIndex - beginIndex ) );
+                        beginIndex = content.IndexOf( pattern, endIndex );
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException( e );
+                }
+            }
+            return result;
         }
 
         internal static string GetLatestVersion( string repo, bool force )

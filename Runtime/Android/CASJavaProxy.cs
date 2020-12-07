@@ -17,7 +17,7 @@ namespace CAS.Android
         internal const string UnityActivityClassName = "com.unity3d.player.UnityPlayer";
         #endregion
 
-        internal static AndroidJavaObject GetJavaListObject( List<String> csTypeList )
+        internal static AndroidJavaObject GetJavaListObject( List<string> csTypeList )
         {
             AndroidJavaObject javaTypeArrayList = new AndroidJavaObject( "java.util.ArrayList" );
             foreach (string itemList in csTypeList)
@@ -40,6 +40,13 @@ namespace CAS.Android
         {
             this.manager = manager;
             this.initCompleteAction = initCompleteAction;
+        }
+
+        public void onInitialization( bool success, AndroidJavaObject error )
+        {
+            manager.initializationListener = null;
+            CASFactory.ExecuteEvent( initCompleteAction, success, "" );
+            initCompleteAction = null;
         }
 
         public void onInitialization( bool success, string error )

@@ -11,7 +11,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "1.7.2";
+        public const string wrapperVersion = "1.8.0";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -91,8 +91,6 @@ namespace CAS
         }
 
         /// <summary>
-        /// [Support Android only right now]
-        /// 
         /// The CAS SDK provides an easy way to verify that you’ve successfully integrated any additional adapters;
         /// it also makes sure all required dependencies and frameworks were added for the various mediated ad networks.
         /// After you have finished your integration, call the following static method

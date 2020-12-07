@@ -45,7 +45,6 @@ namespace CAS.UEditor
         }
         #endregion
 
-
         public static void ValidateIntegration( BuildTarget target )
         {
             if (target != BuildTarget.Android && target != BuildTarget.iOS)
@@ -146,7 +145,7 @@ namespace CAS.UEditor
                 CopyTemplateIfNeedToAndroidLib(
                     Utils.androidLibPropTemplateFile, Utils.androidLibPropertiesPath );
 
-                SetAdmobAppIdToAndroidManifest( admobAppId, false );
+                SetAdmobAppIdToAndroidManifest( admobAppId, false, Utils.GetCrossPromoAlias( target ) );
 
                 ConfigurateGradleSettings();
 
@@ -447,7 +446,7 @@ namespace CAS.UEditor
             }
         }
 
-        private static void SetAdmobAppIdToAndroidManifest( string admobAppId, bool newFile )
+        private static void SetAdmobAppIdToAndroidManifest( string admobAppId, bool newFile, HashSet<string> queries )
         {
             const string metaAdmobApplicationID = "com.google.android.gms.ads.APPLICATION_ID";
             XNamespace ns = "http://schemas.android.com/apk/res/android";
@@ -457,16 +456,20 @@ namespace CAS.UEditor
             CopyTemplateIfNeedToAndroidLib(
                     Utils.androidLibManifestTemplateFile, Utils.androidLibManifestPath );
 
+            bool appIdUpdated = false;
+            XElement elemManifest = null;
             try
             {
                 XDocument manifest = XDocument.Load( manifestPath );
-                XElement elemManifest = manifest.Element( "manifest" );
+                elemManifest = manifest.Element( "manifest" );
                 XElement elemApplication = elemManifest.Element( "application" );
                 IEnumerable<XElement> metas = elemApplication.Descendants()
                     .Where( elem => elem.Name.LocalName.Equals( "meta-data" ) );
 
                 foreach (XElement elem in metas)
                 {
+                    if (appIdUpdated)
+                        break;
                     IEnumerable<XAttribute> attrs = elem.Attributes();
                     foreach (XAttribute attr in attrs)
                     {
@@ -474,23 +477,47 @@ namespace CAS.UEditor
                                 && attr.Name.LocalName.Equals( "name" ) && attr.Value.Equals( metaAdmobApplicationID ))
                         {
                             elem.SetAttributeValue( ns + "value", admobAppId );
-                            elemManifest.Save( manifestPath );
-                            return;
+                            appIdUpdated = true;
+                            break;
                         }
                     }
+                }
+
+                var elemQueries = elemManifest.Element( "queries" );
+                if (elemQueries != null)
+                    elemQueries.Remove();
+
+                if (queries.Count > 0)
+                {
+                    elemQueries = new XElement( "queries" );
+                    elemQueries.Add( new XComment( "CAS Cross promotion" ) );
+                    foreach (var item in queries)
+                    {
+                        elemQueries.Add( new XElement( "package",
+                            new XAttribute( ns + "name", item ) ) );
+                    }
+                    elemManifest.Add( elemQueries );
                 }
             }
             catch (Exception e)
             {
                 Debug.LogException( e );
             }
-            if (newFile)
-                Utils.StopBuildWithMessage(
-                    "AndroidManifest.xml is not valid. Try re-importing the plugin.", BuildTarget.Android );
+            if (appIdUpdated)
+            {
+                if (elemManifest != null)
+                    elemManifest.Save( manifestPath );
+            }
+            else
+            {
+                if (newFile)
+                    Utils.StopBuildWithMessage(
+                        "AndroidManifest.xml is not valid. Try re-importing the plugin.", BuildTarget.Android );
 
-            Debug.LogWarning( Utils.logTag + "AndroidManifest.xml is not valid. Created new file by template." );
-            AssetDatabase.DeleteAsset( Utils.androidLibManifestPath );
-            SetAdmobAppIdToAndroidManifest( admobAppId, true );
+                Debug.LogWarning( Utils.logTag + "AndroidManifest.xml is not valid. Created new file by template." );
+                AssetDatabase.DeleteAsset( Utils.androidLibManifestPath );
+                SetAdmobAppIdToAndroidManifest( admobAppId, true, queries );
+            }
         }
 
         private static void DialogOrCancel( string message, BuildTarget target, string btn = "Continue" )

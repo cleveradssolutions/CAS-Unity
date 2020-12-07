@@ -150,6 +150,11 @@ namespace CAS
                 var androidSettings = MobileAds.settings as CAS.Android.CASSettings;
                 androidSettings.ValidateIntegration();
             }
+#elif UNITY_IOS
+            if (Application.platform == RuntimePlatform.IPhonePlayer)
+            {
+                CAS.iOS.CASExterns.CASUValidateIntegration();
+            }
 #endif
         }
 

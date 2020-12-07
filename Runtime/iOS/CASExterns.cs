@@ -61,6 +61,9 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern string CASUGetSDKVersion();
+
+        [DllImport( "__Internal" )]
+        internal static extern string CASUValidateIntegration();
         #endregion
 
         #region CAS Callback types

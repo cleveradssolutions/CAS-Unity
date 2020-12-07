@@ -6,9 +6,7 @@
 //
 
 typedef const void * CASUTypeManagerClientRef;
-/// Type representing a CASUManager.
 typedef const void * CASUTypeManagerRef;
-
 
 typedef void (*CASUInitializationCompleteCallback)(CASUTypeManagerClientRef *client,
                                                    BOOL                     success,

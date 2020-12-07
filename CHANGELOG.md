@@ -1,5 +1,15 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.8.0] - 2020-11-24
+### Dependencies
+- [Android] Wraps [1.8.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [1.8.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- [iOS] Add [Validate of native Integration](https://github.com/cleveradssolutions/CAS-Unity#step-4-initialize-cas-sdk) in runtime. Find log information by tag: `CASIntegrationHelper`
+- [Android] Add write all promotion bundles of Cross Promo to manifest queris to support Android 11 package info.
+### Bug Fixes
+- [Android] No such proxy method of `OnInitializationListener` for Unity 2019.4 and newer.
+
 ## [1.7.2] - 2020-11-24
 ### Dependencies
 - Wraps [iOS 1.7.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)

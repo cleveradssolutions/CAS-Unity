@@ -35,6 +35,10 @@ The Clever Ads Solutions Unity plugin enables Unity developers to easily serve M
  9.  [Support](#support)  
  10.  [License](#license)  
 
+### CAS Unity Demo App
+The Integration Demo application demonstrate how to integrate the CAS in your app.  
+[Repository Unity Sample Application](https://github.com/cleveradssolutions/CAS-Unity-Sample)
+
 ## Step 1 Add the CAS package to Your Project
 if you are using Unity 2018.4 or newer then you can add CAS SDK to your Unity project using the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html), or you can import the package manually.
 
@@ -56,20 +60,21 @@ Modify `Packages/manifest.json`  to the following form:
   }
 ],
 "dependencies": {
-    "com.cleversolutions.ads.unity" : "https://github.com/cleveradssolutions/CAS-Unity.git#1.7.2",
-    "Other" : "dependencies"
+    "com.cleversolutions.ads.unity" 
+        : "https://github.com/cleveradssolutions/CAS-Unity.git#1.8.0",
+    ...
 }
 }
 ```
 > Note that some other SDKs, such as the Firebase SDK, may contain [EDM4U](https://github.com/googlesamples/unity-jar-resolver) in their .unitypackage. Check if `Assets/ExternalDependencyManager` or `Assets/PlayServicesResolver` folders exist. If these folders exist, remove them before installing any CAS SDK through Unity Package Manager.
-
+***
 </details>
 <details><summary><b>Manual installation</b></summary>
 
 1. Download latest [CleverAdsSolutions.unitypackage](https://github.com/cleveradssolutions/CAS-Unity/releases/latest)
 2. In your open Unity project, navigate to **Assets > Import Package > Custom Package**.
 3. In the *Import Unity Package* window, make sure all of the files are selected and click **Import**.
-
+***
 </details>
 <details><summary><b>Cross Promotion</b></summary>
 
@@ -78,11 +83,50 @@ Cross promotion is an app marketing strategy in which app developers promote one
 Start your cross promotion campaign with CAS [here](https://cleveradssolutions.com).
 
 Dependency of `CrossPromotion` can be disabled/enabled using Advanced Integration in `Assets > CleverAdsSolutions > Settings` window.
+***
 </details>
+<details><summary><b>Third party mediation partners</b></summary>
 
-## CAS Unity Demo App
-The Integration Demo application demonstrate how to integrate the CAS in your app.  
-[Repository Unity Sample Application](https://github.com/cleveradssolutions/CAS-Unity-Sample)
+- Google Ads  
+Banner, Interstitial, Rewarded Video - [Home](https://admob.google.com/home) - [Privacy Policy](https://policies.google.com/technologies/ads)
+- Unity Ads  
+Banner, Interstitial, Rewarded Video - [Home](https://unity.com/solutions/unity-ads) - [Privacy Policy](https://unity3d.com/legal/privacy-policy)
+- IronSource  
+~~Banner~~, Interstitial, Rewarded Video - [Home](https://www.ironsrc.com) - [Privacy Policy](https://developers.ironsrc.com/ironsource-mobile/air/ironsource-mobile-privacy-policy/)
+- AdColony  
+Banner, Interstitial, Rewarded Video - [Home](https://www.adcolony.com) - [Privacy Policy](https://www.adcolony.com/privacy-policy/)
+- Kidoz  
+Banner, Interstitial, Rewarded Video - [Home](https://kidoz.net) - [Privacy Policy](https://kidoz.net/privacy-policy/)
+- Vungle  
+Banner, Interstitial, Rewarded Video - [Home](https://vungle.com) - [Privacy Policy](https://vungle.com/privacy/)
+- AppLovin  
+Banner, Interstitial, Rewarded Video - [Home](https://www.applovin.com) - [Privacy Policy](https://www.applovin.com/privacy/)
+- StartApp  
+Banner, Interstitial, Rewarded Video - [Home](https://www.startapp.com) - [Privacy Policy](https://www.startapp.com/policy/privacy-policy/)
+- InMobi  
+Banner, Interstitial, Rewarded Video - [Home](https://www.inmobi.com) - [Privacy Policy](https://www.inmobi.com/privacy-policy/)
+- Chartboost  
+Banner, Interstitial, Rewarded Video - [Home](https://www.chartboost.com) - [Privacy Policy](https://answers.chartboost.com/en-us/articles/200780269)
+- SuperAwesome   
+> Works only for children audience  
+Banner, Interstitial, Rewarded Video - [Home](https://www.superawesome.com) - [Privacy Policy](https://www.superawesome.com/privacy-hub/privacy-policy/)  
+- Facebook Audience Network  
+Banner, Interstitial, Rewarded Video  - [Home](https://www.facebook.com/business/marketing/audience-network) - [Privacy Policy](https://developers.facebook.com/docs/audience-network/policy/)
+- Yandex Ads  
+Banner, Interstitial, Rewarded Video - [Home](https://yandex.com/dev/mobile-ads/) - [Privacy Policy](https://yandex.com/legal/mobileads_sdk_agreement/) 
+#### Dependencies of Closed Beta third party partners:
+> :warning:  Next dependencies in closed beta and available upon invite only. If you would like to be considered for the beta, please contact Support.
+- Verizon Media
+Banner, Interstitial, Rewarded Video - [Home](https://www.verizonmedia.com/advertising/solutions#/mobile)- [Privacy Policy](https://www.verizonmedia.com/policies/us/en/verizonmedia/privacy/)
+- MyTarget  
+> Works to CIS countries only  
+Banner, Interstitial, Rewarded Video - [Home](https://target.my.com/) - [Privacy Policy](https://legal.my.com/us/mytarget/privacy/)   
+- MobFox
+Banner, Interstitial, Rewarded Video - [Home](https://www.mobfox.com) - [Privacy Policy](https://www.mobfox.com/privacy-policy/)
+- Amazon Ads
+Banner, ~~Interstitial, Rewarded Video~~ - [Home](https://advertising.amazon.com) - [Privacy Policy](https://advertising.amazon.com/legal/privacy-notice)
+***
+</details>
 
 ## Step 2 Configuring CAS SDK
 In your open Unity project, navigate to **Assets > CleverAdsSolutions > Settings** to create and modify build settings.
@@ -90,14 +134,13 @@ In your open Unity project, navigate to **Assets > CleverAdsSolutions > Settings
 <details><summary><b>Test Ad Mode</b></summary>
 
 The quickest way to testing is to enable Test Ad Mode. These ad are not associated with your account, so there's no risk of your account generating invalid traffic when using these ad units.
-</details>
-<details><summary><b>Manager Ids</b></summary>
+***
+</details><details><summary><b>Manager Ids</b></summary>
 
 Add your Clever Ads Solutions manager Id's.
 > If you haven't created an CAS account and registered an manager yet,  now's a great time to do so at [cleveradssolutions.com](https://cleveradssolutions.com). If you're just looking to experiment with the SDK, though, you can use the Test Ad Mode above.  
-
-</details>
-<details><summary><b>Allowed ads types in app</b></summary>
+***
+</details><details><summary><b>Allowed ads types in app</b></summary>
 
 To improve the performance of your application, we recommend that you only allow ad types that will actually be used in the application. For example: Banner and Interstitial ad.  
 
@@ -105,16 +148,14 @@ The processes of ad types can be disabled/enabled at any time using following me
 ```c#
 CAS.MobileAds.manager.SetEnableAd(adType, enabled);
 ```
-
-</details>
-<details><summary><b>Audience Tagged</b></summary>
+***
+</details><details><summary><b>Audience Tagged</b></summary>
 
 Choose the audience your game is targeting.   
 In addition to targeting ads, on Google Play has restrictions games participate in the family apps program. These games can only serve ads from certified ad networks. [More about Families Ads Program](https://support.google.com/googleplay/android-developer/answer/9283445).  
 Changing this setting will change the project dependencies. Please follow the instructions provided in the settings window.
-
-</details>
-<details><summary><b>Banner Size</b></summary>
+***
+</details><details><summary><b>Banner Size</b></summary>
 
 Select the banner size to initialize.  
 
@@ -145,9 +186,8 @@ You can get the current banner size in pixels at any time using the following me
 float height = CAS.MobileAds.manager.GetBannerHeightInPixels();
 float width = CAS.MobileAds.manager.GetBannerWidthInPixels();
 ```
-
-</details>
-<details><summary><b>Banner Refresh rate</b></summary>
+***
+</details><details><summary><b>Banner Refresh rate</b></summary>
 
 An ad unit’s automatic refresh rate (in seconds) determines how often a new ad request is generated for that ad unit.  
 > Ad requests should not be made when the device screen is turned off.  
@@ -157,9 +197,8 @@ Change the banner automatic refresh rate using the following method:
 ```c#
 CAS.MobileAds.settings.bannerRefreshInterval = refreshInterval;
 ```
-
-</details>
-<details><summary><b>Interstitial impression interval</b></summary>
+***
+</details><details><summary><b>Interstitial impression interval</b></summary>
 
 You can limit the posting of an interstitial ad to a period of time in seconds after the ad is closed, during which display attempts will fail.
 
@@ -184,9 +223,8 @@ void OnRewardedAdClosed(){
 ```
 
 > During interval after ad closed display attempts will fire event `OnInterstitialAdFailedToShow`.
-
-</details>
-<details><summary><b>Loading mode</b></summary>
+***
+</details><details><summary><b>Loading mode</b></summary>
 
 Select CAS mediation processing mode of ad requests.
 |        Mode        |  Load*  | Impact on App performance | Memory usage |        Actual ads*       |
@@ -208,9 +246,8 @@ Change the Clever Ads Solution processing mode using the following method:
 ```c#
 CAS.MobileAds.settings.loadingMode = mode;
 ```
-
-</details>
-<details><summary><b>Debug mode</b></summary>
+***
+</details><details><summary><b>Debug mode</b></summary>
 
 The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdc with tag `CAS`.  
 Disabling Debug Mode may improve application performance.  
@@ -220,9 +257,8 @@ Change the Debug Mode flag at any time using the following method:
 CAS.MobileAds.settings.isDebugMode = enabled;
 ```
 Disabled by default.
-
-</details>
-<details><summary><b>Analytics Collection</b></summary>
+***
+</details><details><summary><b>Analytics Collection</b></summary>
 
 If your application uses Google Analytics (Firebase) then Clever Ads Solutions collects ad impressions and states analytics.  
 **This flag has no effect on ad revenue.**  
@@ -233,18 +269,16 @@ Change the analytics collection flag at any time using the following method:
 CAS.MobileAds.settings.analyticsCollectionEnabled = enabled;
 ```
 Disabled by default.  
-
-</details>
-<details><summary><b>Muted Ads Sounds</b></summary>
+***
+</details><details><summary><b>Muted Ads Sounds</b></summary>
 
 Sounds in ads mute state.  
 ```c#
 CAS.MobileAds.settings.isMutedAdSounds = mute;
 ```
 Disabled by default.  
-
-</details>
-<details><summary><b>Execute Events On Unity Thread</b></summary>
+***
+</details><details><summary><b>Execute Events On Unity Thread</b></summary>
 
 Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
 You can use EventExecutor to schedule each calls on the next `Update()` loop:
@@ -256,18 +290,16 @@ OR enable `isExecuteEventsOnUnityThread` property to automatically schedule all 
 CAS.MobileAds.settings.isExecuteEventsOnUnityThread = enable;
 ```
 Disabled by default.  
-
-</details>
-<details><summary><b>Test Device Ids</b></summary>
+***
+</details><details><summary><b>Test Device Ids</b></summary>
 
 Identifiers corresponding to test devices which will always request test ads.
 The test device identifier for the current device is logged to the console when the first ad request is made.
 ```c#
 CAS.MobileAds.settings.SetTestDeviceIds(testDeviceIds);
 ```
-
-</details>
-<details><summary><b>Allow Interstitial Ads When Video Cost Are Lower</b></summary>
+***
+</details><details><summary><b>Allow Interstitial Ads When Video Cost Are Lower</b></summary>
 
 This option will compare ad cost and serve regular interstitial ads when rewarded video ads are expected to generate less revenue.  
 Interstitial Ads does not require to watch the video to the end, but the OnRewardedAdCompleted callback will be triggered in any case.  
@@ -277,9 +309,8 @@ Change the flag at any time using the following method:
 CAS.MobileAds.settings.allowInterstitialAdsWhenVideoCostAreLower = allow;
 ```
 Disabled by default.  
-
-</details>
-<details><summary><b>Targeting Options</b></summary>
+***
+</details><details><summary><b>Targeting Options</b></summary>
 
 You can now easily tailor the way you serve your ads to fit a specific audience!  
 You’ll need to inform our servers of the users’ details so the SDK will know to serve ads according to the segment the user belongs to.  
@@ -289,8 +320,8 @@ CAS.MobileAds.targetingOptions.gender = CAS.Gender.Male;
 // Set user age. Limitation: 1-99 and 0 is 'unknown'
 CAS.MobileAds.targetingOptions.age = 12;
 ```
-</details>
-<details><summary><b>Last Page Ad Content</b></summary>
+***
+</details><details><summary><b>Last Page Ad Content</b></summary>
 
 The latest free ad page for your own promotion.  
 This ad page will be displayed when there is no paid ad to show or internet availability.  
@@ -302,9 +333,8 @@ Change the `LastPageAdContent` at any time using the following method:
 CAS.MobileAds.manager.lastPageAdContent = new LastPageAdContent(...);
 ```
 By default, this page will not be displayed while the ad content is NULL.  
-
-</details>
-<details><summary><b>iOS Tracking Usage Description</b></summary>
+***
+</details><details><summary><b>iOS Tracking Usage Description</b></summary>
 
 **Property for iOS only.**  
 iOS 14 and above requires publishers to obtain permission to track the user's device across applications.  
@@ -321,9 +351,8 @@ Below is an example description text:
 For more information, see [Apple's developer documentation](https://developer.apple.com/documentation/bundleresources/information_property_list/nsusertrackingusagedescription) or [Google Ads documentation](https://developers.google.com/admob/ios/ios14#request).
 
 > **Important!** CAS does not provide legal advice. Therefore, the information on this page is not a substitute for seeking your own legal counsel to determine the legal requirements of your business and processes, and how to address them.
-
-</details>
-<details><summary><b>iOS Track Location Enabled</b></summary>
+***
+</details><details><summary><b>iOS Track Location Enabled</b></summary>
 
 **Property for iOS only.**  
 The SDK automatically collects location data if the user allowed the app to track the location.
@@ -332,9 +361,8 @@ Change the flag at any time using the following method:
 CAS.MobileAds.settings.trackLocationEnabled = enabled;
 ```
 Disabled by default.  
-
-</details>
-<details><summary><b>iOS App Pause On Background</b></summary>
+***
+</details><details><summary><b>iOS App Pause On Background</b></summary>
 
 **Property for iOS only.**  
 Indicates if the Unity app should be automatically paused when a full screen ad (Interstitial or Rewarded video ad) is displayed.
@@ -342,7 +370,7 @@ Indicates if the Unity app should be automatically paused when a full screen ad 
 CAS.MobileAds.settings.iOSAppPauseOnBackground = pause;
 ```
 Enabled by default.
-
+***
 </details>
 
 ## Step 3 Privacy Laws
@@ -368,6 +396,7 @@ By default, user consent management is passed on to media networks. For reset st
 ```c#
 CAS.MobileAds.settings.userConsent = ConsentStatus.Undefined;
 ```
+***
 </details>
 
 ### CCPA Compliance
@@ -388,6 +417,7 @@ By default, user consent management is passed on to media networks. For reset st
 ```c#
 CAS.MobileAds.settings.userCCPAStatus = CCPAStatus.Undefined;
 ```
+***
 </details>
 
 ### COPPA and EEA Compliance
@@ -399,16 +429,17 @@ You can mark your ad requests to receive treatment for users in the European Eco
 
 Call `Audience.children` indicate that user want get content treated as child-directed for purposes of COPPA or receive treatment for users in the European Economic Area (EEA) under the age of consent. 
 ```c#
-CAS.MobileAds.settings.taggedAudience = Audience.Children)
+CAS.MobileAds.settings.taggedAudience = Audience.Children;
 ```
 Call `Audience.notChildren` to indicate that user **don't** want get content treated as child-directed for purposes of COPPA or **not** receive treatment for users in the European Economic Area (EEA) under the age of consent.
 ```c#
-CAS.MobileAds.settings.taggedAudience = Audience.NotChildren)
+CAS.MobileAds.settings.taggedAudience = Audience.NotChildren;
 ```
 By default, the audience is unknown and the mediation ad network will work as usual. For reset state:
 ```c#
-CAS.MobileAds.settings.taggedAudience = Audience.Mixed
+CAS.MobileAds.settings.taggedAudience = Audience.Mixed;
 ```
+***
 </details>
 
 ## Step 4 Initialize CAS SDK
@@ -416,7 +447,7 @@ Before loading ads, have your app initialize the CAS SDK by calling `CAS.MobileA
 Initialize can be called for different identifiers to create different managers (Placement).
 This needs to be done only once for each manager, ideally at app launch.
 
-<details><summary><b>Simple initialzie</b></summary>
+<details><summary><b>Simple initialize</b></summary>
 
 Also to initialize SDK using settings from resources, created by menu `Assets > CleverAdsSolutions > Settings`, there is the following method:
 ```c#
@@ -426,9 +457,8 @@ CAS.MobileAds.InitializeFromResources(
         // CAS manager initialization done  
     });
 ```
-
-</details>
-<details><summary><b>Advanced initialzie</b></summary>
+***
+</details><details><summary><b>Advanced initialzie</b></summary>
 
 Here's an example of how to call `Initialize()` within the `Start()` method of a script attached to a GameObject:
 ```c#
@@ -455,6 +485,20 @@ public class CleverAdsSolutionsDemoScript : MonoBehaviour
     }
 }
 ```
+***
+</details><details><summary><b>Validate of native  mediation integration (Optional)</b></summary>
+
+The CAS SDK provides an easy way to verify that you’ve successfully integrated any additional adapters; it also makes sure all required dependencies and frameworks were added for the various mediated ad networks.   
+After you have finished your integration, call the following static method and confirm that all networks you have implemented are marked as VERIFIED:  
+```java
+CAS.validateIntegration();
+```
+Find log information by tag: **CASIntegrationHelper**
+
+Once you’ve successfully verified your integration, please remember to **remove the integration helper from your code**.
+
+The Integration Helper tool reviews everything, including ad networks you may have intentionally chosen NOT to include in your application. These will appear as MISSING and there is no reason for concern. In the case the ad network’s integration has not been completed successfully, it will be marked as NOT VERIFIED.  
+***
 </details>
 
 ## Step 5 Implement CAS Events
@@ -471,8 +515,8 @@ void OnEnable () {
     manager.OnFailedToLoadAd += CASFailedToLoad;
 }
 ```
-</details>
-<details><summary><b>Banner Ad state events</b></summary>
+***
+</details><details><summary><b>Banner Ad state events</b></summary>
 
 ```c#
 void OnEnable () {
@@ -489,8 +533,8 @@ void OnEnable () {
     manager.OnBannerAdHidden += CASBannerAdHidden;
 }
 ```
-</details>
-<details><summary><b>Interstitial Ad state events</b></summary>
+***
+</details><details><summary><b>Interstitial Ad state events</b></summary>
 
 ```c#
 void OnEnable () {
@@ -505,8 +549,8 @@ void OnEnable () {
     manager.OnInterstitialAdClosed += CASInterstitialClosed;
 }
 ```
-</details>
-<details><summary><b>Rewarded Ad state events</b></summary>
+***
+</details><details><summary><b>Rewarded Ad state events</b></summary>
 
 ```c#
 void OnEnable () {
@@ -523,6 +567,7 @@ void OnEnable () {
     manager.OnRewardedAdClosed += CASRewardedClosed;
 }
 ```
+***
 </details>
 
 > **Note:** Do not assume the callbacks are always running on the main thread. Any UI interaction or updates resulting from CAS callbacks need to be passed to the main thread before executing. More information [Execute Events on Unity Thread](#step-2-configuring-cas-sdk).  
@@ -539,17 +584,15 @@ manager.LoadAd(adType);
 ```
 
 > **Important!** Once you’ve successfully completed shown your user an Ad. In the case you want to serve another ad, you must repeat laod an ad.  
-
-</details>
-<details><summary><b>Check Ad Availability</b></summary>
+***
+</details><details><summary><b>Check Ad Availability</b></summary>
 
 You can ask for the ad availability directly by calling the following function:
 ```c#
 bool loaded = manager.IsReadyAd(adType);
 ```
-
-</details>
-<details><summary><b>Show Banner ad</b></summary>
+***
+</details><details><summary><b>Show Banner ad</b></summary>
 
 Please set Banner Ad Position using the following property, before show:
 ```c#
@@ -565,8 +608,8 @@ To hide Banner Ad from screen, call the following method:
 ```c#
 manager.HideBanner();
 ```
-</details>
-<details><summary><b>Show full screen ad</b></summary>
+***
+</details><details><summary><b>Show full screen ad</b></summary>
 
 To show the ad, call the following method with AdType of ad you want.
 ```c#
@@ -576,7 +619,7 @@ manager.ShowAd(adType);
 To further customize the behavior of your ad, you can hook into a number of events in the ad's lifecycle: loading, opening, closing, and so on. Listen for these events by registering a delegate for the appropriate event, as shown [here](#step-5-implement-cas-events).  
 
 > Interstitial and Rewarded ads should be displayed during natural pauses in the flow of an app. Between levels of a game is a good example, or after the user completes a task.  
-
+***
 </details>
 
 ## Step 7 Include native platforms
@@ -601,9 +644,8 @@ You can read more about fix Gradle plugin with support Android 11 on the [Androi
 9. Save your changes, by pressing `OK`
 
 In the Unity editor, select `Assets > External Dependency Manager > Android Resolver > Resolve`. The Unity External Dependency Manager library will append dependencies to `mainTemplate.gradle` of your Unity app.
-
-</details>
-<details><summary><b>Update AndroidManifest Permissions</b></summary>
+***
+</details><details><summary><b>Update AndroidManifest Permissions</b></summary>
 
 Add the following permissions to your `Assets/Plugins/Android/AndroidManifest.xml` file inside the `<manifest>` tag but outside the `<application>` tag:
 ```xml
@@ -641,41 +683,51 @@ Some SDK may require a default permission, so please use the following lines to 
 
 If you do not find the manifest file [Plugins/Android/AndroidManifest.xml](https://github.com/cleveradssolutions/CAS-Unity-Sample/blob/master/Assets/Plugins/Android/AndroidManifest.xml), you can take it from the example.  
 Or Unity 2019.3+ makes it possible to activate in `Player Settings > Publishing Settings > Build > Custom Main Manifest` checkmark.  
+***
 </details>
 <details><summary><b>Google Ads App Android ID (Automated)</b></summary>
 
 **Automated integration during application build.**  
 About Google Ads App ID [here](https://developers.google.com/admob/android/quick-start#update_your_androidmanifestxml).  
+***
 </details>
 
 ### Include iOS
 Make sure that Cocoapods is installed. 
 In the Unity editor, select: `Assets > External Dependency Manager > iOS Resolver > Install Cocoapods`  
  
-<details><summary><b>Configuring App Transport Security (Optional)</b></summary>
+ <details><summary><b>Supports Unity 2019.3 and newer</b></summary>
+ 
+ If you get the following error while loading your application:
+ ```
+ Error loading [path]/Your.app/Frameworks/UnityFramework.framework/UnityFramework:  
+   dlopen([path]/Your.app/Frameworks/UnityFramework.framework/UnityFramework, 265): 
+      Library not loaded: @rpath/CleverAdsSolutions.framework
+   Referenced from: [path]/Your.app/Frameworks/UnityFramework.framework/UnityFramework
+   Reason: image not found
+ ```
+ Then please add `target 'Unity-iPhone'` to the Podfile in root folder of XCode project as follows:
+ ```cpp
+ source 'https://github.com/CocoaPods/Specs.git'
+ source 'https://github.com/cleveradssolutions/CAS-Specs.git'
+ platform :ios, '11.0'
 
-With the release of iOS 9 Apple introduced ATS, which requires apps to make secure network connections via SSL and enforces HTTPS connections through its requirements on the SSL version, encryption cipher, and key length. At this time, CAS highly recommends disabling ATS in your application. Please note that, while CAS fully supports HTTPS, some of our advertisers and 3rd party ad tracking providers do not. Therefore enabling ATS may result in a reduction in fill rate.
+ target 'UnityFramework' do
+   pod 'CleverAdsSolutions-SDK', 'version'
+ end
 
-From the options mentioned below, please choose either option for seemless ad delivery and monetization.
-
-In order to prevent your ads (and your revenue) from being impacted by ATS, please disable it by adding the following to your info.plist:
-
-```xml
-<key>NSAppTransportSecurity</key>
-<dict>
-    <key>NSAllowsArbitraryLoads</key>
-    <true/>
-    <key>NSAllowsArbitraryLoadsForMedia</key>
-    <true/>
-    <key>NSAllowsArbitraryLoadsInWebContent</key>
-    <true/>
-</dict>
-```
-
-The `NSAllowsArbitraryLoads` exception is required to make sure your ads are not impacted by ATS on iOS 9 devices, while `NSAllowsArbitraryLoadsForMedia` and `NSAllowsArbitraryLoadsInWebContent` are required to make sure your ads are not impacted by ATS on iOS 10 and later devices.
-
-</details>
-<details><summary><b>Configuring permissions (Optional)</b></summary>
+ target 'Unity-iPhone' do
+ end
+ ```
+ Save Podfile and call terminal command
+ ```
+ cd [path to XCode project]
+ pod install --no-repo-update
+ ```
+ 
+ > We are working with EDM4U to fix this problem in [issue #405](https://github.com/googlesamples/unity-jar-resolver/issues/405)
+ ***
+ </details><details><summary><b>Configuring permissions (Optional)</b></summary>
 
 In iOS 10, Apple has extended the scope of its privacy controls by restricting access to features like the camera, photo library, etc. In order to unlock rich, immersive experiences in the SDK that take advantage of these services, please add the following entry to your apps plist:
 ```xml
@@ -687,25 +739,25 @@ In iOS 10, Apple has extended the scope of its privacy controls by restricting a
 <string>Some ad content may require access to accelerometer for interactive ad experience.</string>
 ```
 > You can also use the settings provided by the Unity `Player Settings > Other Settings > Usage Description`.  
-
+***
 </details>
 <details><summary><b>Google Ads App iOS ID (Automated)</b></summary>
 
 **Automated integration during application build.**  
 About Google Ads App ID [here](https://developers.google.com/admob/ios/quick-start).  
-
+***
 </details>
 <details><summary><b>Configuring SK Ad Networks (Automated)</b></summary>
 
 **Automated integration during application build.**  
 About SKAdNetwork [here](https://developer.apple.com/documentation/storekit/skadnetwork).  
-
+***
 </details>
 <details><summary><b>Configuring URL Schemes (Automated)</b></summary>
 
 **Automated integration during application build.**  
 About URL Schemes [here](https://github.com/cleveradssolutions/CAS-iOS#step-6-configuring-url-schemes).
-
+***
 </details>
 
 ## GitHub issue tracker

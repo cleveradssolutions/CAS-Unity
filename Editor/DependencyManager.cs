@@ -73,7 +73,8 @@ namespace CAS.UEditor
 
         internal GUILayoutOption columnWidth;
         internal GUILayoutOption nameColumnWidth;
-        internal GUIContent helpIconContext = null;
+        internal GUIContent helpIconContent = null;
+        internal GUIContent betaContent = null;
 
         internal bool installedAny;
 
@@ -85,7 +86,8 @@ namespace CAS.UEditor
 
         internal void Init( BuildTarget platform, bool deepInit = true )
         {
-            helpIconContext = null;
+            helpIconContent = null;
+            betaContent = null;
             installedAny = false;
             for (int i = 0; i < simple.Length; i++)
                 simple[i].Reset();
@@ -135,9 +137,11 @@ namespace CAS.UEditor
 
         internal void OnGUI( BuildTarget platform )
         {
-            if (helpIconContext == null)
-                helpIconContext = EditorGUIUtility.IconContent( "_Help" );
-
+            if (helpIconContent == null)
+                helpIconContent = EditorGUIUtility.IconContent( "_Help" );
+            if (betaContent == null)
+                betaContent = new GUIContent( "beta", "Dependencies in closed beta and available upon invite only. " +
+                    "If you would like to be considered for the beta, please contact Support." );
             if (!installedAny)
                 EditorGUILayout.HelpBox( "Dependencies of native SDK were not found. " +
                     "Please use the following options to integrate solutions or any SDK separately.",
@@ -278,6 +282,7 @@ namespace CAS.UEditor
         public string[] dependencies;
         public string[] contains;
         public string[] source;
+        public bool beta;
 
         public string installedVersion { get; set; }
         public bool isNewer { get; set; }
@@ -364,10 +369,20 @@ namespace CAS.UEditor
                 GUILayout.Label( EditorGUIUtility.IconContent( "d_console.erroricon.sml" ), GUILayout.Width( 20 ) );
             else if (string.IsNullOrEmpty( url ))
                 GUILayout.Space( 25 );
-            else if (GUILayout.Button( mediation.helpIconContext, EditorStyles.label, GUILayout.Width( 20 ) ))
+            else if (GUILayout.Button( mediation.helpIconContent, EditorStyles.label, GUILayout.Width( 20 ) ))
                 Application.OpenURL( url );
 
-            GUILayout.Label( name, mediation.nameColumnWidth );
+            if (beta)
+            {
+                GUILayout.Label( name, GUILayout.ExpandWidth( false ) );
+                GUILayout.Label( mediation.betaContent, "AssetLabel", GUILayout.ExpandWidth( false ) );
+                GUILayout.FlexibleSpace();
+            }
+            else
+            {
+                GUILayout.Label( name );
+            }
+
             if (installed)
             {
                 if (!isNewer || inBan)
@@ -406,9 +421,7 @@ namespace CAS.UEditor
                 EditorGUI.EndDisabledGroup();
             }
             EditorGUILayout.EndHorizontal();
-            if (contains.Length == 1 && contains[0] == "Base")
-                return;
-            if (contains.Length > 0)
+            if (contains.Length > 0 && !( contains.Length == 1 && contains[0] == "Base" ))
                 EditorGUILayout.HelpBox( string.Join( ", ", contains ), MessageType.None );
         }
 
