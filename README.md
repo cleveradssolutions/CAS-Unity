@@ -107,23 +107,23 @@ Banner, Interstitial, Rewarded Video - [Home](https://www.startapp.com) - [Priva
 Banner, Interstitial, Rewarded Video - [Home](https://www.inmobi.com) - [Privacy Policy](https://www.inmobi.com/privacy-policy/)
 - Chartboost  
 Banner, Interstitial, Rewarded Video - [Home](https://www.chartboost.com) - [Privacy Policy](https://answers.chartboost.com/en-us/articles/200780269)
-- SuperAwesome   
-> Works only for children audience  
+- SuperAwesome  
 Banner, Interstitial, Rewarded Video - [Home](https://www.superawesome.com) - [Privacy Policy](https://www.superawesome.com/privacy-hub/privacy-policy/)  
+*Works only for children audience*
 - Facebook Audience Network  
 Banner, Interstitial, Rewarded Video  - [Home](https://www.facebook.com/business/marketing/audience-network) - [Privacy Policy](https://developers.facebook.com/docs/audience-network/policy/)
 - Yandex Ads  
 Banner, Interstitial, Rewarded Video - [Home](https://yandex.com/dev/mobile-ads/) - [Privacy Policy](https://yandex.com/legal/mobileads_sdk_agreement/) 
 #### Dependencies of Closed Beta third party partners:
 > :warning:  Next dependencies in closed beta and available upon invite only. If you would like to be considered for the beta, please contact Support.
-- Verizon Media
+- Verizon Media  
 Banner, Interstitial, Rewarded Video - [Home](https://www.verizonmedia.com/advertising/solutions#/mobile)- [Privacy Policy](https://www.verizonmedia.com/policies/us/en/verizonmedia/privacy/)
 - MyTarget  
-> Works to CIS countries only  
-Banner, Interstitial, Rewarded Video - [Home](https://target.my.com/) - [Privacy Policy](https://legal.my.com/us/mytarget/privacy/)   
-- MobFox
+Banner, Interstitial, Rewarded Video - [Home](https://target.my.com/) - [Privacy Policy](https://legal.my.com/us/mytarget/privacy/)  
+*Works to CIS countries only*
+- MobFox  
 Banner, Interstitial, Rewarded Video - [Home](https://www.mobfox.com) - [Privacy Policy](https://www.mobfox.com/privacy-policy/)
-- Amazon Ads
+- Amazon Ads  
 Banner, ~~Interstitial, Rewarded Video~~ - [Home](https://advertising.amazon.com) - [Privacy Policy](https://advertising.amazon.com/legal/privacy-notice)
 ***
 </details>
