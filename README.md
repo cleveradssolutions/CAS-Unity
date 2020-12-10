@@ -126,6 +126,12 @@ Banner, Interstitial, Rewarded Video - [Home](https://www.mobfox.com) - [Privacy
 Banner, ~~Interstitial, Rewarded Video~~ - [Home](https://advertising.amazon.com) - [Privacy Policy](https://advertising.amazon.com/legal/privacy-notice)
 ***
 </details>
+<details><summary><b>Don’t forget to implement app-ads.txt (Optional)</b></summary>
+
+For both iOS and Android integrations, we encourage our partners to adopt this file and help us combat ad fraud.  
+Read detailed instructions on [how to create and upload your app-ads.txt file](https://github.com/cleveradssolutions/App-ads.txt#cleveradssolutions-app-adstxt).
+***
+</details>
 
 ## Step 2 Configuring CAS SDK
 In your open Unity project, navigate to **Assets > CleverAdsSolutions > Settings** to create and modify build settings.
