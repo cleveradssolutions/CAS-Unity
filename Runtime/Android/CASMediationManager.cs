@@ -129,8 +129,7 @@ namespace CAS.Android
             if (initCompleteAction != null)
                 initializationListener = new InitializationListenerProxy( this, initCompleteAction );
 
-            AndroidJavaClass playerClass = new AndroidJavaClass( CASJavaProxy.UnityActivityClassName );
-            AndroidJavaObject activity = playerClass.GetStatic<AndroidJavaObject>( "currentActivity" );
+            AndroidJavaObject activity = CASJavaProxy.GetUnityActivity();
 
             _managerBridge = new AndroidJavaObject( CASJavaProxy.NativeBridgeClassName,
                 activity,

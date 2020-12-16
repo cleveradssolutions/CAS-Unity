@@ -26,6 +26,12 @@ namespace CAS.Android
             }
             return javaTypeArrayList;
         }
+
+        internal static AndroidJavaObject GetUnityActivity()
+        {
+            AndroidJavaClass playerClass = new AndroidJavaClass( UnityActivityClassName );
+            return playerClass.GetStatic<AndroidJavaObject>( "currentActivity" );
+        }
     }
 
     internal class InitializationListenerProxy : AndroidJavaProxy

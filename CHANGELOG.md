@@ -1,5 +1,13 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.8.2] - 2020-12-16
+### Dependencies
+- [Android] Wraps [1.8.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [1.8.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+- External Dependency Manager for Unity [1.2.162](https://github.com/googlesamples/unity-jar-resolver/releases/tag/v1.2.162)
+### Features
+- [iOS] Added more flexibility in advanced dependency integration.
+
 ## [1.8.1] - 2020-12-07
 ### Dependencies
 - [Android] Wraps [1.8.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
