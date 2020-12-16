@@ -230,26 +230,25 @@ void OnRewardedAdClosed(){
 ***
 </details><details><summary><b>Loading mode</b></summary>
 
-Select CAS mediation processing mode of ad requests.
-|        Mode        |  Load*  | Impact on App performance | Memory usage |        Actual ads*       |
+|        Mode        |  Load<sup>[*1](#load-f-1)</sup>  | Impact on App performance | Memory usage |        Actual ads<sup>[*2](#actual-f-2)</sup>       |
 |:------------------:|:------:|:-------------------------:|:------------:|:------------------------:|
 |   FastestRequests  |  Auto  |         Very high         |     High     |       Most relevant      |
 |    FastRequests    |  Auto  |            High           |    Balance   |      High relevance      |
-|  Optimal(Default)  |  Auto  |          Balance          |    Balance   |          Balance         |
+|  Optimal *(Default)*  |  Auto  |          Balance          |    Balance   |          Balance         |
 |   HighPerformance  |  Auto  |            Low            |      Low     |       Possible loss      |
 | HighestPerformance |  Auto  |          Very low         |      Low     |       Possible loss      |
-|       Manual      | Manual |          Very low         |      Low     | Depends on the frequency |
-
-> Actual ads column* - Potential increase in revenue by increasing the frequency of ad requests. At the same time, it greatly affects the performance of the application.   
-
-> Load column*  
-> Auto control load mediation ads starts immediately after initialization and will prepare displays automatically.  
-> Manual control loading mediation ads requires manual preparation of advertising content for display. Use ad loading method before trying to show: `CAS.MobileAds.manager.LoadAd()`  
+|       Manual      | Manual<sup>[*3](#manual-f-3)</sup> |          Very low         |      Low     | Depends on the frequency |
 
 Change the Clever Ads Solution processing mode using the following method:
 ```c#
 CAS.MobileAds.settings.loadingMode = mode;
 ```
+
+<b id="load-f-1">^1</b>: Auto control load mediation ads starts immediately after initialization and will prepare displays automatically.  
+
+<b id="actual-f-2">^2</b>: Potential increase in revenue by increasing the frequency of ad requests. At the same time, it greatly affects the performance of the application.  
+
+<b id="manual-f-3">^3</b>: Manual control loading mediation ads requires manual preparation of advertising content for display. Use ad loading methods before trying to show: `CAS.MobileAds.manager.LoadAd()`.  
 ***
 </details><details><summary><b>Debug mode</b></summary>
 
