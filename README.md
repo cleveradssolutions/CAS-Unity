@@ -141,8 +141,12 @@ The quickest way to testing is to enable Test Ad Mode. These ad are not associat
 ***
 </details><details><summary><b>Manager Ids</b></summary>
 
-Add your Clever Ads Solutions manager Id's.
-> If you haven't created an CAS account and registered an manager yet,  now's a great time to do so at [cleveradssolutions.com](https://cleveradssolutions.com). If you're just looking to experiment with the SDK, though, you can use the Test Ad Mode above.  
+- An manager ID is a unique ID number assigned to each of your ad placements when they're created in CAS.  
+The manager ID is added to your app's code and used to identify ad requests.  
+If you haven't created an CAS account and registered an app yet, now's a great time to do so at [cleveradssolutions.com](https://cleveradssolutions.com).  
+In a real app, it is important that you use your actual CAS manager ID.  
+
+> If you're just looking to experiment with the SDK, though, you can use the **Test Ad Mode** above with any manager ID string.  
 ***
 </details><details><summary><b>Allowed ads types in app</b></summary>
 
