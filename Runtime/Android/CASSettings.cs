@@ -44,7 +44,10 @@ namespace CAS.Android
 
         public void ValidateIntegration()
         {
-            settingsBridge.CallStatic( "validateIntegration" );
+            // If CAS Android 1.8.2+
+            settingsBridge.CallStatic( "validateIntegration", CASJavaProxy.GetUnityActivity() );
+            // else
+            // settingsBridge.CallStatic( "validateIntegration" );
         }
 
         public bool analyticsCollectionEnabled

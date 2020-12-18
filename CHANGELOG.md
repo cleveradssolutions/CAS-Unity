@@ -1,10 +1,17 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.8.3] - 2020-12-18
+### Dependencies
+- [Android] Wraps [1.8.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [1.8.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixes
+- [Facebook AN] Fix CCPA DoNotSell filter to increase ad filling. CAS incorrectly assigned all users from California. More about [California Consumer Privacy Act (CCPA) Compliance](https://developers.facebook.com/docs/audience-network/guides/ccpa/)
+
 ## [1.8.2] - 2020-12-16
 ### Dependencies
 - [Android] Wraps [1.8.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [1.8.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-- External Dependency Manager for Unity [1.2.162](https://github.com/googlesamples/unity-jar-resolver/releases/tag/v1.2.162)
+- External Dependency Manager for Unity [1.2.163](https://github.com/googlesamples/unity-jar-resolver/releases/tag/v1.2.163)
 ### Features
 - [iOS] Added more flexibility in advanced dependency integration.
 
