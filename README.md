@@ -498,7 +498,7 @@ public class CleverAdsSolutionsDemoScript : MonoBehaviour
 The CAS SDK provides an easy way to verify that you’ve successfully integrated any additional adapters; it also makes sure all required dependencies and frameworks were added for the various mediated ad networks.   
 After you have finished your integration, call the following static method and confirm that all networks you have implemented are marked as VERIFIED:  
 ```c#
-CAS.validateIntegration();
+CAS.MobileAds.ValidateIntegration();
 ```
 Find log information by tag: **CASIntegrationHelper**
 
