@@ -50,6 +50,16 @@ namespace CAS.Android
             // settingsBridge.CallStatic( "validateIntegration" );
         }
 
+        public string GetActiveMediationPattern()
+        {
+            return settingsBridge.CallStatic<string>( "getActiveMediationPattern" );
+        }
+
+        public bool IsActiveMediationNetwork( AdNetwork net )
+        {
+            return settingsBridge.CallStatic<bool>( "isActiveMediationNetwork", (int)net );
+        }
+
         public bool analyticsCollectionEnabled
         {
             get { return _analyticsCollectionEnabled; }

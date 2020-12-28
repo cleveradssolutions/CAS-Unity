@@ -22,10 +22,12 @@ typedef void (*CASUDidAdFailedToLoadCallback)(CASUTypeManagerClientRef *client,
 typedef void (*CASUWillShownWithAdCallback)(CASUTypeManagerClientRef *client);
 
 typedef void (*CASUDidShowAdFailedWithErrorCallback)(CASUTypeManagerClientRef *client,
-                                                     const char                *error);
+                                                     const char               *error);
 
 typedef void (*CASUDidClickedAdCallback)(CASUTypeManagerClientRef *client);
 
 typedef void (*CASUDidCompletedAdCallback)(CASUTypeManagerClientRef *client);
 
 typedef void (*CASUDidClosedAdCallback)(CASUTypeManagerClientRef *client);
+
+typedef void (*CASUTrackingStatusCallback)(NSInteger status);

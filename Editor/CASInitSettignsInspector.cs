@@ -30,11 +30,9 @@ namespace CAS.UEditor
         private bool allowedPackageUpdate;
         private string newCASVersion;
         private bool deprecateDependenciesExist;
-        private bool usingMultidexOnBuild;
+        //private bool usingMultidexOnBuild;
 
         private int editorRuntimeActiveAdFlags;
-        private GUIStyle boxScopeStyle = null;
-        private GUIStyle wordWrapTextAred = null;
 
         private void OnEnable()
         {
@@ -73,7 +71,7 @@ namespace CAS.UEditor
 
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
             newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
-            usingMultidexOnBuild = PlayerPrefs.GetInt( Utils.editorIgnoreMultidexPrefs, 0 ) == 0;
+            //usingMultidexOnBuild = PlayerPrefs.GetInt( Utils.editorIgnoreMultidexPrefs, 0 ) == 0;
 
             dependencyManager = DependencyManager.Create( platform, ( Audience )audienceTaggedProp.enumValueIndex, true );
         }
@@ -96,15 +94,9 @@ namespace CAS.UEditor
             var obj = serializedObject;
             obj.UpdateIfRequiredOrScript();
 
-            if (wordWrapTextAred == null)
-            {
-                wordWrapTextAred = new GUIStyle( EditorStyles.textArea );
-                wordWrapTextAred.wordWrap = true;
-            }
-
             LinksToolbarGUI();
 
-            BeginBoxScope();
+            HelpStyles.BeginBoxScope();
             EditorGUILayout.PropertyField( testAdModeProp );
             EditorGUI.BeginDisabledGroup( testAdModeProp.boolValue );
             managerIdsList.DoLayoutList();
@@ -115,7 +107,7 @@ namespace CAS.UEditor
 
             GUILayout.Label( "These settings are required for initialization with: CAS.MobileAds.InitializeFromResources(0)",
                 EditorStyles.wordWrappedMiniLabel, GUILayout.ExpandHeight( false ) );
-            EndBoxScope();
+            HelpStyles.EndBoxScope();
 
             DrawSeparator();
             OnAudienceGUI();
@@ -154,9 +146,7 @@ namespace CAS.UEditor
             }
             else
             {
-                BeginBoxScope();
                 dependencyManager.OnGUI( platform );
-                EndBoxScope();
             }
 
             obj.ApplyModifiedProperties();
@@ -226,8 +216,8 @@ namespace CAS.UEditor
             EditorGUILayout.EndHorizontal();
             EditorGUI.indentLevel++;
             trackingUsageDescriptionProp.stringValue =
-                EditorGUILayout.TextArea( trackingUsageDescriptionProp.stringValue, wordWrapTextAred );
-            EditorGUILayout.HelpBox( "NSUserTrackingUsageDescription key with a custom message describing your usage. Can be empty.", MessageType.None );
+                EditorGUILayout.TextArea( trackingUsageDescriptionProp.stringValue, HelpStyles.wordWrapTextAred );
+            EditorGUILayout.HelpBox( "NSUserTrackingUsageDescription key with a custom message describing your usage location tracking to AppTrackingTransparency.Request(). Can be empty if not using location tracking", MessageType.None );
 
             EditorGUI.indentLevel--;
             EditorGUILayout.PropertyField( trackLocationEnabledProp );
@@ -366,23 +356,6 @@ namespace CAS.UEditor
                 }
                 EditorGUILayout.EndHorizontal();
             }
-        }
-
-        private void BeginBoxScope()
-        {
-            if (boxScopeStyle == null)
-            {
-                boxScopeStyle = new GUIStyle( EditorStyles.helpBox );
-                var p = boxScopeStyle.padding;
-                p.right += 3;
-                p.left += 3;
-            }
-            EditorGUILayout.BeginVertical( boxScopeStyle );
-        }
-
-        private void EndBoxScope()
-        {
-            EditorGUILayout.EndVertical();
         }
     }
 }

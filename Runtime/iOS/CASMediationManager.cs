@@ -1,6 +1,4 @@
 ﻿#if UNITY_IOS || CASDeveloper
-// Vungle Network crashes if ad orientation is not allowed
-//#define CAS_EXPIREMENTAL_ORIENTATION
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -15,9 +13,6 @@ namespace CAS.iOS
         private AdSize _bannerSize = AdSize.Banner;
         private AdPosition _bannerPosition = AdPosition.BottomCenter;
         private LastPageAdContent _lastPageAdContent = null;
-#if CAS_EXPIREMENTAL_ORIENTATION
-        private bool[] autorotateOrientation = new bool[4];
-#endif
 
         public string managerID { get; }
         public bool isTestAdMode { get; }
@@ -40,10 +35,10 @@ namespace CAS.iOS
         public event Action OnRewardedAdClosed;
         #endregion
 
-        public CASMediationManager( string managerID, bool isDemoAdMode )
+        public CASMediationManager( CASInitSettings initData )
         {
-            this.managerID = managerID;
-            this.isTestAdMode = isDemoAdMode;
+            managerID = initData.targetId;
+            isTestAdMode = initData.testAdMode;
         }
 
         ~CASMediationManager()
@@ -58,20 +53,39 @@ namespace CAS.iOS
             }
         }
 
-        public void CreateManager( AdFlags enableAd, InitCompleteAction initCompleteAction )
+        public void CreateManager( CASInitSettings initData )
         {
-            _initCompleteAction = initCompleteAction;
+            _initCompleteAction = initData.initListener;
 
             CASExterns.CASUSetPluginPlatformWithName( "Unity", Application.unityVersion );
 
             _managerClientPtr = ( IntPtr )GCHandle.Alloc( this );
-            _managerPtr = CASExterns.CASUCreateManager(
-                _managerClientPtr,
-                InitializationCompleteCallback,
-                managerID,
-                ( int )enableAd,
-                isTestAdMode
-            );
+
+            if (initData.extrasKeys != null && initData.extrasValues != null
+                && initData.extrasKeys.Count != 0 && initData.extrasValues.Count != 0)
+            {
+                var extrasCount = Math.Min( initData.extrasKeys.Count, initData.extrasValues.Count );
+                _managerPtr = CASExterns.CASUCreateManagerWithExtras(
+                    _managerClientPtr,
+                    InitializationCompleteCallback,
+                    managerID,
+                    ( int )initData.allowedAdFlags,
+                    isTestAdMode,
+                    initData.extrasKeys.ToArray(),
+                    initData.extrasValues.ToArray(),
+                    extrasCount
+                );
+            }
+            else
+            {
+                _managerPtr = CASExterns.CASUCreateManager(
+                    _managerClientPtr,
+                    InitializationCompleteCallback,
+                    managerID,
+                    ( int )initData.allowedAdFlags,
+                    isTestAdMode
+                );
+            }
 
             CASExterns.CASUSetLoadAdDelegate( _managerPtr,
                 DidAdLoadedCallback,
@@ -169,10 +183,6 @@ namespace CAS.iOS
 
         public void ShowAd( AdType adType )
         {
-#if CAS_EXPIREMENTAL_ORIENTATION
-            if (adType == AdType.Interstitial || adType == AdType.Rewarded)
-                PrepareScreenOrientation();
-#endif
             CASExterns.CASUShowAdWithType( _managerPtr, ( int )adType );
         }
 
@@ -185,29 +195,6 @@ namespace CAS.iOS
         {
             return CASExterns.CASUGetBannerWidthInPixels( _managerPtr );
         }
-
-#if CAS_EXPIREMENTAL_ORIENTATION
-        private void PrepareScreenOrientation()
-        {
-            autorotateOrientation[0] = Screen.autorotateToPortrait;
-            autorotateOrientation[1] = Screen.autorotateToPortraitUpsideDown;
-            autorotateOrientation[2] = Screen.autorotateToLandscapeLeft;
-            autorotateOrientation[3] = Screen.autorotateToLandscapeRight;
-
-            Screen.autorotateToPortrait = true;
-            Screen.autorotateToPortraitUpsideDown = true;
-            Screen.autorotateToLandscapeLeft = true;
-            Screen.autorotateToLandscapeRight = true;
-        }
-
-        private void RestoreScreenOrientation()
-        {
-            Screen.autorotateToPortrait = autorotateOrientation[0];
-            Screen.autorotateToPortraitUpsideDown = autorotateOrientation[1];
-            Screen.autorotateToLandscapeLeft = autorotateOrientation[2];
-            Screen.autorotateToLandscapeRight = autorotateOrientation[3];
-        }
-#endif
 
         #region Callback methods
         private static CASMediationManager IntPtrToManagerClient( IntPtr managerClient )

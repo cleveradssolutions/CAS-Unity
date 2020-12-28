@@ -17,6 +17,7 @@
                       enable:(NSUInteger)types
                       demoAd:(BOOL)demoAd
                    forClient:(CASUTypeManagerClientRef _Nullable *_Nullable)client
+             mediationExtras:(NSDictionary<NSString *, NSString *> *_Nullable)extras
                       onInit:(nullable CASUInitializationCompleteCallback)onInit;
 
 @property (nonatomic, strong, nonnull) CASMediationManager *mediationManager;

@@ -32,11 +32,12 @@ The Integration Demo application demonstrate how to integrate the CAS in your ap
  5.  [Implement CAS Events](#step-5-implement-cas-events)  
  6.  [Implement our Ad Units](#step-6-implement-our-ad-units)  
  7.  [Include native platforms](#step-7-include-native-platforms)  
- 7.1 [Include Android](#include-android)  
- 7.2 [Include iOS](#include-ios)   
- 8.  [GitHub issue tracker](#github-issue-tracker)  
- 9.  [Support](#support)  
- 10.  [License](#license)  
+ 7.1.  [Include Android](#include-android)  
+ 7.2.  [Include iOS](#include-ios)   
+ 8.  [Mediation extras](#mediation-extras)
+ 9.  [GitHub issue tracker](#github-issue-tracker)  
+ 10.  [Support](#support)  
+ 11.  [License](#license)  
 
 ## Step 1 Add the CAS package to Your Project
 if you are using Unity 2018.4 or newer then you can add CAS SDK to your Unity project using the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html), or you can import the package manually.
@@ -60,7 +61,7 @@ Modify `Packages/manifest.json`  to the following form:
 ],
 "dependencies": {
     "com.cleversolutions.ads.unity" 
-        : "https://github.com/cleveradssolutions/CAS-Unity.git#1.8.3"
+        : "https://github.com/cleveradssolutions/CAS-Unity.git#1.9.1"
 }
 }
 ```
@@ -111,7 +112,7 @@ Banner, Interstitial, Rewarded Video - [Home](https://www.superawesome.com) - [P
 - Facebook Audience Network  
 Banner, Interstitial, Rewarded Video  - [Home](https://www.facebook.com/business/marketing/audience-network) - [Privacy Policy](https://developers.facebook.com/docs/audience-network/policy/)
 - Yandex Ads  
-Banner, Interstitial, Rewarded Video - [Home](https://yandex.com/dev/mobile-ads/) - [Privacy Policy](https://yandex.com/legal/mobileads_sdk_agreement/) 
+Banner, Interstitial, ~~Rewarded Video~~ - [Home](https://yandex.com/dev/mobile-ads/) - [Privacy Policy](https://yandex.com/legal/mobileads_sdk_agreement/) 
 #### Dependencies of Closed Beta third party partners:
 > :warning:  Next dependencies in closed beta and available upon invite only. If you would like to be considered for the beta, please contact Support.
 - Verizon Media  
@@ -120,7 +121,7 @@ Banner, Interstitial, Rewarded Video - [Home](https://www.verizonmedia.com/adver
 Banner, Interstitial, Rewarded Video - [Home](https://target.my.com/) - [Privacy Policy](https://legal.my.com/us/mytarget/privacy/)  
 *Works to CIS countries only*
 - MobFox  
-Banner, Interstitial, Rewarded Video - [Home](https://www.mobfox.com) - [Privacy Policy](https://www.mobfox.com/privacy-policy/)
+Banner, Interstitial, ~~Rewarded Video~~ - [Home](https://www.mobfox.com) - [Privacy Policy](https://www.mobfox.com/privacy-policy/)
 - Amazon Ads  
 Banner, ~~Interstitial, Rewarded Video~~ - [Home](https://advertising.amazon.com) - [Privacy Policy](https://advertising.amazon.com/legal/privacy-notice)
 ***
@@ -341,43 +342,6 @@ CAS.MobileAds.manager.lastPageAdContent = new LastPageAdContent(...);
 ```
 By default, this page will not be displayed while the ad content is NULL.  
 ***
-</details><details><summary><b>iOS Tracking Usage Description</b></summary>
-
-**Property for iOS only.**  
-iOS 14 and above requires publishers to obtain permission to track the user's device across applications.  
-To display the App Tracking Transparency authorization request for accessing the IDFA, update your Info.plist to add the NSUserTrackingUsageDescription key with a custom message describing your usage.  
-
-> You can leave the field blank so that CAS does not define NSUserTrackingUsageDescription.  
-
-Below is an example description text:
-- This identifier will be used to deliver personalized ads to you.
-- Your data will be used to provide you a better and personalized ad experience.
-- We try to show ads for apps and products that will be most interesting to you based on the apps you use.
-- We try to show ads for apps and products that will be most interesting to you based on the apps you use, the device you are on, and the country you are in.  
-
-For more information, see [Apple's developer documentation](https://developer.apple.com/documentation/bundleresources/information_property_list/nsusertrackingusagedescription) or [Google Ads documentation](https://developers.google.com/admob/ios/ios14#request).
-
-> **Important!** CAS does not provide legal advice. Therefore, the information on this page is not a substitute for seeking your own legal counsel to determine the legal requirements of your business and processes, and how to address them.
-***
-</details><details><summary><b>iOS Track Location Enabled</b></summary>
-
-**Property for iOS only.**  
-The SDK automatically collects location data if the user allowed the app to track the location.
-Change the flag at any time using the following method:
-```c#
-CAS.MobileAds.settings.trackLocationEnabled = enabled;
-```
-Disabled by default.  
-***
-</details><details><summary><b>iOS App Pause On Background</b></summary>
-
-**Property for iOS only.**  
-Indicates if the Unity app should be automatically paused when a full screen ad (Interstitial or Rewarded video ad) is displayed.
-```c#
-CAS.MobileAds.settings.iOSAppPauseOnBackground = pause;
-```
-Enabled by default.
-***
 </details>
 
 ## Step 3 Privacy Laws
@@ -450,45 +414,40 @@ CAS.MobileAds.settings.taggedAudience = Audience.Mixed;
 </details>
 
 ## Step 4 Initialize CAS SDK
-Before loading ads, have your app initialize the CAS SDK by calling `CAS.MobileAds.Initialize()` which initializes the SDK and calls back a completion listener once initialization is complete. 
-Initialize can be called for different identifiers to create different managers (Placement).
-This needs to be done only once for each manager, ideally at app launch.
+<details><summary><b>Initialize code</b></summary>
 
-<details><summary><b>Simple initialize</b></summary>
+To display ads, you must initialize the mediation manager with a unique identifier.  
+If you haven't created an CAS account and registered an app yet, now's a great time to do so at [cleveradssolutions.com](https://cleveradssolutions.com).  
+In a real app, it is important that you use your actual CAS manager ID.  
+This needs to be done only once for each manager, ideally at app launch.  
 
-Also to initialize SDK using settings from resources, created by menu `Assets > CleverAdsSolutions > Settings`, there is the following method:
-```c#
-CAS.MobileAds.InitializeFromResources(
-    managerIndex: 0,
-    initCompleteAction: (success, error) => { 
-        // CAS manager initialization done  
-    });
-```
-***
-</details><details><summary><b>Advanced initialzie</b></summary>
+
+The settings for initializing the mediation manager are contained in the `CASInitSettings` asset.  
+This asset is unique to each supported runtime platform and can be customized using the editor `Assets > CleverAdsSolutions > Settings` menu.  
+Also you can change any properties of the asset using `MobileAds.BuildManager()` to get actual `CASInitSettings` asset.  
+
+> If you're just looking to experiment with the SDK, though, you can use the **Test Ad Mode** above with any manager ID string.  
 
 Here's an example of how to call `Initialize()` within the `Start()` method of a script attached to a GameObject:
 ```c#
 using CAS;
-...
-public class CleverAdsSolutionsDemoScript : MonoBehaviour
+
+class CleverAdsSolutionsDemoScript : MonoBehaviour
 {
     IMediationManager manager;
-    public void Start()
+    void Start()
     {
+        // Configure AdsSettings before initialize
         // Initialize the Clever Ads Solutions SDK manager.
-        manager = MobileAds.Initialize(
-            // CAS manager (Placement) identifier.
-            managerID, 
-            // Optional set active Ad Types: 'AdFlags.Banner | AdFlags.Interstitial' for example.
-            // Ad types can be enabled manually after initialize by IMediationManager.SetEnableAd
-            enableAd: AdFlags.Everything,
-            // Optional Enable demo mode that will always request test ads. Set FALSE for release!  
-            testAdMode: !releaseBuild,
-            // Optional subscribe to initialization done
-            initCompleteAction: (success, error) => { 
-                // CAS manager initialization done  
-            });
+        CASInitSettings builder = MobileAds.BuildManager();
+        // Any changes CASInitSettings properties
+        builder.WithTestAdMode(isTestBuild);
+        // Add initialize listener
+        builder.WithInitListener((success, error) => {
+            // CAS manager initialization done
+        });
+        // Call Initialize method in any case to get IMediationManager instance
+        manager = builder.Initialize();
     }
 }
 ```
@@ -692,49 +651,68 @@ If you do not find the manifest file [Plugins/Android/AndroidManifest.xml](https
 Or Unity 2019.3+ makes it possible to activate in `Player Settings > Publishing Settings > Build > Custom Main Manifest` checkmark.  
 ***
 </details>
-<details><summary><b>Google Ads App Android ID (Automated)</b></summary>
-
-**Automated integration during application build.**  
-About Google Ads App ID [here](https://developers.google.com/admob/android/quick-start#update_your_androidmanifestxml).  
-***
-</details>
 
 ### Include iOS
 Make sure that Cocoapods is installed. 
 In the Unity editor, select: `Assets > External Dependency Manager > iOS Resolver > Install Cocoapods`  
  
- <details><summary><b>Supports Unity 2019.3 and newer</b></summary>
- 
- If you get the following error while loading your application:
- ```
- Error loading [path]/Your.app/Frameworks/UnityFramework.framework/UnityFramework:  
-   dlopen([path]/Your.app/Frameworks/UnityFramework.framework/UnityFramework, 265): 
-      Library not loaded: @rpath/CleverAdsSolutions.framework
-   Referenced from: [path]/Your.app/Frameworks/UnityFramework.framework/UnityFramework
-   Reason: image not found
- ```
- Then please add `target 'Unity-iPhone'` to the Podfile in root folder of XCode project as follows:
- ```cpp
- source 'https://github.com/CocoaPods/Specs.git'
- source 'https://github.com/cleveradssolutions/CAS-Specs.git'
- platform :ios, '11.0'
+ <details><summary><b>Tracking Usage Description</b></summary>
 
- target 'UnityFramework' do
-   pod 'CleverAdsSolutions-SDK', 'version'
- end
-
- target 'Unity-iPhone' do
- end
- ```
- Save Podfile and call terminal command
- ```
- cd [path to XCode project]
- pod install --no-repo-update
- ```
+ iOS 14 and above requires publishers to obtain permission to track the user's device across applications.  
+ To display the App Tracking Transparency authorization request for accessing the IDFA, update your Info.plist to add the NSUserTrackingUsageDescription key with a custom message describing your usage.  
  
- > We are working with EDM4U to fix this problem in [issue #405](https://github.com/googlesamples/unity-jar-resolver/issues/405)
+You can set description in `Assets > CleverAdsSolution > iOS Settings` menu or  leave the field blank so that CAS does not define NSUserTrackingUsageDescription.  
+
+ Below is an example description text:
+ - This identifier will be used to deliver personalized ads to you.
+ - Your data will be used to provide you a better and personalized ad experience.
+ - We try to show ads for apps and products that will be most interesting to you based on the apps you use.
+ - We try to show ads for apps and products that will be most interesting to you based on the apps you use, the device you are on, and the country you are in.  
+
+To present the authorization request, call `CAS.iOS.AppTrackingTransparency.Request()`. We recommend waiting for the completion callback prior to initialize SDK, so that if the user grants the App Tracking Transparency permission, the third party networks can use the IDFA in ad requests.
+
+```csharp
+class CleverAdsSolutionsDemoScript : MonoBehaviour
+{
+    CAS.IMediationManager manager;
+    void Start()
+    {
+        CAS.iOS.AppTrackingTransparency.OnAuthorizationRequestComplete
+            += OnAuthorizationRequestComplete;
+        CAS.iOS.AppTrackingTransparency.Request();
+    }
+    
+    void OnAuthorizationRequestComplete(
+            CAS.iOS.AppTrackingTransparency.Status status){
+        manager = CAS.MobileAds.BuildManager().Initialize();
+    }
+}
+```
+
+ For more information, see [Apple's developer documentation](https://developer.apple.com/documentation/bundleresources/information_property_list/nsusertrackingusagedescription)
+
+ > **Important!** CAS does not provide legal advice. Therefore, the information on this page is not a substitute for seeking your own legal counsel to determine the legal requirements of your business and processes, and how to address them.
  ***
- </details><details><summary><b>Configuring permissions (Optional)</b></summary>
+ </details><details><summary><b>Track Location Enabled</b></summary>
+
+ The SDK automatically collects location data if the user allowed the app to track the location.
+ Change the flag at any time using the following method:
+ ```c#
+ CAS.MobileAds.settings.trackLocationEnabled = enabled;
+ ```
+ Disabled by default.  
+ ***
+ </details><details><summary><b>App Pause On Background</b></summary>
+
+ **Property for iOS only.**  
+ Indicates if the Unity app should be automatically paused when a full screen ad (Interstitial or Rewarded video ad) is displayed.
+ ```c#
+ CAS.MobileAds.settings.iOSAppPauseOnBackground = pause;
+ ```
+ Enabled by default.
+ ***
+ </details>
+<details><summary><b>Configuring permissions (Optional)</b></summary>
 
 In iOS 10, Apple has extended the scope of its privacy controls by restricting access to features like the camera, photo library, etc. In order to unlock rich, immersive experiences in the SDK that take advantage of these services, please add the following entry to your apps plist:
 ```xml
@@ -748,24 +726,120 @@ In iOS 10, Apple has extended the scope of its privacy controls by restricting a
 > You can also use the settings provided by the Unity `Player Settings > Other Settings > Usage Description`.  
 ***
 </details>
-<details><summary><b>Google Ads App iOS ID (Automated)</b></summary>
 
-**Automated integration during application build.**  
-About Google Ads App ID [here](https://developers.google.com/admob/ios/quick-start).  
+
+## Mediation extras
+The CAS mediation adapters provides the `CAS.MediationExtras` constant keys to customize parameters to be sent to networks SDK.  
+
+The following sample code demonstrates how to pass these parameters to the networks adapter:
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ .WithMediationExtras(MediationExtras.vunglePublishIDFV, "1")
+ .WithMediationExtras(MediationExtras.vungleAndroidIdOptedOut, "0")
+ .Initialize();
+```
+
+Although the GDPR and CCPA settings are used by all media adapters, you have the option to override these values for a specific network.
+<details><summary>Google Ads</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ // User GDPR consent "1" is accepted and "0" is rejected
+ .WithMediationExtras(MediationExtras.AdMobGDPRConsent, "0")
+ // User CCPA do not sell data "1" and "0" is use data in ad
+ .WithMediationExtras(MediationExtras.AdMobCCPAOptedOut, "1")
+ .Initialize();
+```
+See Admob [GDPR](https://developers.google.com/admob/android/eu-consent) and [CCPA](https://developers.google.com/admob/android/ccpa#rdp_signal) implementation details for more information about what values may be provided in these methods.
+***
+</details><details><summary>AppLovin</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ // User GDPR consent "1" is accepted and "0" is rejected
+ .WithMediationExtras(MediationExtras.AppLovinGDPRConsent, "0")
+ // User CCPA do not sell data "1" and "0" is use data in ad
+ .WithMediationExtras(MediationExtras.AppLovinCCPAOptedOut, "1")
+ // Initialize MAX
+ .WithMediationExtras(MediationExtras.AppLovinUseMAX, "1")
+ .Initialize();
+```
+***
+</details><details><summary>AdColony</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ // User GDPR consent "1" is accepted and "0" is rejected
+ .WithMediationExtras(MediationExtras.AdColonyGDPRConsent, "0")
+ // User CCPA do not sell data "1" and "0" is use data in ad
+ .WithMediationExtras(MediationExtras.AdColonyCCPAOptedOut, "1")
+ .Initialize();
+```
+See [AdColony’s Privacy Laws implementation details](https://github.com/AdColony/AdColony-Android-SDK/wiki/Privacy-Laws) for more information about what values may be provided in these methods.
+***
+</details><details><summary>Vungle</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ // User GDPR consent "1" is accepted and "0" is rejected
+ .WithMediationExtras(MediationExtras.VungleGDPRConsent, "0")
+ // User CCPA do not sell data "1" and "0" is use data in ad
+ .WithMediationExtras(MediationExtras.VungleCCPAOptedOut, "1")
+ // Restrict Use of Android Device ID
+ .WithMediationExtras(MediationExtras.vungleAndroidIdOptedOut, "1")
+ // Restrict Use of IDFV
+ .WithMediationExtras(MediationExtras.vunglePublishIDFV, "0")
+ .Initialize();
+```
+See [Vungle's Advanced Settings implementation](https://support.vungle.com/hc/en-us/articles/360047780372) for more information.
+***
+</details><details><summary>IronSource</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ // User GDPR consent "1" is accepted and "0" is rejected
+ .WithMediationExtras(MediationExtras.ironSourceGDPRConsent, "0")
+ // User CCPA do not sell data "1" and "0" is use data in ad
+ .WithMediationExtras(MediationExtras.ironSourceCCPAOptedOut, "1")
+ .Initialize();
+```
+See [ironSource's managing consent](https://developers.ironsrc.com/ironsource-mobile/android/advanced-settings/) documentation for more details.
+***
+</details><details><summary>Unity Ads</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ // User GDPR consent "1" is accepted and "0" is rejected
+ .WithMediationExtras(MediationExtras.unityAdsGDPRConsent, "0")
+ // User CCPA do not sell data "1" and "0" is use data in ad
+ .WithMediationExtras(MediationExtras.unityAdsCCPAOptedOut, "1")
+ .Initialize();
+```
+See [Unity Ads data privacy and consent implementation details](https://unityads.unity3d.com/help/legal/data-privacy-and-consent) for more information about what values may be provided in these methods.
+***
+</details><details><summary>InMobi</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ // User GDPR consent "1" is accepted and "0" is rejected
+ .WithMediationExtras(MediationExtras.InMobiGDPRConsent, "0")
+ .WithMediationExtras(MediationExtras.InMobiGDPRIAB, iab_string)
+ .Initialize();
+```
+See [InMobi's GDPR implementation details](https://support.inmobi.com/monetize/android-guidelines) for more information about the possible keys and values that InMobi accepts in this consent object.
+***
+</details><details><summary>StartApp</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ // User GDPR consent "1" is accepted and "0" is rejected
+ .WithMediationExtras(MediationExtras.startAppGDPRConsent, "0")
+ .Initialize();
+```
 ***
 </details>
-<details><summary><b>Configuring SK Ad Networks (Automated)</b></summary>
 
-**Automated integration during application build.**  
-About SKAdNetwork [here](https://developer.apple.com/documentation/storekit/skadnetwork).  
-***
-</details>
-<details><summary><b>Configuring URL Schemes (Automated)</b></summary>
-
-**Automated integration during application build.**  
-About URL Schemes [here](https://github.com/cleveradssolutions/CAS-iOS#step-6-configuring-url-schemes).
-***
-</details>
+>Unique properties for each network will be added in the future.  
 
 ## GitHub issue tracker
 To file bugs, make feature requests, or suggest improvements for the Unity Plugin SDK, please use [GitHub's issue tracker](https://github.com/cleveradssolutions/CAS-Unity/issues).

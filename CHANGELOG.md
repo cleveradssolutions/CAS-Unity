@@ -1,5 +1,22 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.9.1] - 2020-12-28
+### Dependencies
+- [Android] Wraps [1.9.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [1.9.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- Added `CAS.MobileAds.BuildManager().Initialize()` [builder](https://github.com/cleveradssolutions/CAS-Unity#step-4-initialize-cas-sdk) to initialize the `IMediationManager` for alternative to `CAS.MobileAds.Initialize(...)` method.
+- Added [Mediation extras](https://github.com/cleveradssolutions/CAS-Unity#mediation-extras) options.
+- [iOS] Added `CAS.iOS.AppTrackingTransparency` class that provides a [tracking authorization request](https://github.com/cleveradssolutions/CAS-Unity#include-ios).
+### Changes
+- Migrated Cross-promotion dependency from `Advanced Integration` to `Solutions` section.
+- `CAS.MobileAds.InitializeFromResources()` is obsolete in favor of `BuildManager()`.
+- [iOS] `SKAdNetworkItems` are added to end of the Plist array instead of replacing all items in the array.
+### Bug Fixes
+- [iOS] `Library not loaded` while laoding application with Unity 2019.3+. The `Unity-iPhone` pod target is added automatically after build.
+- [Android] `java.lang.NoSuchMethodError` when call `CAS.MobileAds.ValidateIntegration()`
+- [Editor] Select the correct CAS Settings asset from resources by the build target platform.
+
 ## [1.8.3] - 2020-12-18
 ### Dependencies
 - [Android] Wraps [1.8.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

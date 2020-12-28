@@ -20,6 +20,7 @@
              enable:(NSUInteger)types
              demoAd:(BOOL)demoAd
           forClient:(CASUTypeManagerClientRef *)client
+    mediationExtras:(NSDictionary<NSString *, NSString *> *_Nullable)extras
              onInit:(CASUInitializationCompleteCallback)onInit {
     self = [super init];
     if (self) {
@@ -28,15 +29,16 @@
             [CAS createWithManagerID:appID
                          enableTypes:types
                           demoAdMode:demoAd
+                     mediationExtras:extras
                               onInit:^(BOOL succses, NSString *_Nullable error) {
-            if (onInit) {
-                if (error) {
-                    onInit(client, succses, [error cStringUsingEncoding:NSUTF8StringEncoding]);
-                } else {
-                    onInit(client, succses, NULL);
-                }
-            }
-        }];
+                                  if (onInit) {
+                                      if (error) {
+                                          onInit(client, succses, [error cStringUsingEncoding:NSUTF8StringEncoding]);
+                                      } else {
+                                          onInit(client, succses, NULL);
+                                      }
+                                  }
+                              }];
 
         bannerPositionId = 3;
         self.bannerCallback = [[CASUCallback alloc] initForFullScreen:NO];

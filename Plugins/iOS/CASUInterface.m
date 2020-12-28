@@ -13,6 +13,7 @@
 #if __has_include("UnityAppController.h")
 #import "UnityAppController.h"
 #endif
+#import <AppTrackingTransparency/AppTrackingTransparency.h>
 
 static NSString * CASUStringFromUTF8String(const char *bytes)
 {
@@ -141,9 +142,40 @@ void CASUOpenDebugger()
     NSLog(@"[CAS] Framework bridge cant find CASDebugger.h");
 }
 
+const char * CASUGetActiveMediationPattern()
+{
+    return cStringCopy([CASNetwork getActiveNetworkPattern].UTF8String);
+}
+
+BOOL CASUIsActiveMediationNetwork(NSInteger net)
+{
+    NSArray *values = [CASNetwork values];
+    if (net > 0 && net < [values count]) {
+        return [CASNetwork isActiveNetwork:[values objectAtIndex:net]];
+    }
+    return NO;
+}
+
 const char * CASUGetSDKVersion()
 {
     return cStringCopy([CAS getSDKVersion].UTF8String);
+}
+
+#pragma mark - CAS ATTrackingManager
+
+void CASURequestTracking(CASUTrackingStatusCallback callback)
+{
+    if (@available(iOS 14, *)) {
+        [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
+            if (callback) {
+                callback(status);
+            }
+        }];
+    } else {
+        if (callback) {
+            callback(3);
+        }
+    }
 }
 
 #pragma mark - CAS Manager
@@ -156,10 +188,37 @@ CASUTypeManagerRef CASUCreateManager(CASUTypeManagerClientRef           *client,
 {
     CASUManager *manager = [[CASUManager alloc]
                             initWithAppID:CASUStringFromUTF8String(managerID)
-                                   enable:enableAd
-                                   demoAd:demoAd
-                                forClient:client
-                                   onInit:onInit];
+                                    enable:enableAd
+                                    demoAd:demoAd
+                                 forClient:client
+                           mediationExtras:nil
+                                    onInit:onInit];
+
+    CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
+    [cache saveObject:manager withKey:manager.mediationManager.managerID];
+    return (__bridge CASUTypeManagerRef)manager;
+}
+
+CASUTypeManagerRef CASUCreateManagerWithExtras(CASUTypeManagerClientRef           *client,
+                                               CASUInitializationCompleteCallback onInit,
+                                               const char                         *managerID,
+                                               NSInteger                          enableAd,
+                                               BOOL                               demoAd,
+                                               const char                         **extraKeys,
+                                               const char                         **extraValues,
+                                               NSInteger                          extrasCount)
+{
+    NSDictionary *mediationExtras = [[NSDictionary<NSString *, NSString *> alloc] init];
+    for (int i = 0; i < extrasCount; i++) {
+        [mediationExtras setValue:CASUStringFromUTF8String(extraKeys[i]) forKey:CASUStringFromUTF8String(extraValues[i])];
+    }
+    CASUManager *manager = [[CASUManager alloc]
+                            initWithAppID:CASUStringFromUTF8String(managerID)
+                                    enable:enableAd
+                                    demoAd:demoAd
+                                 forClient:client
+                           mediationExtras:mediationExtras
+                                    onInit:onInit];
 
     CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
     [cache saveObject:manager withKey:manager.mediationManager.managerID];

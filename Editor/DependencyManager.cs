@@ -63,9 +63,22 @@ namespace CAS.UEditor
         }
     }
 
+    
+
     [Serializable]
     public partial class Dependency
     {
+        [Flags]
+        public enum Label
+        {
+            None = 0,
+            Banner = 1,
+            Inter = 2,
+            Reward = 4,
+            Native = 8,
+            Beta = 16,
+        }
+
         public string name;
         public string version;
         public string require;
@@ -74,7 +87,7 @@ namespace CAS.UEditor
         public string[] dependencies;
         public string[] contains;
         public string[] source;
-        public bool beta;
+        public Label labels = Label.Banner | Label.Inter | Label.Reward;
 
         public string installedVersion { get; set; }
         public bool isNewer { get; set; }

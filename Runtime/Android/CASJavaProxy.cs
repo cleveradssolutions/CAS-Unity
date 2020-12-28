@@ -20,9 +20,9 @@ namespace CAS.Android
         internal static AndroidJavaObject GetJavaListObject( List<string> csTypeList )
         {
             AndroidJavaObject javaTypeArrayList = new AndroidJavaObject( "java.util.ArrayList" );
-            foreach (string itemList in csTypeList)
+            for (int i = 0; i < csTypeList.Count; i++)
             {
-                javaTypeArrayList.Call<bool>( "add", itemList );
+                javaTypeArrayList.Call<bool>( "add", csTypeList[i] );
             }
             return javaTypeArrayList;
         }

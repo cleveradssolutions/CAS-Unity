@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -8,7 +9,19 @@ namespace CAS
     {
         internal static volatile bool isExecuteEventsOnUnityThread = false;
 
+        internal static IMediationManager manager;
         internal static IAdsSettings _settings;
+
+        internal static CASInitSettings LoadInitSettingsFromResources()
+        {
+#if UNITY_ANDROID
+            return Resources.Load<CASInitSettings>( "CASSettingsAndroid" );
+#elif UNITY_IOS
+            return Resources.Load<CASInitSettings>( "CASSettingsiOS" );
+#else
+            return null;
+#endif
+        }
 
         internal static IAdsSettings CreateSettigns( CASInitSettings initSettings )
         {
@@ -63,77 +76,33 @@ namespace CAS
             return MobileAds.wrapperVersion;
         }
 
-
-        internal static IMediationManager Initialize(
-            string managerID,
-            AdFlags enableAd = AdFlags.Everything,
-            bool testAdMode = false,
-            InitCompleteAction initCompleteAction = null )
+        internal static IMediationManager CreateManager( CASInitSettings initSettings )
         {
-            if (string.IsNullOrEmpty( managerID ))
-                throw new ArgumentNullException( "managerID", "Manager ID is empty" );
-            if (MobileAds.manager != null && MobileAds.manager.managerID == managerID)
+            if (manager != null && manager.managerID == initSettings.targetId)
             {
-                if (initCompleteAction != null)
-                    initCompleteAction( true, null );
-                return MobileAds.manager;
+                if (initSettings.initListener != null)
+                    initSettings.initListener( true, null );
+                manager.bannerSize = initSettings.bannerSize;
+                return manager;
             }
             if (_settings == null)
-                _settings = CreateSettigns( LoadInitSettingsFromResources() );
+                _settings = CreateSettigns( initSettings );
+
             EventExecutor.Initialize();
-            return CreateManager( managerID, enableAd, testAdMode, initCompleteAction );
-        }
-
-        internal static IMediationManager InitializeFromResources(
-            int managerIndex, AdFlags enableAd, InitCompleteAction initCompleteAction = null )
-        {
-            var initSettings = LoadInitSettingsFromResources();
-
-            if (!initSettings)
-                throw new FileNotFoundException( "No settings found in resources. " +
-                    "Please use Assets/CleverAdsSolutions/Settings menu for create settings asset." );
-            string managerID;
-            if (Application.isEditor || initSettings.testAdMode)
-            {
-                managerID = "demo";
-            }
-            else
-            {
-                if (initSettings.managerIds.Length - 1 < managerIndex || string.IsNullOrEmpty( initSettings.managerIds[managerIndex] ))
-                    throw new ArgumentNullException( "managerIds", "Manager ID is empty. " +
-                        "Please use Assets/CleverAdsSolutions/Settings menu and set manager ID." );
-                managerID = initSettings.managerIds[managerIndex];
-            }
-            if (MobileAds.manager != null && MobileAds.manager.managerID == managerID)
-            {
-                if (initCompleteAction != null)
-                    initCompleteAction( true, null );
-                return MobileAds.manager;
-            }
-            EventExecutor.Initialize();
-            var manager = CreateManager( managerID, initSettings.allowedAdFlags & enableAd, initSettings.testAdMode, initCompleteAction );
-            manager.bannerSize = initSettings.bannerSize;
-            return manager;
-        }
-
-        internal static IMediationManager CreateManager(
-            string managerID, AdFlags enableAd, bool demoAdMode, InitCompleteAction initCompleteAction )
-        {
-            IMediationManager manager = null;
 #if UNITY_EDITOR || TARGET_OS_SIMULATOR
-            manager = CAS.Unity.CASMediationManager.CreateManager( enableAd, initCompleteAction );
+            manager = CAS.Unity.CASMediationManager.CreateManager( initSettings );
 #elif UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {
-                var android = new CAS.Android.CASMediationManager( managerID, demoAdMode );
-                android.CreateManager( enableAd, initCompleteAction );
+                var android = new CAS.Android.CASMediationManager( initSettings );
+                android.CreateManager( initSettings );
                 manager = android;
             }
 #elif UNITY_IOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
-                var ios = new CAS.iOS.CASMediationManager( managerID, demoAdMode );
-                ios.CreateManager( enableAd, initCompleteAction );
+                var ios = new CAS.iOS.CASMediationManager( initSettings );
+                ios.CreateManager( initSettings );
                 manager = ios;
             }
 #endif
@@ -144,10 +113,12 @@ namespace CAS
 
         internal static void ValidateIntegration()
         {
-#if UNITY_ANDROID
+#if UNITY_EDITOR
+            // TODO: Implementation editor 
+#elif UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {
-                var androidSettings = MobileAds.settings as CAS.Android.CASSettings;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
                 androidSettings.ValidateIntegration();
             }
 #elif UNITY_IOS
@@ -158,25 +129,55 @@ namespace CAS
 #endif
         }
 
-        internal static CASInitSettings LoadInitSettingsFromResources()
+        #region Mediation network states
+        internal static string GetActiveMediationPattern()
         {
-            string assetName;
-            switch (Application.platform)
+#if UNITY_EDITOR
+            // TODO: Implementation editor 
+#elif UNITY_ANDROID
+            if (Application.platform == RuntimePlatform.Android)
             {
-                case RuntimePlatform.WindowsEditor:
-                case RuntimePlatform.Android:
-                    assetName = "CASSettingsAndroid";
-                    break;
-                case RuntimePlatform.OSXEditor:
-                case RuntimePlatform.IPhonePlayer:
-                    assetName = "CASSettingsiOS";
-                    break;
-                default:
-                    return null;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
+                return androidSettings.GetActiveMediationPattern();
             }
-            return Resources.Load<CASInitSettings>( assetName );
+#elif UNITY_IOS
+            if (Application.platform == RuntimePlatform.IPhonePlayer)
+                return CAS.iOS.CASExterns.CASUGetActiveMediationPattern();
+#endif
+            return "";
         }
 
+        internal static AdNetwork[] GetActiveNetworks()
+        {
+            var pattern = GetActiveMediationPattern();
+            var result = new List<AdNetwork>();
+            for (int i = 0; i < pattern.Length; i++)
+            {
+                if (pattern[i] == '1')
+                    result.Add( ( AdNetwork )i );
+            }
+            return result.ToArray();
+        }
+
+        internal static bool IsActiveNetwork( AdNetwork network )
+        {
+#if UNITY_EDITOR
+            // TODO: Implementation editor 
+#elif UNITY_ANDROID
+            if (Application.platform == RuntimePlatform.Android)
+            {
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
+                return androidSettings.IsActiveMediationNetwork( network );
+            }
+#elif UNITY_IOS
+            if (Application.platform == RuntimePlatform.IPhonePlayer)
+                return CAS.iOS.CASExterns.CASUIsActiveMediationNetwork( ( int )network );
+#endif
+            return false;
+        }
+        #endregion
+
+        #region Execute events wrapper
         internal static void ExecuteEvent( Action action )
         {
             if (action == null)
@@ -271,5 +272,6 @@ namespace CAS
                 Debug.LogException( e );
             }
         }
+        #endregion
     }
 }

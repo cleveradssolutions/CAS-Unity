@@ -1,7 +1,6 @@
 ﻿#if UNITY_IOS || CASDeveloper
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -35,6 +34,31 @@ namespace CAS.UEditor
                 EditorUtility.ClearProgressBar();
             }
         }
+
+#if UNITY_2019_3_OR_NEWER
+        [PostProcessBuild( 45 )]//must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40) and that it's added before "pod install" (50)
+        private static void FixPodFileBug( BuildTarget target, string buildPath )
+        {
+            if (target != BuildTarget.iOS)
+                return;
+            var podPath = buildPath + "/Podfile";
+            if (!File.Exists( podPath ))
+            {
+                Debug.LogError( CASEditorUtils.logTag + "Podfile not found.\n" +
+                    "Please add `target 'Unity-iPhone' do end` to the Podfile in root folder of XCode project and call `pod install --no-repo-update`" );
+                return;
+            }
+            var content = File.ReadAllText( podPath );
+            if (content.Contains( "'Unity-iPhone'" ))
+                return;
+            using (StreamWriter sw = File.AppendText( podPath ))
+            {
+                sw.WriteLine();
+                sw.WriteLine( "target 'Unity-iPhone' do" );
+                sw.WriteLine( "end" );
+            }
+        }
+#endif
 
         private static void ConfigureInfoPlist( string plistPath )
         {
@@ -88,26 +112,39 @@ namespace CAS.UEditor
             EditorUtility.DisplayProgressBar( casTitle, "Write SKAdNetworks to Info.plist", 0.5f );
             var templateFile = CASEditorUtils.GetTemplatePath( CASEditorUtils.iosSKAdNetworksTemplateFile );
             if (string.IsNullOrEmpty( templateFile ))
-                CASEditorUtils.StopBuildWithMessage( "Not found SKAdNetworkItems. Try reimport CAS package.", BuildTarget.iOS );
-            var networksLines = File.ReadAllLines( templateFile );
-            var adNetworkItems = plist.root.CreateArray( "SKAdNetworkItems" );
+            {
+                Debug.LogError( CASEditorUtils.logTag + "Not found SKAdNetworkItems. Try reimport CAS package." );
+            }
+            else
+            {
+                var networksLines = File.ReadAllLines( templateFile );
 
-            for (int i = 0; i < networksLines.Length; i++)
-                if (!string.IsNullOrEmpty( networksLines[i] ))
+                PlistElementArray adNetworkItems;
+                var adNetworkItemsField = plist.root["SKAdNetworkItems"];
+                if (adNetworkItemsField == null)
+                    adNetworkItems = plist.root.CreateArray( "SKAdNetworkItems" );
+                else
+                    adNetworkItems = adNetworkItemsField.AsArray();
+
+                for (int i = 0; i < networksLines.Length; i++)
                 {
-                    var dict = adNetworkItems.AddDict();
-                    dict.SetString( "SKAdNetworkIdentifier", networksLines[i] );
+                    if (!string.IsNullOrEmpty( networksLines[i] ))
+                    {
+                        var dict = adNetworkItems.AddDict();
+                        dict.SetString( "SKAdNetworkIdentifier", networksLines[i] );
+                    }
                 }
+            }
             #endregion
 
             #region Write LSApplicationQueriesSchemes
             EditorUtility.DisplayProgressBar( casTitle, "Write LSApplicationQueriesSchemes to Info.plist", 0.6f );
             PlistElementArray applicationQueriesSchemes;
             var applicationQueriesSchemesField = plist.root["LSApplicationQueriesSchemes"];
-            if (applicationQueriesSchemesField != null)
-                applicationQueriesSchemes = applicationQueriesSchemesField.AsArray();
-            else
+            if (applicationQueriesSchemesField == null)
                 applicationQueriesSchemes = plist.root.CreateArray( "LSApplicationQueriesSchemes" );
+            else
+                applicationQueriesSchemes = applicationQueriesSchemesField.AsArray();
             foreach (var scheme in new[] { "fb", "instagram", "tumblr", "twitter" })
                 if (applicationQueriesSchemes.values.Find( x => x.AsString() == scheme ) == null)
                     applicationQueriesSchemes.AddString( scheme );
@@ -128,8 +165,9 @@ namespace CAS.UEditor
             var target = project.TargetGuidByName( PBXProject.GetUnityTargetName() );
 #endif
             project.SetBuildProperty( target, "ENABLE_BITCODE", "No" );
-            project.AddBuildProperty( target, "OTHER_LDFLAGS", "-lxml2 -ObjC -fobjc-arc" );
-            project.AddBuildProperty( target, "CLANG_ENABLE_MODULES", "YES" ); // InMobi required
+            project.AddBuildProperty( target, "OTHER_LDFLAGS", "-ObjC" );
+            //project.AddBuildProperty( target, "OTHER_LDFLAGS", "-lxml2 -ObjC -fobjc-arc" );
+            //project.AddBuildProperty( target, "CLANG_ENABLE_MODULES", "YES" ); // InMobi required
             project.SetBuildProperty( target, "SWIFT_VERSION", "5.0" );
 
             EditorUtility.DisplayProgressBar( casTitle, "Copy CAS Settings json to project", 0.8f );

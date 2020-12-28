@@ -81,13 +81,13 @@ namespace CAS.Unity
         public event Action OnRewardedAdClosed;
         #endregion
 
-        public static IMediationManager CreateManager( AdFlags enableAd, InitCompleteAction initCompleteAction )
+        public static IMediationManager CreateManager( CASInitSettings initSettings )
         {
             var obj = new GameObject( "CASMediationManager" );
             DontDestroyOnLoad( obj );
             var manager = obj.AddComponent<CASMediationManager>();
-            manager.enabledTypes = enableAd;
-            manager._initCompleteAction = initCompleteAction;
+            manager.enabledTypes = initSettings.allowedAdFlags;
+            manager._initCompleteAction = initSettings.initListener;
             manager.bannerSize = AdSize.Banner;
             manager._settings = CAS.MobileAds.settings as CASSettings;
             return manager;

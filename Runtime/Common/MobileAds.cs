@@ -11,7 +11,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "1.8.3";
+        public const string wrapperVersion = "1.9.1";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -25,7 +25,10 @@ namespace CAS
         /// Get last initialized <see cref="IMediationManager"/>
         /// May be NULL before the first initialization in the session.
         /// </summary>
-        public static IMediationManager manager { get; private set; }
+        public static IMediationManager manager
+        {
+            get { return CASFactory.manager; }
+        }
 
         /// <summary>
         /// You can now easily tailor the way you serve your ads to fit a specific audience!
@@ -47,6 +50,18 @@ namespace CAS
         }
 
         /// <summary>
+        /// Create <see cref="IMediationManager"/> builder.
+        /// Don't forget to call the <see cref="CASInitSettings.Initialize"/> method to create manager instance.
+        /// </summary>
+        public static CASInitSettings BuildManager()
+        {
+            var builder = CASFactory.LoadInitSettingsFromResources();
+            if (builder == null)
+                return ScriptableObject.CreateInstance<CASInitSettings>();
+            return UnityEngine.Object.Instantiate( builder );
+        }
+
+        /// <summary>
         /// Initialize new <see cref="IMediationManager"/> and save to <see cref="manager"/> field.
         /// Can be called for different identifiers to create different managers.
         /// After initialization, advertising content of <paramref name="enableAd"/> is loading automatically.
@@ -64,7 +79,12 @@ namespace CAS
             bool testAdMode = false,
             InitCompleteAction initCompleteAction = null )
         {
-            return manager = CASFactory.Initialize( managerID, enableAd, testAdMode, initCompleteAction );
+            return BuildManager()
+                .WithManagerId( managerID )
+                .WithEnabledAdTypes( enableAd )
+                .WithTestAdMode( testAdMode )
+                .WithInitListener( initCompleteAction )
+                .Initialize();
         }
 
         /// <summary>
@@ -82,12 +102,18 @@ namespace CAS
         /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
         /// <exception cref="NotSupportedException">Not supported runtime platform</exception>
         /// <exception cref="FileNotFoundException">No settings found in resources</exception>
+        [Obsolete( "Use the new extended parameters of BuildManager() instead" )]
         public static IMediationManager InitializeFromResources(
             int managerIndex = 0,
             AdFlags enableAd = AdFlags.Everything,
             InitCompleteAction initCompleteAction = null )
         {
-            return manager = CASFactory.InitializeFromResources( managerIndex, enableAd, initCompleteAction );
+            var builder = BuildManager()
+                .WithInitListener( initCompleteAction );
+            builder.WithEnabledAdTypes( enableAd & builder.allowedAdFlags );
+            if (managerIndex > 0)
+                builder.WithManagerIdAtIndex( managerIndex );
+            return builder.Initialize();
         }
 
         /// <summary>
@@ -96,7 +122,7 @@ namespace CAS
         /// After you have finished your integration, call the following static method
         /// and confirm that all networks you have implemented are marked as VERIFIED.
         ///
-        /// Find log information by tag: CASIntegrationHelper
+        /// Find log information by tag: <b>CASIntegrationHelper</b>
         ///
         /// Once you’ve successfully verified your integration,
         /// please remember to remove the integration helper from your code.
@@ -104,6 +130,28 @@ namespace CAS
         public static void ValidateIntegration()
         {
             CASFactory.ValidateIntegration();
+        }
+
+        /// <summary>
+        /// Mediation pattern string with format '1' - active and '0' - not active.
+        /// Char index of string pattern equals enum index of <see cref="AdNetwork"/>
+        /// </summary>
+        public static string GetActiveMediationPattern()
+        {
+            return CASFactory.GetActiveMediationPattern();
+        }
+
+        /// <summary>
+        /// Get array of active mediation networks in build.
+        /// </summary>
+        public static AdNetwork[] GetActiveNetworks()
+        {
+            return CASFactory.GetActiveNetworks();
+        }
+
+        public static bool IsActiveNetwork( AdNetwork network )
+        {
+            return CASFactory.IsActiveNetwork( network );
         }
     }
 }

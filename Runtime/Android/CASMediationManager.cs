@@ -101,10 +101,10 @@ namespace CAS.Android
         }
         #endregion
 
-        public CASMediationManager( string managerID, bool isDemoAdMode )
+        public CASMediationManager( CASInitSettings initData )
         {
-            this.managerID = managerID;
-            this.isTestAdMode = isDemoAdMode;
+            managerID = initData.targetId;
+            isTestAdMode = initData.testAdMode;
         }
 
         ~CASMediationManager()
@@ -119,24 +119,40 @@ namespace CAS.Android
             }
         }
 
-        public void CreateManager( AdFlags enableAd, InitCompleteAction initCompleteAction )
+        public void CreateManager( CASInitSettings initData )
         {
             _bannerProxy = new AdCallbackProxy();
             _interstitialProxy = new AdCallbackProxy();
             _rewardedProxy = new AdCallbackProxy();
             _adLoadProxy = new AdLoadCallbackProxy();
 
-            if (initCompleteAction != null)
-                initializationListener = new InitializationListenerProxy( this, initCompleteAction );
+            if (initData.initListener != null)
+                initializationListener = new InitializationListenerProxy( this, initData.initListener );
 
             AndroidJavaObject activity = CASJavaProxy.GetUnityActivity();
 
-            _managerBridge = new AndroidJavaObject( CASJavaProxy.NativeBridgeClassName,
-                activity,
-                managerID,
-                ( int )enableAd,
-                isTestAdMode,
-                initializationListener );
+            if (initData.extrasKeys != null && initData.extrasValues != null
+                && initData.extrasKeys.Count != 0 && initData.extrasValues.Count != 0)
+            {
+                _managerBridge = new AndroidJavaObject( CASJavaProxy.NativeBridgeClassName,
+                    activity,
+                    managerID,
+                    ( int )initData.allowedAdFlags,
+                    isTestAdMode,
+                    initializationListener,
+                    CASJavaProxy.GetJavaListObject( initData.extrasKeys ),
+                    CASJavaProxy.GetJavaListObject( initData.extrasValues )
+                );
+            }
+            else
+            {
+                _managerBridge = new AndroidJavaObject( CASJavaProxy.NativeBridgeClassName,
+                    activity,
+                    managerID,
+                    ( int )initData.allowedAdFlags,
+                    isTestAdMode,
+                    initializationListener );
+            }
 
             _managerBridge.Call( "setListeners",
                 _bannerProxy,

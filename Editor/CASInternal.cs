@@ -8,6 +8,83 @@ using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
 {
+
+    internal static class HelpStyles
+    {
+        private static GUIStyle boxScopeStyle;
+        public static GUIStyle wordWrapTextAred;
+
+        public static GUIContent helpIconContent;
+        public static GUIContent errorIconContent;
+        private static GUIContent tempContent;
+
+
+        static HelpStyles()
+        {
+            boxScopeStyle = new GUIStyle( EditorStyles.helpBox );
+            boxScopeStyle.padding = new RectOffset( 6, 6, 6, 6 );
+            wordWrapTextAred = new GUIStyle( EditorStyles.textArea );
+            wordWrapTextAred.wordWrap = true;
+
+            errorIconContent = EditorGUIUtility.IconContent( "d_console.erroricon.sml" );
+            helpIconContent = EditorGUIUtility.IconContent( "_Help" );
+            tempContent = new GUIContent();
+        }
+
+        public static void OnLabelGUI( Dependency.Label label )
+        {
+            if (label == Dependency.Label.None)
+                return;
+            if (( label & Dependency.Label.Banner ) == Dependency.Label.Banner)
+            {
+                tempContent.text = "B";
+                tempContent.tooltip = "Support Banner Ad";
+                GUILayout.Label( tempContent, "AssetLabel", GUILayout.ExpandWidth( false ) );
+            }
+            else
+            {
+                GUILayout.Label( " B ", GUILayout.ExpandWidth( false ) );
+            }
+            if (( label & Dependency.Label.Inter ) == Dependency.Label.Inter)
+            {
+                tempContent.text = "I";
+                tempContent.tooltip = "Support Interstitial Ad";
+                GUILayout.Label( tempContent, "AssetLabel", GUILayout.ExpandWidth( false ) );
+            }
+            else
+            {
+                GUILayout.Label( " I ", GUILayout.ExpandWidth( false ) );
+            }
+            if (( label & Dependency.Label.Reward ) == Dependency.Label.Reward)
+            {
+                tempContent.text = "R";
+                tempContent.tooltip = "Support Rewarded Video Ad";
+                GUILayout.Label( tempContent, "AssetLabel", GUILayout.ExpandWidth( false ) );
+            }
+            else
+            {
+                GUILayout.Label( " R ", GUILayout.ExpandWidth( false ) );
+            }
+            if (( label & Dependency.Label.Beta ) == Dependency.Label.Beta)
+            {
+                tempContent.text = "beta";
+                tempContent.tooltip = "Dependencies in closed beta and available upon invite only. " +
+                        "If you would like to be considered for the beta, please contact Support.";
+                GUILayout.Label( tempContent, "AssetLabel", GUILayout.ExpandWidth( false ) );
+            }
+        }
+
+        public static void BeginBoxScope()
+        {
+            EditorGUILayout.BeginVertical( boxScopeStyle );
+        }
+
+        public static void EndBoxScope()
+        {
+            EditorGUILayout.EndVertical();
+        }
+    }
+
     public partial class DependencyManager
     {
         #region Internal implementation
@@ -18,9 +95,6 @@ namespace CAS.UEditor
         private List<AdDependency> other = new List<AdDependency>();
 
         internal GUILayoutOption columnWidth;
-        internal GUILayoutOption nameColumnWidth;
-        internal GUIContent helpIconContent = null;
-        internal GUIContent betaContent = null;
 
         internal bool installedAny;
 
@@ -32,8 +106,6 @@ namespace CAS.UEditor
 
         internal void Init( BuildTarget platform, bool deepInit = true )
         {
-            helpIconContent = null;
-            betaContent = null;
             installedAny = false;
             for (int i = 0; i < simple.Length; i++)
                 simple[i].Reset();
@@ -81,42 +153,43 @@ namespace CAS.UEditor
             firebaseDeepLinksExist = Utils.IsFirebaseServiceExist( "dynamic" );
         }
 
+        private void OnHeaderGUI()
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space( 25 );
+            GUILayout.Label( "Dependency", EditorStyles.largeLabel );
+            GUILayout.Label( "Current", EditorStyles.largeLabel, columnWidth );
+            GUILayout.Label( "Latest", EditorStyles.largeLabel, columnWidth );
+            GUILayout.Label( "Action", EditorStyles.largeLabel, columnWidth );
+            EditorGUILayout.EndHorizontal();
+        }
+
         internal void OnGUI( BuildTarget platform )
         {
-            if (helpIconContent == null)
-                helpIconContent = EditorGUIUtility.IconContent( "_Help" );
-            if (betaContent == null)
-                betaContent = new GUIContent( "beta", "Dependencies in closed beta and available upon invite only. " +
-                    "If you would like to be considered for the beta, please contact Support." );
             if (!installedAny)
                 EditorGUILayout.HelpBox( "Dependencies of native SDK were not found. " +
                     "Please use the following options to integrate solutions or any SDK separately.",
                     MessageType.Warning );
 
             columnWidth = GUILayout.MaxWidth( EditorGUIUtility.currentViewWidth * 0.15f );
-            nameColumnWidth = GUILayout.MaxWidth( EditorGUIUtility.currentViewWidth * 0.32f );
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Space( 25 );
-            GUILayout.Label( "Dependency", EditorStyles.largeLabel, nameColumnWidth );
-            GUILayout.Label( "Current", EditorStyles.largeLabel, columnWidth );
-            GUILayout.Label( "Latest", EditorStyles.largeLabel, columnWidth );
-            GUILayout.Label( "Action", EditorStyles.largeLabel, columnWidth );
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
 
             if (simple.Length > 0)
             {
-                solutionsFoldout = GUILayout.Toggle( solutionsFoldout, "Solutions", EditorStyles.toolbarButton );
+                HelpStyles.BeginBoxScope();
+                solutionsFoldout = GUILayout.Toggle( solutionsFoldout, "Solutions", EditorStyles.foldout );
                 if (solutionsFoldout)
                 {
+                    OnHeaderGUI();
                     for (int i = 0; i < simple.Length; i++)
                         simple[i].OnGUI( this, platform );
                 }
+                HelpStyles.EndBoxScope();
             }
 
             if (advanced.Length > 0)
             {
-                advancedFoldout = GUILayout.Toggle( advancedFoldout, "Advanced Integration", EditorStyles.toolbarButton );
+                HelpStyles.BeginBoxScope();
+                advancedFoldout = GUILayout.Toggle( advancedFoldout, "Advanced Integration", EditorStyles.foldout );
                 if (!advancedFoldout)
                 {
                     for (int i = 0; i < advanced.Length; i++)
@@ -134,18 +207,22 @@ namespace CAS.UEditor
                 }
                 if (advancedFoldout)
                 {
+                    OnHeaderGUI();
                     for (int i = 0; i < advanced.Length; i++)
                         advanced[i].OnGUI( this, platform );
                 }
+                HelpStyles.EndBoxScope();
             }
             if (other.Count > 0)
             {
-                otherFoldout = GUILayout.Toggle( otherFoldout, "Other Active Dependencies: " + other.Count, EditorStyles.toolbarButton );
+                HelpStyles.BeginBoxScope();
+                otherFoldout = GUILayout.Toggle( otherFoldout, "Other Active Dependencies: " + other.Count, EditorStyles.foldout );
                 if (otherFoldout)
                 {
                     for (int i = 0; i < other.Count; i++)
                         other[i].OnGUI( this );
                 }
+                HelpStyles.EndBoxScope();
             }
 
             EditorGUILayout.HelpBox( "Please provide us with a list of integrated dependencies " +
@@ -163,11 +240,6 @@ namespace CAS.UEditor
                         "OK" );
                 }
                 EditorGUILayout.EndHorizontal();
-            }
-            else if (platform == BuildTarget.iOS && !firebaseDeepLinksExist)
-            {
-                EditorGUILayout.HelpBox( "CAS Cross-promotion uses deep links to track conversions. " +
-                    "Please add Firebase Deep Link dependency to the project.", MessageType.Warning );
             }
         }
 
@@ -278,22 +350,14 @@ namespace CAS.UEditor
             EditorGUILayout.BeginHorizontal();
             bool installed = !string.IsNullOrEmpty( installedVersion );
             if (( inBan && installed ) || ( installed && locked ) || ( isRequired && !locked && !installed ))
-                GUILayout.Label( EditorGUIUtility.IconContent( "d_console.erroricon.sml" ), GUILayout.Width( 20 ) );
+                GUILayout.Label( HelpStyles.errorIconContent, GUILayout.Width( 20 ) );
             else if (string.IsNullOrEmpty( url ))
                 GUILayout.Space( 25 );
-            else if (GUILayout.Button( mediation.helpIconContent, EditorStyles.label, GUILayout.Width( 20 ) ))
+            else if (GUILayout.Button( HelpStyles.helpIconContent, EditorStyles.label, GUILayout.Width( 20 ) ))
                 Application.OpenURL( url );
 
-            if (beta)
-            {
-                GUILayout.Label( name, GUILayout.ExpandWidth( false ) );
-                GUILayout.Label( mediation.betaContent, "AssetLabel", GUILayout.ExpandWidth( false ) );
-                GUILayout.FlexibleSpace();
-            }
-            else
-            {
-                GUILayout.Label( name );
-            }
+            HelpStyles.OnLabelGUI( labels );
+            GUILayout.Label( name );
 
             if (installed)
             {

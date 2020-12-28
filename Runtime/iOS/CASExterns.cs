@@ -64,6 +64,15 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern string CASUValidateIntegration();
+
+        [DllImport( "__Internal" )]
+        internal static extern string CASUGetActiveMediationPattern();
+
+        [DllImport( "__Internal" )]
+        internal static extern bool CASUIsActiveMediationNetwork( int net );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASURequestTracking( CASUTrackingStatusCallback callback );
         #endregion
 
         #region CAS Callback types
@@ -77,6 +86,8 @@ namespace CAS.iOS
         internal delegate void CASUInitializationCompleteCallback( IntPtr client, bool success, string error );
         internal delegate void CASUDidAdLoadedCallback( IntPtr client, int adType );
         internal delegate void CASUDidAdFailedToLoadCallback( IntPtr client, int adType, string error );
+
+        internal delegate void CASUTrackingStatusCallback( int status );
         #endregion
 
         #region CAS Manager
@@ -87,6 +98,18 @@ namespace CAS.iOS
             string managerID,
             int enableAd,
             bool demoAd
+        );
+
+        [DllImport( "__Internal" )]
+        internal static extern IntPtr CASUCreateManagerWithExtras(
+            IntPtr client, // C# manager client ptr
+            CASUInitializationCompleteCallback onInit,
+            string managerID,
+            int enableAd,
+            bool demoAd,
+            string[] extraKeys,
+            string[] extraValues,
+            int extrasCount
         );
 
         [DllImport( "__Internal" )]

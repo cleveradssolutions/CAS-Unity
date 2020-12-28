@@ -39,7 +39,7 @@ namespace CAS.UEditor
         internal const string gitUnityRepo = "CAS-Unity";
         internal const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
         internal const string supportURL = gitUnityRepoURL + "#support";
-        internal const string configuringPrivacyURL = gitUnityRepoURL + "#step-2-configuring-cas-sdk";
+        internal const string configuringPrivacyURL = gitUnityRepoURL + "#include-ios";
         internal const string websiteURL = "https://cleveradssolutions.com";
 
         internal const string generalDeprecateDependency = "General";
