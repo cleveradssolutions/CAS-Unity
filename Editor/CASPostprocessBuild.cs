@@ -184,7 +184,7 @@ namespace CAS.UEditor
                 Debug.LogWarning( CASEditorUtils.logTag + "Copy Raw Files To XCode Project failed with error: " + e.ToString() );
             }
 
-            EditorUtility.DisplayProgressBar( casTitle, "Save XCode project", 0.85f );
+            EditorUtility.DisplayProgressBar( casTitle, "Save XCode project", 0.9f );
             File.WriteAllText( projectPath, project.WriteToString() );
         }
 
