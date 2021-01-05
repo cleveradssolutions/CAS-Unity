@@ -731,6 +731,8 @@ In iOS 10, Apple has extended the scope of its privacy controls by restricting a
 ## Mediation extras
 The CAS mediation adapters provides the `CAS.MediationExtras` constant keys to customize parameters to be sent to networks SDK.  
 
+<details><summary><b>Samples</b></summary>
+ 
 The following sample code demonstrates how to pass these parameters to the networks adapter:
 ```csharp
 manager = CAS.MobileAds.BuildManager()
@@ -837,6 +839,7 @@ manager = CAS.MobileAds.BuildManager()
  .Initialize();
 ```
 ***
+</details>
 </details>
 
 >Unique properties for each network will be added in the future.  
