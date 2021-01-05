@@ -1,5 +1,14 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.9.2] - 2021-01-05
+### Dependencies
+- [Android] Wraps [1.9.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [1.9.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Added new optional third party mediation
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+- [MoPub](https://www.mopub.com/en) - 5.15.0
+> Please contact us if you intend to use any additional third party mediation.
+
 ## [1.9.1] - 2020-12-28
 ### Dependencies
 - [Android] Wraps [1.9.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

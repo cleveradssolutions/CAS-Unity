@@ -61,7 +61,7 @@ Modify `Packages/manifest.json`  to the following form:
 ],
 "dependencies": {
     "com.cleversolutions.ads.unity" 
-        : "https://github.com/cleveradssolutions/CAS-Unity.git#1.9.1"
+        : "https://github.com/cleveradssolutions/CAS-Unity.git#1.9.2"
 }
 }
 ```
@@ -115,13 +115,15 @@ Banner, Interstitial, Rewarded Video  - [Home](https://www.facebook.com/business
 Banner, Interstitial, ~~Rewarded Video~~ - [Home](https://yandex.com/dev/mobile-ads/) - [Privacy Policy](https://yandex.com/legal/mobileads_sdk_agreement/) 
 #### Dependencies of Closed Beta third party partners:
 > :warning:  Next dependencies in closed beta and available upon invite only. If you would like to be considered for the beta, please contact Support.
+- MoPub 
+Banner, Interstitial, Rewarded Video - [Home](https://www.mopub.com/)- [Privacy Policy](https://www.mopub.com/en/legal/privacy)
 - Verizon Media  
 Banner, Interstitial, Rewarded Video - [Home](https://www.verizonmedia.com/advertising/solutions#/mobile)- [Privacy Policy](https://www.verizonmedia.com/policies/us/en/verizonmedia/privacy/)
 - MyTarget  
 Banner, Interstitial, Rewarded Video - [Home](https://target.my.com/) - [Privacy Policy](https://legal.my.com/us/mytarget/privacy/)  
 *Works to CIS countries only*
 - MobFox  
-Banner, Interstitial, ~~Rewarded Video~~ - [Home](https://www.mobfox.com) - [Privacy Policy](https://www.mobfox.com/privacy-policy/)
+Banner, Interstitial, Rewarded Video - [Home](https://www.mobfox.com) - [Privacy Policy](https://www.mobfox.com/privacy-policy/)
 - Amazon Ads  
 Banner, ~~Interstitial, Rewarded Video~~ - [Home](https://advertising.amazon.com) - [Privacy Policy](https://advertising.amazon.com/legal/privacy-notice)
 ***
