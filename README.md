@@ -16,7 +16,7 @@ The Clever Ads Solutions Unity plugin enables Unity developers to easily serve M
 ### iOS
 - XCode version 12.2 and up
 - iOS version 10 and up
-- Cocoapods applied
+- Cocoapods 1.10 and up
 ### CAS Unity Demo App
 The Integration Demo application demonstrate how to integrate the CAS in your app.  
 [Repository Unity Sample Application](https://github.com/cleveradssolutions/CAS-Unity-Sample)
