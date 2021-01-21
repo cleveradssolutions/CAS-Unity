@@ -1,5 +1,13 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.9.4] - 2021-01-20
+### Dependencies
+- [Android] Wraps [1.9.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [1.9.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Changes
+- Chartboost has been removed from all solutions, however you can still integrate it at will with advanced integration.
+- [Android] Added `com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT` to delay app measurement until Google Ads initialize.
+
 ## [1.9.3] - 2021-01-19
 ### Dependencies
 - [Android] Wraps [1.9.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

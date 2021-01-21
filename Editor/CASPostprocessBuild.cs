@@ -36,7 +36,7 @@ namespace CAS.UEditor
         }
 
 #if UNITY_2019_3_OR_NEWER
-        [PostProcessBuild( 45 )]//must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40) and that it's added before "pod install" (50)
+        [PostProcessBuild( 47 )]//must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40) and that it's added before "pod install" (50)
         private static void FixPodFileBug( BuildTarget target, string buildPath )
         {
             if (target != BuildTarget.iOS)
@@ -51,6 +51,24 @@ namespace CAS.UEditor
             var content = File.ReadAllText( podPath );
             if (content.Contains( "'Unity-iPhone'" ))
                 return;
+#if false //Develop
+            var depends = new List<string>();
+            var isFramework = false;
+
+            using (StreamWriter sw = new StreamWriter( podPath, false ))
+            {
+                for (int i = 0; i < content.Length; i++)
+                {
+                    var line = content[i];
+                    if (line.Contains( "'Unity-iPhone'" ))
+                        return;
+                    if (!isFramework && line.Contains( "use_frameworks!" ))
+                        isFramework = true;
+                    if (line.Contains( "CleverAdsSolutions-" ))
+                        depends.Add( line );
+                }
+            }
+#endif
             using (StreamWriter sw = File.AppendText( podPath ))
             {
                 sw.WriteLine();

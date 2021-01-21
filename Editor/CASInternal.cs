@@ -234,10 +234,16 @@ namespace CAS.UEditor
                     "Please use Android Resolver after the change complete.", MessageType.Info );
                 if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.Height( 40 ) ))
                 {
+#if UNITY_ANDROID
                     var succses = Utils.TryResolveAndroidDependencies();
                     EditorUtility.DisplayDialog( "Android Dependencies",
                         succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
                         "OK" );
+#else
+                    EditorUtility.DisplayDialog( "Android Dependencies",
+                        "Android resolver not enabled. Unity Android platform target must be selected.",
+                        "OK" );
+#endif
                 }
                 EditorGUILayout.EndHorizontal();
             }
@@ -286,12 +292,12 @@ namespace CAS.UEditor
                 EditorGUI.indentLevel--;
             }
         }
-        #endregion
+#endregion
     }
 
     public partial class Dependency
     {
-        #region Internal implementation
+#region Internal implementation
         internal void Reset()
         {
             isNewer = false;
@@ -511,6 +517,6 @@ namespace CAS.UEditor
                 }
             }
         }
-        #endregion
+#endregion
     }
 }

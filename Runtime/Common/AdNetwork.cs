@@ -20,6 +20,7 @@
         YandexAds,
         OwnVAST,
         AmazonAds,
-        Verizon
+        Verizon,
+        MoPub
     }
 }
