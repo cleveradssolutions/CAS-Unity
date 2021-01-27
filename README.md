@@ -60,7 +60,7 @@ Modify `Packages/manifest.json`  to the following form:
   }
 ],
 "dependencies": {
-"com.cleversolutions.ads.unity": "https://github.com/cleveradssolutions/CAS-Unity.git#1.9.5"
+"com.cleversolutions.ads.unity": "https://github.com/cleveradssolutions/CAS-Unity.git#1.9.6"
 }
 }
 ```
@@ -825,11 +825,30 @@ See [Unity Ads data privacy and consent implementation details](https://unityads
 ```csharp
 manager = CAS.MobileAds.BuildManager()
  // User GDPR consent "1" is accepted and "0" is rejected
- .WithMediationExtras(MediationExtras.InMobiGDPRConsent, "0")
- .WithMediationExtras(MediationExtras.InMobiGDPRIAB, iab_string)
+ .WithMediationExtras(MediationExtras.inMobiGDPRConsent, "0")
+ .WithMediationExtras(MediationExtras.inMobiGDPRIAB, iab_string)
  .Initialize();
 ```
 See [InMobi's GDPR implementation details](https://support.inmobi.com/monetize/android-guidelines) for more information about the possible keys and values that InMobi accepts in this consent object.
+***
+</details><details><summary>CrossPromotion</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ .WithMediationExtras(MediationExtras.crossPromoEndless, "1")
+ .Initialize();
+```
+***
+</details><details><summary>MyTarget</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ // User GDPR consent "1" is accepted and "0" is rejected
+ .WithMediationExtras(MediationExtras.myTargetGDPRConsent, "0")
+ // User CCPA do not sell data "1" and "0" is use data in ad
+ .WithMediationExtras(MediationExtras.myTargetCCPAOptedOut, "1")
+ .Initialize();
+```
 ***
 </details><details><summary>StartApp</summary>
 
@@ -837,6 +856,15 @@ See [InMobi's GDPR implementation details](https://support.inmobi.com/monetize/a
 manager = CAS.MobileAds.BuildManager()
  // User GDPR consent "1" is accepted and "0" is rejected
  .WithMediationExtras(MediationExtras.startAppGDPRConsent, "0")
+ .Initialize();
+```
+***
+</details><details><summary>YandexAds</summary>
+
+```csharp
+manager = CAS.MobileAds.BuildManager()
+ // User GDPR consent "1" is accepted and "0" is rejected
+ .WithMediationExtras(MediationExtras.yandexAdsGDPRConsent, "0")
  .Initialize();
 ```
 ***
