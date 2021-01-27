@@ -98,8 +98,6 @@ namespace CAS.UEditor
 
         internal bool installedAny;
 
-        private bool firebaseDeepLinksExist;
-
         private static bool solutionsFoldout = true;
         private static bool advancedFoldout;
         private static bool otherFoldout;
@@ -149,8 +147,6 @@ namespace CAS.UEditor
                     }
                 }
             }
-
-            firebaseDeepLinksExist = Utils.IsFirebaseServiceExist( "dynamic" );
         }
 
         private void OnHeaderGUI()

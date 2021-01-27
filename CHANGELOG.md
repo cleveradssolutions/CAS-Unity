@@ -1,5 +1,18 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.9.6] - 2021-01-27
+### Dependencies
+- [Android] Wraps [1.9.6 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [1.9.6 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- [CrossPromotion] Added support for new functionality to override ad destination link using a web page. In the future, we will detail these possibilities when we have everything ready.  
+- [CrossPromotion] Added a new meta flag `CAS.MediationExtras.crossPromoEndless` to disable endless display ad. 
+- [MyTarget] Added a new meta flags `CAS.MediationExtras.myTargetGDPRConsent` and `CAS.MediationExtras.myTargetCCPAOptedOut` to override GDPR and CCPA status. 
+- [Yandex Ads] Added a new meta flags `CAS.MediationExtras.yandexAdsGDPRConsent` to override GDPR status. 
+- [Editor] Implemented `CAS.MobileAds.GetActiveNetworks()` in Editor to get list of active network dependencies.
+### Bug Fixes
+- [Editor] Fix renderer progress bar of check for updates on open `Assets > CleverAdsSolutions > Settings` window.
+
 ## [1.9.5] - 2021-01-25
 ### Dependencies
 - [Android] Wraps [1.9.5 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

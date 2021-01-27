@@ -133,7 +133,17 @@ namespace CAS
         internal static string GetActiveMediationPattern()
         {
 #if UNITY_EDITOR
-            // TODO: Implementation editor 
+            try
+            {
+                return ( string )Type.GetType( "CAS.UEditor.DependencyManager, CleverAdsSolutions-Editor", true )
+                    .GetMethod( "GetActiveMediationPattern",
+                        System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public )
+                    .Invoke( null, null );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
 #elif UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {
@@ -162,7 +172,9 @@ namespace CAS
         internal static bool IsActiveNetwork( AdNetwork network )
         {
 #if UNITY_EDITOR
-            // TODO: Implementation editor 
+            var pattern = GetActiveMediationPattern();
+            if (( int )network < pattern.Length)
+                return pattern[( int )network] == '1';
 #elif UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {

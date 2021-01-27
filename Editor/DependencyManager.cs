@@ -42,6 +42,23 @@ namespace CAS.UEditor
             };
         }
 
+        // Reflection target
+        public static string GetActiveMediationPattern()
+        {
+            var target = Create( EditorUserBuildSettings.activeBuildTarget, Audience.Mixed, true );
+            if (target == null)
+                return "";
+
+            var networks = Enum.GetValues( typeof( AdNetwork ) );
+            var result = new char[networks.Length];
+            for (int i = 0; i < networks.Length; i++)
+            {
+                var dependency = target.Find( ( ( AdNetwork )networks.GetValue( i ) ).ToString() );
+                result[i] = ( dependency != null && dependency.isInstalled() ) ? '1' : '0';
+            }
+            return new string( result );
+        }
+
         public Dependency Find( string name )
         {
             for (int i = 0; i < simple.Length; i++)
@@ -63,7 +80,7 @@ namespace CAS.UEditor
         }
     }
 
-    
+
 
     [Serializable]
     public partial class Dependency

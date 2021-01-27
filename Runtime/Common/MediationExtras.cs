@@ -48,5 +48,18 @@
         public const string unityAdsCCPAOptedOut = "U_ccpa";
 
         public const string startAppGDPRConsent = "StA_gdpr";
+
+        /// <summary>
+        /// Enables/disables endless impression Cross promo creative when waterfall have no loaded ad.
+        ///
+        /// Default value is enabled "1".
+        /// if "0" disables the endless impression.
+        /// </summary>
+        public const string crossPromoEndless = "P_endless";
+
+        public const string myTargetGDPRConsent = "MT_gdpr";
+        public const string myTargetCCPAOptedOut = "MT_ccpa";
+
+        public const string yandexAdsGDPRConsent = "Ya_gdpr";
     }
 }

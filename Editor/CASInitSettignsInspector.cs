@@ -28,7 +28,7 @@ namespace CAS.UEditor
         private ReorderableList managerIdsList;
         private BuildTarget platform;
         private bool allowedPackageUpdate;
-        private string newCASVersion;
+        private string newCASVersion = null;
         private bool deprecateDependenciesExist;
         //private bool usingMultidexOnBuild;
 
@@ -70,10 +70,12 @@ namespace CAS.UEditor
             };
 
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
-            newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
+
             //usingMultidexOnBuild = PlayerPrefs.GetInt( Utils.editorIgnoreMultidexPrefs, 0 ) == 0;
 
             dependencyManager = DependencyManager.Create( platform, ( Audience )audienceTaggedProp.enumValueIndex, true );
+
+            EditorApplication.delayCall += () => newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
         }
 
         private void DrawListHeader( Rect rect )
@@ -94,7 +96,7 @@ namespace CAS.UEditor
             var obj = serializedObject;
             obj.UpdateIfRequiredOrScript();
 
-            LinksToolbarGUI();
+            Utils.LinksToolbarGUI( Utils.gitUnityRepo );
 
             HelpStyles.BeginBoxScope();
             EditorGUILayout.PropertyField( testAdModeProp );
@@ -137,7 +139,7 @@ namespace CAS.UEditor
 
             DrawSeparator();
             DeprecatedDependenciesGUI();
-            OnCASAboutGUI();
+            Utils.AboutRepoGUI( Utils.gitUnityRepo, allowedPackageUpdate, MobileAds.wrapperVersion, ref newCASVersion );
 
             if (dependencyManager == null)
             {
@@ -273,65 +275,6 @@ namespace CAS.UEditor
                 if (EditorGUI.EndChangeCheck())
                     PlayerPrefs.SetInt( Utils.editorRuntimeActiveAdPrefs, editorRuntimeActiveAdFlags );
             }
-        }
-
-        private void OnCASAboutGUI()
-        {
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label( "CAS Unity wrapper version: " + MobileAds.wrapperVersion );
-            if (GUILayout.Button( "Check for Updates", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-            {
-                newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, true );
-                string message = string.IsNullOrEmpty( newCASVersion ) ? "You are using the latest version."
-                    : "There is a new version " + newCASVersion + " of the CAS Unity available for update.";
-                EditorUtility.DisplayDialog( "Check for Updates", message, "OK" );
-            }
-            EditorGUILayout.EndHorizontal();
-            if (!string.IsNullOrEmpty( newCASVersion ))
-            {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.HelpBox( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", MessageType.Warning );
-                var layoutParams = new[] { GUILayout.Height( 38 ), GUILayout.ExpandWidth( false ) };
-#if UNITY_2018_4_OR_NEWER
-                if (allowedPackageUpdate && GUILayout.Button( "Update", layoutParams ))
-                {
-                    var request = UnityEditor.PackageManager.Client.Add( Utils.gitUnityRepoURL + ".git#" + newCASVersion );
-                    try
-                    {
-                        while (!request.IsCompleted)
-                        {
-                            if (EditorUtility.DisplayCancelableProgressBar(
-                                "Update Package Manager dependency", "Clever Ads Solutions " + newCASVersion, 0.5f ))
-                                break;
-                        }
-                        if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
-                            Debug.Log( "Package Manager: Update " + request.Result.displayName );
-                        else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
-                            Debug.LogError( request.Error.message );
-                    }
-                    finally
-                    {
-                        EditorUtility.ClearProgressBar();
-                    }
-                }
-#endif
-                if (GUILayout.Button( "Releases", layoutParams ))
-                    Application.OpenURL( Utils.gitUnityRepoURL + "/releases" );
-                EditorGUILayout.EndHorizontal();
-            }
-
-        }
-
-        private void LinksToolbarGUI()
-        {
-            EditorGUILayout.BeginHorizontal( EditorStyles.toolbar );
-            if (GUILayout.Button( "Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( Utils.supportURL );
-            if (GUILayout.Button( "GitHub", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( Utils.gitUnityRepoURL );
-            if (GUILayout.Button( "CleverAdsSolutions.com", EditorStyles.toolbarButton ))
-                Application.OpenURL( Utils.websiteURL );
-            EditorGUILayout.EndHorizontal();
         }
 
         private void DeprecatedDependenciesGUI()

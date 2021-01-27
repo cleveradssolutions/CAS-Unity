@@ -1,8 +1,10 @@
-﻿namespace CAS
+﻿using System;
+
+namespace CAS
 {
     public enum AdNetwork
     {
-        AdMob,
+        GoogleAds,
         Vungle,
         Kidoz,
         Chartboost,
@@ -15,12 +17,12 @@
         InMobi,
         MobFox,
         MyTarget,
-        CrossPromo,
+        CrossPromotion,
         IronSource,
         YandexAds,
         OwnVAST,
         AmazonAds,
         Verizon,
-        MoPub
+        MoPub,
     }
 }

@@ -32,15 +32,16 @@ namespace CAS.UEditor
         public const string launcherGradlePath = "Assets/Plugins/Android/launcherTemplate.gradle";
         public const string projectGradlePath = "Assets/Plugins/Android/baseProjectTemplate.gradle";
         public const string packageManifestPath = "Packages/manifest.json";
+
+        public const string gitRootURL = "https://github.com/cleveradssolutions/";
+        public const string websiteURL = "https://cleveradssolutions.com";
         #endregion
 
         #region Internal Constants
-        internal const string gitRootURL = "https://github.com/cleveradssolutions/";
         internal const string gitUnityRepo = "CAS-Unity";
         internal const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
         internal const string supportURL = gitUnityRepoURL + "#support";
         internal const string configuringPrivacyURL = gitUnityRepoURL + "#include-ios";
-        internal const string websiteURL = "https://cleveradssolutions.com";
 
         internal const string generalDeprecateDependency = "General";
         internal const string teenDeprecateDependency = "Teen";
@@ -172,6 +173,90 @@ namespace CAS.UEditor
             }
             return success;
         }
+
+        public static string GetNewVersionOrNull( string repo, string currVersion, bool force )
+        {
+            try
+            {
+                var newVerStr = GetLatestVersion( repo, force, currVersion );
+                if (newVerStr != null && newVerStr != currVersion)
+                {
+                    var currVer = new System.Version( currVersion );
+                    var newVer = new System.Version( newVerStr );
+                    if (currVer < newVer)
+                        return newVerStr;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+            return null;
+        }
+
+        public static bool IsPackageExist( string package )
+        {
+            return File.Exists( packageManifestPath ) &&
+                File.ReadAllText( packageManifestPath ).Contains( package );
+        }
+
+        public static void LinksToolbarGUI( string gitRepoName )
+        {
+            EditorGUILayout.BeginHorizontal( EditorStyles.toolbar );
+            if (GUILayout.Button( "Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
+                Application.OpenURL( gitRootURL + gitRepoName + "#support" );
+            if (GUILayout.Button( "GitHub", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
+                Application.OpenURL( gitRootURL + gitRepoName );
+            if (GUILayout.Button( "CleverAdsSolutions.com", EditorStyles.toolbarButton ))
+                Application.OpenURL( websiteURL );
+            EditorGUILayout.EndHorizontal();
+        }
+
+        public static void AboutRepoGUI( string gitRepoName, bool allowedPackageUpdate, string currVersion, ref string newCASVersion )
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label( gitRepoName + " version: " + currVersion );
+            if (GUILayout.Button( "Check for Updates", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
+            {
+                newCASVersion = GetNewVersionOrNull( gitRepoName, currVersion, true );
+                string message = string.IsNullOrEmpty( newCASVersion ) ? "You are using the latest version."
+                    : "There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.";
+                EditorUtility.DisplayDialog( "Check for Updates", message, "OK" );
+            }
+            EditorGUILayout.EndHorizontal();
+            if (!string.IsNullOrEmpty( newCASVersion ))
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.HelpBox( "There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.", MessageType.Warning );
+                var layoutParams = new[] { GUILayout.Height( 38 ), GUILayout.ExpandWidth( false ) };
+#if UNITY_2018_4_OR_NEWER
+                if (allowedPackageUpdate && GUILayout.Button( "Update", layoutParams ))
+                {
+                    var request = UnityEditor.PackageManager.Client.Add( gitRootURL + gitRepoName + ".git#" + newCASVersion );
+                    try
+                    {
+                        while (!request.IsCompleted)
+                        {
+                            if (EditorUtility.DisplayCancelableProgressBar(
+                                "Update Package Manager dependency", gitRepoName + " " + newCASVersion, 0.5f ))
+                                break;
+                        }
+                        if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
+                            Debug.Log( "Package Manager: Update " + request.Result.displayName );
+                        else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
+                            Debug.LogError( request.Error.message );
+                    }
+                    finally
+                    {
+                        EditorUtility.ClearProgressBar();
+                    }
+                }
+#endif
+                if (GUILayout.Button( "Releases", layoutParams ))
+                    Application.OpenURL( gitRootURL + gitRepoName + "/releases" );
+                EditorGUILayout.EndHorizontal();
+            }
+        }
         #endregion
 
         #region Internal API
@@ -181,12 +266,6 @@ namespace CAS.UEditor
                 return true;
 
             return IsPackageExist( "com.google.firebase." + service );
-        }
-
-        internal static bool IsPackageExist( string package )
-        {
-            return File.Exists( packageManifestPath ) &&
-                File.ReadAllText( packageManifestPath ).Contains( package );
         }
 
         internal static void OpenSettingsWindow( BuildTarget target )
@@ -447,26 +526,6 @@ namespace CAS.UEditor
                 WriteToFile( content, iosResSettingsPath );
         }
 
-        internal static string GetNewVersionOrNull( string repo, string currVersion, bool force )
-        {
-            try
-            {
-                var newVerStr = GetLatestVersion( repo, force );
-                if (newVerStr != null && newVerStr != currVersion)
-                {
-                    var currVer = new System.Version( currVersion );
-                    var newVer = new System.Version( newVerStr );
-                    if (currVer < newVer)
-                        return newVerStr;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-            return null;
-        }
-
         internal static HashSet<string> GetCrossPromoAlias( BuildTarget platform )
         {
             var result = new HashSet<string>();
@@ -498,11 +557,11 @@ namespace CAS.UEditor
             return result;
         }
 
-        internal static string GetLatestVersion( string repo, bool force )
+        internal static string GetLatestVersion( string repo, bool force, string currVersion )
         {
             if (!force && !HasTimePassed( editorLatestVersionTimestampPrefs + repo, 1, false ))
             {
-                var last = PlayerPrefs.GetString( editorLatestVersionPrefs + repo );
+                var last = EditorPrefs.GetString( editorLatestVersionPrefs + repo );
                 if (!string.IsNullOrEmpty( last ))
                     return last;
             }
@@ -522,6 +581,7 @@ namespace CAS.UEditor
                             Mathf.Repeat( ( float )EditorApplication.timeSinceStartup, 1.0f ) ))
                         {
                             loader.Dispose();
+                            SaveLatestRepoVersion( repo, currVersion );
                             return null;
                         }
                     }
@@ -536,19 +596,26 @@ namespace CAS.UEditor
                     var content = loader.downloadHandler.text;
                     var versionInfo = JsonUtility.FromJson<GitVersionInfo>( content );
                     if (!string.IsNullOrEmpty( versionInfo.tag_name ))
-                    {
-                        PlayerPrefs.SetString( editorLatestVersionPrefs + repo, versionInfo.tag_name );
-                        EditorPrefs.SetString( editorLatestVersionTimestampPrefs + repo, DateTime.Now.ToBinary().ToString() );
-                    }
+                        SaveLatestRepoVersion( repo, versionInfo.tag_name );
+
                     return versionInfo.tag_name;
                 }
                 else
                 {
-                    Debug.LogError( logTag + "Response " + loader.responseCode + ": " + loader.error );
+                    Debug.LogError( logTag + "Check " + repo + " updates failed. Response " +
+                        loader.responseCode + ": " + loader.error );
+                    SaveLatestRepoVersion( repo, currVersion );
                 }
+
             }
 
             return null;
+        }
+
+        private static void SaveLatestRepoVersion( string repo, string version )
+        {
+            EditorPrefs.SetString( editorLatestVersionPrefs + repo, version );
+            EditorPrefs.SetString( editorLatestVersionTimestampPrefs + repo, DateTime.Now.ToBinary().ToString() );
         }
 
         internal static bool HasTimePassed( string prefKey, int days, bool projectOnly )

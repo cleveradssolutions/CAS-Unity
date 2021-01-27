@@ -11,7 +11,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "1.9.5";
+        public const string wrapperVersion = "1.9.6";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -136,6 +136,7 @@ namespace CAS
         /// Mediation pattern string with format '1' - active and '0' - not active.
         /// Char index of string pattern equals enum index of <see cref="AdNetwork"/>
         /// </summary>
+        [Obsolete( "Use GetActiveNetworks() instead.")]
         public static string GetActiveMediationPattern()
         {
             return CASFactory.GetActiveMediationPattern();
