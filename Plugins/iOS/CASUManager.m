@@ -25,6 +25,16 @@
     self = [super init];
     if (self) {
         self.client = client;
+        
+        self.bannerCallback = [[CASUCallback alloc] initForFullScreen:NO];
+        self.bannerCallback.client = client;
+        self.interstitialCallback = [[CASUCallback alloc] initForFullScreen:YES];
+        self.interstitialCallback.client = client;
+        self.rewardedCallback = [[CASUCallback alloc] initForFullScreen:YES];
+        self.rewardedCallback.client = client;
+        
+        [CASAnalytics setHandler:self.bannerCallback]; // Require before create manager
+        
         self.mediationManager =
             [CAS createWithManagerID:appID
                          enableTypes:types
@@ -41,15 +51,9 @@
                               }];
 
         bannerPositionId = 3;
-        self.bannerCallback = [[CASUCallback alloc] initForFullScreen:NO];
-        self.bannerCallback.client = client;
-        self.interstitialCallback = [[CASUCallback alloc] initForFullScreen:YES];
-        self.interstitialCallback.client = client;
-        self.rewardedCallback = [[CASUCallback alloc] initForFullScreen:YES];
-        self.rewardedCallback.client = client;
+        
         self.bannerActiveSize = [self.mediationManager getBannerSize];
 
-        [CASAnalytics setHandler:self.bannerCallback];
     }
     return self;
 }
