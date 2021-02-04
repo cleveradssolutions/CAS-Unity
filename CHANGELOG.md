@@ -1,5 +1,10 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.9.8] - 2021-02-04
+### Dependencies
+- [Android] Wraps [1.9.8 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [1.9.8 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+
 ## [1.9.7] - 2021-01-28
 ### Dependencies
 - [Android] Wraps [1.9.7 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
@@ -7,7 +12,7 @@
 ### Features
 - Migrate Clever Ads Solutions Privacy policy to https://cleveradssolutions.com/privacy-policy
 ### Bug Fixes
-- [Editor] Fix wrong warning message `You have activated the collection of advertising analytics`.
+- [iOS] Fix wrong warning message `You have activated the collection of advertising analytics`.
 
 ## [1.9.6] - 2021-01-27
 ### Dependencies

@@ -8,8 +8,7 @@ The Clever Ads Solutions Unity plugin enables Unity developers to easily serve M
 
 ## Requirements
 ### Unity
-- Unity Editor version: 2017.4, 2018.4, 2019, 2020.1  
-> You can try any version you want, however, non-recommended versions can lead to unexpected errors.
+- Unity Editor version: 2017.4, 2018.4, 2019, 2020.1
 ### Android
 - Android version 4.4 (API level 19) and up
 - Gradle 3.4.3 and up
@@ -60,7 +59,7 @@ Modify `Packages/manifest.json`  to the following form:
   }
 ],
 "dependencies": {
-"com.cleversolutions.ads.unity": "https://github.com/cleveradssolutions/CAS-Unity.git#1.9.7"
+"com.cleversolutions.ads.unity": "https://github.com/cleveradssolutions/CAS-Unity.git#1.9.8"
 }
 }
 ```
@@ -122,7 +121,7 @@ Banner, Interstitial, Rewarded Video - [Home](https://www.verizonmedia.com/adver
 Banner, Interstitial, Rewarded Video - [Home](https://target.my.com/) - [Privacy Policy](https://legal.my.com/us/mytarget/privacy/)  
 *Works to CIS countries only*
 - MobFox  
-Banner, Interstitial, Rewarded Video - [Home](https://www.mobfox.com) - [Privacy Policy](https://www.mobfox.com/privacy-policy/)
+Banner, ~~Interstitial, Rewarded Video~~ - [Home](https://www.mobfox.com) - [Privacy Policy](https://www.mobfox.com/privacy-policy/)
 - Amazon Ads  
 Banner, ~~Interstitial, Rewarded Video~~ - [Home](https://advertising.amazon.com) - [Privacy Policy](https://advertising.amazon.com/legal/privacy-notice)
 ***

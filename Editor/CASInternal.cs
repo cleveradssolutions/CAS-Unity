@@ -400,7 +400,11 @@ namespace CAS.UEditor
             }
             EditorGUILayout.EndHorizontal();
             if (contains.Length > 0 && !( contains.Length == 1 && contains[0] == "Base" ))
+            {
+                EditorGUI.indentLevel++;
                 EditorGUILayout.HelpBox( string.Join( ", ", contains ), MessageType.None );
+                EditorGUI.indentLevel--;
+            }
         }
 
         private void DisableDependencies( BuildTarget platform, DependencyManager mediation )
