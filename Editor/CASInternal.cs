@@ -9,7 +9,7 @@ using Utils = CAS.UEditor.CASEditorUtils;
 namespace CAS.UEditor
 {
 
-    internal static class HelpStyles
+    public static class HelpStyles
     {
         private static GUIStyle boxScopeStyle;
         public static GUIStyle wordWrapTextAred;

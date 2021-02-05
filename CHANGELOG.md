@@ -1,5 +1,14 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.9.9] - 2021-02-05
+### Dependencies
+- [Android] Wraps [1.9.9 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [1.9.9 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixes
+- [iOS] Crash on use `MediationExtras`.
+- [iOS] Exception on build with Cross promotion and Unity 2019+.
+- [MoPub] Initialization error.
+
 ## [1.9.8] - 2021-02-04
 ### Dependencies
 - [Android] Wraps [1.9.8 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

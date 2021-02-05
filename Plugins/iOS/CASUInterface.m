@@ -208,9 +208,9 @@ CASUTypeManagerRef CASUCreateManagerWithExtras(CASUTypeManagerClientRef         
                                                const char                         **extraValues,
                                                NSInteger                          extrasCount)
 {
-    NSDictionary *mediationExtras = [[NSDictionary<NSString *, NSString *> alloc] init];
+    NSMutableDictionary *mediationExtras = [[NSMutableDictionary<NSString *, NSString *> alloc] init];
     for (int i = 0; i < extrasCount; i++) {
-        [mediationExtras setValue:CASUStringFromUTF8String(extraKeys[i]) forKey:CASUStringFromUTF8String(extraValues[i])];
+        [mediationExtras setObject:CASUStringFromUTF8String(extraKeys[i]) forKey:CASUStringFromUTF8String(extraValues[i])];
     }
     CASUManager *manager = [[CASUManager alloc]
                             initWithAppID:CASUStringFromUTF8String(managerID)

@@ -218,11 +218,10 @@ namespace CAS.UEditor
                 EditorUtility.DisplayProgressBar( casTitle, "Apply Crosspromo Dynamic Links", 0.9f );
                 var identifier = Application.identifier;
                 var productName = identifier.Substring( identifier.LastIndexOf( "." ) + 1 );
-#if UNITY_2019_3_OR_NEWER
-                string target = null; // Use Default
-#else
+
+#pragma warning disable 0618 // Obsolete Unity 2019 but still work
                 string target = PBXProject.GetUnityTargetName();
-#endif
+#pragma warning restore 0618
                 var entitlements = new ProjectCapabilityManager( projectPath, productName + ".entitlements", target );
 
                 var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
