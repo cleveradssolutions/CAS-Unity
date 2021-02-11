@@ -137,11 +137,11 @@ namespace CAS.UEditor
             DrawSeparator();
             OnBannerSizeGUI();
             bannerRefreshProp.intValue = Mathf.Clamp(
-                 EditorGUILayout.IntField( "Banner refresh rate(sec):", bannerRefreshProp.intValue ), 10, short.MaxValue );
+                 EditorGUILayout.IntField( "Banner refresh rate(sec)", bannerRefreshProp.intValue ), 10, short.MaxValue );
 
             DrawSeparator();
             interstitialIntervalProp.intValue = Math.Max( 0,
-                EditorGUILayout.IntField( "Interstitial impression interval(sec):", interstitialIntervalProp.intValue ) );
+                EditorGUILayout.IntField( "Interstitial impression interval(sec)", interstitialIntervalProp.intValue ) );
             interWhenNoRewardedAdProp.boolValue = EditorGUILayout.ToggleLeft(
                 "Allow Interstitial Ad when the cost of the Rewarded Ad is lower",
                 interWhenNoRewardedAdProp.boolValue );

@@ -91,7 +91,6 @@ namespace CAS.Unity
             manager.managerID = initSettings.targetId;
             manager.enabledTypes = initSettings.allowedAdFlags;
             manager._initCompleteAction = initSettings.initListener;
-            manager.bannerSize = AdSize.Banner;
             manager._settings = CAS.MobileAds.settings as CASSettings;
             return manager;
         }
