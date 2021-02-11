@@ -101,26 +101,15 @@ namespace CAS.UEditor
         #endregion
 
         #region Public API
-        public static CASInitSettings GetSettingsAsset( BuildTarget platform )
+        public static CASInitSettings GetSettingsAsset( BuildTarget platform, bool create = true )
         {
             if (!AssetDatabase.IsValidFolder( "Assets/Resources" ))
                 AssetDatabase.CreateFolder( "Assets", "Resources" );
             var assetPath = "Assets/Resources/CASSettings" + platform.ToString() + ".asset";
             var asset = AssetDatabase.LoadAssetAtPath<CASInitSettings>( assetPath );
-            if (!asset)
+            if (create && !asset)
             {
                 asset = ScriptableObject.CreateInstance<CASInitSettings>();
-                if (platform == BuildTarget.Android)
-                {
-                    asset.managerIds = new string[] {
-                        PlayerSettings.GetApplicationIdentifier( BuildTargetGroup.Android )
-                    };
-                }
-                else if (platform == BuildTarget.iOS)
-                {
-                    asset.managerIds = new string[] { "" };
-                    asset.interstitialInterval = 90;
-                }
                 AssetDatabase.CreateAsset( asset, assetPath );
             }
             return asset;

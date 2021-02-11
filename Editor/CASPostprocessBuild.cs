@@ -25,8 +25,8 @@ namespace CAS.UEditor
                 ConfigureInfoPlist( plistPath );
 
                 var projectPath = Path.Combine( path, "Unity-iPhone.xcodeproj/project.pbxproj" );
-                ConfigureXCodeProject( path, projectPath );
-                ApplyCrosspromoDynamicLinks( projectPath );
+                var project = ConfigureXCodeProject( path, projectPath );
+                ApplyCrosspromoDynamicLinks( projectPath, project );
                 Debug.Log( CASEditorUtils.logTag + "Postrocess Build done." );
             }
             finally
@@ -122,8 +122,8 @@ namespace CAS.UEditor
             #region Write NSUserTrackingUsageDescription
             EditorUtility.DisplayProgressBar( casTitle, "Write NSUserTrackingUsageDescription to Info.plist", 0.5f );
             var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
-            if (casSettings && !string.IsNullOrEmpty( casSettings.trackingUsageDescription ))
-                plist.root.SetString( "NSUserTrackingUsageDescription", casSettings.trackingUsageDescription );
+            if (casSettings && !string.IsNullOrEmpty( casSettings.defaultIOSTrakingUsageDescription ))
+                plist.root.SetString( "NSUserTrackingUsageDescription", casSettings.defaultIOSTrakingUsageDescription );
             #endregion
 
             #region Write SKAdNetworks
@@ -172,7 +172,7 @@ namespace CAS.UEditor
             File.WriteAllText( plistPath, plist.WriteToString() );
         }
 
-        private static void ConfigureXCodeProject( string rootPath, string projectPath )
+        private static PBXProject ConfigureXCodeProject( string rootPath, string projectPath )
         {
             EditorUtility.DisplayProgressBar( casTitle, "Configure XCode project", 0.7f );
             var project = new PBXProject();
@@ -204,9 +204,10 @@ namespace CAS.UEditor
 
             EditorUtility.DisplayProgressBar( casTitle, "Save XCode project", 0.9f );
             File.WriteAllText( projectPath, project.WriteToString() );
+            return project;
         }
 
-        private static void ApplyCrosspromoDynamicLinks( string projectPath )
+        private static void ApplyCrosspromoDynamicLinks( string projectPath, PBXProject project )
         {
             if (!CASEditorUtils.IsDependencyExists( CASEditorUtils.promoDependency, BuildTarget.iOS ))
                 return;
@@ -219,16 +220,18 @@ namespace CAS.UEditor
                 var identifier = Application.identifier;
                 var productName = identifier.Substring( identifier.LastIndexOf( "." ) + 1 );
 
-#pragma warning disable 0618 // Obsolete Unity 2019 but still work
-                string target = PBXProject.GetUnityTargetName();
-#pragma warning restore 0618
-                var entitlements = new ProjectCapabilityManager( projectPath, productName + ".entitlements", target );
+                var entitlements = new ProjectCapabilityManager( projectPath, productName + ".entitlements",
+#if UNITY_2019_3_OR_NEWER
+                    project.GetUnityMainTargetGuid() );
+#else
+                    PBXProject.GetUnityTargetName() );
+#endif
 
                 var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
-                var dynamicLinks = new List<string>( casSettings.managerIds.Length );
-                for (int i = 0; i < casSettings.managerIds.Length; i++)
+                var dynamicLinks = new List<string>( casSettings.managersCount );
+                for (int i = 0; i < casSettings.managersCount; i++)
                 {
-                    var id = casSettings.managerIds[i];
+                    var id = casSettings.GetManagerId( i );
                     if (!string.IsNullOrEmpty( id ))
                     {
                         string link = "applinks:psvios" + id + ".page.link";

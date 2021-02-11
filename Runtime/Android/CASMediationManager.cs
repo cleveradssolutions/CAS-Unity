@@ -131,17 +131,24 @@ namespace CAS.Android
 
             AndroidJavaObject activity = CASJavaProxy.GetUnityActivity();
 
-            if (initData.extrasKeys != null && initData.extrasValues != null
-                && initData.extrasKeys.Count != 0 && initData.extrasValues.Count != 0)
+            if (initData.extras != null && initData.extras.Count != 0)
             {
+                AndroidJavaObject extraKeys = new AndroidJavaObject( CASJavaProxy.JavaUtilArrayList );
+                AndroidJavaObject extraValues = new AndroidJavaObject( CASJavaProxy.JavaUtilArrayList );
+                foreach (var extra in initData.extras)
+                {
+                    extraKeys.Call<bool>( "add", extra.Key );
+                    extraValues.Call<bool>( "add", extra.Value );
+                }
+
                 _managerBridge = new AndroidJavaObject( CASJavaProxy.NativeBridgeClassName,
                     activity,
                     managerID,
                     ( int )initData.allowedAdFlags,
                     isTestAdMode,
                     initializationListener,
-                    CASJavaProxy.GetJavaListObject( initData.extrasKeys ),
-                    CASJavaProxy.GetJavaListObject( initData.extrasValues )
+                    extraKeys,
+                    extraValues
                 );
             }
             else

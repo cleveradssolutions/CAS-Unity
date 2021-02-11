@@ -22,6 +22,8 @@ namespace CAS.UEditor
         private SerializedProperty bannerSizeProp;
         private SerializedProperty trackingUsageDescriptionProp;
         private SerializedProperty trackLocationEnabledProp;
+        private SerializedProperty analyticsCollectionEnabledProp;
+        private SerializedProperty interWhenNoRewardedAdProp;
 
         private DependencyManager dependencyManager;
 
@@ -48,6 +50,8 @@ namespace CAS.UEditor
             bannerSizeProp = props.FindProperty( "bannerSize" );
             trackingUsageDescriptionProp = props.FindProperty( "trackingUsageDescription" );
             trackLocationEnabledProp = props.FindProperty( "trackLocationEnabled" );
+            analyticsCollectionEnabledProp = props.FindProperty( "analyticsCollectionEnabled" );
+            interWhenNoRewardedAdProp = props.FindProperty( "interWhenNoRewardedAd" );
 
             editorRuntimeActiveAdFlags = PlayerPrefs.GetInt( Utils.editorRuntimeActiveAdPrefs, -1 );
 
@@ -70,12 +74,27 @@ namespace CAS.UEditor
             };
 
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
+            if (managerIdsProp.arraySize == 0)
+            {
+                if (platform == BuildTarget.Android)
+                {
+                    managerIdsProp.arraySize = 1;
+                    managerIdsProp.GetArrayElementAtIndex( 0 )
+                                  .stringValue = PlayerSettings.GetApplicationIdentifier( BuildTargetGroup.Android );
+                }
+                else if (platform == BuildTarget.iOS)
+                {
+                    managerIdsProp.arraySize = 1;
+                    interstitialIntervalProp.intValue = 90;
+                }
+            }
 
             //usingMultidexOnBuild = PlayerPrefs.GetInt( Utils.editorIgnoreMultidexPrefs, 0 ) == 0;
 
             dependencyManager = DependencyManager.Create( platform, ( Audience )audienceTaggedProp.enumValueIndex, true );
 
             EditorApplication.delayCall += () => newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
+            props.ApplyModifiedProperties();
         }
 
         private void DrawListHeader( Rect rect )
@@ -123,11 +142,14 @@ namespace CAS.UEditor
             DrawSeparator();
             interstitialIntervalProp.intValue = Math.Max( 0,
                 EditorGUILayout.IntField( "Interstitial impression interval(sec):", interstitialIntervalProp.intValue ) );
-
+            interWhenNoRewardedAdProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Allow Interstitial Ad when the cost of the Rewarded Ad is lower",
+                interWhenNoRewardedAdProp.boolValue );
             DrawSeparator();
             OnLoadingModeGUI();
 
             EditorGUILayout.PropertyField( debugModeProp );
+            EditorGUILayout.PropertyField( analyticsCollectionEnabledProp );
             OnEditroRuntimeActiveAdGUI();
             //if(usingMultidexOnBuild != EditorGUILayout.Toggle("Use MultiDex", usingMultidexOnBuild )){
             //    usingMultidexOnBuild = !usingMultidexOnBuild;

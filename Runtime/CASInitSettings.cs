@@ -7,23 +7,61 @@ namespace CAS
     [Serializable]
     public class CASInitSettings : ScriptableObject
     {
+#pragma warning disable 649 // is never assigned to, and will always have its default value null
         public bool testAdMode = false;
-        public string[] managerIds;
+        [SerializeField]
+        private string[] managerIds;
         public AdFlags allowedAdFlags = AdFlags.Everything;
-        public Audience audienceTagged = Audience.Children;
+        [SerializeField]
+        private Audience audienceTagged = Audience.Children;
         public AdSize bannerSize = AdSize.Banner;
-        public int bannerRefresh = 30;
-        public int interstitialInterval = 30;
-        public LoadingManagerMode loadingMode = LoadingManagerMode.Optimal;
-        public bool debugMode;
-        public string trackingUsageDescription;
-        public bool trackLocationEnabled;
 
-        internal List<string> extrasKeys;
-        internal List<string> extrasValues;
+        [SerializeField]
+        private int bannerRefresh = 30;
+        [SerializeField]
+        private int interstitialInterval = 30;
+        [SerializeField]
+        private LoadingManagerMode loadingMode = LoadingManagerMode.Optimal;
+        [SerializeField]
+        private bool debugMode;
+        [SerializeField]
+        private string trackingUsageDescription;
+        [SerializeField]
+        private bool trackLocationEnabled;
+        [SerializeField]
+        private bool analyticsCollectionEnabled;
+        [SerializeField]
+        private bool interWhenNoRewardedAd;
+
         internal string targetId;
+        internal Dictionary<string, string> extras;
         internal InitCompleteAction initListener;
+#pragma warning restore 649
 
+        /// <summary>
+        /// Initialize new <see cref="IMediationManager"/> and save to <see cref="MobileAds.manager"/> field.
+        /// Can be called for different identifiers to create different managers.
+        /// </summary>
+        /// <exception cref="NotSupportedException">Not supported platform. Allowed Android, iOS and Editor only</exception>
+        /// <exception cref="ArgumentNullException">Manager ID are not found</exception>
+        public IMediationManager Initialize()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty( targetId ))
+                    WithManagerIdAtIndex( 0 );
+            }
+            catch (Exception e)
+            {
+                if (Application.isEditor || testAdMode)
+                    targetId = "Dummy";
+                else
+                    throw e;
+            }
+            return CASFactory.CreateManager( this );
+        }
+
+        #region Initialization options
         /// <summary>
         /// An manager ID is a unique ID number assigned to each of your ad placements when they're created in CAS.
         /// The manager ID is added to your app's code and used to identify ad requests.
@@ -97,13 +135,9 @@ namespace CAS
         /// </summary>
         public CASInitSettings WithMediationExtras( string key, string value )
         {
-            if (extrasKeys == null || extrasValues == null)
-            {
-                extrasKeys = new List<string>();
-                extrasValues = new List<string>();
-            }
-            extrasKeys.Add( key );
-            extrasValues.Add( value );
+            if (extras == null)
+                extras = new Dictionary<string, string>();
+            extras[key] = value;
             return this;
         }
 
@@ -112,31 +146,34 @@ namespace CAS
         /// </summary>
         public CASInitSettings ClearMediationExtras()
         {
-            if (extrasKeys != null)
-                extrasKeys.Clear();
-            if (extrasValues != null)
-                extrasValues.Clear();
+            if (extras != null)
+                extras.Clear();
             return this;
         }
 
-        /// <summary>
-        /// Initialize new <see cref="IMediationManager"/> and save to <see cref="MobileAds.manager"/> field.
-        /// Can be called for different identifiers to create different managers.
-        /// </summary>
-        /// <exception cref="NotSupportedException">Not supported platform. Allowed Android, iOS and Editor only</exception>
-        /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
-        public IMediationManager Initialize()
+        #endregion
+
+        #region
+        public Audience defaultAudienceTagged { get { return audienceTagged; } }
+        public int defaultBannerRefresh { get { return bannerRefresh; } }
+        public int defaultInterstitialInterval { get { return interstitialInterval; } }
+        public LoadingManagerMode defaultLoadingMode { get { return loadingMode; } }
+        public bool defaultDebugModeEnabled { get { return debugMode; } }
+        public bool defaultIOSTrackLocationEnabled { get { return trackLocationEnabled; } }
+        public bool defaultAnalyticsCollectionEnabled { get { return analyticsCollectionEnabled; } }
+        public bool defaultInterstitialWhenNoRewardedAd { get { return interWhenNoRewardedAd; } }
+
+        public string defaultIOSTrakingUsageDescription { get { return trackingUsageDescription; } }
+
+        public int managersCount { get { return managerIds == null ? 0 : managerIds.Length; } }
+        public string GetManagerId( int index )
         {
-            if (string.IsNullOrEmpty( targetId ))
-            {
-                if (Application.isEditor || testAdMode)
-                    targetId = "demo";
-                else
-                    WithManagerIdAtIndex( 0 );
-            }
-            var manager = CASFactory.CreateManager( this );
-            manager.bannerSize = bannerSize;
-            return manager;
+            return managerIds[index];
         }
+        public int IndexOfManagerId( string id )
+        {
+            return Array.IndexOf( managerIds, id );
+        }
+        #endregion
     }
 }

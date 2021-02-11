@@ -1,4 +1,6 @@
-﻿namespace CAS
+﻿using System.Collections.Generic;
+
+namespace CAS
 {
     public class MediationExtras
     {
@@ -61,5 +63,10 @@
         public const string myTargetCCPAOptedOut = "MT_ccpa";
 
         public const string yandexAdsGDPRConsent = "Ya_gdpr";
+
+        public static void SetGlobalEtras( Dictionary<string, string> extras )
+        {
+            CASFactory.SetGlobalMediationExtras( extras );
+        }
     }
 }

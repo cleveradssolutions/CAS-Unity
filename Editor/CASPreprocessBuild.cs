@@ -84,14 +84,14 @@ namespace CAS.UEditor
             }
             else
             {
-                if (settings.managerIds == null || settings.managerIds.Length == 0 || string.IsNullOrEmpty( settings.managerIds[0] ))
+                if (settings.managersCount == 0 || string.IsNullOrEmpty( settings.GetManagerId(0) ))
                     StopBuildIDNotFound( target );
 
-                admobAppId = Utils.DownloadRemoteSettings( settings.managerIds[0], Utils.preferredCountry, target );
+                admobAppId = Utils.DownloadRemoteSettings( settings.GetManagerId( 0 ), Utils.preferredCountry, target );
             }
 
             if (string.IsNullOrEmpty( admobAppId ))
-                Utils.StopBuildWithMessage( "CAS server provides wrong settings for managerID " + settings.managerIds[0] +
+                Utils.StopBuildWithMessage( "CAS server provides wrong settings for managerID " + settings.GetManagerId( 0 ) +
                     ". Please try using a different identifier in the first place or contact support.", target );
 
             if (admobAppId.IndexOf( '~' ) < 0)

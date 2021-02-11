@@ -1,9 +1,13 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace CAS
 {
+    [Serializable]
+    public class CASUEventWithError : UnityEvent<string> { }
+
     public delegate void InitCompleteAction( bool success, string error );
 
     public static class MobileAds
@@ -27,7 +31,7 @@ namespace CAS
         /// </summary>
         public static IMediationManager manager
         {
-            get { return CASFactory.manager; }
+            get { return CASFactory.GetMainManagerOrNull(); }
         }
 
         /// <summary>

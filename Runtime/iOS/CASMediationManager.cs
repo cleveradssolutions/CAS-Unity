@@ -61,19 +61,26 @@ namespace CAS.iOS
 
             _managerClientPtr = ( IntPtr )GCHandle.Alloc( this );
 
-            if (initData.extrasKeys != null && initData.extrasValues != null
-                && initData.extrasKeys.Count != 0 && initData.extrasValues.Count != 0)
+            if (initData.extras != null && initData.extras.Count != 0)
             {
-                var extrasCount = Math.Min( initData.extrasKeys.Count, initData.extrasValues.Count );
+                var extrasKeys = new string[initData.extras.Count];
+                var extrasValues = new string[initData.extras.Count];
+                int extraI = 0;
+                foreach (var extra in initData.extras)
+                {
+                    extrasKeys[extraI] = extra.Key;
+                    extrasValues[extraI] = extra.Value;
+                    extraI++;
+                }
                 _managerPtr = CASExterns.CASUCreateManagerWithExtras(
                     _managerClientPtr,
                     InitializationCompleteCallback,
                     managerID,
                     ( int )initData.allowedAdFlags,
                     isTestAdMode,
-                    initData.extrasKeys.ToArray(),
-                    initData.extrasValues.ToArray(),
-                    extrasCount
+                    extrasKeys,
+                    extrasValues,
+                    initData.extras.Count
                 );
             }
             else

@@ -19,7 +19,7 @@ namespace CAS.Unity
         private AdSize _bannerSize = AdSize.Banner;
         private LastPageAdContent _lastPageAdContent;
 
-        public string managerID { get { return "Dummy"; } }
+        public string managerID { get; private set; }
         public bool isTestAdMode { get { return true; } }
         public LastPageAdContent lastPageAdContent
         {
@@ -28,9 +28,9 @@ namespace CAS.Unity
             {
                 _lastPageAdContent = value;
                 if (value == null)
-                    Debug.Log( "CAS Last Page Ad content cleared" );
+                    Log( "CAS Last Page Ad content cleared" );
                 else
-                    Debug.Log( "CAS Last Page Ad apply content:" +
+                    Log( "CAS Last Page Ad apply content:" +
                         "\n- Headline:" + value.Headline +
                         "\n- DestinationURL:" + value.DestinationURL +
                         "\n- ImageURL:" + value.ImageURL +
@@ -43,12 +43,12 @@ namespace CAS.Unity
             get { return _bannerSize; }
             set
             {
-                if (value == 0)
+                if (value == 0 || value == _bannerSize)
                     return;
+
+                Log( "Banner size changed to: " + value );
                 if (value <= AdSize.MediumRectangle)
                     _bannerSize = value;
-                else
-                    Debug.Log( "CAS change Banner size to unsupported value: " + value );
             }
         }
         public AdPosition bannerPosition
@@ -56,10 +56,11 @@ namespace CAS.Unity
             get { return _bannerPosition; }
             set
             {
+                if (value == AdPosition.Undefined || value == _bannerPosition)
+                    return;
+                Log( "Banner position changed to: " + value );
                 if (value < AdPosition.Undefined)
                     _bannerPosition = value;
-                else if (value != AdPosition.Undefined)
-                    Debug.Log( "CAS change Banner position to unsupported value: " + value );
             }
         }
 
@@ -86,6 +87,8 @@ namespace CAS.Unity
             var obj = new GameObject( "CASMediationManager" );
             DontDestroyOnLoad( obj );
             var manager = obj.AddComponent<CASMediationManager>();
+            Log( "Initialized manager with id: " + initSettings.targetId );
+            manager.managerID = initSettings.targetId;
             manager.enabledTypes = initSettings.allowedAdFlags;
             manager._initCompleteAction = initSettings.initListener;
             manager.bannerSize = AdSize.Banner;
@@ -435,6 +438,12 @@ namespace CAS.Unity
                 default:
                     throw new NotImplementedException( "Unknown adType " + adType.ToString() );
             }
+        }
+
+        private static void Log( string message )
+        {
+            if (MobileAds.settings.isDebugMode)
+                Debug.Log( "[CleverAdsSolutions] " + message );
         }
         #endregion
     }

@@ -7,10 +7,34 @@ namespace CAS
 {
     internal static class CASFactory
     {
-        internal static volatile bool isExecuteEventsOnUnityThread = false;
+        private static volatile bool executeEventsOnUnityThread = false;
 
-        internal static IMediationManager manager;
-        internal static IAdsSettings _settings;
+        private static IAdsSettings settings;
+        private static List<IMediationManager> managers;
+        private static List<Action<IMediationManager>> initCallback = new List<Action<IMediationManager>>();
+        private static Dictionary<string, string> globalExtras;
+
+        internal static IMediationManager GetMainManagerOrNull()
+        {
+            return managers == null || managers.Count < 1 ? null : managers[0];
+        }
+
+        internal static void SetGlobalMediationExtras( Dictionary<string, string> extras )
+        {
+            globalExtras = extras;
+        }
+
+        internal static bool IsExecuteEventsOnUnityThread()
+        {
+            return executeEventsOnUnityThread;
+        }
+
+        internal static void SetExecuteEventsOnUnityThread( bool enable )
+        {
+            executeEventsOnUnityThread = enable;
+            if (enable)
+                EventExecutor.Initialize();
+        }
 
         internal static CASInitSettings LoadInitSettingsFromResources()
         {
@@ -40,20 +64,22 @@ namespace CAS
 
             if (initSettings)
             {
-                settings.isDebugMode = initSettings.debugMode;
-                settings.loadingMode = initSettings.loadingMode;
-                settings.bannerRefreshInterval = initSettings.bannerRefresh;
-                settings.interstitialInterval = initSettings.interstitialInterval;
-                settings.taggedAudience = initSettings.audienceTagged;
+                settings.isDebugMode = initSettings.defaultDebugModeEnabled;
+                settings.loadingMode = initSettings.defaultLoadingMode;
+                settings.bannerRefreshInterval = initSettings.defaultBannerRefresh;
+                settings.interstitialInterval = initSettings.defaultInterstitialInterval;
+                settings.taggedAudience = initSettings.defaultAudienceTagged;
+                settings.analyticsCollectionEnabled = initSettings.defaultAnalyticsCollectionEnabled;
+                settings.allowInterstitialAdsWhenVideoCostAreLower = initSettings.defaultInterstitialWhenNoRewardedAd;
             }
             return settings;
         }
 
         internal static IAdsSettings GetAdsSettings()
         {
-            if (_settings == null)
-                _settings = CreateSettigns( LoadInitSettingsFromResources() );
-            return _settings;
+            if (settings == null)
+                settings = CreateSettigns( LoadInitSettingsFromResources() );
+            return settings;
         }
 
         internal static ITargetingOptions GetTargetingOptions()
@@ -78,17 +104,49 @@ namespace CAS
 
         internal static IMediationManager CreateManager( CASInitSettings initSettings )
         {
-            if (manager != null && manager.managerID == initSettings.targetId)
+            if (managers == null)
             {
-                if (initSettings.initListener != null)
-                    initSettings.initListener( true, null );
-                manager.bannerSize = initSettings.bannerSize;
-                return manager;
+                if (initSettings.managersCount == 0)
+                {
+                    managers = new List<IMediationManager>();
+                }
+                else
+                {
+                    managers = new List<IMediationManager>( initSettings.managersCount );
+                    for (int i = 0; i < initSettings.managersCount; i++)
+                        managers.Add( null );
+                }
             }
-            if (_settings == null)
-                _settings = CreateSettigns( initSettings );
+            else
+            {
+                for (int i = 0; i < managers.Count; i++)
+                {
+                    var readyManager = managers[i];
+                    if (readyManager != null && readyManager.managerID == initSettings.targetId)
+                    {
+                        if (initSettings.initListener != null)
+                            initSettings.initListener( true, null );
+                        return readyManager;
+                    }
+                }
+            }
 
-            EventExecutor.Initialize();
+            if (settings == null)
+                settings = CreateSettigns( initSettings );
+
+            if (initSettings.extras == null)
+            {
+                initSettings.extras = globalExtras;
+            }
+            else if (globalExtras != null)
+            {
+                var mergeExtras = new Dictionary<string, string>( globalExtras );
+                foreach (var extra in initSettings.extras)
+                    mergeExtras[extra.Key] = extra.Value;
+                initSettings.extras = mergeExtras;
+            }
+
+            IMediationManager manager;
 #if UNITY_EDITOR || TARGET_OS_SIMULATOR
             manager = CAS.Unity.CASMediationManager.CreateManager( initSettings );
 #elif UNITY_ANDROID
@@ -108,7 +166,65 @@ namespace CAS
 #endif
             if (manager == null)
                 throw new NotSupportedException( "Current platform: " + Application.platform.ToString() );
+
+            manager.bannerSize = initSettings.bannerSize; // Before onInitManager callback
+
+            var managerIndex = initSettings.IndexOfManagerId( initSettings.targetId );
+            if (managerIndex < 0)
+            {
+                managerIndex = managers.Count;
+                managers.Add( manager );
+            }
+            else
+            {
+                managers[managerIndex] = manager;
+            }
+            if (managerIndex < initCallback.Count)
+            {
+                var onInitManager = initCallback[managerIndex];
+                if (onInitManager != null)
+                {
+                    initCallback[managerIndex] = null;
+                    try
+                    {
+                        onInitManager( manager );
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogException( e );
+                    }
+                }
+            }
             return manager;
+        }
+
+        internal static void GetReadyManagerByIndexAsync( Action<IMediationManager> callback, int index )
+        {
+            if (index < 0)
+                throw new ArgumentOutOfRangeException( "index", "Manager index cannot be less than 0" );
+
+            if (managers != null && index < managers.Count && managers[index] != null)
+            {
+                callback( managers[index] );
+                return;
+            }
+
+            if (index != 0)
+            {
+                var initSettings = LoadInitSettingsFromResources();
+                if (initSettings && initSettings.managersCount > 0 && initSettings.managersCount - 1 < index)
+                    throw new ArgumentOutOfRangeException( "index",
+                        "Manager with index " + index + " not found in settings." );
+            }
+            for (int i = initCallback.Count; i <= index; i++)
+                initCallback.Add( null );
+            initCallback[index] += callback;
+        }
+
+        internal static void UnsubscribeReadyManagerAsync( Action<IMediationManager> callback, int index )
+        {
+            if (initCallback != null && index < initCallback.Count)
+                initCallback[index] -= callback;
         }
 
         internal static void ValidateIntegration()
@@ -194,7 +310,7 @@ namespace CAS
         {
             if (action == null)
                 return;
-            if (isExecuteEventsOnUnityThread)
+            if (executeEventsOnUnityThread)
             {
                 EventExecutor.Add( action );
                 return;
@@ -213,7 +329,7 @@ namespace CAS
         {
             if (action == null)
                 return;
-            if (isExecuteEventsOnUnityThread)
+            if (executeEventsOnUnityThread)
             {
                 EventExecutor.Add( () => action( error ) );
                 return;
@@ -232,7 +348,7 @@ namespace CAS
         {
             if (action == null)
                 return;
-            if (isExecuteEventsOnUnityThread)
+            if (executeEventsOnUnityThread)
             {
                 EventExecutor.Add( () => action( ( AdType )typeId ) );
                 return;
@@ -251,7 +367,7 @@ namespace CAS
         {
             if (action == null)
                 return;
-            if (isExecuteEventsOnUnityThread)
+            if (executeEventsOnUnityThread)
             {
                 EventExecutor.Add( () => action( ( AdType )typeId, error ) );
                 return;
@@ -270,7 +386,7 @@ namespace CAS
         {
             if (action == null)
                 return;
-            if (isExecuteEventsOnUnityThread)
+            if (executeEventsOnUnityThread)
             {
                 EventExecutor.Add( () => action( success, error ) );
                 return;

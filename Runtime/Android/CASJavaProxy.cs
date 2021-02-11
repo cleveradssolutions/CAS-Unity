@@ -15,15 +15,14 @@ namespace CAS.Android
         internal const string OnInitializationListenerClassName = "com.cleversolutions.ads.OnInitializationListener";
 
         internal const string UnityActivityClassName = "com.unity3d.player.UnityPlayer";
+        internal const string JavaUtilArrayList = "java.util.ArrayList";
         #endregion
 
         internal static AndroidJavaObject GetJavaListObject( List<string> csTypeList )
         {
-            AndroidJavaObject javaTypeArrayList = new AndroidJavaObject( "java.util.ArrayList" );
+            AndroidJavaObject javaTypeArrayList = new AndroidJavaObject( JavaUtilArrayList );
             for (int i = 0; i < csTypeList.Count; i++)
-            {
                 javaTypeArrayList.Call<bool>( "add", csTypeList[i] );
-            }
             return javaTypeArrayList;
         }
 
