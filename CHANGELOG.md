@@ -1,5 +1,9 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [1.9.10] - 2021-02-15
+### Bug Fixes
+- [iOS] Compilation error on Unity 2019+.
+
 ## [1.9.9] - 2021-02-05
 ### Dependencies
 - [Android] Wraps [1.9.9 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

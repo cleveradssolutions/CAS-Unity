@@ -39,7 +39,7 @@ The Integration Demo application demonstrate how to integrate the CAS in your ap
  11.  [License](#license)  
 
 ## Step 1 Add the CAS package to Your Project
-if you are using Unity 2018.4 or newer then you can add CAS SDK to your Unity project using the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html), or you can import the package manually.
+If you are using Unity 2018.4 or newer then you can add CAS SDK to your Unity project using the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html), or you can import the package manually.
 
 <details><summary><b>Unity Package Manager</b></summary>
 
@@ -59,7 +59,7 @@ Modify `Packages/manifest.json`  to the following form:
   }
 ],
 "dependencies": {
-"com.cleversolutions.ads.unity": "https://github.com/cleveradssolutions/CAS-Unity.git#1.9.9"
+"com.cleversolutions.ads.unity": "https://github.com/cleveradssolutions/CAS-Unity.git#1.9.10"
 }
 }
 ```
@@ -257,7 +257,7 @@ CAS.MobileAds.settings.loadingMode = mode;
 ***
 </details><details><summary><b>Debug mode</b></summary>
 
-The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdc with tag `CAS`.  
+The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdk with tag `CAS`.  
 Disabling Debug Mode may improve application performance.  
 
 Change the Debug Mode flag at any time using the following method:
