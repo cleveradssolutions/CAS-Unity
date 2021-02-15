@@ -20,7 +20,7 @@ namespace CAS.UEditor
         public const string rootCASFolderPath = "Assets/CleverAdsSolutions";
         public const string editorFolderPath = rootCASFolderPath + "/Editor";
         public const string androidLibFolderPath = "Assets/Plugins/Android/CASPlugin.androidlib";
-        public const string androidResSettingsPath = androidLibFolderPath + "/res/raw/cas_settings.json";
+        public const string androidResSettingsPath = androidLibFolderPath + "/res/raw/cas_settings";
         public const string androidLibManifestPath = androidLibFolderPath + "/AndroidManifest.xml";
         public const string androidLibPropertiesPath = androidLibFolderPath + "/project.properties";
 
@@ -449,7 +449,7 @@ namespace CAS.UEditor
                             }
                             else
                             {
-                                WriteSettingsForPlatform( content, platform );
+                                WriteSettingsForPlatform( content, managerID, platform );
                                 return data.admob_app_id;
                             }
                         }
@@ -464,7 +464,8 @@ namespace CAS.UEditor
                     }
                 }
             }
-            var cachePath = platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
+            var cachePath = ( platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath )
+                + managerID.Length + ".json";
             if (data != null || File.Exists( cachePath ))
             {
                 var dialogResponse = EditorUtility.DisplayDialogComplex( title, message, "Use cache", "Cancel Build", "Select settings file" );
@@ -494,7 +495,7 @@ namespace CAS.UEditor
                 if (!string.IsNullOrEmpty( filePath ))
                 {
                     var content = File.ReadAllText( filePath );
-                    WriteSettingsForPlatform( content, platform );
+                    WriteSettingsForPlatform( content, managerID, platform );
                     return GetAdmobAppIdFromJson( content );
                 }
             }
@@ -507,22 +508,20 @@ namespace CAS.UEditor
             return null;
         }
 
-        private static void WriteSettingsForPlatform( string content, BuildTarget target )
+        private static void WriteSettingsForPlatform( string content, string managerId, BuildTarget target )
         {
-            if (target == BuildTarget.Android)
-                WriteToFile( content, androidResSettingsPath );
-            else
-                WriteToFile( content, iosResSettingsPath );
+            string path = target == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
+            WriteToFile( content, path + managerId.Length + ".json" );
         }
 
-        internal static HashSet<string> GetCrossPromoAlias( BuildTarget platform )
+        internal static void GetCrossPromoAlias( BuildTarget platform, string managerId, HashSet<string> result )
         {
-            var result = new HashSet<string>();
             if (!IsDependencyExists( promoDependency, platform ))
-                return result;
+                return;
 
             string pattern = "alias\\\": \\\""; //: "iOSBundle\\\": \\\"";
-            string cachePath = platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
+            string cachePath = (platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath )
+                + managerId.Length + ".json";
 
             if (File.Exists( cachePath ))
             {
@@ -543,7 +542,7 @@ namespace CAS.UEditor
                     Debug.LogException( e );
                 }
             }
-            return result;
+            return;
         }
 
         internal static string GetLatestVersion( string repo, bool force, string currVersion )

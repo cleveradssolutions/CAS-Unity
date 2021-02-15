@@ -59,7 +59,7 @@ namespace CAS.UEditor
             if (newCASVersion != null)
                 DialogOrCancel( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", target );
 
-            string admobAppId;
+            string admobAppId = null;
             if (settings.testAdMode)
             {
                 DialogOrCancel( "CAS Mediation work in Test Ad mode.", BuildTarget.NoTarget );
@@ -84,10 +84,18 @@ namespace CAS.UEditor
             }
             else
             {
-                if (settings.managersCount == 0 || string.IsNullOrEmpty( settings.GetManagerId(0) ))
+                if (settings.managersCount == 0)
                     StopBuildIDNotFound( target );
 
-                admobAppId = Utils.DownloadRemoteSettings( settings.GetManagerId( 0 ), Utils.preferredCountry, target );
+                for (int i = 0; i < settings.managersCount; i++)
+                {
+                    if (!string.IsNullOrEmpty( settings.GetManagerId( i ) ))
+                    {
+                        var newAppId = Utils.DownloadRemoteSettings( settings.GetManagerId( i ), Utils.preferredCountry, target );
+                        if (string.IsNullOrEmpty( admobAppId ))
+                            admobAppId = newAppId;
+                    }
+                }
             }
 
             if (string.IsNullOrEmpty( admobAppId ))
@@ -145,7 +153,12 @@ namespace CAS.UEditor
                 CopyTemplateIfNeedToAndroidLib(
                     Utils.androidLibPropTemplateFile, Utils.androidLibPropertiesPath );
 
-                SetAdmobAppIdToAndroidManifest( admobAppId, false, Utils.GetCrossPromoAlias( target ) );
+                HashSet<string> promoAlias = new HashSet<string>();
+                for (int i = 0; i < settings.managersCount; i++)
+                {
+                    Utils.GetCrossPromoAlias( target, settings.GetManagerId( i ), promoAlias );
+                }
+                SetAdmobAppIdToAndroidManifest( admobAppId, false, promoAlias );
 
                 ConfigurateGradleSettings();
 

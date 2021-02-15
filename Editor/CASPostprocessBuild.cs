@@ -21,12 +21,14 @@ namespace CAS.UEditor
 
             try
             {
+                var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
+
                 string plistPath = Path.Combine( path, "Info.plist" );
-                ConfigureInfoPlist( plistPath );
+                ConfigureInfoPlist( plistPath, casSettings );
 
                 var projectPath = Path.Combine( path, "Unity-iPhone.xcodeproj/project.pbxproj" );
-                var project = ConfigureXCodeProject( path, projectPath );
-                ApplyCrosspromoDynamicLinks( projectPath, project );
+                var project = ConfigureXCodeProject( path, projectPath, casSettings );
+                ApplyCrosspromoDynamicLinks( projectPath, project, casSettings );
                 Debug.Log( CASEditorUtils.logTag + "Postrocess Build done." );
             }
             finally
@@ -78,7 +80,7 @@ namespace CAS.UEditor
         }
 #endif
 
-        private static void ConfigureInfoPlist( string plistPath )
+        private static void ConfigureInfoPlist( string plistPath, CASInitSettings casSettings )
         {
             EditorUtility.DisplayProgressBar( casTitle, "Read iOS Info.plist", 0.3f );
             PlistDocument plist = new PlistDocument();
@@ -87,14 +89,14 @@ namespace CAS.UEditor
             #region Read Admob App ID from CAS Settings
             EditorUtility.DisplayProgressBar( casTitle, "Read Admob App ID from CAS Settings", 0.35f );
             string settingsJson = null;
-            try
+            for (int i = 0; i < casSettings.managersCount; i++)
             {
-                settingsJson = File.ReadAllText( CASEditorUtils.iosResSettingsPath );
+                settingsJson = ReadSettingsForManager( casSettings.GetManagerId( i ).Length + ".json" );
+                if (!string.IsNullOrEmpty( settingsJson ))
+                    break;
             }
-            catch (Exception e)
-            {
-                CASEditorUtils.StopBuildWithMessage( e.ToString(), BuildTarget.iOS );
-            }
+            if (string.IsNullOrEmpty( settingsJson ))
+                settingsJson = ReadSettingsForManager( string.Empty );
 
             string admobAppId = null;
             try
@@ -121,7 +123,6 @@ namespace CAS.UEditor
 
             #region Write NSUserTrackingUsageDescription
             EditorUtility.DisplayProgressBar( casTitle, "Write NSUserTrackingUsageDescription to Info.plist", 0.5f );
-            var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
             if (casSettings && !string.IsNullOrEmpty( casSettings.defaultIOSTrakingUsageDescription ))
                 plist.root.SetString( "NSUserTrackingUsageDescription", casSettings.defaultIOSTrakingUsageDescription );
             #endregion
@@ -172,7 +173,24 @@ namespace CAS.UEditor
             File.WriteAllText( plistPath, plist.WriteToString() );
         }
 
-        private static PBXProject ConfigureXCodeProject( string rootPath, string projectPath )
+        private static string ReadSettingsForManager( string suffix )
+        {
+            string settingsPath = CASEditorUtils.iosResSettingsPath + suffix;
+            if (File.Exists( settingsPath ))
+            {
+                try
+                {
+                    return File.ReadAllText( settingsPath );
+                }
+                catch (Exception e)
+                {
+                    CASEditorUtils.StopBuildWithMessage( e.ToString(), BuildTarget.iOS );
+                }
+            }
+            return null;
+        }
+
+        private static PBXProject ConfigureXCodeProject( string rootPath, string projectPath, CASInitSettings casSettings )
         {
             EditorUtility.DisplayProgressBar( casTitle, "Configure XCode project", 0.7f );
             var project = new PBXProject();
@@ -189,17 +207,26 @@ namespace CAS.UEditor
             project.SetBuildProperty( target, "SWIFT_VERSION", "5.0" );
 
             EditorUtility.DisplayProgressBar( casTitle, "Copy CAS Settings json to project", 0.8f );
-            try
+
+            var resourcesBuildPhase = project.GetResourcesBuildPhaseByTarget( target );
+            for (int i = 0; i < casSettings.managersCount; i++)
             {
-                const string fileName = "cas_settings.json";
-                var resourcesBuildPhase = project.GetResourcesBuildPhaseByTarget( target );
-                File.Copy( CASEditorUtils.iosResSettingsPath, Path.Combine( rootPath, fileName ) );
-                var fileGuid = project.AddFile( fileName, fileName, PBXSourceTree.Source );
-                project.AddFileToBuildSection( target, resourcesBuildPhase, fileGuid );
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning( CASEditorUtils.logTag + "Copy Raw Files To XCode Project failed with error: " + e.ToString() );
+                string suffix = casSettings.GetManagerId( i ).Length + ".json";
+                string fileName = "cas_settings" + suffix;
+                string pathInAssets = CASEditorUtils.iosResSettingsPath + suffix;
+                if (File.Exists( pathInAssets ))
+                {
+                    try
+                    {
+                        File.Copy( pathInAssets, Path.Combine( rootPath, fileName ) );
+                        var fileGuid = project.AddFile( fileName, fileName, PBXSourceTree.Source );
+                        project.AddFileToBuildSection( target, resourcesBuildPhase, fileGuid );
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning( CASEditorUtils.logTag + "Copy Raw Files To XCode Project failed with error: " + e.ToString() );
+                    }
+                }
             }
 
             EditorUtility.DisplayProgressBar( casTitle, "Save XCode project", 0.9f );
@@ -207,13 +234,10 @@ namespace CAS.UEditor
             return project;
         }
 
-        private static void ApplyCrosspromoDynamicLinks( string projectPath, PBXProject project )
+        private static void ApplyCrosspromoDynamicLinks( string projectPath, PBXProject project, CASInitSettings casSettings )
         {
-            if (!CASEditorUtils.IsDependencyExists( CASEditorUtils.promoDependency, BuildTarget.iOS ))
+            if (casSettings.managersCount == 0 || string.IsNullOrEmpty( casSettings.GetManagerId( 0 ) ))
                 return;
-            if (!CASEditorUtils.IsFirebaseServiceExist( "dynamic" ))
-                return;
-
             try
             {
                 EditorUtility.DisplayProgressBar( casTitle, "Apply Crosspromo Dynamic Links", 0.9f );
@@ -226,22 +250,10 @@ namespace CAS.UEditor
 #else
                     PBXProject.GetUnityTargetName() );
 #endif
-
-                var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
-                var dynamicLinks = new List<string>( casSettings.managersCount );
-                for (int i = 0; i < casSettings.managersCount; i++)
-                {
-                    var id = casSettings.GetManagerId( i );
-                    if (!string.IsNullOrEmpty( id ))
-                    {
-                        string link = "applinks:psvios" + id + ".page.link";
-                        dynamicLinks.Add( link );
-                        Debug.Log( CASEditorUtils.logTag + "Add dynamic link: " + link );
-                    }
-                }
-                entitlements.AddAssociatedDomains( dynamicLinks.ToArray() );
+                string link = "applinks:psvios" + casSettings.GetManagerId( 0 ) + ".page.link";
+                entitlements.AddAssociatedDomains( new[] { link } );
                 entitlements.WriteToFile();
-                Debug.Log( CASEditorUtils.logTag + "Apply dynamic links: " + dynamicLinks.Count );
+                Debug.Log( CASEditorUtils.logTag + "Apply application shame: " + link );
             }
             catch (Exception e)
             {
