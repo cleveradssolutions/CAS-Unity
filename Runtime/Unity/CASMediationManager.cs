@@ -196,6 +196,11 @@ namespace CAS.Unity
             return CalculateAdSizeOnScreen( _bannerSize ).x;
         }
 
+        public bool TryOpenDebugger()
+        {
+            // Not supported for editor
+            return false;
+        }
         #endregion
 
         #region Skip frame on call SDK

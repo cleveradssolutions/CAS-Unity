@@ -101,6 +101,15 @@ namespace CAS.UEditor
         #endregion
 
         #region Public API
+        public static string GetNativeSettingsPath( BuildTarget platform, string managerId )
+        {
+            if (string.IsNullOrEmpty( managerId ))
+                return "";
+
+            string root = platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
+            return root + managerId.Length + managerId[managerId.Length - 1] + ".json";
+        }
+
         public static CASInitSettings GetSettingsAsset( BuildTarget platform, bool create = true )
         {
             if (!AssetDatabase.IsValidFolder( "Assets/Resources" ))
@@ -115,9 +124,14 @@ namespace CAS.UEditor
             return asset;
         }
 
-        public static bool IsDependencyExists( string dependency, BuildTarget platform )
+        public static bool IsDependencyExists( string dependency, BuildTarget target )
         {
-            return AssetDatabase.FindAssets( "CAS" + platform.ToString() + dependency + "Dependencies" ).Length > 0;
+            return AssetDatabase.FindAssets( GetDependencyName( dependency, target ) ).Length > 0;
+        }
+
+        public static string GetDependencyName( string dependency, BuildTarget target )
+        {
+            return "CAS" + target.ToString() + dependency + "Dependencies";
         }
 
         public static string GetDependencyPath( string name, BuildTarget platform )
@@ -277,9 +291,14 @@ namespace CAS.UEditor
                 AssetDatabase.CreateFolder( rootCASFolderPath, folderName );
         }
 
-        internal static bool IsDeprecateDependencyExists( string dependency, BuildTarget platform )
+        internal static bool IsDeprecateDependencyExists( string dependency, BuildTarget target )
         {
-            return AssetDatabase.FindAssets( "CAS" + dependency + platform.ToString() + "Dependencies" ).Length > 0;
+            return AssetDatabase.FindAssets( GetDeprecateDependencyName( dependency, target ) ).Length > 0;
+        }
+
+        internal static string GetDeprecateDependencyName( string dependency, BuildTarget target )
+        {
+            return "CAS" + dependency + target.ToString() + "Dependencies";
         }
 
         internal static string GetTemplatePath( string templateFile )
@@ -408,7 +427,7 @@ namespace CAS.UEditor
             return hashString.ToString().PadLeft( 32, '0' );
         }
 
-        internal static string DownloadRemoteSettings( string managerID, string country, BuildTarget platform )
+        internal static string DownloadRemoteSettings( string managerID, string country, BuildTarget platform, bool main )
         {
             const string title = "Update CAS remote settings";
             string url = BuildRemoteUrl( managerID, country, platform );
@@ -443,7 +462,7 @@ namespace CAS.UEditor
                         try
                         {
                             data = JsonUtility.FromJson<AdmobAppIdData>( content );
-                            if (data.IsDisabled())
+                            if (main && data.IsDisabled())
                             {
                                 message = "Ads are currently disabled for your application. You can use the cached settings or try later.";
                             }
@@ -464,8 +483,9 @@ namespace CAS.UEditor
                     }
                 }
             }
-            var cachePath = ( platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath )
-                + managerID.Length + ".json";
+            if (!main)
+                return null;
+            var cachePath = GetNativeSettingsPath( platform, managerID );
             if (data != null || File.Exists( cachePath ))
             {
                 var dialogResponse = EditorUtility.DisplayDialogComplex( title, message, "Use cache", "Cancel Build", "Select settings file" );
@@ -510,8 +530,7 @@ namespace CAS.UEditor
 
         private static void WriteSettingsForPlatform( string content, string managerId, BuildTarget target )
         {
-            string path = target == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
-            WriteToFile( content, path + managerId.Length + ".json" );
+            WriteToFile( content, GetNativeSettingsPath( target, managerId ) );
         }
 
         internal static void GetCrossPromoAlias( BuildTarget platform, string managerId, HashSet<string> result )
@@ -520,8 +539,7 @@ namespace CAS.UEditor
                 return;
 
             string pattern = "alias\\\": \\\""; //: "iOSBundle\\\": \\\"";
-            string cachePath = (platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath )
-                + managerId.Length + ".json";
+            string cachePath = GetNativeSettingsPath( platform, managerId );
 
             if (File.Exists( cachePath ))
             {

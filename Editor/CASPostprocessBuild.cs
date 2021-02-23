@@ -87,38 +87,34 @@ namespace CAS.UEditor
             plist.ReadFromFile( plistPath );
 
             #region Read Admob App ID from CAS Settings
-            EditorUtility.DisplayProgressBar( casTitle, "Read Admob App ID from CAS Settings", 0.35f );
-            string settingsJson = null;
-            for (int i = 0; i < casSettings.managersCount; i++)
-            {
-                settingsJson = ReadSettingsForManager( casSettings.GetManagerId( i ).Length + ".json" );
-                if (!string.IsNullOrEmpty( settingsJson ))
-                    break;
-            }
-            if (string.IsNullOrEmpty( settingsJson ))
-                settingsJson = ReadSettingsForManager( string.Empty );
+            EditorUtility.DisplayProgressBar( casTitle, "Write Admob App ID to Info.plist", 0.35f );
+
 
             string admobAppId = null;
-            try
+            if (casSettings.testAdMode)
             {
-                admobAppId = CASEditorUtils.GetAdmobAppIdFromJson( settingsJson );
+                admobAppId = CASEditorUtils.iosAdmobSampleAppID;
             }
-            catch (Exception e)
+            else if (casSettings.managersCount > 0)
             {
-                CASEditorUtils.StopBuildWithMessage( e.ToString(), BuildTarget.iOS );
+                string settingsPath = CASEditorUtils.GetNativeSettingsPath( BuildTarget.iOS, casSettings.GetManagerId( 0 ) );
+                if (File.Exists( settingsPath ))
+                {
+                    try
+                    {
+                        admobAppId = CASEditorUtils.GetAdmobAppIdFromJson( File.ReadAllText( settingsPath ) );
+                    }
+                    catch (Exception e)
+                    {
+                        CASEditorUtils.StopBuildWithMessage( e.ToString(), BuildTarget.iOS );
+                    }
+                }
             }
 
-            if (string.IsNullOrEmpty( admobAppId ))
-                CASEditorUtils.StopBuildWithMessage( "CAS server provides wrong settings. " +
-                    "Please try using a different identifier in the first place or contact support.", BuildTarget.iOS );
-
-            if (admobAppId.IndexOf( '~' ) < 0)
-                CASEditorUtils.StopBuildWithMessage( "CAS server provides invalid Admob App Id not match pattern ca-app-pub-0000000000000000~0000000000. " +
-                    "Please try using a different identifier in the first place or contact support.", BuildTarget.iOS );
             #endregion
 
-            EditorUtility.DisplayProgressBar( casTitle, "Write Admob App ID to Info.plist", 0.45f );
-            plist.root.SetString( "GADApplicationIdentifier", admobAppId );
+            if (admobAppId != null)
+                plist.root.SetString( "GADApplicationIdentifier", admobAppId );
             plist.root.SetBoolean( "GADDelayAppMeasurementInit", true );
 
             #region Write NSUserTrackingUsageDescription
@@ -173,23 +169,6 @@ namespace CAS.UEditor
             File.WriteAllText( plistPath, plist.WriteToString() );
         }
 
-        private static string ReadSettingsForManager( string suffix )
-        {
-            string settingsPath = CASEditorUtils.iosResSettingsPath + suffix;
-            if (File.Exists( settingsPath ))
-            {
-                try
-                {
-                    return File.ReadAllText( settingsPath );
-                }
-                catch (Exception e)
-                {
-                    CASEditorUtils.StopBuildWithMessage( e.ToString(), BuildTarget.iOS );
-                }
-            }
-            return null;
-        }
-
         private static PBXProject ConfigureXCodeProject( string rootPath, string projectPath, CASInitSettings casSettings )
         {
             EditorUtility.DisplayProgressBar( casTitle, "Configure XCode project", 0.7f );
@@ -211,7 +190,8 @@ namespace CAS.UEditor
             var resourcesBuildPhase = project.GetResourcesBuildPhaseByTarget( target );
             for (int i = 0; i < casSettings.managersCount; i++)
             {
-                string suffix = casSettings.GetManagerId( i ).Length + ".json";
+                int managerIdLength = casSettings.GetManagerId( i ).Length;
+                string suffix = managerIdLength + casSettings.GetManagerId( i )[managerIdLength - 1] + ".json";
                 string fileName = "cas_settings" + suffix;
                 string pathInAssets = CASEditorUtils.iosResSettingsPath + suffix;
                 if (File.Exists( pathInAssets ))

@@ -253,6 +253,11 @@ namespace CAS.Android
         {
             return _managerBridge.Call<int>( "getBannerWidthInPixels" );
         }
+
+        public bool TryOpenDebugger()
+        {
+            return _managerBridge.Call<bool>( "tryOpenDebugger" );
+        }
     }
 }
 #endif

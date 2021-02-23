@@ -146,7 +146,7 @@ namespace CAS
                 initSettings.extras = mergeExtras;
             }
 
-            IMediationManager manager;
+            IMediationManager manager = null;
 #if UNITY_EDITOR || TARGET_OS_SIMULATOR
             manager = CAS.Unity.CASMediationManager.CreateManager( initSettings );
 #elif UNITY_ANDROID

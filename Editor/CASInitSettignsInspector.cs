@@ -34,6 +34,8 @@ namespace CAS.UEditor
         private bool deprecateDependenciesExist;
         //private bool usingMultidexOnBuild;
 
+        private string[] deprecatedAssets = null;
+
         private int editorRuntimeActiveAdFlags;
 
         private void OnEnable()
@@ -63,10 +65,6 @@ namespace CAS.UEditor
             else
                 platform = BuildTarget.NoTarget;
 
-            deprecateDependenciesExist = Utils.IsDeprecateDependencyExists( Utils.generalDeprecateDependency, platform )
-                || Utils.IsDeprecateDependencyExists( Utils.teenDeprecateDependency, platform )
-                || Utils.IsDeprecateDependencyExists( Utils.promoDeprecateDependency, platform );
-
             managerIdsList = new ReorderableList( props, managerIdsProp, true, true, true, true )
             {
                 drawHeaderCallback = DrawListHeader,
@@ -95,6 +93,22 @@ namespace CAS.UEditor
 
             EditorApplication.delayCall += () => newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
             props.ApplyModifiedProperties();
+
+            deprecatedAssets = new string[]{
+                Utils.GetDeprecateDependencyName( Utils.generalDeprecateDependency, platform ),
+                Utils.GetDeprecateDependencyName( Utils.teenDeprecateDependency, platform ),
+                Utils.GetDeprecateDependencyName( Utils.promoDeprecateDependency, platform ),
+                Utils.GetDependencyName( "Additional", platform )
+            };
+
+            for (int i = 0; i < deprecatedAssets.Length; i++)
+            {
+                if (deprecateDependenciesExist |= AssetDatabase.FindAssets( deprecatedAssets[i] ).Length > 0)
+                    break;
+            }
+
+            if (File.Exists( Utils.androidResSettingsPath + ".json" ))
+                AssetDatabase.MoveAssetToTrash( Utils.androidResSettingsPath + ".json" );
         }
 
         private void DrawListHeader( Rect rect )
@@ -120,6 +134,12 @@ namespace CAS.UEditor
             HelpStyles.BeginBoxScope();
             EditorGUILayout.PropertyField( testAdModeProp );
             EditorGUI.BeginDisabledGroup( testAdModeProp.boolValue );
+            if(managerIdsList.count > 1)
+            {
+                var appId = managerIdsProp.GetArrayElementAtIndex( 0 ).stringValue;
+                if (!string.IsNullOrEmpty( appId ))
+                    EditorGUILayout.LabelField( "Application id:", appId );
+            }
             managerIdsList.DoLayoutList();
             OnManagerIDVerificationGUI();
             EditorGUI.EndDisabledGroup();
@@ -190,7 +210,7 @@ namespace CAS.UEditor
             if (managerIdsProp.arraySize == 0)
                 EditorGUILayout.HelpBox( "Build is not supported without a manager ID.", MessageType.Error );
             else if (string.IsNullOrEmpty( managerIdsProp.GetArrayElementAtIndex( 0 ).stringValue ))
-                EditorGUILayout.HelpBox( "Manager ID cannot be empty.", MessageType.Error );
+                EditorGUILayout.HelpBox( "The ID of the first manager cannot be empty!", MessageType.Error );
             else
                 return;
             EditorGUILayout.HelpBox( "If you haven't created an CAS account and registered an manager yet, " +
@@ -308,15 +328,12 @@ namespace CAS.UEditor
                     "Please remove them and use the new dependencies below.", MessageType.Error );
                 if (GUILayout.Button( "Remove", GUILayout.ExpandWidth( false ), GUILayout.Height( 40 ) ))
                 {
-                    var generalpath = Utils.GetDeprecatedDependencyPath( Utils.generalDeprecateDependency, platform );
-                    if (File.Exists( generalpath ))
-                        AssetDatabase.MoveAssetToTrash( generalpath );
-                    var teenPath = Utils.GetDeprecatedDependencyPath( Utils.teenDeprecateDependency, platform );
-                    if (File.Exists( teenPath ))
-                        AssetDatabase.MoveAssetToTrash( teenPath );
-                    var promoPath = Utils.GetDeprecatedDependencyPath( Utils.promoDeprecateDependency, platform );
-                    if (File.Exists( promoPath ))
-                        AssetDatabase.MoveAssetToTrash( promoPath );
+                    for (int i = 0; i < deprecatedAssets.Length; i++)
+                    {
+                        var assets = AssetDatabase.FindAssets( deprecatedAssets[i] );
+                        for (int assetI = 0; assetI < assets.Length; assetI++)
+                            AssetDatabase.MoveAssetToTrash( AssetDatabase.GUIDToAssetPath( assets[assetI] ) );
+                    }
                     deprecateDependenciesExist = false;
                 }
                 EditorGUILayout.EndHorizontal();

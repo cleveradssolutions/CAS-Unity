@@ -42,6 +42,9 @@ namespace CAS
         /// Forces sdk to filter ads with violence, drugs, etc
         /// </summary>
         Children,
+        /// <summary>
+        /// Disable all filters ads
+        /// </summary>
         NotChildren,
     }
 

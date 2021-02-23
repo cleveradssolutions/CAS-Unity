@@ -11,6 +11,7 @@ namespace CAS.UEditor
 
     public static class HelpStyles
     {
+        private static GUIStyle labelStyle;
         private static GUIStyle boxScopeStyle;
         public static GUIStyle wordWrapTextAred;
 
@@ -21,6 +22,10 @@ namespace CAS.UEditor
 
         static HelpStyles()
         {
+            labelStyle = new GUIStyle( "AssetLabel" );
+            labelStyle.fontSize = 9;
+            labelStyle.fixedHeight = 10;
+            labelStyle.padding = new RectOffset( 4, 3, 0, 0 );
             boxScopeStyle = new GUIStyle( EditorStyles.helpBox );
             boxScopeStyle.padding = new RectOffset( 6, 6, 6, 6 );
             wordWrapTextAred = new GUIStyle( EditorStyles.textArea );
@@ -35,43 +40,32 @@ namespace CAS.UEditor
         {
             if (label == Dependency.Label.None)
                 return;
+            string title = "";
+            string tooltip = "";
             if (( label & Dependency.Label.Banner ) == Dependency.Label.Banner)
             {
-                tempContent.text = "B";
-                tempContent.tooltip = "Support Banner Ad";
-                GUILayout.Label( tempContent, "AssetLabel", GUILayout.ExpandWidth( false ) );
-            }
-            else
-            {
-                GUILayout.Label( " B ", GUILayout.ExpandWidth( false ) );
+                title += "b ";
+                tooltip += "'b' - Support Banner Ad\n";
             }
             if (( label & Dependency.Label.Inter ) == Dependency.Label.Inter)
             {
-                tempContent.text = "I";
-                tempContent.tooltip = "Support Interstitial Ad";
-                GUILayout.Label( tempContent, "AssetLabel", GUILayout.ExpandWidth( false ) );
-            }
-            else
-            {
-                GUILayout.Label( " I ", GUILayout.ExpandWidth( false ) );
+                title += "i ";
+                tooltip += "'i' - Support Interstitial Ad\n";
             }
             if (( label & Dependency.Label.Reward ) == Dependency.Label.Reward)
             {
-                tempContent.text = "R";
-                tempContent.tooltip = "Support Rewarded Video Ad";
-                GUILayout.Label( tempContent, "AssetLabel", GUILayout.ExpandWidth( false ) );
-            }
-            else
-            {
-                GUILayout.Label( " R ", GUILayout.ExpandWidth( false ) );
+                title += "r ";
+                tooltip += "'r' - Support Rewarded Ad\n";
             }
             if (( label & Dependency.Label.Beta ) == Dependency.Label.Beta)
             {
-                tempContent.text = "beta";
-                tempContent.tooltip = "Dependencies in closed beta and available upon invite only. " +
-                        "If you would like to be considered for the beta, please contact Support.";
-                GUILayout.Label( tempContent, "AssetLabel", GUILayout.ExpandWidth( false ) );
+                title += "beta";
+                tooltip += "'beta' - Dependencies in closed beta and available upon invite only. " +
+                    "If you would like to be considered for the beta, please contact Support.";
             }
+            tempContent.text = title;
+            tempContent.tooltip = tooltip;
+            GUILayout.Label( tempContent, labelStyle );
         }
 
         public static void BeginBoxScope()
@@ -154,7 +148,7 @@ namespace CAS.UEditor
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space( 25 );
             GUILayout.Label( "Dependency", EditorStyles.largeLabel );
-            GUILayout.Label( "Current", EditorStyles.largeLabel, columnWidth );
+            GUILayout.Label( "Version", EditorStyles.largeLabel, columnWidth );
             GUILayout.Label( "Latest", EditorStyles.largeLabel, columnWidth );
             GUILayout.Label( "Action", EditorStyles.largeLabel, columnWidth );
             EditorGUILayout.EndHorizontal();
@@ -185,9 +179,17 @@ namespace CAS.UEditor
             if (advanced.Length > 0)
             {
                 HelpStyles.BeginBoxScope();
-                advancedFoldout = GUILayout.Toggle( advancedFoldout, "Advanced Integration", EditorStyles.foldout );
-                if (!advancedFoldout)
+
+                if (advancedFoldout)
                 {
+                    advancedFoldout = GUILayout.Toggle( advancedFoldout, "Advanced Integration", EditorStyles.foldout );
+                    OnHeaderGUI();
+                    for (int i = 0; i < advanced.Length; i++)
+                        advanced[i].OnGUI( this, platform );
+                }
+                else
+                {
+                    advancedFoldout = GUILayout.Toggle( advancedFoldout, "Advanced Integration", EditorStyles.foldout );
                     for (int i = 0; i < advanced.Length; i++)
                     {
                         if (advanced[i].inBan && advanced[i].installedVersion.Length > 0)
@@ -200,12 +202,6 @@ namespace CAS.UEditor
                             break;
                         }
                     }
-                }
-                if (advancedFoldout)
-                {
-                    OnHeaderGUI();
-                    for (int i = 0; i < advanced.Length; i++)
-                        advanced[i].OnGUI( this, platform );
                 }
                 HelpStyles.EndBoxScope();
             }
@@ -288,12 +284,12 @@ namespace CAS.UEditor
                 EditorGUI.indentLevel--;
             }
         }
-#endregion
+        #endregion
     }
 
     public partial class Dependency
     {
-#region Internal implementation
+        #region Internal implementation
         internal void Reset()
         {
             isNewer = false;
@@ -314,7 +310,14 @@ namespace CAS.UEditor
                 {
                     beginIndex += line.Length;
                     installedVersion = dependency.Substring( beginIndex, dependency.IndexOf( '\"', beginIndex ) - beginIndex );
-                    isNewer = new Version( installedVersion ) < new Version( version );
+                    try
+                    {
+                        isNewer = new Version( installedVersion ) < new Version( version );
+                    }
+                    catch
+                    {
+                        isNewer = true;
+                    }
                     mediation.installedAny = true;
                 }
 
@@ -349,6 +352,11 @@ namespace CAS.UEditor
 
         internal void OnGUI( DependencyManager mediation, BuildTarget platform )
         {
+            var dividerRect = EditorGUILayout.GetControlRect( GUILayout.Height( 1 ) );
+            if (Event.current.type == EventType.Repaint) //draw the divider
+            {
+                GUI.skin.box.Draw( dividerRect, GUIContent.none, 0 );
+            }
             EditorGUILayout.BeginHorizontal();
             bool installed = !string.IsNullOrEmpty( installedVersion );
             if (( inBan && installed ) || ( installed && locked ) || ( isRequired && !locked && !installed ))
@@ -358,15 +366,16 @@ namespace CAS.UEditor
             else if (GUILayout.Button( HelpStyles.helpIconContent, EditorStyles.label, GUILayout.Width( 20 ) ))
                 Application.OpenURL( url );
 
+            GUILayout.Label( name, GUILayout.ExpandWidth( false ) );
             HelpStyles.OnLabelGUI( labels );
-            GUILayout.Label( name );
+            GUILayout.FlexibleSpace();
 
             if (installed)
             {
                 if (!isNewer || inBan)
                 {
-                    GUILayout.Label( "Latest", mediation.columnWidth );
                     GUILayout.Label( version, mediation.columnWidth );
+                    GUILayout.Label( "-", mediation.columnWidth );
                 }
                 else
                 {
@@ -384,7 +393,7 @@ namespace CAS.UEditor
             else if (locked)
             {
                 EditorGUI.BeginDisabledGroup( true );
-                GUILayout.Label( "", mediation.columnWidth );
+                GUILayout.Label( "-", mediation.columnWidth );
                 GUILayout.Label( version, mediation.columnWidth );
                 GUILayout.Label( "Required", EditorStyles.miniButton, mediation.columnWidth );
                 EditorGUI.EndDisabledGroup();
@@ -402,7 +411,8 @@ namespace CAS.UEditor
             if (contains.Length > 0 && !( contains.Length == 1 && contains[0] == "Base" ))
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.HelpBox( string.Join( ", ", contains ), MessageType.None );
+                EditorGUILayout.LabelField( string.Join( ", ", contains ), EditorStyles.wordWrappedMiniLabel );
+                //EditorGUILayout.HelpBox( string.Join( ", ", contains ), MessageType.None );
                 EditorGUI.indentLevel--;
             }
         }
@@ -463,7 +473,10 @@ namespace CAS.UEditor
                 {
                     builder.Append( "    <" ).Append( dependencyName ).Append( ' ' )
                         .Append( attrName ).Append( "=\"" ).Append( dependencies[i] )
-                        .Append( "\" version=\"" ).Append( version ).Append( "\">" ).AppendLine();
+                        .Append( "\" version=\"" ).Append( version ).Append( "\"" );
+                    if (platform == BuildTarget.iOS)
+                        builder.Append( " addToAllTargets=\"true\"" );
+                    builder.Append( ">" ).AppendLine();
                     if (i == 0 && ( source.Length > 0 || contains.Length > 0 ))
                     {
                         builder.Append( "      <" ).Append( sourcesName ).Append( '>' ).AppendLine();
@@ -517,6 +530,6 @@ namespace CAS.UEditor
                 }
             }
         }
-#endregion
+        #endregion
     }
 }

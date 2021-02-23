@@ -73,6 +73,9 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern void CASURequestTracking( CASUTrackingStatusCallback callback );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUOpenDebugger();
         #endregion
 
         #region CAS Callback types

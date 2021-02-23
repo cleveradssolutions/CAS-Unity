@@ -203,6 +203,12 @@ namespace CAS.iOS
             return CASExterns.CASUGetBannerWidthInPixels( _managerPtr );
         }
 
+        public bool TryOpenDebugger()
+        {
+            CASExterns.CASUOpenDebugger();
+            return true;
+        }
+
         #region Callback methods
         private static CASMediationManager IntPtrToManagerClient( IntPtr managerClient )
         {

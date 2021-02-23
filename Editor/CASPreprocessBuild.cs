@@ -59,53 +59,6 @@ namespace CAS.UEditor
             if (newCASVersion != null)
                 DialogOrCancel( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", target );
 
-            string admobAppId = null;
-            if (settings.testAdMode)
-            {
-                DialogOrCancel( "CAS Mediation work in Test Ad mode.", BuildTarget.NoTarget );
-
-                if (target == BuildTarget.Android)
-                {
-                    admobAppId = Utils.androidAdmobSampleAppID;
-                }
-                else
-                {
-                    admobAppId = Utils.iosAdmobSampleAppID;
-                    try
-                    {
-                        if (File.Exists( Utils.iosResSettingsPath ))
-                            File.Delete( Utils.iosResSettingsPath );
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogException( e );
-                    }
-                }
-            }
-            else
-            {
-                if (settings.managersCount == 0)
-                    StopBuildIDNotFound( target );
-
-                for (int i = 0; i < settings.managersCount; i++)
-                {
-                    if (!string.IsNullOrEmpty( settings.GetManagerId( i ) ))
-                    {
-                        var newAppId = Utils.DownloadRemoteSettings( settings.GetManagerId( i ), Utils.preferredCountry, target );
-                        if (string.IsNullOrEmpty( admobAppId ))
-                            admobAppId = newAppId;
-                    }
-                }
-            }
-
-            if (string.IsNullOrEmpty( admobAppId ))
-                Utils.StopBuildWithMessage( "CAS server provides wrong settings for managerID " + settings.GetManagerId( 0 ) +
-                    ". Please try using a different identifier in the first place or contact support.", target );
-
-            if (admobAppId.IndexOf( '~' ) < 0)
-                Utils.StopBuildWithMessage( "CAS server provides invalid Admob App Id not match pattern ca-app-pub-0000000000000000~0000000000. " +
-                    "Please try using a different identifier in the first place or contact support.", target );
-
             var dependencyManager = DependencyManager.Create( target, Audience.Mixed, false );
             if (dependencyManager != null)
             {
@@ -139,6 +92,52 @@ namespace CAS.UEditor
                         "Please use 'Assets/CleverAdsSolutions/Settings' menu to update.", target );
             }
 
+            if (settings.bannerSize == AdSize.Banner && Utils.IsPortraitOrientation())
+            {
+                DialogOrCancel( "For portrait applications, we recommend using the adaptive banner size." +
+                        "This will allow you to get more expensive advertising.", target );
+            }
+
+            string admobAppId = null;
+            if (settings.testAdMode)
+            {
+                //DialogOrCancel( "CAS Mediation work in Test Ad mode.", BuildTarget.NoTarget );
+
+                if (target == BuildTarget.Android)
+                {
+                    admobAppId = Utils.androidAdmobSampleAppID;
+                }
+                else
+                {
+                    admobAppId = Utils.iosAdmobSampleAppID;
+                }
+            }
+            else
+            {
+                if (settings.managersCount == 0)
+                    StopBuildIDNotFound( target );
+
+                for (int i = 0; i < settings.managersCount; i++)
+                {
+                    if (!string.IsNullOrEmpty( settings.GetManagerId( i ) ))
+                    {
+                        var newAppId = Utils.DownloadRemoteSettings( settings.GetManagerId( i ), Utils.preferredCountry, target, i == 0 );
+                        if (string.IsNullOrEmpty( admobAppId ))
+                            admobAppId = newAppId;
+                    }
+                    else if (i == 0)
+                        StopBuildIDNotFound( target );
+                }
+            }
+
+            if (string.IsNullOrEmpty( admobAppId ))
+                Utils.StopBuildWithMessage( "CAS server provides wrong settings for managerID " + settings.GetManagerId( 0 ) +
+                    ". Please try using a different identifier in the first place or contact support.", target );
+
+            if (admobAppId.IndexOf( '~' ) < 0)
+                Utils.StopBuildWithMessage( "CAS server provides invalid Admob App Id not match pattern ca-app-pub-0000000000000000~0000000000. " +
+                    "Please try using a different identifier in the first place or contact support.", target );
+
             if (target == BuildTarget.Android)
             {
                 EditorUtility.DisplayProgressBar( casTitle, "Validate CAS Android Build Settings", 0.8f );
@@ -168,25 +167,6 @@ namespace CAS.UEditor
                     PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel19;
                 }
             }
-            else if (target == BuildTarget.iOS)
-            {
-                EditorUtility.DisplayProgressBar( casTitle, "Validate CAS iOS Build Settings", 0.8f );
-
-                if (!File.Exists( Utils.iosResSettingsPath ))
-                {
-                    var appIdSettings = new Utils.AdmobAppIdData();
-                    appIdSettings.admob_app_id = admobAppId;
-                    File.WriteAllText( Utils.iosResSettingsPath, JsonUtility.ToJson( appIdSettings ) );
-                    AssetDatabase.ImportAsset( Utils.iosResSettingsPath );
-                }
-            }
-
-            if (settings.bannerSize == AdSize.Banner && Utils.IsPortraitOrientation())
-            {
-                DialogOrCancel( "For portrait applications, we recommend using the adaptive banner size." +
-                        "This will allow you to get more expensive advertising.", target );
-            }
-
 #if false
             if (target == BuildTarget.Android && allowReimportDeps)
             {
