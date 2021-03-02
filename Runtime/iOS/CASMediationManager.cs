@@ -205,7 +205,7 @@ namespace CAS.iOS
 
         public bool TryOpenDebugger()
         {
-            CASExterns.CASUOpenDebugger();
+            CASExterns.CASUOpenDebugger( _managerPtr );
             return true;
         }
 

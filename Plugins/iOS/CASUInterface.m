@@ -13,7 +13,6 @@
 #if __has_include("UnityAppController.h")
 #import "UnityAppController.h"
 #endif
-#import <AppTrackingTransparency/AppTrackingTransparency.h>
 
 static NSString * CASUStringFromUTF8String(const char *bytes)
 {
@@ -126,7 +125,7 @@ void CASUValidateIntegration()
     [CAS validateIntegration];
 }
 
-void CASUOpenDebugger()
+void CASUOpenDebugger(CASUTypeManagerRef manager)
 {
 #if __has_include("UnityAppController.h")
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"CASDebugger" bundle:nil];
@@ -134,6 +133,15 @@ void CASUOpenDebugger()
         UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"DebuggerController"];
         if (vc) {
             UIViewController *root = ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;
+            
+            SEL selector = NSSelectorFromString(@"setTargetManager:");
+            
+            IMP imp = [vc methodForSelector:selector];
+            void (*func)(id, SEL) = (void *)imp;
+            func(vc, selector);
+            
+            //[vc performSelector:selector withObject:(__bridge CASUManager *)manager];
+            
             [root presentViewController:vc animated:YES completion:nil];
             return;
         }
@@ -159,23 +167,6 @@ BOOL CASUIsActiveMediationNetwork(NSInteger net)
 const char * CASUGetSDKVersion()
 {
     return cStringCopy([CAS getSDKVersion].UTF8String);
-}
-
-#pragma mark - CAS ATTrackingManager
-
-void CASURequestTracking(CASUTrackingStatusCallback callback)
-{
-    if (@available(iOS 14, *)) {
-        [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
-            if (callback) {
-                callback(status);
-            }
-        }];
-    } else {
-        if (callback) {
-            callback(3);
-        }
-    }
 }
 
 #pragma mark - CAS Manager

@@ -41,7 +41,6 @@ namespace CAS.UEditor
         internal const string gitUnityRepo = "CAS-Unity";
         internal const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
         internal const string supportURL = gitUnityRepoURL + "#support";
-        internal const string configuringPrivacyURL = gitUnityRepoURL + "#include-ios";
 
         internal const string generalDeprecateDependency = "General";
         internal const string teenDeprecateDependency = "Teen";
@@ -56,8 +55,6 @@ namespace CAS.UEditor
         internal const string androidLibManifestTemplateFile = "CASManifest.xml";
         internal const string androidLibPropTemplateFile = "CASLibProperties.txt";
         internal const string iosSKAdNetworksTemplateFile = "CASSKAdNetworks.txt";
-
-        internal const string locationUsageDefaultDescription = "Your data will be used to provide you a better and personalized ad experience.";
 
         internal const string preferredCountry = "BR"; // ISO2: US, RU ...
         #endregion

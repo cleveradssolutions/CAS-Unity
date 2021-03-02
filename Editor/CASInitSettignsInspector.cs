@@ -20,7 +20,6 @@ namespace CAS.UEditor
         private SerializedProperty interstitialIntervalProp;
         private SerializedProperty loadingModeProp;
         private SerializedProperty bannerSizeProp;
-        private SerializedProperty trackingUsageDescriptionProp;
         private SerializedProperty trackLocationEnabledProp;
         private SerializedProperty analyticsCollectionEnabledProp;
         private SerializedProperty interWhenNoRewardedAdProp;
@@ -50,7 +49,6 @@ namespace CAS.UEditor
             interstitialIntervalProp = props.FindProperty( "interstitialInterval" );
             loadingModeProp = props.FindProperty( "loadingMode" );
             bannerSizeProp = props.FindProperty( "bannerSize" );
-            trackingUsageDescriptionProp = props.FindProperty( "trackingUsageDescription" );
             trackLocationEnabledProp = props.FindProperty( "trackLocationEnabled" );
             analyticsCollectionEnabledProp = props.FindProperty( "analyticsCollectionEnabled" );
             interWhenNoRewardedAdProp = props.FindProperty( "interWhenNoRewardedAd" );
@@ -134,7 +132,7 @@ namespace CAS.UEditor
             HelpStyles.BeginBoxScope();
             EditorGUILayout.PropertyField( testAdModeProp );
             EditorGUI.BeginDisabledGroup( testAdModeProp.boolValue );
-            if(managerIdsList.count > 1)
+            if (managerIdsList.count > 1)
             {
                 var appId = managerIdsProp.GetArrayElementAtIndex( 0 ).stringValue;
                 if (!string.IsNullOrEmpty( appId ))
@@ -251,19 +249,7 @@ namespace CAS.UEditor
         {
             if (platform != BuildTarget.iOS)
                 return;
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField( "Tracking Usage Description:" );
-            if (GUILayout.Button( "Default", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-                trackingUsageDescriptionProp.stringValue = Utils.locationUsageDefaultDescription;
-            if (GUILayout.Button( "Info", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( Utils.configuringPrivacyURL );
-            EditorGUILayout.EndHorizontal();
-            EditorGUI.indentLevel++;
-            trackingUsageDescriptionProp.stringValue =
-                EditorGUILayout.TextArea( trackingUsageDescriptionProp.stringValue, HelpStyles.wordWrapTextAred );
-            EditorGUILayout.HelpBox( "NSUserTrackingUsageDescription key with a custom message describing your usage location tracking to AppTrackingTransparency.Request(). Can be empty if not using location tracking", MessageType.None );
 
-            EditorGUI.indentLevel--;
             EditorGUILayout.PropertyField( trackLocationEnabledProp );
             if (trackLocationEnabledProp.boolValue)
             {

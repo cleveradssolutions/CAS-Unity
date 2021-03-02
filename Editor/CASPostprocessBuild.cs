@@ -11,30 +11,21 @@ namespace CAS.UEditor
 {
     internal class CASPostprocessBuild
     {
-        private const string casTitle = "CAS Postprocess Build";
-
         [PostProcessBuild]
         public static void OnPostProcessBuild( BuildTarget buildTarget, string path )
         {
             if (buildTarget != BuildTarget.iOS)
                 return;
 
-            try
-            {
-                var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
+            var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
 
-                string plistPath = Path.Combine( path, "Info.plist" );
-                ConfigureInfoPlist( plistPath, casSettings );
+            string plistPath = Path.Combine( path, "Info.plist" );
+            ConfigureInfoPlist( plistPath, casSettings );
 
-                var projectPath = Path.Combine( path, "Unity-iPhone.xcodeproj/project.pbxproj" );
-                var project = ConfigureXCodeProject( path, projectPath, casSettings );
-                ApplyCrosspromoDynamicLinks( projectPath, project, casSettings );
-                Debug.Log( CASEditorUtils.logTag + "Postrocess Build done." );
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
+            var projectPath = Path.Combine( path, "Unity-iPhone.xcodeproj/project.pbxproj" );
+            var project = ConfigureXCodeProject( path, projectPath, casSettings );
+            ApplyCrosspromoDynamicLinks( projectPath, project, casSettings );
+            Debug.Log( CASEditorUtils.logTag + "Postrocess Build done." );
         }
 
 #if UNITY_2019_3_OR_NEWER
@@ -82,14 +73,10 @@ namespace CAS.UEditor
 
         private static void ConfigureInfoPlist( string plistPath, CASInitSettings casSettings )
         {
-            EditorUtility.DisplayProgressBar( casTitle, "Read iOS Info.plist", 0.3f );
             PlistDocument plist = new PlistDocument();
             plist.ReadFromFile( plistPath );
 
             #region Read Admob App ID from CAS Settings
-            EditorUtility.DisplayProgressBar( casTitle, "Write Admob App ID to Info.plist", 0.35f );
-
-
             string admobAppId = null;
             if (casSettings.testAdMode)
             {
@@ -117,14 +104,7 @@ namespace CAS.UEditor
                 plist.root.SetString( "GADApplicationIdentifier", admobAppId );
             plist.root.SetBoolean( "GADDelayAppMeasurementInit", true );
 
-            #region Write NSUserTrackingUsageDescription
-            EditorUtility.DisplayProgressBar( casTitle, "Write NSUserTrackingUsageDescription to Info.plist", 0.5f );
-            if (casSettings && !string.IsNullOrEmpty( casSettings.defaultIOSTrakingUsageDescription ))
-                plist.root.SetString( "NSUserTrackingUsageDescription", casSettings.defaultIOSTrakingUsageDescription );
-            #endregion
-
             #region Write SKAdNetworks
-            EditorUtility.DisplayProgressBar( casTitle, "Write SKAdNetworks to Info.plist", 0.5f );
             var templateFile = CASEditorUtils.GetTemplatePath( CASEditorUtils.iosSKAdNetworksTemplateFile );
             if (string.IsNullOrEmpty( templateFile ))
             {
@@ -153,7 +133,6 @@ namespace CAS.UEditor
             #endregion
 
             #region Write LSApplicationQueriesSchemes
-            EditorUtility.DisplayProgressBar( casTitle, "Write LSApplicationQueriesSchemes to Info.plist", 0.6f );
             PlistElementArray applicationQueriesSchemes;
             var applicationQueriesSchemesField = plist.root["LSApplicationQueriesSchemes"];
             if (applicationQueriesSchemesField == null)
@@ -165,13 +144,11 @@ namespace CAS.UEditor
                     applicationQueriesSchemes.AddString( scheme );
             #endregion
 
-            EditorUtility.DisplayProgressBar( casTitle, "Save Info.plist to XCode project", 0.65f );
             File.WriteAllText( plistPath, plist.WriteToString() );
         }
 
         private static PBXProject ConfigureXCodeProject( string rootPath, string projectPath, CASInitSettings casSettings )
         {
-            EditorUtility.DisplayProgressBar( casTitle, "Configure XCode project", 0.7f );
             var project = new PBXProject();
             project.ReadFromString( File.ReadAllText( projectPath ) );
 #if UNITY_2019_3_OR_NEWER
@@ -185,7 +162,6 @@ namespace CAS.UEditor
             //project.AddBuildProperty( target, "CLANG_ENABLE_MODULES", "YES" ); // InMobi required
             project.SetBuildProperty( target, "SWIFT_VERSION", "5.0" );
 
-            EditorUtility.DisplayProgressBar( casTitle, "Copy CAS Settings json to project", 0.8f );
 
             var resourcesBuildPhase = project.GetResourcesBuildPhaseByTarget( target );
             for (int i = 0; i < casSettings.managersCount; i++)
@@ -209,7 +185,6 @@ namespace CAS.UEditor
                 }
             }
 
-            EditorUtility.DisplayProgressBar( casTitle, "Save XCode project", 0.9f );
             File.WriteAllText( projectPath, project.WriteToString() );
             return project;
         }
@@ -220,13 +195,12 @@ namespace CAS.UEditor
                 return;
             try
             {
-                EditorUtility.DisplayProgressBar( casTitle, "Apply Crosspromo Dynamic Links", 0.9f );
                 var identifier = Application.identifier;
                 var productName = identifier.Substring( identifier.LastIndexOf( "." ) + 1 );
 
                 var entitlements = new ProjectCapabilityManager( projectPath, productName + ".entitlements",
 #if UNITY_2019_3_OR_NEWER
-                    project.GetUnityMainTargetGuid() );
+                    null, project.GetUnityMainTargetGuid() );
 #else
                     PBXProject.GetUnityTargetName() );
 #endif

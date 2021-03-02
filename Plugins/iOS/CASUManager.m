@@ -25,16 +25,16 @@
     self = [super init];
     if (self) {
         self.client = client;
-        
+
         self.bannerCallback = [[CASUCallback alloc] initForFullScreen:NO];
         self.bannerCallback.client = client;
         self.interstitialCallback = [[CASUCallback alloc] initForFullScreen:YES];
         self.interstitialCallback.client = client;
         self.rewardedCallback = [[CASUCallback alloc] initForFullScreen:YES];
         self.rewardedCallback.client = client;
-        
+
         [CASAnalytics setHandler:self.bannerCallback]; // Require before create manager
-        
+
         self.mediationManager =
             [CAS createWithManagerID:appID
                          enableTypes:types
@@ -51,9 +51,8 @@
                               }];
 
         bannerPositionId = 3;
-        
-        self.bannerActiveSize = [self.mediationManager getBannerSize];
 
+        self.bannerActiveSize = [self.mediationManager getBannerSize];
     }
     return self;
 }
@@ -71,7 +70,7 @@
             [_mediationManager loadInterstitial];
             break;
         case CASTypeRewarded:
-            [_mediationManager loadRewardedVideo];
+            [_mediationManager loadRewardedAd];
             break;
         default:
             break;
@@ -90,14 +89,12 @@
             [self setBannerPosition:bannerPositionId];
             break;
         case CASTypeInterstitial:
-            [_mediationManager showFromRootViewController:[self unityGLViewController]
-                                                     type:CASTypeInterstitial
-                                                 callback:_interstitialCallback];
+            [_mediationManager presentInterstitialFromRootViewController:[self unityGLViewController]
+                                                                callback:_interstitialCallback];
             break;
         case CASTypeRewarded:
-            [_mediationManager showFromRootViewController:[self unityGLViewController]
-                                                     type:CASTypeRewarded
-                                                 callback:_rewardedCallback];
+            [_mediationManager presentRewardedAdFromRootViewController:[self unityGLViewController]
+                                                              callback:_rewardedCallback];
             break;
         default:
             break;

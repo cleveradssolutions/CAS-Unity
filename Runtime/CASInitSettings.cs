@@ -25,8 +25,6 @@ namespace CAS
         [SerializeField]
         private bool debugMode;
         [SerializeField]
-        private string trackingUsageDescription;
-        [SerializeField]
         private bool trackLocationEnabled;
         [SerializeField]
         private bool analyticsCollectionEnabled;
@@ -162,8 +160,6 @@ namespace CAS
         public bool defaultIOSTrackLocationEnabled { get { return trackLocationEnabled; } }
         public bool defaultAnalyticsCollectionEnabled { get { return analyticsCollectionEnabled; } }
         public bool defaultInterstitialWhenNoRewardedAd { get { return interWhenNoRewardedAd; } }
-
-        public string defaultIOSTrakingUsageDescription { get { return trackingUsageDescription; } }
 
         public int managersCount { get { return managerIds == null ? 0 : managerIds.Length; } }
         public string GetManagerId( int index )

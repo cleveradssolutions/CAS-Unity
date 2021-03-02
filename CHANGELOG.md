@@ -1,6 +1,21 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
-## [1.9.10] - 2021-02-15
+## [2.0.0] - 2021-03-02
+### Dependencies
+- [Android] Wraps [2.0.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.0.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+- External Dependency Manager for Unity [1.2.164](https://github.com/googlesamples/unity-jar-resolver/releases/tag/v1.2.164)
+### Features
+- Added AdObject components to implement ads by unity inspector whit out custom scripts.
+- Added Analytics collection toggle to CAS Settings window.
+### Changes 
+- [Android] Banner ad is now rendered only in the safe area of the screen.  
+> Be careful, this change may offset the banner ad by the size of cutout screen.
+- [Android] StartApp removed from [Families ads program](https://support.google.com/googleplay/android-developer/answer/9283445) integration with FamiliesAds solution.
+- [Android] MoPub is moving from beta to integration with NotChildrenAds solution.
+- [iSO] Removed [App Tracking Transparency request](https://developer.apple.com/documentation/apptrackingtransparency) and `AppTrackingTransparency` dependency from CAS Unity plguin.  
+> You can still use this functionality in the new plugin [CAS Unity Consent](https://github.com/cleveradssolutions/CAS-Unity-Consent).
+- [iOS] MoPub is moving from beta to integration with Recomended solution.
 ### Bug Fixes
 - [iOS] Compilation error on Unity 2019+.
 
