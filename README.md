@@ -59,7 +59,7 @@ Modify `Packages/manifest.json`  to the following form:
   }
 ],
 "dependencies": {
-"com.cleversolutions.ads.unity": "https://github.com/cleveradssolutions/CAS-Unity.git#1.9.10"
+"com.cleversolutions.ads.unity": "https://github.com/cleveradssolutions/CAS-Unity.git#2.0.1"
 }
 }
 ```
@@ -111,10 +111,12 @@ Banner, Interstitial, Rewarded Video - [Home](https://www.superawesome.com) - [P
 Banner, Interstitial, Rewarded Video  - [Home](https://www.facebook.com/business/marketing/audience-network) - [Privacy Policy](https://developers.facebook.com/docs/audience-network/policy/)
 - Yandex Ads  
 Banner, Interstitial, ~~Rewarded Video~~ - [Home](https://yandex.com/dev/mobile-ads/) - [Privacy Policy](https://yandex.com/legal/mobileads_sdk_agreement/) 
-#### Dependencies of Closed Beta third party partners:
-> :warning:  Next dependencies in closed beta and available upon invite only. If you would like to be considered for the beta, please contact Support.
 - MoPub 
 Banner, Interstitial, Rewarded Video - [Home](https://www.mopub.com/)- [Privacy Policy](https://www.mopub.com/en/legal/privacy)
+#### Dependencies of Closed Beta third party partners:
+> :warning:  Next dependencies in closed beta and available upon invite only. If you would like to be considered for the beta, please contact Support.
+- Tapjoy  
+~~Banner~~, Interstitial, Rewarded Video - [Home](https://www.tapjoy.com)- [Privacy Policy](https://www.tapjoy.com/legal/players/privacy-policy/)
 - Verizon Media  
 Banner, Interstitial, Rewarded Video - [Home](https://www.verizonmedia.com/advertising/solutions#/mobile)- [Privacy Policy](https://www.verizonmedia.com/policies/us/en/verizonmedia/privacy/)
 - MyTarget  

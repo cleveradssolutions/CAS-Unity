@@ -1,5 +1,18 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.0.1] - 2021-03-09
+### Dependencies
+- [Android] Wraps [2.0.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.0.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- [iOS] Update SKAdNetwork ID's.
+### Bug Fixes
+- [iOS] Default CAS settings file in XCode.
+### Added new optional third party mediation
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+- [Tapjoy](https://www.tapjoy.com) - 12.7.1
+> Please contact us if you intend to use any additional third party mediation.
+
 ## [2.0.0] - 2021-03-02
 ### Dependencies
 - [Android] Wraps [2.0.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
