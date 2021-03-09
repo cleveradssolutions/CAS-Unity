@@ -372,6 +372,7 @@ namespace CAS.Unity
             {
                 float width = Screen.width;
                 float height = Screen.height;
+                GUI.enabled = ( loadedTypes & AdFlags.Rewarded ) == AdFlags.Rewarded;
                 if (GUI.Button( new Rect( 0, 0, width, height * 0.5f ), "Close\nCAS Rewarded Video Ad", _btnStyle ))
                 {
                     visibleTypes &= ~AdFlags.Rewarded;
@@ -385,14 +386,22 @@ namespace CAS.Unity
                 {
                     CASFactory.ExecuteEvent( OnRewardedAdClicked );
                     CASFactory.ExecuteEvent( OnRewardedAdCompleted );
-                    visibleTypes &= ~AdFlags.Rewarded;
                     loadedTypes &= ~AdFlags.Rewarded;
                     CASFactory.ExecuteEvent( OnFailedToLoadAd, ( int )AdType.Rewarded, "Please Load new Ad" );
                     if (_settings.loadingMode != LoadingManagerMode.Manual)
                         LoadAd( AdType.Rewarded );
-                    CASFactory.ExecuteEvent( OnRewardedAdClosed );
+
+                    // Delayed OnAdClosed after OnAdComplete to simulate real behaviour.
+                    Invoke( "DelayedCloseRewardedAd", UnityEngine.Random.Range(0.3f, 1.0f) );
                 }
+                GUI.enabled = true;
             }
+        }
+
+        private void DelayedCloseRewardedAd()
+        {
+            visibleTypes &= ~AdFlags.Rewarded;
+            CASFactory.ExecuteEvent( OnRewardedAdClosed );
         }
         #endregion
 

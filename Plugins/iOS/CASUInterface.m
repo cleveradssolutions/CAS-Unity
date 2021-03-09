@@ -128,26 +128,29 @@ void CASUValidateIntegration()
 void CASUOpenDebugger(CASUTypeManagerRef manager)
 {
 #if __has_include("UnityAppController.h")
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"CASDebugger" bundle:nil];
+    UIStoryboard *storyboard =
+        [UIStoryboard storyboardWithName:@"CASDebugger"
+                                  bundle:[NSBundle bundleForClass:[CASUManager class]]];
     if (storyboard) {
         UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"DebuggerController"];
         if (vc) {
             UIViewController *root = ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;
             
             SEL selector = NSSelectorFromString(@"setTargetManager:");
+            if (![vc respondsToSelector:selector]){
+                NSLog(@"[CAS] Framework bridge cant connect to CASDebugger");
+                return;
+            }
             
-            IMP imp = [vc methodForSelector:selector];
-            void (*func)(id, SEL) = (void *)imp;
-            func(vc, selector);
-            
-            //[vc performSelector:selector withObject:(__bridge CASUManager *)manager];
-            
+            CASUManager *internalManager = (__bridge CASUManager *)manager;
+            [vc performSelector:selector withObject:[internalManager mediationManager]];
+            vc.modalPresentationStyle = UIModalPresentationFullScreen;
             [root presentViewController:vc animated:YES completion:nil];
             return;
         }
     }
 #endif
-    NSLog(@"[CAS] Framework bridge cant find CASDebugger.h");
+    NSLog(@"[CAS] Framework bridge cant find CASDebugger");
 }
 
 const char * CASUGetActiveMediationPattern()

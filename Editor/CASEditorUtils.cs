@@ -104,7 +104,7 @@ namespace CAS.UEditor
                 return "";
 
             string root = platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
-            return root + managerId.Length + managerId[managerId.Length - 1] + ".json";
+            return root + managerId.Length.ToString() + managerId[managerId.Length - 1] + ".json";
         }
 
         public static CASInitSettings GetSettingsAsset( BuildTarget platform, bool create = true )
