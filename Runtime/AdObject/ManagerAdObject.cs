@@ -29,8 +29,9 @@ namespace CAS.AdObject
         }
     }
 
-    [AddComponentMenu( "CleverAdsSolutions/Initialzie Manager Ad Object" )]
+    [AddComponentMenu( "CleverAdsSolutions/Initialize Manager Ad Object" )]
     [DisallowMultipleComponent]
+    [HelpURL( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Manager-Ad-object" )]
     public class ManagerAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
@@ -42,9 +43,9 @@ namespace CAS.AdObject
         public void Initialize()
         {
             MobileAds.BuildManager()
-                .WithManagerIdAtIndex( managerId.index )
-                .WithInitListener( OnInitializeResult )
-                .Initialize();
+               .WithManagerIdAtIndex( managerId.index )
+               .WithInitListener( OnInitializeResult )
+               .Initialize();
         }
 
         private void Start()

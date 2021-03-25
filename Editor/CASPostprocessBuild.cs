@@ -138,7 +138,7 @@ namespace CAS.UEditor
 #else
             var target = project.TargetGuidByName( PBXProject.GetUnityTargetName() );
 #endif
-            project.SetBuildProperty( target, "ENABLE_BITCODE", "No" );
+            //project.SetBuildProperty( target, "ENABLE_BITCODE", "No" );
             project.AddBuildProperty( target, "OTHER_LDFLAGS", "-ObjC" );
             //project.AddBuildProperty( target, "OTHER_LDFLAGS", "-lxml2 -ObjC -fobjc-arc" );
             //project.AddBuildProperty( target, "CLANG_ENABLE_MODULES", "YES" ); // InMobi required

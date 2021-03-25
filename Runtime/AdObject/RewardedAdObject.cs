@@ -6,6 +6,7 @@ namespace CAS.AdObject
 {
     [AddComponentMenu( "CleverAdsSolutions/Rewarded Ad Object" )]
     [DisallowMultipleComponent]
+    [HelpURL( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Rewarded-Ad-object" )]
     public sealed class RewardedAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;

@@ -205,17 +205,70 @@ namespace CAS.UEditor
             EditorGUILayout.BeginHorizontal( EditorStyles.toolbar );
             if (GUILayout.Button( "Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
                 Application.OpenURL( gitRootURL + gitRepoName + "#support" );
-            if (GUILayout.Button( "GitHub", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( gitRootURL + gitRepoName );
+            if (GUILayout.Button( "Wiki", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
+                Application.OpenURL( gitRootURL + gitRepoName + "/wiki" );
             if (GUILayout.Button( "CleverAdsSolutions.com", EditorStyles.toolbarButton ))
                 Application.OpenURL( websiteURL );
             EditorGUILayout.EndHorizontal();
         }
 
+        public static void OnHeaderGUI( string gitRepoName, bool allowedPackageUpdate, string currVersion, ref string newCASVersion )
+        {
+            EditorGUILayout.BeginHorizontal( EditorStyles.toolbar );
+            if (GUILayout.Button( HelpStyles.helpIconContent, EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
+                Application.OpenURL( gitRootURL + gitRepoName + "/wiki" );
+
+            if (GUILayout.Button( gitRepoName + " " + currVersion, EditorStyles.toolbarButton ))
+                Application.OpenURL( gitRootURL + gitRepoName + "/releases" );
+            if (GUILayout.Button( "Check for Updates", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
+            {
+                newCASVersion = GetNewVersionOrNull( gitRepoName, currVersion, true );
+                string message = string.IsNullOrEmpty( newCASVersion ) ? "You are using the latest version."
+                    : "There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.";
+                EditorUtility.DisplayDialog( "Check for Updates", message, "OK" );
+            }
+
+            if (GUILayout.Button( "Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
+                Application.OpenURL( gitRootURL + gitRepoName + "#support" );
+            EditorGUILayout.EndHorizontal();
+
+            if (!string.IsNullOrEmpty( newCASVersion ))
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.HelpBox( "There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.", MessageType.Warning );
+
+#if UNITY_2018_4_OR_NEWER
+                if (allowedPackageUpdate && GUILayout.Button( "Update", GUILayout.ExpandHeight( true ), GUILayout.ExpandWidth( false ) ))
+                {
+                    var request = UnityEditor.PackageManager.Client.Add( gitRootURL + gitRepoName + ".git#" + newCASVersion );
+                    try
+                    {
+                        while (!request.IsCompleted)
+                        {
+                            if (EditorUtility.DisplayCancelableProgressBar(
+                                "Update Package Manager dependency", gitRepoName + " " + newCASVersion, 0.5f ))
+                                break;
+                        }
+                        if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
+                            Debug.Log( "Package Manager: Update " + request.Result.displayName );
+                        else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
+                            Debug.LogError( request.Error.message );
+                    }
+                    finally
+                    {
+                        EditorUtility.ClearProgressBar();
+                    }
+                }
+#endif
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+
         public static void AboutRepoGUI( string gitRepoName, bool allowedPackageUpdate, string currVersion, ref string newCASVersion )
         {
             EditorGUILayout.BeginHorizontal();
-            GUILayout.Label( gitRepoName + " version: " + currVersion );
+            GUILayout.Label( gitRepoName, EditorStyles.boldLabel, GUILayout.ExpandWidth( false ) );
+            GUILayout.Label( currVersion );
             if (GUILayout.Button( "Check for Updates", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
             {
                 newCASVersion = GetNewVersionOrNull( gitRepoName, currVersion, true );
@@ -650,5 +703,56 @@ namespace CAS.UEditor
             }
         }
         #endregion
+    }
+
+    public static class HelpStyles
+    {
+        public static GUIStyle labelStyle;
+        public static GUIStyle wordWrapTextAred;
+        public static GUIStyle largeTitleStyle;
+        private static GUIStyle boxScopeStyle;
+
+        public static GUIContent helpIconContent;
+        public static GUIContent errorIconContent;
+        private static GUIContent tempContent;
+
+        static HelpStyles()
+        {
+            labelStyle = new GUIStyle( "AssetLabel" );
+            labelStyle.fontSize = 9;
+            labelStyle.fixedHeight = 10;
+            labelStyle.padding = new RectOffset( 4, 3, 0, 0 );
+            boxScopeStyle = new GUIStyle( EditorStyles.helpBox );
+            boxScopeStyle.padding = new RectOffset( 6, 6, 6, 6 );
+            wordWrapTextAred = new GUIStyle( EditorStyles.textArea );
+            wordWrapTextAred.wordWrap = true;
+            errorIconContent = EditorGUIUtility.IconContent( "d_console.erroricon.sml" );
+            errorIconContent = new GUIContent( string.Empty, errorIconContent.image,
+                "Remove dependency.\nThe dependency cannot be used in current configuration." );
+            helpIconContent = EditorGUIUtility.IconContent( "_Help" );
+            helpIconContent = new GUIContent( string.Empty, helpIconContent.image,
+                "Open home page of the mediation network." );
+            tempContent = new GUIContent();
+            largeTitleStyle = new GUIStyle( EditorStyles.boldLabel );
+            largeTitleStyle.fontSize = 18;
+        }
+
+        public static void BeginBoxScope()
+        {
+            EditorGUILayout.BeginVertical( boxScopeStyle );
+        }
+
+        public static void EndBoxScope()
+        {
+            EditorGUILayout.EndVertical();
+        }
+
+        public static GUIContent GetContent( string text, Texture image, string tooltip = "" )
+        {
+            tempContent.text = text;
+            tempContent.image = image;
+            tempContent.tooltip = tooltip;
+            return tempContent;
+        }
     }
 }

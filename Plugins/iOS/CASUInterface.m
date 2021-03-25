@@ -77,17 +77,17 @@ void CASUUpdateCCPAWithStatus(NSInteger doNotSell)
 
 void CASUSetTaggedWithAudience(NSInteger audience)
 {
-    [[CAS settings] setTaggedWithAudience:(CASAudience)audience ];
+    [[CAS settings] setTaggedWithAudience:(CASAudience)audience];
 }
 
 void CASUSetDebugMode(BOOL mode)
 {
-    [[CAS settings] setDebugMode:mode ];
+    [[CAS settings] setDebugMode:mode];
 }
 
 void CASUSetMuteAdSoundsTo(BOOL muted)
 {
-    [[CAS settings] setMuteAdSoundsTo:muted ];
+    [[CAS settings] setMuteAdSoundsTo:muted];
 }
 
 void CASUSetLoadingWithMode(NSInteger mode)
@@ -135,13 +135,13 @@ void CASUOpenDebugger(CASUTypeManagerRef manager)
         UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"DebuggerController"];
         if (vc) {
             UIViewController *root = ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;
-            
+
             SEL selector = NSSelectorFromString(@"setTargetManager:");
-            if (![vc respondsToSelector:selector]){
+            if (![vc respondsToSelector:selector]) {
                 NSLog(@"[CAS] Framework bridge cant connect to CASDebugger");
                 return;
             }
-            
+
             CASUManager *internalManager = (__bridge CASUManager *)manager;
             [vc performSelector:selector withObject:[internalManager mediationManager]];
             vc.modalPresentationStyle = UIModalPresentationFullScreen;

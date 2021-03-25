@@ -8,77 +8,6 @@ using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
 {
-
-    public static class HelpStyles
-    {
-        private static GUIStyle labelStyle;
-        private static GUIStyle boxScopeStyle;
-        public static GUIStyle wordWrapTextAred;
-
-        public static GUIContent helpIconContent;
-        public static GUIContent errorIconContent;
-        private static GUIContent tempContent;
-
-
-        static HelpStyles()
-        {
-            labelStyle = new GUIStyle( "AssetLabel" );
-            labelStyle.fontSize = 9;
-            labelStyle.fixedHeight = 10;
-            labelStyle.padding = new RectOffset( 4, 3, 0, 0 );
-            boxScopeStyle = new GUIStyle( EditorStyles.helpBox );
-            boxScopeStyle.padding = new RectOffset( 6, 6, 6, 6 );
-            wordWrapTextAred = new GUIStyle( EditorStyles.textArea );
-            wordWrapTextAred.wordWrap = true;
-
-            errorIconContent = EditorGUIUtility.IconContent( "d_console.erroricon.sml" );
-            helpIconContent = EditorGUIUtility.IconContent( "_Help" );
-            tempContent = new GUIContent();
-        }
-
-        public static void OnLabelGUI( Dependency.Label label )
-        {
-            if (label == Dependency.Label.None)
-                return;
-            string title = "";
-            string tooltip = "";
-            if (( label & Dependency.Label.Banner ) == Dependency.Label.Banner)
-            {
-                title += "b ";
-                tooltip += "'b' - Support Banner Ad\n";
-            }
-            if (( label & Dependency.Label.Inter ) == Dependency.Label.Inter)
-            {
-                title += "i ";
-                tooltip += "'i' - Support Interstitial Ad\n";
-            }
-            if (( label & Dependency.Label.Reward ) == Dependency.Label.Reward)
-            {
-                title += "r ";
-                tooltip += "'r' - Support Rewarded Ad\n";
-            }
-            if (( label & Dependency.Label.Beta ) == Dependency.Label.Beta)
-            {
-                title += "beta";
-                tooltip += "'beta' - Dependencies in closed beta and available upon invite only. " +
-                    "If you would like to be considered for the beta, please contact Support.";
-            }
-            tempContent.text = title;
-            tempContent.tooltip = tooltip;
-            GUILayout.Label( tempContent, labelStyle );
-        }
-
-        public static void BeginBoxScope()
-        {
-            EditorGUILayout.BeginVertical( boxScopeStyle );
-        }
-
-        public static void EndBoxScope()
-        {
-            EditorGUILayout.EndVertical();
-        }
-    }
-
     public partial class DependencyManager
     {
         #region Internal implementation
@@ -154,6 +83,37 @@ namespace CAS.UEditor
             EditorGUILayout.EndHorizontal();
         }
 
+        private void CheckDependencyUpdates( BuildTarget platform )
+        {
+            bool updatesFound = false;
+            for (int i = 0; !updatesFound && i < simple.Length; i++)
+                updatesFound = simple[i].isNewer;
+
+            for (int i = 0; !updatesFound && i < advanced.Length; i++)
+                updatesFound = advanced[i].isNewer;
+
+            if (updatesFound)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.HelpBox( "Found one or more updates for native dependencies.", MessageType.Info );
+                if (GUILayout.Button( "Update all", GUILayout.ExpandHeight( true ) ))
+                {
+                    for (int i = 0; i < simple.Length; i++)
+                    {
+                        if (simple[i].isNewer)
+                            simple[i].ActivateDependencies( platform, this );
+                    }
+
+                    for (int i = 0; i < advanced.Length; i++)
+                    {
+                        if (advanced[i].isNewer)
+                            advanced[i].ActivateDependencies( platform, this );
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+
         internal void OnGUI( BuildTarget platform )
         {
             if (!installedAny)
@@ -161,7 +121,10 @@ namespace CAS.UEditor
                     "Please use the following options to integrate solutions or any SDK separately.",
                     MessageType.Warning );
 
+            CheckDependencyUpdates( platform );
+
             columnWidth = GUILayout.MaxWidth( EditorGUIUtility.currentViewWidth * 0.15f );
+
 
             if (simple.Length > 0)
             {
@@ -189,19 +152,22 @@ namespace CAS.UEditor
                 }
                 else
                 {
-                    advancedFoldout = GUILayout.Toggle( advancedFoldout, "Advanced Integration", EditorStyles.foldout );
+                    int installed = 0;
+
                     for (int i = 0; i < advanced.Length; i++)
                     {
-                        if (advanced[i].inBan && advanced[i].installedVersion.Length > 0)
+                        if (advanced[i].installedVersion.Length > 0)
                         {
-                            advancedFoldout = true;
-                            Debug.LogError( Utils.logTag + advanced[i].name +
-                                " Dependencies found that are not valid for the applications of the selected audience. " +
-                                "Please use 'Assets/CleverAdsSolutions/" + platform.ToString() +
-                                " Settings' menu to remove dependencies." );
-                            break;
+                            installed++;
+                            if (advanced[i].inBan && Event.current.type == EventType.Repaint)
+                            {
+                                advancedFoldout = true;
+                                Debug.LogError( Utils.logTag + advanced[i].name +
+                                    " Dependencies found that are not valid for the applications of the selected audience." );
+                            }
                         }
                     }
+                    advancedFoldout = GUILayout.Toggle( advancedFoldout, "Advanced Integration (" + installed + ")", EditorStyles.foldout );
                 }
                 HelpStyles.EndBoxScope();
             }
@@ -217,14 +183,12 @@ namespace CAS.UEditor
                 HelpStyles.EndBoxScope();
             }
 
-            EditorGUILayout.HelpBox( "Please provide us with a list of integrated dependencies " +
-                "so that we can make the correct settings.", MessageType.Info );
             if (platform == BuildTarget.Android)
             {
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
                     "Please use Android Resolver after the change complete.", MessageType.Info );
-                if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.Height( 40 ) ))
+                if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.ExpandHeight( true ) ))
                 {
 #if UNITY_ANDROID
                     var succses = Utils.TryResolveAndroidDependencies();
@@ -312,7 +276,9 @@ namespace CAS.UEditor
                     installedVersion = dependency.Substring( beginIndex, dependency.IndexOf( '\"', beginIndex ) - beginIndex );
                     try
                     {
-                        isNewer = new Version( installedVersion ) < new Version( version );
+                        var currVer = new Version( installedVersion );
+                        var targetVer = new Version( version );
+                        isNewer = currVer < targetVer;
                     }
                     catch
                     {
@@ -350,6 +316,41 @@ namespace CAS.UEditor
                 inBan = filter == -1 || filter > 1;
         }
 
+        private void OnLabelGUI( Label label )
+        {
+            if (label == Label.None)
+                return;
+            string title = "";
+            string tooltip = "";
+            if (( label & Label.Banner ) == Label.Banner)
+            {
+                title += "b ";
+                tooltip += "'b' - Support Banner Ad\n";
+            }
+            if (( label & Label.Inter ) == Label.Inter)
+            {
+                title += "i ";
+                tooltip += "'i' - Support Interstitial Ad\n";
+            }
+            if (( label & Label.Reward ) == Label.Reward)
+            {
+                title += "r ";
+                tooltip += "'r' - Support Rewarded Ad\n";
+            }
+            if (( label & Label.Beta ) == Label.Beta)
+            {
+                title += "beta";
+                tooltip += "'beta' - Dependencies in closed beta and available upon invite only. " +
+                    "If you would like to be considered for the beta, please contact Support.";
+            }
+            if (( label & Label.Obsolete ) == Label.Obsolete)
+            {
+                title += "obsolete";
+                tooltip += "'obsolete' - The mediation of the network is considered obsolete and not recommended for install.";
+            }
+            GUILayout.Label( HelpStyles.GetContent( title, null, tooltip ), HelpStyles.labelStyle );
+        }
+
         internal void OnGUI( DependencyManager mediation, BuildTarget platform )
         {
             var dividerRect = EditorGUILayout.GetControlRect( GUILayout.Height( 1 ) );
@@ -367,7 +368,7 @@ namespace CAS.UEditor
                 Application.OpenURL( url );
 
             GUILayout.Label( name, GUILayout.ExpandWidth( false ) );
-            HelpStyles.OnLabelGUI( labels );
+            OnLabelGUI( labels );
             GUILayout.FlexibleSpace();
 
             if (installed)
@@ -417,7 +418,7 @@ namespace CAS.UEditor
             }
         }
 
-        private void DisableDependencies( BuildTarget platform, DependencyManager mediation )
+        public void DisableDependencies( BuildTarget platform, DependencyManager mediation )
         {
             var destination = Utils.GetDependencyPath( name, platform );
             if (File.Exists( destination ))
@@ -428,7 +429,7 @@ namespace CAS.UEditor
             }
         }
 
-        private void ActivateDependencies( BuildTarget platform, DependencyManager mediation )
+        public void ActivateDependencies( BuildTarget platform, DependencyManager mediation )
         {
             if (dependencies.Length == 0)
             {

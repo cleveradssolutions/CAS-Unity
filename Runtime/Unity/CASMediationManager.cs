@@ -1,5 +1,6 @@
 ﻿#if UNITY_EDITOR || TARGET_OS_SIMULATOR
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CAS.Unity
@@ -9,6 +10,8 @@ namespace CAS.Unity
         public AdFlags enabledTypes;
         public AdFlags loadedTypes = AdFlags.None;
         public AdFlags visibleTypes = AdFlags.None;
+
+        private List<Action> eventsQueue = new List<Action>();
 
         private bool _emulateTabletScreen = false;
         private bool _bannerRequired = false;
@@ -105,7 +108,7 @@ namespace CAS.Unity
         public void HideBanner()
         {
             _bannerRequired = false;
-            EventExecutor.Add( CallHideBanner );
+            eventsQueue.Add( CallHideBanner );
         }
 
         public bool IsEnabledAd( AdType adType )
@@ -152,11 +155,11 @@ namespace CAS.Unity
                 {
                     enabledTypes |= AdFlags.Banner;
                     if (_bannerRequired)
-                        EventExecutor.Add( CallShowBanner );
+                        eventsQueue.Add( CallShowBanner );
                 }
                 else
                 {
-                    EventExecutor.Add( CallHideBanner );
+                    eventsQueue.Add( CallHideBanner );
                     enabledTypes &= ~AdFlags.Banner;
                 }
             }
@@ -175,13 +178,13 @@ namespace CAS.Unity
             {
                 case AdType.Banner:
                     _bannerRequired = true;
-                    EventExecutor.Add( CallShowBanner );
+                    eventsQueue.Add( CallShowBanner );
                     break;
                 case AdType.Interstitial:
-                    EventExecutor.Add( CallShowInterstitial );
+                    eventsQueue.Add( CallShowInterstitial );
                     break;
                 case AdType.Rewarded:
-                    EventExecutor.Add( CallShowRewarded );
+                    eventsQueue.Add( CallShowRewarded );
                     break;
             }
         }
@@ -209,7 +212,7 @@ namespace CAS.Unity
             if (( visibleTypes & AdFlags.Banner ) == AdFlags.Banner)
             {
                 visibleTypes &= ~AdFlags.Banner;
-                CASFactory.ExecuteEvent( OnBannerAdHidden );
+                eventsQueue.Add( OnBannerAdHidden );
             }
         }
 
@@ -217,47 +220,84 @@ namespace CAS.Unity
         {
             if (( enabledTypes & AdFlags.Banner ) != AdFlags.Banner)
             {
-                CASFactory.ExecuteEvent( OnBannerAdFailedToShow, "Manager is disabled!" );
+                eventsQueue.Add( () =>
+                {
+                    if (OnBannerAdFailedToShow != null)
+                        OnBannerAdFailedToShow( "Manager is disabled!" );
+                } );
             }
             else if (( loadedTypes & AdFlags.Banner ) != AdFlags.Banner)
             {
-                CASFactory.ExecuteEvent( OnBannerAdFailedToShow, "NoFill" );
+                eventsQueue.Add( () =>
+                {
+                    if (OnBannerAdFailedToShow != null)
+                        OnBannerAdFailedToShow( "No Fill" );
+                } );
             }
             else
             {
                 visibleTypes |= AdFlags.Banner;
-                CASFactory.ExecuteEvent( OnBannerAdShown );
+                eventsQueue.Add( OnBannerAdShown );
             }
         }
 
         private void CallShowInterstitial()
         {
             if (isFullscreenAdVisible)
-                CASFactory.ExecuteEvent( OnInterstitialAdFailedToShow, "Ad already displayed." );
+                eventsQueue.Add( () =>
+                {
+                    if (OnInterstitialAdFailedToShow != null)
+                        OnInterstitialAdFailedToShow( "Ad already displayed." );
+                } );
             else if (( enabledTypes & AdFlags.Interstitial ) != AdFlags.Interstitial)
-                CASFactory.ExecuteEvent( OnInterstitialAdFailedToShow, "Manager is disabled!" );
+                eventsQueue.Add( () =>
+                {
+                    if (OnInterstitialAdFailedToShow != null)
+                        OnInterstitialAdFailedToShow( "Manager is disabled!" );
+                } );
             else if (_settings.lastInterImpressionTimestamp + MobileAds.settings.interstitialInterval > Time.time)
-                CASFactory.ExecuteEvent( OnInterstitialAdFailedToShow,
-                    "The interval between impressions Ad has not yet passed." );
+                eventsQueue.Add( () =>
+                {
+                    if (OnInterstitialAdFailedToShow != null)
+                        OnInterstitialAdFailedToShow( "The interval between impressions Ad has not yet passed." );
+                } );
             else if (( loadedTypes & AdFlags.Interstitial ) != AdFlags.Interstitial)
-                CASFactory.ExecuteEvent( OnInterstitialAdFailedToShow, "NoFill" );
+                eventsQueue.Add( () =>
+                {
+                    if (OnInterstitialAdFailedToShow != null)
+                        OnInterstitialAdFailedToShow( "No Fill" );
+                } );
             else
             {
                 visibleTypes |= AdFlags.Interstitial;
-                CASFactory.ExecuteEvent( OnInterstitialAdShown );
+                eventsQueue.Add( OnInterstitialAdShown );
             }
         }
 
         private void CallShowRewarded()
         {
             if (isFullscreenAdVisible)
-                CASFactory.ExecuteEvent( OnRewardedAdFailedToShow, "Ad already displayed." );
+                eventsQueue.Add( () =>
+                {
+                    if (OnRewardedAdFailedToShow != null)
+                        OnRewardedAdFailedToShow( "Ad already displayed." );
+                } );
             else if (( enabledTypes & AdFlags.Rewarded ) != AdFlags.Rewarded)
-                CASFactory.ExecuteEvent( OnRewardedAdFailedToShow, "Manager is disabled!" );
+                eventsQueue.Add( () =>
+                {
+                    if (OnRewardedAdFailedToShow != null)
+                        OnRewardedAdFailedToShow( "Manager is disabled!" );
+                } );
+            else if (( loadedTypes & AdFlags.Rewarded ) != AdFlags.Rewarded)
+                eventsQueue.Add( () =>
+                {
+                    if (OnRewardedAdFailedToShow != null)
+                        OnRewardedAdFailedToShow( "No Fill" );
+                } );
             else
             {
                 visibleTypes |= AdFlags.Rewarded;
-                CASFactory.ExecuteEvent( OnRewardedAdShown );
+                eventsQueue.Add( OnRewardedAdShown );
             }
         }
         #endregion
@@ -271,7 +311,31 @@ namespace CAS.Unity
                 LoadAd( AdType.Interstitial );
                 LoadAd( AdType.Rewarded );
             }
-            CASFactory.ExecuteEvent( _initCompleteAction, true, null );
+            eventsQueue.Add( () =>
+            {
+                if (_initCompleteAction != null)
+                    _initCompleteAction( true, null );
+            } );
+        }
+
+        public void Update()
+        {
+            if (eventsQueue.Count == 0)
+                return;
+            for (int i = 0; i < eventsQueue.Count; i++)
+            {
+                try
+                {
+                    var action = eventsQueue[i];
+                    if (action != null)
+                        action.Invoke();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException( e );
+                }
+            }
+            eventsQueue.Clear();
         }
 
         public void OnGUI()
@@ -295,7 +359,7 @@ namespace CAS.Unity
 
                 rect.height *= 0.65f;
                 if (GUI.Button( rect, "CAS " + bannerSize.ToString() + " Ad", _btnStyle ))
-                    CASFactory.ExecuteEvent( OnBannerAdClicked );
+                    eventsQueue.Add( OnBannerAdClicked );
 
                 rect.y += rect.height;
                 rect.height = sizePX.y * 0.35f;
@@ -354,14 +418,18 @@ namespace CAS.Unity
             {
                 if (GUI.Button( new Rect( 0, 0, Screen.width, Screen.height ), "Close\n\nCAS Interstitial Ad", _btnStyle ))
                 {
-                    CASFactory.ExecuteEvent( OnInterstitialAdClicked );
+                    eventsQueue.Add( OnInterstitialAdClicked );
                     _settings.lastInterImpressionTimestamp = Time.time;
                     visibleTypes &= ~AdFlags.Interstitial;
                     loadedTypes &= ~AdFlags.Interstitial;
-                    CASFactory.ExecuteEvent( OnFailedToLoadAd, ( int )AdType.Interstitial, "Please Load new Ad" );
+                    eventsQueue.Add( () =>
+                    {
+                        if (OnFailedToLoadAd != null)
+                            OnFailedToLoadAd( AdType.Interstitial, "Please Load new Ad" );
+                    } );
                     if (_settings.loadingMode != LoadingManagerMode.Manual)
                         LoadAd( AdType.Interstitial );
-                    CASFactory.ExecuteEvent( OnInterstitialAdClosed );
+                    eventsQueue.Add( OnInterstitialAdClosed );
                 }
             }
         }
@@ -373,26 +441,32 @@ namespace CAS.Unity
                 float width = Screen.width;
                 float height = Screen.height;
                 GUI.enabled = ( loadedTypes & AdFlags.Rewarded ) == AdFlags.Rewarded;
-                if (GUI.Button( new Rect( 0, 0, width, height * 0.5f ), "Close\nCAS Rewarded Video Ad", _btnStyle ))
+                bool isClosed = GUI.Button( new Rect( 0, 0, width, height * 0.5f ),
+                    "Close\nCAS Rewarded Video Ad", _btnStyle );
+                bool isCompleted = GUI.Button( new Rect( 0, height * 0.5f, width, height * 0.5f ),
+                    "Complete\nCAS Rewarded Video Ad", _btnStyle );
+                if (isClosed || isCompleted)
                 {
-                    visibleTypes &= ~AdFlags.Rewarded;
                     loadedTypes &= ~AdFlags.Rewarded;
-                    CASFactory.ExecuteEvent( OnFailedToLoadAd, ( int )AdType.Rewarded, "Please Load new Ad" );
+                    eventsQueue.Add( () =>
+                    {
+                        if (OnFailedToLoadAd != null)
+                            OnFailedToLoadAd( AdType.Rewarded, "Please Load new Ad" );
+                    } );
                     if (_settings.loadingMode != LoadingManagerMode.Manual)
                         LoadAd( AdType.Rewarded );
-                    CASFactory.ExecuteEvent( OnRewardedAdClosed );
-                }
-                if (GUI.Button( new Rect( 0, height * 0.5f, width, height * 0.5f ), "Complete\nCAS Rewarded Video Ad", _btnStyle ))
-                {
-                    CASFactory.ExecuteEvent( OnRewardedAdClicked );
-                    CASFactory.ExecuteEvent( OnRewardedAdCompleted );
-                    loadedTypes &= ~AdFlags.Rewarded;
-                    CASFactory.ExecuteEvent( OnFailedToLoadAd, ( int )AdType.Rewarded, "Please Load new Ad" );
-                    if (_settings.loadingMode != LoadingManagerMode.Manual)
-                        LoadAd( AdType.Rewarded );
-
-                    // Delayed OnAdClosed after OnAdComplete to simulate real behaviour.
-                    Invoke( "DelayedCloseRewardedAd", UnityEngine.Random.Range(0.3f, 1.0f) );
+                    if (isCompleted)
+                    {
+                        eventsQueue.Add( OnRewardedAdClicked );
+                        eventsQueue.Add( OnRewardedAdCompleted );
+                        // Delayed OnAdClosed after OnAdComplete to simulate real behaviour.
+                        Invoke( "DelayedCloseRewardedAd", UnityEngine.Random.Range( 0.3f, 1.0f ) );
+                    }
+                    else
+                    {
+                        visibleTypes &= ~AdFlags.Rewarded;
+                        eventsQueue.Add( OnRewardedAdClosed );
+                    }
                 }
                 GUI.enabled = true;
             }
@@ -401,7 +475,7 @@ namespace CAS.Unity
         private void DelayedCloseRewardedAd()
         {
             visibleTypes &= ~AdFlags.Rewarded;
-            CASFactory.ExecuteEvent( OnRewardedAdClosed );
+            eventsQueue.Add( OnRewardedAdClosed );
         }
         #endregion
 
@@ -418,20 +492,32 @@ namespace CAS.Unity
         {
             loadedTypes |= AdFlags.Banner;
             if (_bannerRequired)
-                EventExecutor.Add( CallShowBanner );
-            CASFactory.ExecuteEvent( OnLoadedAd, ( int )AdType.Banner );
+                eventsQueue.Add( CallShowBanner );
+            eventsQueue.Add( () =>
+            {
+                if (OnLoadedAd != null)
+                    OnLoadedAd( AdType.Banner );
+            } );
         }
 
         private void DidInterstitialLoaded()
         {
             loadedTypes |= AdFlags.Interstitial;
-            CASFactory.ExecuteEvent( OnLoadedAd, ( int )AdType.Interstitial );
+            eventsQueue.Add( () =>
+            {
+                if (OnLoadedAd != null)
+                    OnLoadedAd( AdType.Interstitial );
+            } );
         }
 
         private void DidRewardedLoaded()
         {
             loadedTypes |= AdFlags.Rewarded;
-            CASFactory.ExecuteEvent( OnLoadedAd, ( int )AdType.Rewarded );
+            eventsQueue.Add( () =>
+            {
+                if (OnLoadedAd != null)
+                    OnLoadedAd( AdType.Rewarded );
+            } );
         }
 
         private AdFlags GetFlag( AdType adType )

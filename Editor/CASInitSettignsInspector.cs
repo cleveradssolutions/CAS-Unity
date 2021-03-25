@@ -31,7 +31,6 @@ namespace CAS.UEditor
         private bool allowedPackageUpdate;
         private string newCASVersion = null;
         private bool deprecateDependenciesExist;
-        //private bool usingMultidexOnBuild;
 
         private string[] deprecatedAssets = null;
 
@@ -66,7 +65,8 @@ namespace CAS.UEditor
             managerIdsList = new ReorderableList( props, managerIdsProp, true, true, true, true )
             {
                 drawHeaderCallback = DrawListHeader,
-                drawElementCallback = DrawListElement
+                drawElementCallback = DrawListElement,
+                onCanRemoveCallback = (list) => list.count > 1,
             };
 
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
@@ -81,6 +81,7 @@ namespace CAS.UEditor
                 else if (platform == BuildTarget.iOS)
                 {
                     managerIdsProp.arraySize = 1;
+                    managerIdsProp.GetArrayElementAtIndex( 0 ).stringValue = "demo";
                     interstitialIntervalProp.intValue = 90;
                 }
             }
@@ -122,16 +123,23 @@ namespace CAS.UEditor
             item.stringValue = EditorGUI.TextField( rect, item.stringValue );
         }
 
+        protected override void OnHeaderGUI()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label( "CleverAdsSolutions", HelpStyles.largeTitleStyle );
+            GUILayout.Label( platform.ToString(), HelpStyles.largeTitleStyle, GUILayout.ExpandWidth( false ) );
+            EditorGUILayout.EndHorizontal();
+
+            Utils.OnHeaderGUI( Utils.gitUnityRepo, allowedPackageUpdate, MobileAds.wrapperVersion, ref newCASVersion );
+        }
+
         public override void OnInspectorGUI()
         {
             var obj = serializedObject;
             obj.UpdateIfRequiredOrScript();
 
-            Utils.LinksToolbarGUI( Utils.gitUnityRepo );
-
             HelpStyles.BeginBoxScope();
-            EditorGUILayout.PropertyField( testAdModeProp );
-            EditorGUI.BeginDisabledGroup( testAdModeProp.boolValue );
             if (managerIdsList.count > 1)
             {
                 var appId = managerIdsProp.GetArrayElementAtIndex( 0 ).stringValue;
@@ -140,19 +148,14 @@ namespace CAS.UEditor
             }
             managerIdsList.DoLayoutList();
             OnManagerIDVerificationGUI();
-            EditorGUI.EndDisabledGroup();
             allowedAdFlagsProp.intValue = Convert.ToInt32(
                EditorGUILayout.EnumFlagsField( "Allowed ads in app", ( AdFlags )allowedAdFlagsProp.intValue ) );
 
-            GUILayout.Label( "These settings are required for initialization with: CAS.MobileAds.InitializeFromResources(0)",
+            EditorGUILayout.PropertyField( testAdModeProp );
+            GUILayout.Label( "CAS.MobileAds.BuildManager() default settings.",
                 EditorStyles.wordWrappedMiniLabel, GUILayout.ExpandHeight( false ) );
             HelpStyles.EndBoxScope();
 
-            DrawSeparator();
-            OnAudienceGUI();
-            OnIOSLocationUsageDescriptionGUI();
-
-            DrawSeparator();
             OnBannerSizeGUI();
             bannerRefreshProp.intValue = Mathf.Clamp(
                  EditorGUILayout.IntField( "Banner refresh rate(sec)", bannerRefreshProp.intValue ), 10, short.MaxValue );
@@ -165,21 +168,14 @@ namespace CAS.UEditor
                 interWhenNoRewardedAdProp.boolValue );
             DrawSeparator();
             OnLoadingModeGUI();
-
+            OnIOSLocationUsageDescriptionGUI();
             EditorGUILayout.PropertyField( debugModeProp );
             EditorGUILayout.PropertyField( analyticsCollectionEnabledProp );
             OnEditroRuntimeActiveAdGUI();
-            //if(usingMultidexOnBuild != EditorGUILayout.Toggle("Use MultiDex", usingMultidexOnBuild )){
-            //    usingMultidexOnBuild = !usingMultidexOnBuild;
-            //    if (usingMultidexOnBuild)
-            //        PlayerPrefs.DeleteKey( Utils.editorIgnoreMultidexPrefs );
-            //    else
-            //        PlayerPrefs.SetInt( Utils.editorIgnoreMultidexPrefs, 1 );
-            //}
 
             DrawSeparator();
+            OnAudienceGUI();
             DeprecatedDependenciesGUI();
-            Utils.AboutRepoGUI( Utils.gitUnityRepo, allowedPackageUpdate, MobileAds.wrapperVersion, ref newCASVersion );
 
             if (dependencyManager == null)
             {
@@ -190,7 +186,7 @@ namespace CAS.UEditor
             {
                 dependencyManager.OnGUI( platform );
             }
-
+            GUILayout.FlexibleSpace();
             obj.ApplyModifiedProperties();
         }
 
@@ -202,9 +198,6 @@ namespace CAS.UEditor
 
         private void OnManagerIDVerificationGUI()
         {
-            if (testAdModeProp.boolValue)
-                return;
-
             if (managerIdsProp.arraySize == 0)
                 EditorGUILayout.HelpBox( "Build is not supported without a manager ID.", MessageType.Error );
             else if (string.IsNullOrEmpty( managerIdsProp.GetArrayElementAtIndex( 0 ).stringValue ))
@@ -213,7 +206,7 @@ namespace CAS.UEditor
                 return;
             EditorGUILayout.HelpBox( "If you haven't created an CAS account and registered an manager yet, " +
                 "now's a great time to do so at cleveradssolutions.com. " +
-                "If you're just looking to experiment with the SDK, though, you can use the Test Ad Mode above.", MessageType.Info );
+                "If you're just looking to experiment with the SDK, though, you can use the Test Ad Mode below with any manager ID.", MessageType.Info );
         }
 
         private void OnAudienceGUI()

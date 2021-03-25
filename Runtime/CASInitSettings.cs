@@ -44,18 +44,8 @@ namespace CAS
         /// <exception cref="ArgumentNullException">Manager ID are not found</exception>
         public IMediationManager Initialize()
         {
-            try
-            {
-                if (string.IsNullOrEmpty( targetId ))
-                    WithManagerIdAtIndex( 0 );
-            }
-            catch (Exception e)
-            {
-                if (Application.isEditor || testAdMode)
-                    targetId = "Dummy";
-                else
-                    throw e;
-            }
+            if (string.IsNullOrEmpty( targetId ))
+                WithManagerIdAtIndex( 0 );
             return CASFactory.CreateManager( this );
         }
 
@@ -168,6 +158,8 @@ namespace CAS
         }
         public int IndexOfManagerId( string id )
         {
+            if (managerIds == null || id == null)
+                return -1;
             return Array.IndexOf( managerIds, id );
         }
         #endregion

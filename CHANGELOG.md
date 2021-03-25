@@ -1,5 +1,26 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.1.2] - 2021-03-25
+### Dependencies
+- [Android] Wraps [2.1.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.1.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- [Android] Optimizing Android UI Thread.
+- [iOS] Update SKAdNetwork ID's.
+- Added `SetAdPositionEnumIndex(int)` and `SetAdSizeEnumIndex(int)` methods to `BannerAdObject` for setting the banner position and size by index in enums from the inspector.
+- [Editor] Added a button in CAS Settings to update all native dependencies.
+- [Editor] Added links to the wiki in the inspector.
+### Changes
+- Test Ad Mode requires the definition of the manager ID. In this case, the manager identifier can be any string, for example `demo`.
+- [iOS] The build property `ENABLE_BITCODE` does not change anymore.
+### Bug Fixes
+- [Editor] Fixed `ArgumentNullException` on Standalone platform.
+- [Editor] Fixed ads callbacks in Unity Editor without calling the `EventExecutor.Initialize()` method. You still need to call initialization to use `EventExecutor`.
+
+### Added new optional third party mediation
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+- [Fyber](https://www.fyber.com) - 7.8.2
+
 ## [2.0.1] - 2021-03-09
 ### Dependencies
 - [Android] Wraps [2.0.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
