@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace CAS.Unity
 {
+    [AddComponentMenu("")]
     internal class CASMediationManager : MonoBehaviour, IMediationManager
     {
         public AdFlags enabledTypes;

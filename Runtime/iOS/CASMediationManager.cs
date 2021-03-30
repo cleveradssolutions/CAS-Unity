@@ -324,9 +324,6 @@ namespace CAS.iOS
             try
             {
                 var instance = IntPtrToManagerClient( client );
-#if CAS_EXPIREMENTAL_ORIENTATION
-                EventExecutor.Add( instance.RestoreScreenOrientation );
-#endif
                 if (instance != null && instance.OnInterstitialAdFailedToShow != null)
                     instance.OnInterstitialAdFailedToShow( error );
             }

@@ -1,5 +1,12 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.1.3] - 2021-03-30
+### Dependencies
+- [iOS] Wraps [2.1.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixes from iOS native 2.1.3
+- Fixed invoke `OnBannerAdClicked`, `OnInterstitialAdClicked`, `OnRewardedAdClicked`, `OnRewardedAdCompleted` events.
+- Fixed multiple call `OnBannerAdHidden`, `OnInterstitialAdClosed`, `OnRewardedAdClosed` events per impression.
+
 ## [2.1.2] - 2021-03-25
 ### Dependencies
 - [Android] Wraps [2.1.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
