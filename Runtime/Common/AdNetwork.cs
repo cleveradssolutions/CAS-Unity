@@ -23,6 +23,7 @@
         Verizon,
         MoPub,
         Tapjoy,
-        Fyber
+        Fyber,
+        FairBid
     }
 }

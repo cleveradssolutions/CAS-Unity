@@ -70,21 +70,6 @@ namespace CAS.UEditor
             };
 
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
-            if (managerIdsProp.arraySize == 0)
-            {
-                if (platform == BuildTarget.Android)
-                {
-                    managerIdsProp.arraySize = 1;
-                    managerIdsProp.GetArrayElementAtIndex( 0 )
-                                  .stringValue = PlayerSettings.GetApplicationIdentifier( BuildTargetGroup.Android );
-                }
-                else if (platform == BuildTarget.iOS)
-                {
-                    managerIdsProp.arraySize = 1;
-                    managerIdsProp.GetArrayElementAtIndex( 0 ).stringValue = "demo";
-                    interstitialIntervalProp.intValue = 90;
-                }
-            }
 
             //usingMultidexOnBuild = PlayerPrefs.GetInt( Utils.editorIgnoreMultidexPrefs, 0 ) == 0;
 

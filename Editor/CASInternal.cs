@@ -308,12 +308,14 @@ namespace CAS.UEditor
 
         internal void FilterAudience( Audience audience )
         {
-            if (audience == Audience.Mixed)
+            if (filter < 0)
+                inBan = true;
+            else if (audience == Audience.Mixed)
                 inBan = false;
             else if (audience == Audience.Children)
                 inBan = filter < 1;
             else
-                inBan = filter == -1 || filter > 1;
+                inBan = filter > 1;
         }
 
         private void OnLabelGUI( Label label )

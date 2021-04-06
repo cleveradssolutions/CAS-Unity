@@ -1,5 +1,19 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.1.4] - 2021-04-06
+### Dependencies
+- [Android] Wraps [2.1.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.1.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- Now it is possible to test advertisements in the Unity Editor using the Standardone taregt build.
+- Audience Network migrate to Bidding with FairBid. Read more on [Audience Network blog post](https://www.facebook.com/audiencenetwork/news-and-insights/audience-network-to-become-bidding-only-beginning-with-ios-in-2021/).
+### Changes
+- [FairBid] Included with Android `MixedAudience`, `NotChildrenAds` and iOS `Recommended` solutions.
+- [Fyber] Has been replaced with an enhanced version of FairBid to use bidding.
+### Added new partner mediation
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+- [FairBid](https://www.fyber.com) - 13.3.0
+
 ## [2.1.3] - 2021-03-30
 ### Dependencies
 - [iOS] Wraps [2.1.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)

@@ -4,31 +4,6 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
-    [Serializable]
-    public struct ManagerIndex
-    {
-#pragma warning disable 649
-        [SerializeField]
-        private int android;
-        [SerializeField]
-        private int ios;
-#pragma warning restore 649
-
-        public int index
-        {
-            get
-            {
-#if UNITY_ANDROID
-                return android;
-#elif UNITY_IOS
-                return ios;
-#else
-                return -1;
-#endif
-            }
-        }
-    }
-
     [AddComponentMenu( "CleverAdsSolutions/Initialize Manager Ad Object" )]
     [DisallowMultipleComponent]
     [HelpURL( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Manager-Ad-object" )]
@@ -57,6 +32,31 @@ namespace CAS.AdObject
         private void OnInitializeResult( bool success, string error )
         {
             OnInitialized.Invoke();
+        }
+    }
+
+    [Serializable]
+    public struct ManagerIndex
+    {
+#pragma warning disable 649
+        [SerializeField]
+        private int android;
+        [SerializeField]
+        private int ios;
+#pragma warning restore 649
+
+        public int index
+        {
+            get
+            {
+#if UNITY_ANDROID
+                return android;
+#elif UNITY_IOS
+                return ios;
+#else
+                return 0;
+#endif
+            }
         }
     }
 }

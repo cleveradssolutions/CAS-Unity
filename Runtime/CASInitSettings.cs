@@ -10,7 +10,7 @@ namespace CAS
 #pragma warning disable 649 // is never assigned to, and will always have its default value null
         public bool testAdMode = false;
         [SerializeField]
-        private string[] managerIds;
+        private string[] managerIds = { "demo" };
         public AdFlags allowedAdFlags = AdFlags.Everything;
         [SerializeField]
         private Audience audienceTagged = Audience.Children;
@@ -52,26 +52,8 @@ namespace CAS
         #region Initialization options
         /// <summary>
         /// An manager ID is a unique ID number assigned to each of your ad placements when they're created in CAS.
-        /// The manager ID is added to your app's code and used to identify ad requests.
-        /// If you haven't created an CAS account and registered an app yet, now's a great time to do so at <see cref="https://cleveradssolutions.com"/>.
-        /// In a real app, it is important that you use your actual CAS manager ID.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
-        public CASInitSettings WithManagerId( string managerId )
-        {
-            if (string.IsNullOrEmpty( managerId ))
-                throw new ArgumentNullException( "managerID", "Manager ID is empty" );
-            targetId = managerId;
-            return this;
-        }
-
-        /// <summary>
-        /// An manager ID is a unique ID number assigned to each of your ad placements when they're created in CAS.
-        /// The manager ID is added to your app's code and used to identify ad requests.
-        /// If you haven't created an CAS account and registered an app yet, now's a great time to do so at <see cref="https://cleveradssolutions.com"/>.
-        /// In a real app, it is important that you use your actual CAS manager ID.
-        ///
-        /// Use Manager Id at Index from list `Assets/CleverAdsSolutions/Settings` menu
+        /// Using Manager Id at Index from list `Assets/CleverAdsSolutions/Settings` menu.
+        /// Index 0 by default when the method is not called.
         /// </summary>
         /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
         public CASInitSettings WithManagerIdAtIndex( int index )
@@ -85,7 +67,23 @@ namespace CAS
         }
 
         /// <summary>
-        /// Initialization complete result callback
+        /// An manager ID is a unique ID number assigned to each of your ad placements when they're created in CAS.
+        /// The manager ID is added to your app's code and used to identify ad requests.
+        /// <b>Attention</b> The identifier is different for each platforms.
+        /// You need to define different identifiers depending on the current platform.
+        /// Or you can use a generic way to get the ID by ordinal index <see cref="WithManagerIdAtIndex(int)"/>
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
+        public CASInitSettings WithManagerId( string managerId )
+        {
+            if (string.IsNullOrEmpty( managerId ))
+                throw new ArgumentNullException( "managerId", "Manager ID is empty" );
+            targetId = managerId;
+            return this;
+        }
+
+        /// <summary>
+        /// Set listener to initialization complete result callback.
         /// </summary>
         public CASInitSettings WithInitListener( InitCompleteAction listener )
         {
@@ -95,7 +93,7 @@ namespace CAS
 
         /// <summary>
         /// An demoAdMode is optional to enable Test ad mode that will always request test ads.
-        /// If you're just looking to experiment with the SDK in a Hello World app, though, you can use the <see cref="true"/> with any manager ID string.
+        /// If you're just looking to experiment with the SDK in a Hello World app, though, you can use the true with any manager ID string.
         /// <b>Please remember to set False demo ad mode after tests done.</b>
         /// </summary>
         public CASInitSettings WithTestAdMode( bool test )
@@ -119,7 +117,7 @@ namespace CAS
 
         /// <summary>
         /// Additional mediation settings.
-        /// Use constant key from <see cref="MediationExtras"/>
+        /// Use constant key from <see cref="MediationExtras"/> with values of "1" or "0".
         /// </summary>
         public CASInitSettings WithMediationExtras( string key, string value )
         {
