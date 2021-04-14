@@ -178,8 +178,16 @@ namespace CAS.UEditor
 
         private static void ApplyCrosspromoDynamicLinks( string projectPath, PBXProject project, CASInitSettings casSettings )
         {
-            if (casSettings.managersCount == 0 || string.IsNullOrEmpty( casSettings.GetManagerId( 0 ) ))
+            if (casSettings.testAdMode || casSettings.managersCount == 0
+                || string.IsNullOrEmpty( casSettings.GetManagerId( 0 ) ))
                 return;
+            var depManager = DependencyManager.Create( BuildTarget.iOS, Audience.Mixed, false );
+            if (depManager != null)
+            {
+                var crossPromoDependency = depManager.FindCrossPromotion();
+                if (crossPromoDependency != null && !crossPromoDependency.isInstalled())
+                    return;
+            }
             try
             {
                 var identifier = Application.identifier;
