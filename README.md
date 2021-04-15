@@ -1,4 +1,4 @@
-# CleverAdsSolutions-Unity SDK Integration
+# CleverAdsSolutions-Unity Integration
 The Clever Ads Solutions Unity plugin enables Unity developers to easily serve Mobile Ads on Android and iOS apps without having to write Java or Objective-C code. The plugin provides a C# interface for requesting ads that is used by C# scripts in your Unity project.
 
 [![GitHub package.json version](https://img.shields.io/github/package-json/v/cleveradssolutions/CAS-Unity?label=Unity%20Package)](https://github.com/cleveradssolutions/CAS-Unity/releases/latest)
