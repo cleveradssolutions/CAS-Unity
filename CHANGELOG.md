@@ -1,5 +1,12 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.1.7] - 2021-04-21
+### Dependencies
+- [Android] Wraps [2.1.7 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.1.7 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixes from Android native 2.1.7
+- Downgrade Kidoz version to 8.9.0 for fixing ANR's
+
 ## [2.1.6] - 2021-04-17
 ### Dependencies
 - [Android] Wraps [2.1.6 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
