@@ -24,6 +24,7 @@
         MoPub,
         Tapjoy,
         Fyber,
-        FairBid
+        FairBid,
+        Mintegral
     }
 }

@@ -31,6 +31,7 @@ namespace CAS.UEditor
         private bool allowedPackageUpdate;
         private string newCASVersion = null;
         private bool deprecateDependenciesExist;
+        private bool edmExist;
 
         private string[] deprecatedAssets = null;
 
@@ -66,7 +67,7 @@ namespace CAS.UEditor
             {
                 drawHeaderCallback = DrawListHeader,
                 drawElementCallback = DrawListElement,
-                onCanRemoveCallback = (list) => list.count > 1,
+                onCanRemoveCallback = ( list ) => list.count > 1,
             };
 
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
@@ -93,6 +94,8 @@ namespace CAS.UEditor
 
             if (File.Exists( Utils.androidResSettingsPath + ".json" ))
                 AssetDatabase.MoveAssetToTrash( Utils.androidResSettingsPath + ".json" );
+
+            edmExist = Utils.IsAndroidDependenciesResolverExist();
         }
 
         private void DrawListHeader( Rect rect )
@@ -115,7 +118,7 @@ namespace CAS.UEditor
             GUILayout.Label( "CleverAdsSolutions", HelpStyles.largeTitleStyle );
             GUILayout.Label( platform.ToString(), HelpStyles.largeTitleStyle, GUILayout.ExpandWidth( false ) );
             EditorGUILayout.EndHorizontal();
-
+            EditorGUILayout.Space();
             Utils.OnHeaderGUI( Utils.gitUnityRepo, allowedPackageUpdate, MobileAds.wrapperVersion, ref newCASVersion );
         }
 
@@ -170,6 +173,46 @@ namespace CAS.UEditor
             else
             {
                 dependencyManager.OnGUI( platform );
+
+
+                if (edmExist)
+                {
+                    if (platform == BuildTarget.Android)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
+                            "Please use Android Resolver after the change complete.", MessageType.Info );
+                        if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.ExpandHeight( true ) ))
+                        {
+#if UNITY_ANDROID
+                        var succses = Utils.TryResolveAndroidDependencies();
+                        EditorUtility.DisplayDialog( "Android Dependencies",
+                            succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
+                            "OK" );
+#else
+                            EditorUtility.DisplayDialog( "Android Dependencies",
+                                "Android resolver not enabled. Unity Android platform target must be selected.",
+                                "OK" );
+#endif
+                        }
+                        EditorGUILayout.EndHorizontal();
+                    }
+                }
+                else
+                {
+                    HelpStyles.BeginBoxScope();
+                    EditorGUILayout.HelpBox( "In order to properly include third party dependencies in your project, " +
+                        "an External Dependency Manager is required.", MessageType.Error );
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label( "1. Download latest EDM4U.unitypackage", GUILayout.ExpandWidth( false ) );
+                    if (GUILayout.Button( "here", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
+                    {
+                        Application.OpenURL( "https://github.com/googlesamples/unity-jar-resolver/releases" );
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    GUILayout.Label( "2. Import the EDM4U.unitypackage into your project." );
+                    HelpStyles.EndBoxScope();
+                }
             }
             GUILayout.FlexibleSpace();
             obj.ApplyModifiedProperties();

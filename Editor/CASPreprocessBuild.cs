@@ -50,52 +50,56 @@ namespace CAS.UEditor
             if (target != BuildTarget.Android && target != BuildTarget.iOS)
                 return;
 
+            var isBatchMode = Application.isBatchMode;
             var settings = Utils.GetSettingsAsset( target );
             if (!settings)
                 Utils.StopBuildWithMessage( "Settings not found. Please use menu Assets/CleverAdsSolutions/Settings " +
                     "to create and set settings for build.", target );
 
-            var newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
-            if (newCASVersion != null)
-                DialogOrCancel( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", target );
-
-            var dependencyManager = DependencyManager.Create( target, Audience.Mixed, false );
-            if (dependencyManager != null)
+            if (!isBatchMode)
             {
-                if (!dependencyManager.installedAny)
-                    Utils.StopBuildWithMessage( "Dependencies of native SDK were not found. " +
-                    "Please use 'Assets/CleverAdsSolutions/Settings' menu to integrate solutions or any SDK separately.", target );
+                var newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
+                if (newCASVersion != null)
+                    DialogOrCancel( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", target );
 
-                bool isNewerVersionExist = false;
-                for (int i = 0; i < dependencyManager.solutions.Length; i++)
+                var dependencyManager = DependencyManager.Create( target, Audience.Mixed, false );
+                if (dependencyManager != null)
                 {
-                    if (dependencyManager.solutions[i].isNewer)
+                    if (!dependencyManager.installedAny)
+                        Utils.StopBuildWithMessage( "Dependencies of native SDK were not found. " +
+                        "Please use 'Assets/CleverAdsSolutions/Settings' menu to integrate solutions or any SDK separately.", target );
+
+                    bool isNewerVersionExist = false;
+                    for (int i = 0; i < dependencyManager.solutions.Length; i++)
                     {
-                        isNewerVersionExist = true;
-                        break;
-                    }
-                }
-                if (!isNewerVersionExist)
-                {
-                    for (int i = 0; i < dependencyManager.networks.Length; i++)
-                    {
-                        if (dependencyManager.networks[i].isNewer)
+                        if (dependencyManager.solutions[i].isNewer)
                         {
                             isNewerVersionExist = true;
                             break;
                         }
                     }
+                    if (!isNewerVersionExist)
+                    {
+                        for (int i = 0; i < dependencyManager.networks.Length; i++)
+                        {
+                            if (dependencyManager.networks[i].isNewer)
+                            {
+                                isNewerVersionExist = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (isNewerVersionExist)
+                        DialogOrCancel( "There is a new versions of the native dependencies available for update." +
+                            "Please use 'Assets/CleverAdsSolutions/Settings' menu to update.", target );
                 }
 
-                if (isNewerVersionExist)
-                    DialogOrCancel( "There is a new versions of the native dependencies available for update." +
-                        "Please use 'Assets/CleverAdsSolutions/Settings' menu to update.", target );
-            }
-
-            if (settings.bannerSize == AdSize.Banner && Utils.IsPortraitOrientation())
-            {
-                DialogOrCancel( "For portrait applications, we recommend using the adaptive banner size." +
-                        "This will allow you to get more expensive advertising.", target );
+                if (settings.bannerSize == AdSize.Banner && Utils.IsPortraitOrientation())
+                {
+                    DialogOrCancel( "For portrait applications, we recommend using the adaptive banner size." +
+                            "This will allow you to get more expensive advertising.", target );
+                }
             }
 
             string admobAppId = null;
@@ -161,7 +165,7 @@ namespace CAS.UEditor
 
                 ConfigurateGradleSettings();
 
-                if (PlayerSettings.Android.minSdkVersion < AndroidSdkVersions.AndroidApiLevel19)
+                if (!isBatchMode && PlayerSettings.Android.minSdkVersion < AndroidSdkVersions.AndroidApiLevel19)
                 {
                     DialogOrCancel( "CAS required minimum SDK API level 19 (KitKat).", BuildTarget.NoTarget, "Set API 19" );
                     PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel19;
@@ -288,7 +292,7 @@ namespace CAS.UEditor
                 // write dependency
                 if (!multidexExist)
                 {
-                    if (EditorUtility.DisplayDialog( "CAS Preprocess Build",
+                    if (Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
                             "Including the CAS SDK may cause the 64K limit on methods that can be packaged in an Android dex file to be breached" +
                             "Do you want to use the MultiDex support library to building your app correctly?",
                             "Enable MultiDex", "Continue" ))
@@ -322,7 +326,7 @@ namespace CAS.UEditor
 
             if (!sourceCompatibilityExist)
             {
-                if (EditorUtility.DisplayDialog( "CAS Preprocess Build",
+                if (Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
                         "CAS SDK requires for correct operation to determine the Java version in Gradle." +
                         "Do you want to use Java 1.8?",
                         "Set Java version", "Continue" ))

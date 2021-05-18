@@ -182,27 +182,6 @@ namespace CAS.UEditor
                 }
                 HelpStyles.EndBoxScope();
             }
-
-            if (platform == BuildTarget.Android)
-            {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
-                    "Please use Android Resolver after the change complete.", MessageType.Info );
-                if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.ExpandHeight( true ) ))
-                {
-#if UNITY_ANDROID
-                    var succses = Utils.TryResolveAndroidDependencies();
-                    EditorUtility.DisplayDialog( "Android Dependencies",
-                        succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
-                        "OK" );
-#else
-                    EditorUtility.DisplayDialog( "Android Dependencies",
-                        "Android resolver not enabled. Unity Android platform target must be selected.",
-                        "OK" );
-#endif
-                }
-                EditorGUILayout.EndHorizontal();
-            }
         }
 
         internal void SetAudience( Audience audience )
@@ -355,13 +334,15 @@ namespace CAS.UEditor
 
         internal void OnGUI( DependencyManager mediation, BuildTarget platform )
         {
+            bool installed = !string.IsNullOrEmpty( installedVersion );
+            if (inBan && filter < 0 && !installed)
+                return;
             var dividerRect = EditorGUILayout.GetControlRect( GUILayout.Height( 1 ) );
             if (Event.current.type == EventType.Repaint) //draw the divider
             {
                 GUI.skin.box.Draw( dividerRect, GUIContent.none, 0 );
             }
             EditorGUILayout.BeginHorizontal();
-            bool installed = !string.IsNullOrEmpty( installedVersion );
             if (( inBan && installed ) || ( installed && locked ) || ( isRequired && !locked && !installed ))
                 GUILayout.Label( HelpStyles.errorIconContent, GUILayout.Width( 20 ) );
             else if (string.IsNullOrEmpty( url ))

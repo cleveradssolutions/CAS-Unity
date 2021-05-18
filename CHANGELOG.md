@@ -1,5 +1,28 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.2.2] - 2021-05-18
+### Dependencies
+- [Android] Wraps [2.2.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.2.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Features
+- [Editor] Improved prebuild operations with [-batchmode](https://docs.unity3d.com/Manual/CommandLineArguments.html).
+- Reduced memory usage throughout the entire life cycle.
+> ⭐ Our main goal to current update was to reduce the amount of memory used. 
+> We have done a great job optimizing various aspects of our SDK. It should reduce the number of ANR and make CAS work more stable.
+## Changes
+- [iOS 14.5 and SKAdNetwork 2.2](https://developer.apple.com/news/?id=ib31uj1j) including view through attribution. **Bumped minimum Xcode version to 12.5.** :warning: 
+- [The External Dependency Manager for Unity](https://github.com/googlesamples/unity-jar-resolver#external-dependency-manager-for-unity) is no longer distributed with the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html).  
+You should import the latest [external-dependency-manager.unitypackage](https://github.com/googlesamples/unity-jar-resolver/releases) into your project to use the third party SDK correctly.
+> For more context, see [firebase/quickstart-unity#1030](https://github.com/firebase/quickstart-unity/issues/1030#issuecomment-825095383)
+## Added new mediation partner
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+- [Mintegral](https://www.mintegral.com) - [Privacy Policy](https://www.mintegral.com/en/privacy/)  
+## Removed support for the following networks
+- The [Amazon Mobile Ads](https://developer.amazon.com/docs/mobile-ads/mb-overview.html) Network will be disabled on July 15, 2021.
+- The **MobFox** Mobile SDK has been deprecated and no longer conforms to the new global policies.
+- The **Verizon Media** is currently not a priority for further compatibility support.
+- The **Fyber Marketplace** is no longer supported in favor of bidding with **Fyber FairBid**.
+
 ## [2.1.7] - 2021-04-21
 ### Dependencies
 - [Android] Wraps [2.1.7 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

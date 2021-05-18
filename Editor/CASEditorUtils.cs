@@ -136,6 +136,19 @@ namespace CAS.UEditor
             return editorFolderPath + "/CAS" + platform.ToString() + name + dependenciesExtension;
         }
 
+        public static bool IsAndroidDependenciesResolverExist()
+        {
+            try
+            {
+                var resolverType = Type.GetType( "GooglePlayServices.PlayServicesResolver, Google.JarResolver", false );
+                return resolverType != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public static bool TryResolveAndroidDependencies( bool force = true )
         {
             bool success = true;
@@ -425,8 +438,11 @@ namespace CAS.UEditor
         {
             EditorUtility.ClearProgressBar();
             if (target != BuildTarget.NoTarget
-                    && EditorUtility.DisplayDialog( "CAS Stop Build", message, "Open Settings", "Close" ))
+                && !Application.isBatchMode
+                && EditorUtility.DisplayDialog( "CAS Stop Build", message, "Open Settings", "Close" ))
+            {
                 OpenSettingsWindow( target );
+            }
 
 #if UNITY_2018_1_OR_NEWER
             throw new BuildFailedException( logTag + message );

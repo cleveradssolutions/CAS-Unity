@@ -68,6 +68,9 @@ namespace CAS
         public const string facebookGDPRConsent = "FB_gdpr";
         public const string facebookCCPAOptedOut = "FB_ccpa";
 
+        public const string mintegralGDPRConsent = "MB_gdpr";
+        public const string mintegralCCPAOptedOut = "MB_ccpa";
+
         public static void SetGlobalEtras( Dictionary<string, string> extras )
         {
             CASFactory.SetGlobalMediationExtras( extras );

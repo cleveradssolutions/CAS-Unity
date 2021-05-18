@@ -129,8 +129,12 @@ void CASUOpenDebugger(CASUTypeManagerRef manager)
 {
 #if __has_include("UnityAppController.h")
     UIStoryboard *storyboard =
-        [UIStoryboard storyboardWithName:@"CASDebugger"
+        [UIStoryboard storyboardWithName:@"CASTestSuit"
                                   bundle:[NSBundle bundleForClass:[CASUManager class]]];
+    if (!storyboard) {
+        storyboard = [UIStoryboard storyboardWithName:@"CASDebugger"
+                                               bundle:[NSBundle bundleForClass:[CASUManager class]]];
+    }
     if (storyboard) {
         UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"DebuggerController"];
         if (vc) {
@@ -138,7 +142,7 @@ void CASUOpenDebugger(CASUTypeManagerRef manager)
 
             SEL selector = NSSelectorFromString(@"setTargetManager:");
             if (![vc respondsToSelector:selector]) {
-                NSLog(@"[CAS] Framework bridge cant connect to CASDebugger");
+                NSLog(@"[CAS] Framework bridge cant connect to CASTestSuit");
                 return;
             }
 
