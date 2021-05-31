@@ -171,6 +171,16 @@ namespace CAS.UEditor
                     PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel19;
                 }
             }
+            else if (target == BuildTarget.iOS)
+            {
+                if (!isBatchMode && PlayerSettings.muteOtherAudioSources)
+                {
+                    if (EditorUtility.DisplayDialog( casTitle, "Mute Other AudioSources are not supported. " +
+                        "Is a known issue with disabling sounds in Unity after closing interstitial ads.",
+                        "Disable Mute AudioSources", "Continue" ))
+                        PlayerSettings.muteOtherAudioSources = false;
+                }
+            }
 #if false
             if (target == BuildTarget.Android && allowReimportDeps)
             {

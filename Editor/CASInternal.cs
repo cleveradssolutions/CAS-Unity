@@ -351,7 +351,7 @@ namespace CAS.UEditor
                 Application.OpenURL( url );
 
             GUILayout.Label( name, GUILayout.ExpandWidth( false ) );
-            OnLabelGUI( labels );
+            //OnLabelGUI( labels );
             GUILayout.FlexibleSpace();
 
             if (installed)
@@ -392,12 +392,26 @@ namespace CAS.UEditor
                 EditorGUI.EndDisabledGroup();
             }
             EditorGUILayout.EndHorizontal();
-            if (contains.Length > 0 && !( contains.Length == 1 && contains[0] == "Base" ))
+            if (contains.Length > 0)
             {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.LabelField( string.Join( ", ", contains ), EditorStyles.wordWrappedMiniLabel );
-                //EditorGUILayout.HelpBox( string.Join( ", ", contains ), MessageType.None );
-                EditorGUI.indentLevel--;
+                var footerText = new StringBuilder();
+                for (int i = 0; i < contains.Length; i++)
+                {
+                    if (!string.IsNullOrEmpty( contains[i] ) && contains[i] != "Base")
+                    {
+                        if (footerText.Length > 0)
+                            footerText.Append( ", " );
+                        footerText.Append( contains[i] );
+                    }
+                }
+
+                if (footerText.Length > 0)
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.LabelField( footerText.ToString(), EditorStyles.wordWrappedMiniLabel );
+                    //EditorGUILayout.HelpBox( string.Join( ", ", contains ), MessageType.None );
+                    EditorGUI.indentLevel--;
+                }
             }
         }
 

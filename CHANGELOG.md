@@ -1,5 +1,14 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.2.4] - 2021-05-31
+### Dependencies
+- [Android] Wraps [2.2.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.2.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Changes
+- Yandex Ads removed from the recommended solutions as it supports banner ads only.
+- Mintegral added to the recommended solutions.
+> Recommended solutions for Android is `MixedAudience` and `NotChildrenAds`.
+
 ## [2.2.3] - 2021-05-20
 ### Dependencies
 - [iOS] Wraps [2.2.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)

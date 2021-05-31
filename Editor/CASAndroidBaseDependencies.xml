@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dependencies>
+  <androidPackages>
+    <androidPackage spec="com.cleveradssolutions:cas-sdk:2.2.4" version="2.2.4">
+    </androidPackage>
+  </androidPackages>
+</dependencies>
