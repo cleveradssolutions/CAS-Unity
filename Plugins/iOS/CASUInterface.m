@@ -231,6 +231,8 @@ void CASUFreeManager(CASUTypeManagerRef manager)
     internalManager.bannerCallback = nil;
     internalManager.interstitialCallback = nil;
     internalManager.rewardedCallback = nil;
+    internalManager.appReturnDelegate = nil;
+    [internalManager disableReturnAds];
     CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
     [cache removeObjectWithKey:internalManager.mediationManager.managerID];
 }
@@ -284,6 +286,20 @@ void CASUSetRewardedDelegate(CASUTypeManagerRef                   manager,
     internalManager.rewardedCallback.didClickCallback = didClick;
     internalManager.rewardedCallback.didCompleteCallback = didComplete;
     internalManager.rewardedCallback.didClosedCallback = didClosed;
+}
+
+void CASUSetAppReturnDelegate(CASUTypeManagerRef                   manager,
+                              CASUWillShownWithAdCallback          willShow,
+                              CASUDidShowAdFailedWithErrorCallback didShowWithError,
+                              CASUDidClickedAdCallback             didClick,
+                              CASUDidCompletedAdCallback           didComplete,
+                              CASUDidClosedAdCallback              didClosed)
+{
+    CASUManager *internalManager = (__bridge  CASUManager *)manager;
+    internalManager.appReturnDelegate.willShownCallback = willShow;
+    internalManager.appReturnDelegate.didShowFailedCallback = didShowWithError;
+    internalManager.appReturnDelegate.didClickCallback = didClick;
+    internalManager.appReturnDelegate.didClosedCallback = didClosed;
 }
 
 void CASULoadAdWithType(CASUTypeManagerRef manager, NSInteger adType)
@@ -356,4 +372,16 @@ void CASUSetLastPageAdContent(CASUTypeManagerRef manager, const char *contentJso
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     [internalManager setLastPageAdFor:CASUStringFromUTF8String(contentJson)];
+}
+
+void CASUEnableReturnAds(CASUTypeManagerRef manager)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    [internalManager enableReturnAds];
+}
+
+void CASUDisableReturnAds(CASUTypeManagerRef manager)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    [internalManager disableReturnAds];
 }

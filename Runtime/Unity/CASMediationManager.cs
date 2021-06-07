@@ -84,6 +84,10 @@ namespace CAS.Unity
         public event Action OnRewardedAdClicked;
         public event Action OnRewardedAdCompleted;
         public event Action OnRewardedAdClosed;
+        public event Action OnReturnAdShown;
+        public event CASEventWithError OnReturnAdFailedToShow;
+        public event Action OnReturnAdClicked;
+        public event Action OnReturnAdClosed;
         #endregion
 
         public static IMediationManager CreateManager( CASInitSettings initSettings )
@@ -544,6 +548,10 @@ namespace CAS.Unity
         {
             if (MobileAds.settings.isDebugMode)
                 Debug.Log( "[CleverAdsSolutions] " + message );
+        }
+
+        public void SetReturnAdsEnabled( bool enable )
+        {
         }
         #endregion
     }

@@ -33,6 +33,10 @@ namespace CAS.iOS
         public event Action OnRewardedAdClicked;
         public event Action OnRewardedAdCompleted;
         public event Action OnRewardedAdClosed;
+        public event Action OnReturnAdShown;
+        public event CASEventWithError OnReturnAdFailedToShow;
+        public event Action OnReturnAdClicked;
+        public event Action OnReturnAdClosed;
         #endregion
 
         public CASMediationManager( CASInitSettings initData )
@@ -116,6 +120,12 @@ namespace CAS.iOS
                 RewardedDidClickedAdCallback,
                 RewardedDidCompletedAdCallback,
                 RewardedDidClosedAdCallback );
+
+            CASExterns.CASUSetAppReturnDelegate( _managerPtr,
+                ReturnAdWillShownWithAdCallback,
+                ReturnAdDidShowAdFailedWithErrorCallback,
+                ReturnAdDidClickedAdCallback,
+                ReturnAdDidClosedAdCallback );
         }
 
         public AdSize bannerSize
@@ -450,7 +460,81 @@ namespace CAS.iOS
             }
         }
         #endregion
+
+        #region Interstitial Callback
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillShownWithAdCallback ) )]
+        private static void ReturnAdWillShownWithAdCallback( IntPtr client )
+        {
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if ( instance != null && instance.OnReturnAdShown != null )
+                    instance.OnReturnAdShown();
+            }
+            catch ( Exception e )
+            {
+                Debug.LogException( e );
+            }
+        }
+
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidShowAdFailedWithErrorCallback ) )]
+        private static void ReturnAdDidShowAdFailedWithErrorCallback( IntPtr client, string error )
+        {
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if ( instance != null && instance.OnReturnAdFailedToShow != null )
+                    instance.OnReturnAdFailedToShow( error );
+            }
+            catch ( Exception e )
+            {
+                Debug.LogException( e );
+            }
+        }
+
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClickedAdCallback ) )]
+        private static void ReturnAdDidClickedAdCallback( IntPtr client )
+        {
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+                if ( instance != null && instance.OnReturnAdClicked != null )
+                    instance.OnReturnAdClicked();
+            }
+            catch ( Exception e )
+            {
+                Debug.LogException( e );
+            }
+        }
+
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClosedAdCallback ) )]
+        private static void ReturnAdDidClosedAdCallback( IntPtr client )
+        {
+            try
+            {
+                var instance = IntPtrToManagerClient( client );
+#if CAS_EXPIREMENTAL_ORIENTATION
+                EventExecutor.Add( instance.RestoreScreenOrientation );
+#endif
+                if ( instance != null && instance.OnReturnAdClosed != null )
+                    instance.OnReturnAdClosed();
+            }
+            catch ( Exception e )
+            {
+                Debug.LogException( e );
+            }
+        }
+
         #endregion
+        #endregion
+
+        public void SetReturnAdsEnabled( bool enable )
+        {
+            if ( enable )
+                CASExterns.CASUEnableReturnAds( _managerPtr );
+            else
+                CASExterns.CASUDisableReturnAds( _managerPtr );
+        }
     }
 }
 #endif

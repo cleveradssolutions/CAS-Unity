@@ -75,6 +75,23 @@ namespace CAS
         /// Executed when the ad is closed.
         /// </summary>
         event Action OnRewardedAdClosed;
+
+        /// <summary>
+        /// Executed when the ad is displayed.
+        /// </summary>
+        event Action OnReturnAdShown;
+        /// <summary>
+        /// Executed when the ad is failed to display.
+        /// </summary>
+        event CASEventWithError OnReturnAdFailedToShow;
+        /// <summary>
+        /// Executed when the user clicks on an Ad.
+        /// </summary>
+        event Action OnReturnAdClicked;
+        /// <summary>
+        /// Executed when the ad is closed.
+        /// </summary>
+        event Action OnReturnAdClosed;
         #endregion
 
         #region Mediation manager state
@@ -164,5 +181,11 @@ namespace CAS
         /// </summary>
         float GetBannerWidthInPixels();
         #endregion
+
+        /// <summary>
+        /// Enable or disable Return Ads
+        /// </summary>
+        /// <param name="enable"></param>
+        void SetReturnAdsEnabled( bool enable );
     }
 }

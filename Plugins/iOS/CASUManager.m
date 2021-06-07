@@ -32,6 +32,8 @@
         self.interstitialCallback.client = client;
         self.rewardedCallback = [[CASUCallback alloc] initForFullScreen:YES];
         self.rewardedCallback.client = client;
+        self.appReturnDelegate = [[CASUCallback alloc] initForFullScreen:YES];
+        self.appReturnDelegate.client = client;
 
         [CASAnalytics setHandler:self.bannerCallback]; // Require before create manager
 
@@ -278,6 +280,14 @@
             self.didAdFailedToLoadCallback(self.client, (NSInteger)adType, [error cStringUsingEncoding:NSUTF8StringEncoding]);
         }
     }
+}
+
+- (void)enableReturnAds {
+    [_mediationManager enableReturnAdsWithDelegate: _appReturnDelegate];
+}
+
+- (void)disableReturnAds {
+    [_mediationManager disableReturnAds];
 }
 
 - (UIViewController *)unityGLViewController {

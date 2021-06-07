@@ -27,6 +27,7 @@
 @property (nonatomic, strong, nullable) CASUCallback *bannerCallback;
 @property (nonatomic, strong, nullable) CASUCallback *interstitialCallback;
 @property (nonatomic, strong, nullable) CASUCallback *rewardedCallback;
+@property (nonatomic, strong, nullable) CASUCallback *appReturnDelegate;
 
 @property (nonatomic, strong, nullable) NSLayoutConstraint *horizontalConstraint;
 @property (nonatomic, strong, nullable) NSLayoutConstraint *verticalConstraint;
@@ -44,4 +45,6 @@
 - (void)setBannerSize:(NSInteger)sizeId;
 - (void)setBannerPosition:(NSInteger)positionId;
 - (void)setLastPageAdFor:(NSString *_Nullable)content;
+- (void)enableReturnAds;
+- (void)disableReturnAds;
 @end
