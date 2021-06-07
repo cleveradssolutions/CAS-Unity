@@ -149,6 +149,15 @@ namespace CAS.iOS
         );
 
         [DllImport( "__Internal" )]
+        internal static extern void CASUSetAppReturnDelegate(
+            IntPtr manager, // Manager Ptr from CASUCreateManager
+            CASUWillShownWithAdCallback willShow,
+            CASUDidShowAdFailedWithErrorCallback didShowWithError,
+            CASUDidClickedAdCallback didClick,
+            CASUDidClosedAdCallback didClosed
+        );
+
+        [DllImport( "__Internal" )]
         internal static extern void CASULoadAdWithType( IntPtr manager, int adType );
 
         [DllImport( "__Internal" )]
@@ -183,6 +192,12 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetLastPageAdContent( IntPtr manager, string contentJson );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUEnableReturnAds( IntPtr manager );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUDisableReturnAds( IntPtr manager );
         #endregion
     }
 }

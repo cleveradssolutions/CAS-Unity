@@ -9,7 +9,7 @@
 #import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
 #import "CASUTypes.h"
 
-@interface CASUCallback : NSObject<CASCallback, CASAnalyticsHandler>
+@interface CASUCallback : NSObject<CASAppReturnDelegate, CASAnalyticsHandler>
 
 - (id _Nonnull )initForFullScreen:(BOOL)isFullScreen;
 

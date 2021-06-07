@@ -6,6 +6,7 @@ namespace CAS.AdObject
 {
     [AddComponentMenu( "CleverAdsSolutions/Banner Ad Object" )]
     [DisallowMultipleComponent]
+    [HelpURL( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ad-object" )]
     public sealed class BannerAdObject : MonoBehaviour
     {
         public static BannerAdObject Instance { get; private set; }
@@ -32,11 +33,21 @@ namespace CAS.AdObject
                 manager.bannerPosition = position;
         }
 
+        public void SetAdPositionEnumIndex( int enumIndex )
+        {
+            SetAdPosition( ( AdPosition )enumIndex );
+        }
+
         public void SetAdSize( AdSize size )
         {
             adSize = size;
             if (active && manager != null)
                 manager.bannerSize = size;
+        }
+
+        public void SetAdSizeEnumIndex( int enumIndex )
+        {
+            SetAdSize( ( AdSize )enumIndex );
         }
 
         public float GetHeightInPixels()

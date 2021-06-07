@@ -51,18 +51,25 @@ namespace CAS
 
         public const string startAppGDPRConsent = "StA_gdpr";
 
-        /// <summary>
-        /// Enables/disables endless impression Cross promo creative when waterfall have no loaded ad.
-        ///
-        /// Default value is enabled "1".
-        /// if "0" disables the endless impression.
-        /// </summary>
+        [System.Obsolete( "Endless flag does not affect on cross-promo.")]
         public const string crossPromoEndless = "P_endless";
 
         public const string myTargetGDPRConsent = "MT_gdpr";
         public const string myTargetCCPAOptedOut = "MT_ccpa";
 
         public const string yandexAdsGDPRConsent = "Ya_gdpr";
+
+        public const string tapjoyGDPRConsent = "TJ_gdpr";
+        public const string tapjoyCCPAOptedOut = "TJ_ccpa";
+
+        public const string fyberGDPRConsent = "Fy_gdpr";
+        public const string fyberCCPAOptedOut = "Fy_ccpa";
+
+        public const string facebookGDPRConsent = "FB_gdpr";
+        public const string facebookCCPAOptedOut = "FB_ccpa";
+
+        public const string mintegralGDPRConsent = "MB_gdpr";
+        public const string mintegralCCPAOptedOut = "MB_ccpa";
 
         public static void SetGlobalEtras( Dictionary<string, string> extras )
         {

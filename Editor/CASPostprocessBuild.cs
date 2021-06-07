@@ -44,24 +44,6 @@ namespace CAS.UEditor
             var content = File.ReadAllText( podPath );
             if (content.Contains( "'Unity-iPhone'" ))
                 return;
-#if false //Develop
-            var depends = new List<string>();
-            var isFramework = false;
-
-            using (StreamWriter sw = new StreamWriter( podPath, false ))
-            {
-                for (int i = 0; i < content.Length; i++)
-                {
-                    var line = content[i];
-                    if (line.Contains( "'Unity-iPhone'" ))
-                        return;
-                    if (!isFramework && line.Contains( "use_frameworks!" ))
-                        isFramework = true;
-                    if (line.Contains( "CleverAdsSolutions-" ))
-                        depends.Add( line );
-                }
-            }
-#endif
             using (StreamWriter sw = File.AppendText( podPath ))
             {
                 sw.WriteLine();
@@ -156,7 +138,7 @@ namespace CAS.UEditor
 #else
             var target = project.TargetGuidByName( PBXProject.GetUnityTargetName() );
 #endif
-            project.SetBuildProperty( target, "ENABLE_BITCODE", "No" );
+            //project.SetBuildProperty( target, "ENABLE_BITCODE", "No" );
             project.AddBuildProperty( target, "OTHER_LDFLAGS", "-ObjC" );
             //project.AddBuildProperty( target, "OTHER_LDFLAGS", "-lxml2 -ObjC -fobjc-arc" );
             //project.AddBuildProperty( target, "CLANG_ENABLE_MODULES", "YES" ); // InMobi required
@@ -166,8 +148,9 @@ namespace CAS.UEditor
             var resourcesBuildPhase = project.GetResourcesBuildPhaseByTarget( target );
             for (int i = 0; i < casSettings.managersCount; i++)
             {
-                int managerIdLength = casSettings.GetManagerId( i ).Length;
-                string suffix = managerIdLength + casSettings.GetManagerId( i )[managerIdLength - 1] + ".json";
+                string managerId = casSettings.GetManagerId( i );
+                int managerIdLength = managerId.Length;
+                string suffix = managerIdLength.ToString() + managerId[managerIdLength - 1] + ".json";
                 string fileName = "cas_settings" + suffix;
                 string pathInAssets = CASEditorUtils.iosResSettingsPath + suffix;
                 if (File.Exists( pathInAssets ))
@@ -180,8 +163,12 @@ namespace CAS.UEditor
                     }
                     catch (Exception e)
                     {
-                        Debug.LogWarning( CASEditorUtils.logTag + "Copy Raw Files To XCode Project failed with error: " + e.ToString() );
+                        Debug.LogWarning( CASEditorUtils.logTag + "Copy Raw File To XCode Project failed: " + e.ToString() );
                     }
+                }
+                else
+                {
+                    Debug.Log( CASEditorUtils.logTag + "Not found Raw file: " + pathInAssets );
                 }
             }
 
@@ -191,8 +178,16 @@ namespace CAS.UEditor
 
         private static void ApplyCrosspromoDynamicLinks( string projectPath, PBXProject project, CASInitSettings casSettings )
         {
-            if (casSettings.managersCount == 0 || string.IsNullOrEmpty( casSettings.GetManagerId( 0 ) ))
+            if (casSettings.testAdMode || casSettings.managersCount == 0
+                || string.IsNullOrEmpty( casSettings.GetManagerId( 0 ) ))
                 return;
+            var depManager = DependencyManager.Create( BuildTarget.iOS, Audience.Mixed, false );
+            if (depManager != null)
+            {
+                var crossPromoDependency = depManager.FindCrossPromotion();
+                if (crossPromoDependency != null && !crossPromoDependency.isInstalled())
+                    return;
+            }
             try
             {
                 var identifier = Application.identifier;

@@ -13,6 +13,9 @@
 #if __has_include(<FirebaseAnalytics/FIRAnalytics.h>)
 #import <FirebaseAnalytics/FIRAnalytics.h>
 #endif
+#if __has_include("UnityAppController.h")
+#import "UnityAppController.h"
+#endif
 
 @implementation CASUCallback
 {
@@ -75,6 +78,14 @@
 }
 
 - (void)didClosedAd {
+    // Escape from callback when App on background. Not supported for Cross Promo logic.
+//    extern bool _didResignActive;
+//    if (_didResignActive) {
+//        // We are in the middle of the shutdown sequence, and at this point unity runtime is already destroyed.
+//        // We shall not call unity API, and definitely not script callbacks, so nothing to do here
+//        return;
+//    }
+
 #if __has_include("UnityInterface.h")
     if (fullScreenAd) {
         if (UnityIsPaused()) {
@@ -95,6 +106,17 @@
 #else
     NSLog(@"[CAS] Framework bridge cant find Firebase Analytics");
 #endif
+}
+
+- (UIViewController *)viewControllerForPresentingAppReturnAd {
+    {
+    #if __has_include("UnityAppController.h")
+        return ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;
+    #else
+        NSLog(@"[CAS] Framework bridge cant find UnityAppController.h");
+        return nil;
+    #endif
+    }
 }
 
 @end

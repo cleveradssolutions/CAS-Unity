@@ -1,5 +1,113 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.2.4] - 2021-05-31
+### Dependencies
+- [Android] Wraps [2.2.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.2.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Changes
+- Yandex Ads removed from the recommended solutions as it supports banner ads only.
+- Mintegral added to the recommended solutions.
+> Recommended solutions for Android is `MixedAudience` and `NotChildrenAds`.
+
+## [2.2.3] - 2021-05-20
+### Dependencies
+- [iOS] Wraps [2.2.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+
+## [2.2.2] - 2021-05-18
+### Dependencies
+- [Android] Wraps [2.2.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.2.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Features
+- [Editor] Improved prebuild operations with [-batchmode](https://docs.unity3d.com/Manual/CommandLineArguments.html).
+- Reduced memory usage throughout the entire life cycle.
+> ⭐ Our main goal to current update was to reduce the amount of memory used. 
+> We have done a great job optimizing various aspects of our SDK. It should reduce the number of ANR and make CAS work more stable.
+## Changes
+- [iOS 14.5 and SKAdNetwork 2.2](https://developer.apple.com/news/?id=ib31uj1j) including view through attribution. **Bumped minimum Xcode version to 12.5.** :warning: 
+- [The External Dependency Manager for Unity](https://github.com/googlesamples/unity-jar-resolver#external-dependency-manager-for-unity) is no longer distributed with the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html).  
+You should import the latest [external-dependency-manager.unitypackage](https://github.com/googlesamples/unity-jar-resolver/releases) into your project to use the third party SDK correctly.
+> For more context, see [firebase/quickstart-unity#1030](https://github.com/firebase/quickstart-unity/issues/1030#issuecomment-825095383)
+## Added new mediation partner
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+- [Mintegral](https://www.mintegral.com) - [Privacy Policy](https://www.mintegral.com/en/privacy/)  
+## Removed support for the following networks
+- The [Amazon Mobile Ads](https://developer.amazon.com/docs/mobile-ads/mb-overview.html) Network will be disabled on July 15, 2021.
+- The **MobFox** Mobile SDK has been deprecated and no longer conforms to the new global policies.
+- The **Verizon Media** is currently not a priority for further compatibility support.
+- The **Fyber Marketplace** is no longer supported in favor of bidding with **Fyber FairBid**.
+
+## [2.1.7] - 2021-04-21
+### Dependencies
+- [Android] Wraps [2.1.7 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.1.7 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixes from Android native 2.1.7
+- Downgrade Kidoz version to 8.9.0 for fixing ANR's
+
+## [2.1.6] - 2021-04-17
+### Dependencies
+- [Android] Wraps [2.1.6 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.1.6 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+
+## [2.1.5] - 2021-04-15
+### Dependencies
+- [Android] Wraps [2.1.5 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.1.5 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+
+## [2.1.4] - 2021-04-06
+### Dependencies
+- [Android] Wraps [2.1.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.1.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- Now it is possible to test advertisements in the Unity Editor using the Standardone taregt build.
+- Audience Network migrate to Bidding with FairBid. Read more on [Audience Network blog post](https://www.facebook.com/audiencenetwork/news-and-insights/audience-network-to-become-bidding-only-beginning-with-ios-in-2021/).
+### Changes
+- [FairBid] Included with Android `MixedAudience`, `NotChildrenAds` and iOS `Recommended` solutions.
+- [Fyber] Has been replaced with an enhanced version of FairBid to use bidding.
+### Added new partner mediation
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+- [FairBid](https://www.fyber.com) - 13.3.0
+
+## [2.1.3] - 2021-03-30
+### Dependencies
+- [iOS] Wraps [2.1.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixes from iOS native 2.1.3
+- Fixed invoke `OnBannerAdClicked`, `OnInterstitialAdClicked`, `OnRewardedAdClicked`, `OnRewardedAdCompleted` events.
+- Fixed multiple call `OnBannerAdHidden`, `OnInterstitialAdClosed`, `OnRewardedAdClosed` events per impression.
+
+## [2.1.2] - 2021-03-25
+### Dependencies
+- [Android] Wraps [2.1.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.1.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- [Android] Optimizing Android UI Thread.
+- [iOS] Update SKAdNetwork ID's.
+- Added `SetAdPositionEnumIndex(int)` and `SetAdSizeEnumIndex(int)` methods to `BannerAdObject` for setting the banner position and size by index in enums from the inspector.
+- [Editor] Added a button in CAS Settings to update all native dependencies.
+- [Editor] Added links to the wiki in the inspector.
+### Changes
+- Test Ad Mode requires the definition of the manager ID. In this case, the manager identifier can be any string, for example `demo`.
+- [iOS] The build property `ENABLE_BITCODE` does not change anymore.
+### Bug Fixes
+- [Editor] Fixed `ArgumentNullException` on Standalone platform.
+- [Editor] Fixed ads callbacks in Unity Editor without calling the `EventExecutor.Initialize()` method. You still need to call initialization to use `EventExecutor`.
+
+### Added new optional third party mediation
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+- [Fyber](https://www.fyber.com) - 7.8.2
+
+## [2.0.1] - 2021-03-09
+### Dependencies
+- [Android] Wraps [2.0.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.0.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- [iOS] Update SKAdNetwork ID's.
+### Bug Fixes
+- [iOS] Default CAS settings file in XCode.
+### Added new optional third party mediation
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+- [Tapjoy](https://www.tapjoy.com) - 12.7.1
+> Please contact us if you intend to use any additional third party mediation.
+
 ## [2.0.0] - 2021-03-02
 ### Dependencies
 - [Android] Wraps [2.0.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

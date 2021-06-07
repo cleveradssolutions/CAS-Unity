@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CAS
+﻿namespace CAS
 {
     public enum AdNetwork
     {
@@ -24,5 +22,9 @@ namespace CAS
         AmazonAds,
         Verizon,
         MoPub,
+        Tapjoy,
+        Fyber,
+        FairBid,
+        Mintegral
     }
 }

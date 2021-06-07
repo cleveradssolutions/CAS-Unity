@@ -5,6 +5,10 @@ using System;
 
 namespace CAS
 {
+    /// <summary>
+    /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
+    /// You can use EventExecutor to schedule each calls on the next Update() loop
+    /// </summary>
     public static class EventExecutor
     {
         private static EventExecutorComponent instance = null;
@@ -14,9 +18,12 @@ namespace CAS
 
         private static volatile bool eventsQueueEmpty = true;
 
+        /// <summary>
+        /// Creation of the Executor component if needed.
+        /// </summary>
         public static void Initialize()
         {
-            if (IsActive())
+            if (instance)
                 return;
             // Add an invisible game object to the scene
             GameObject obj = new GameObject( "CASMainThreadExecuter" );
@@ -25,13 +32,24 @@ namespace CAS
             instance = obj.AddComponent<EventExecutorComponent>();
         }
 
+        /// <summary>
+        /// Is initialized already.
+        /// </summary>
         public static bool IsActive()
         {
-            return instance != null;
+            return instance;
         }
 
+        /// <summary>
+        /// Schedule action on the next Update() loop in Unity Thread.
+        /// Using EventExecutor requires call static <see cref="Initialize"/> before adding a new event.
+        /// </summary>
         public static void Add( Action action )
         {
+#if UNITY_EDITOR
+            if (!instance)
+                Debug.LogError( "Using EventExecutor requires call static Initialize() before adding a new event." );
+#endif
             lock (eventsQueue)
             {
                 eventsQueue.Add( action );
@@ -42,7 +60,7 @@ namespace CAS
 
         public sealed class EventExecutorComponent : MonoBehaviour
         {
-            public void Update()
+            private void Update()
             {
                 if (eventsQueueEmpty)
                     return;
@@ -72,7 +90,7 @@ namespace CAS
                 startedEvents.Clear();
             }
 
-            public void OnDisable()
+            private void OnDisable()
             {
                 if (instance == this)
                     instance = null;

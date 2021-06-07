@@ -77,17 +77,17 @@ void CASUUpdateCCPAWithStatus(NSInteger doNotSell)
 
 void CASUSetTaggedWithAudience(NSInteger audience)
 {
-    [[CAS settings] setTaggedWithAudience:(CASAudience)audience ];
+    [[CAS settings] setTaggedWithAudience:(CASAudience)audience];
 }
 
 void CASUSetDebugMode(BOOL mode)
 {
-    [[CAS settings] setDebugMode:mode ];
+    [[CAS settings] setDebugMode:mode];
 }
 
 void CASUSetMuteAdSoundsTo(BOOL muted)
 {
-    [[CAS settings] setMuteAdSoundsTo:muted ];
+    [[CAS settings] setMuteAdSoundsTo:muted];
 }
 
 void CASUSetLoadingWithMode(NSInteger mode)
@@ -128,26 +128,33 @@ void CASUValidateIntegration()
 void CASUOpenDebugger(CASUTypeManagerRef manager)
 {
 #if __has_include("UnityAppController.h")
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"CASDebugger" bundle:nil];
+    UIStoryboard *storyboard =
+        [UIStoryboard storyboardWithName:@"CASTestSuit"
+                                  bundle:[NSBundle bundleForClass:[CASUManager class]]];
+    if (!storyboard) {
+        storyboard = [UIStoryboard storyboardWithName:@"CASDebugger"
+                                               bundle:[NSBundle bundleForClass:[CASUManager class]]];
+    }
     if (storyboard) {
         UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"DebuggerController"];
         if (vc) {
             UIViewController *root = ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;
-            
+
             SEL selector = NSSelectorFromString(@"setTargetManager:");
-            
-            IMP imp = [vc methodForSelector:selector];
-            void (*func)(id, SEL) = (void *)imp;
-            func(vc, selector);
-            
-            //[vc performSelector:selector withObject:(__bridge CASUManager *)manager];
-            
+            if (![vc respondsToSelector:selector]) {
+                NSLog(@"[CAS] Framework bridge cant connect to CASTestSuit");
+                return;
+            }
+
+            CASUManager *internalManager = (__bridge CASUManager *)manager;
+            [vc performSelector:selector withObject:[internalManager mediationManager]];
+            vc.modalPresentationStyle = UIModalPresentationFullScreen;
             [root presentViewController:vc animated:YES completion:nil];
             return;
         }
     }
 #endif
-    NSLog(@"[CAS] Framework bridge cant find CASDebugger.h");
+    NSLog(@"[CAS] Framework bridge cant find CASDebugger");
 }
 
 const char * CASUGetActiveMediationPattern()
@@ -224,6 +231,8 @@ void CASUFreeManager(CASUTypeManagerRef manager)
     internalManager.bannerCallback = nil;
     internalManager.interstitialCallback = nil;
     internalManager.rewardedCallback = nil;
+    internalManager.appReturnDelegate = nil;
+    [internalManager disableReturnAds];
     CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
     [cache removeObjectWithKey:internalManager.mediationManager.managerID];
 }
@@ -277,6 +286,20 @@ void CASUSetRewardedDelegate(CASUTypeManagerRef                   manager,
     internalManager.rewardedCallback.didClickCallback = didClick;
     internalManager.rewardedCallback.didCompleteCallback = didComplete;
     internalManager.rewardedCallback.didClosedCallback = didClosed;
+}
+
+void CASUSetAppReturnDelegate(CASUTypeManagerRef                   manager,
+                              CASUWillShownWithAdCallback          willShow,
+                              CASUDidShowAdFailedWithErrorCallback didShowWithError,
+                              CASUDidClickedAdCallback             didClick,
+                              CASUDidCompletedAdCallback           didComplete,
+                              CASUDidClosedAdCallback              didClosed)
+{
+    CASUManager *internalManager = (__bridge  CASUManager *)manager;
+    internalManager.appReturnDelegate.willShownCallback = willShow;
+    internalManager.appReturnDelegate.didShowFailedCallback = didShowWithError;
+    internalManager.appReturnDelegate.didClickCallback = didClick;
+    internalManager.appReturnDelegate.didClosedCallback = didClosed;
 }
 
 void CASULoadAdWithType(CASUTypeManagerRef manager, NSInteger adType)
@@ -349,4 +372,16 @@ void CASUSetLastPageAdContent(CASUTypeManagerRef manager, const char *contentJso
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     [internalManager setLastPageAdFor:CASUStringFromUTF8String(contentJson)];
+}
+
+void CASUEnableReturnAds(CASUTypeManagerRef manager)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    [internalManager enableReturnAds];
+}
+
+void CASUDisableReturnAds(CASUTypeManagerRef manager)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    [internalManager disableReturnAds];
 }

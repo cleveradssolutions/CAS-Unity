@@ -9,6 +9,7 @@ namespace CAS.Android
         private AdCallbackProxy _bannerProxy;
         private AdCallbackProxy _interstitialProxy;
         private AdCallbackProxy _rewardedProxy;
+        private AdCallbackProxy _returnProxy;
         private AdLoadCallbackProxy _adLoadProxy;
         private AndroidJavaObject _managerBridge;
 
@@ -99,6 +100,27 @@ namespace CAS.Android
             add { _rewardedProxy.OnAdClosed += value; }
             remove { _rewardedProxy.OnAdClosed -= value; }
         }
+
+        public event Action OnReturnAdShown
+        {
+            add { _returnProxy.OnAdShown += value; }
+            remove { _returnProxy.OnAdShown -= value; }
+        }
+        public event CASEventWithError OnReturnAdFailedToShow
+        {
+            add { _returnProxy.OnAdFailedToShow += value; }
+            remove { _returnProxy.OnAdFailedToShow -= value; }
+        }
+        public event Action OnReturnAdClicked
+        {
+            add { _returnProxy.OnAdClicked += value; }
+            remove { _returnProxy.OnAdClicked -= value; }
+        }
+        public event Action OnReturnAdClosed
+        {
+            add { _returnProxy.OnAdClosed += value; }
+            remove { _returnProxy.OnAdClosed -= value; }
+        }
         #endregion
 
         public CASMediationManager( CASInitSettings initData )
@@ -124,6 +146,7 @@ namespace CAS.Android
             _bannerProxy = new AdCallbackProxy();
             _interstitialProxy = new AdCallbackProxy();
             _rewardedProxy = new AdCallbackProxy();
+            _returnProxy = new AdCallbackProxy();
             _adLoadProxy = new AdLoadCallbackProxy();
 
             if (initData.initListener != null)
@@ -257,6 +280,14 @@ namespace CAS.Android
         public bool TryOpenDebugger()
         {
             return _managerBridge.Call<bool>( "tryOpenDebugger" );
+        }
+
+        public void SetReturnAdsEnabled( bool enable )
+        {
+            if ( enable )
+                _managerBridge.Call( "enableReturnAds", _returnProxy );
+            else
+                _managerBridge.Call( "disableReturnAds" );
         }
     }
 }

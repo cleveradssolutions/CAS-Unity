@@ -4,6 +4,37 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
+    [AddComponentMenu( "CleverAdsSolutions/Initialize Manager Ad Object" )]
+    [DisallowMultipleComponent]
+    [HelpURL( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Manager-Ad-object" )]
+    public class ManagerAdObject : MonoBehaviour
+    {
+        public ManagerIndex managerId;
+        [SerializeField]
+        private bool initializeOnAwake = true;
+
+        public UnityEvent OnInitialized;
+
+        public void Initialize()
+        {
+            MobileAds.BuildManager()
+               .WithManagerIdAtIndex( managerId.index )
+               .WithInitListener( OnInitializeResult )
+               .Initialize();
+        }
+
+        private void Start()
+        {
+            if (initializeOnAwake)
+                Initialize();
+        }
+
+        private void OnInitializeResult( bool success, string error )
+        {
+            OnInitialized.Invoke();
+        }
+    }
+
     [Serializable]
     public struct ManagerIndex
     {
@@ -23,39 +54,9 @@ namespace CAS.AdObject
 #elif UNITY_IOS
                 return ios;
 #else
-                return -1;
+                return 0;
 #endif
             }
-        }
-    }
-
-    [AddComponentMenu( "CleverAdsSolutions/Initialzie Manager Ad Object" )]
-    [DisallowMultipleComponent]
-    public class ManagerAdObject : MonoBehaviour
-    {
-        public ManagerIndex managerId;
-        [SerializeField]
-        private bool initializeOnAwake = true;
-
-        public UnityEvent OnInitialized;
-
-        public void Initialize()
-        {
-            MobileAds.BuildManager()
-                .WithManagerIdAtIndex( managerId.index )
-                .WithInitListener( OnInitializeResult )
-                .Initialize();
-        }
-
-        private void Start()
-        {
-            if (initializeOnAwake)
-                Initialize();
-        }
-
-        private void OnInitializeResult( bool success, string error )
-        {
-            OnInitialized.Invoke();
         }
     }
 }

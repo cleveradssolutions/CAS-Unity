@@ -94,6 +94,7 @@ namespace CAS.UEditor
             Reward = 4,
             Native = 8,
             Beta = 16,
+            Obsolete = 32
         }
 
         public string name;

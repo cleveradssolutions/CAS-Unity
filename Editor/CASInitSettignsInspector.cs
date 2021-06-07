@@ -31,7 +31,7 @@ namespace CAS.UEditor
         private bool allowedPackageUpdate;
         private string newCASVersion = null;
         private bool deprecateDependenciesExist;
-        //private bool usingMultidexOnBuild;
+        private bool edmExist;
 
         private string[] deprecatedAssets = null;
 
@@ -66,24 +66,11 @@ namespace CAS.UEditor
             managerIdsList = new ReorderableList( props, managerIdsProp, true, true, true, true )
             {
                 drawHeaderCallback = DrawListHeader,
-                drawElementCallback = DrawListElement
+                drawElementCallback = DrawListElement,
+                onCanRemoveCallback = ( list ) => list.count > 1,
             };
 
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
-            if (managerIdsProp.arraySize == 0)
-            {
-                if (platform == BuildTarget.Android)
-                {
-                    managerIdsProp.arraySize = 1;
-                    managerIdsProp.GetArrayElementAtIndex( 0 )
-                                  .stringValue = PlayerSettings.GetApplicationIdentifier( BuildTargetGroup.Android );
-                }
-                else if (platform == BuildTarget.iOS)
-                {
-                    managerIdsProp.arraySize = 1;
-                    interstitialIntervalProp.intValue = 90;
-                }
-            }
 
             //usingMultidexOnBuild = PlayerPrefs.GetInt( Utils.editorIgnoreMultidexPrefs, 0 ) == 0;
 
@@ -107,6 +94,8 @@ namespace CAS.UEditor
 
             if (File.Exists( Utils.androidResSettingsPath + ".json" ))
                 AssetDatabase.MoveAssetToTrash( Utils.androidResSettingsPath + ".json" );
+
+            edmExist = Utils.IsAndroidDependenciesResolverExist();
         }
 
         private void DrawListHeader( Rect rect )
@@ -122,16 +111,23 @@ namespace CAS.UEditor
             item.stringValue = EditorGUI.TextField( rect, item.stringValue );
         }
 
+        protected override void OnHeaderGUI()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label( "CleverAdsSolutions", HelpStyles.largeTitleStyle );
+            GUILayout.Label( platform.ToString(), HelpStyles.largeTitleStyle, GUILayout.ExpandWidth( false ) );
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+            Utils.OnHeaderGUI( Utils.gitUnityRepo, allowedPackageUpdate, MobileAds.wrapperVersion, ref newCASVersion );
+        }
+
         public override void OnInspectorGUI()
         {
             var obj = serializedObject;
             obj.UpdateIfRequiredOrScript();
 
-            Utils.LinksToolbarGUI( Utils.gitUnityRepo );
-
             HelpStyles.BeginBoxScope();
-            EditorGUILayout.PropertyField( testAdModeProp );
-            EditorGUI.BeginDisabledGroup( testAdModeProp.boolValue );
             if (managerIdsList.count > 1)
             {
                 var appId = managerIdsProp.GetArrayElementAtIndex( 0 ).stringValue;
@@ -140,19 +136,18 @@ namespace CAS.UEditor
             }
             managerIdsList.DoLayoutList();
             OnManagerIDVerificationGUI();
-            EditorGUI.EndDisabledGroup();
             allowedAdFlagsProp.intValue = Convert.ToInt32(
                EditorGUILayout.EnumFlagsField( "Allowed ads in app", ( AdFlags )allowedAdFlagsProp.intValue ) );
 
-            GUILayout.Label( "These settings are required for initialization with: CAS.MobileAds.InitializeFromResources(0)",
+            EditorGUILayout.PropertyField( testAdModeProp );
+            if (testAdModeProp.boolValue)
+            {
+                EditorGUILayout.HelpBox( "Make sure you disable test ad mode and replace test manager ID with your own ad manager ID before publishing your app!", MessageType.Warning );
+            }
+            GUILayout.Label( "CAS.MobileAds.BuildManager() default settings.",
                 EditorStyles.wordWrappedMiniLabel, GUILayout.ExpandHeight( false ) );
             HelpStyles.EndBoxScope();
 
-            DrawSeparator();
-            OnAudienceGUI();
-            OnIOSLocationUsageDescriptionGUI();
-
-            DrawSeparator();
             OnBannerSizeGUI();
             bannerRefreshProp.intValue = Mathf.Clamp(
                  EditorGUILayout.IntField( "Banner refresh rate(sec)", bannerRefreshProp.intValue ), 10, short.MaxValue );
@@ -165,21 +160,14 @@ namespace CAS.UEditor
                 interWhenNoRewardedAdProp.boolValue );
             DrawSeparator();
             OnLoadingModeGUI();
-
+            OnIOSLocationUsageDescriptionGUI();
             EditorGUILayout.PropertyField( debugModeProp );
             EditorGUILayout.PropertyField( analyticsCollectionEnabledProp );
             OnEditroRuntimeActiveAdGUI();
-            //if(usingMultidexOnBuild != EditorGUILayout.Toggle("Use MultiDex", usingMultidexOnBuild )){
-            //    usingMultidexOnBuild = !usingMultidexOnBuild;
-            //    if (usingMultidexOnBuild)
-            //        PlayerPrefs.DeleteKey( Utils.editorIgnoreMultidexPrefs );
-            //    else
-            //        PlayerPrefs.SetInt( Utils.editorIgnoreMultidexPrefs, 1 );
-            //}
 
             DrawSeparator();
+            OnAudienceGUI();
             DeprecatedDependenciesGUI();
-            Utils.AboutRepoGUI( Utils.gitUnityRepo, allowedPackageUpdate, MobileAds.wrapperVersion, ref newCASVersion );
 
             if (dependencyManager == null)
             {
@@ -189,8 +177,48 @@ namespace CAS.UEditor
             else
             {
                 dependencyManager.OnGUI( platform );
-            }
 
+
+                if (edmExist)
+                {
+                    if (platform == BuildTarget.Android)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
+                            "Please use Android Resolver after the change complete.", MessageType.Info );
+                        if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.ExpandHeight( true ) ))
+                        {
+#if UNITY_ANDROID
+                        var succses = Utils.TryResolveAndroidDependencies();
+                        EditorUtility.DisplayDialog( "Android Dependencies",
+                            succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
+                            "OK" );
+#else
+                            EditorUtility.DisplayDialog( "Android Dependencies",
+                                "Android resolver not enabled. Unity Android platform target must be selected.",
+                                "OK" );
+#endif
+                        }
+                        EditorGUILayout.EndHorizontal();
+                    }
+                }
+                else
+                {
+                    HelpStyles.BeginBoxScope();
+                    EditorGUILayout.HelpBox( "In order to properly include third party dependencies in your project, " +
+                        "an External Dependency Manager is required.", MessageType.Error );
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label( "1. Download latest EDM4U.unitypackage", GUILayout.ExpandWidth( false ) );
+                    if (GUILayout.Button( "here", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
+                    {
+                        Application.OpenURL( "https://github.com/googlesamples/unity-jar-resolver/releases" );
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    GUILayout.Label( "2. Import the EDM4U.unitypackage into your project." );
+                    HelpStyles.EndBoxScope();
+                }
+            }
+            GUILayout.FlexibleSpace();
             obj.ApplyModifiedProperties();
         }
 
@@ -202,9 +230,6 @@ namespace CAS.UEditor
 
         private void OnManagerIDVerificationGUI()
         {
-            if (testAdModeProp.boolValue)
-                return;
-
             if (managerIdsProp.arraySize == 0)
                 EditorGUILayout.HelpBox( "Build is not supported without a manager ID.", MessageType.Error );
             else if (string.IsNullOrEmpty( managerIdsProp.GetArrayElementAtIndex( 0 ).stringValue ))
@@ -213,7 +238,7 @@ namespace CAS.UEditor
                 return;
             EditorGUILayout.HelpBox( "If you haven't created an CAS account and registered an manager yet, " +
                 "now's a great time to do so at cleveradssolutions.com. " +
-                "If you're just looking to experiment with the SDK, though, you can use the Test Ad Mode above.", MessageType.Info );
+                "If you're just looking to experiment with the SDK, though, you can use the Test Ad Mode below with any manager ID.", MessageType.Info );
         }
 
         private void OnAudienceGUI()
