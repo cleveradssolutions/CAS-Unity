@@ -535,6 +535,11 @@ namespace CAS.iOS
             else
                 CASExterns.CASUDisableReturnAds( _managerPtr );
         }
+
+        public void SkipNextAppReturnAd()
+        {
+            CASExterns.CASUSkipNextAppReturnAd( _managerPtr );
+        }
     }
 }
 #endif

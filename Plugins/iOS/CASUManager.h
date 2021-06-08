@@ -47,4 +47,5 @@
 - (void)setLastPageAdFor:(NSString *_Nullable)content;
 - (void)enableReturnAds;
 - (void)disableReturnAds;
+- (void)skipNextAppReturnAd;
 @end

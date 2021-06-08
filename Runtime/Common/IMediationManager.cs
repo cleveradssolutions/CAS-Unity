@@ -187,5 +187,10 @@ namespace CAS
         /// </summary>
         /// <param name="enable"></param>
         void SetReturnAdsEnabled( bool enable );
+
+        /// <summary>
+        /// Ignore one showing AppReturnAd
+        /// </summary>
+        void SkipNextAppReturnAd();
     }
 }

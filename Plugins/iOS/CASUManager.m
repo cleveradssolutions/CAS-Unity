@@ -290,6 +290,10 @@
     [_mediationManager disableReturnAds];
 }
 
+- (void)skipNextAppReturnAd {
+    [_mediationManager skipNextAppReturnAd];
+}
+
 - (UIViewController *)unityGLViewController {
 #if __has_include("UnityAppController.h")
     return ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;

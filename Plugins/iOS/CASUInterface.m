@@ -385,3 +385,9 @@ void CASUDisableReturnAds(CASUTypeManagerRef manager)
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     [internalManager disableReturnAds];
 }
+
+void CASUSkipNextAppReturnAd(CASUTypeManagerRef manager)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    [internalManager skipNextAppReturnAd];
+}

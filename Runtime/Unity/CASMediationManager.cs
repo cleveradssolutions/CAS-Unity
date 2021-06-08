@@ -550,9 +550,10 @@ namespace CAS.Unity
                 Debug.Log( "[CleverAdsSolutions] " + message );
         }
 
-        public void SetReturnAdsEnabled( bool enable )
-        {
-        }
+        public void SetReturnAdsEnabled( bool enable ) { }
+
+        public void SkipNextAppReturnAd() { }
+
         #endregion
     }
 }
