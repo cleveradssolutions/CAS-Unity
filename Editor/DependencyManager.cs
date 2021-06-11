@@ -53,10 +53,15 @@ namespace CAS.UEditor
             var result = new char[networks.Length];
             for (int i = 0; i < networks.Length; i++)
             {
-                var dependency = target.Find( ( ( AdNetwork )networks.GetValue( i ) ).ToString() );
-                result[i] = ( dependency != null && dependency.isInstalled() ) ? '1' : '0';
+                var dependency = target.Find( ( ( AdNetwork )networks.GetValue( i ) ).GetName() );
+                result[i] = ( dependency != null && dependency.IsInstalled() ) ? '1' : '0';
             }
             return new string( result );
+        }
+
+        public Dependency Find( AdNetwork network )
+        {
+            return Find( network.GetName() );
         }
 
         public Dependency Find( string name )
@@ -76,15 +81,17 @@ namespace CAS.UEditor
 
         public Dependency FindCrossPromotion()
         {
-            return Find( Utils.promoDependency );
+            return Find( AdNetwork.CrossPromotion.GetName() );
         }
     }
-
-
 
     [Serializable]
     public partial class Dependency
     {
+        public const AdNetwork adBase = (AdNetwork)64;
+        public const AdNetwork noNetwork = ( AdNetwork )65;
+        public const string adBaseName = "Base";
+
         [Flags]
         public enum Label
         {
@@ -99,12 +106,13 @@ namespace CAS.UEditor
 
         public string name;
         public string version;
-        public string require;
+        public AdNetwork require = noNetwork;
         public string url;
         public int filter;
         public string[] dependencies;
-        public string[] contains;
+        public AdNetwork[] contains;
         public string[] source;
+        public string comment;
         public Label labels = Label.Banner | Label.Inter | Label.Reward;
 
         public string installedVersion { get; set; }
@@ -115,19 +123,35 @@ namespace CAS.UEditor
 
         public Dependency() { }
 
-        public Dependency( string name, string url, string version, int filter, string require, params string[] dependencies )
+        public Dependency( AdNetwork network, string url, string version, int filter, AdNetwork? require, params string[] dependencies )
+        {
+            this.name = network.GetName();
+            this.dependencies = dependencies;
+            this.version = version;
+            this.url = url;
+            this.filter = filter;
+            this.require = require ?? noNetwork;
+        }
+
+        public Dependency( string name, string url, string version, int filter, AdNetwork? require, params string[] dependencies )
         {
             this.name = name;
             this.dependencies = dependencies;
             this.version = version;
             this.url = url;
             this.filter = filter;
-            this.require = require;
+            this.require = require ?? noNetwork;
         }
 
+        public bool IsInstalled()
+        {
+            return locked || !string.IsNullOrEmpty( installedVersion );
+        }
+
+        [Obsolete( "Renamed to IsInstalled()" )]
         public bool isInstalled()
         {
-            return isRequired || locked || !string.IsNullOrEmpty( installedVersion );
+            return IsInstalled();
         }
     }
 }

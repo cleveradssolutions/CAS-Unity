@@ -25,6 +25,8 @@
         Tapjoy,
         Fyber,
         FairBid,
-        Mintegral
+        Mintegral,
+        Smaato,
+        HyperMX
     }
 }

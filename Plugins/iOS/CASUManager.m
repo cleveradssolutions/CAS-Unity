@@ -283,15 +283,15 @@
 }
 
 - (void)enableReturnAds {
-    [_mediationManager enableReturnAdsWithDelegate: _appReturnDelegate];
+    [_mediationManager enableAppReturnAdsWith: _appReturnDelegate];
 }
 
 - (void)disableReturnAds {
-    [_mediationManager disableReturnAds];
+    [_mediationManager disableAppReturnAds];
 }
 
 - (void)skipNextAppReturnAd {
-    [_mediationManager skipNextAppReturnAd];
+    [_mediationManager skipNextAppReturnAds];
 }
 
 - (UIViewController *)unityGLViewController {

@@ -110,6 +110,8 @@ void CASUSetTrackLocationEnabled(BOOL enabled)
     [[CAS settings] setTrackLocationWithEnabled:enabled];
 }
 
+#pragma mark - User targeting options
+
 void CASUSetUserGender(NSInteger gender)
 {
     [[CAS targetingOptions] setGender:(Gender)gender];
@@ -119,6 +121,8 @@ void CASUSetUserAge(NSInteger age)
 {
     [[CAS targetingOptions] setAge:age];
 }
+
+#pragma mark - Utils
 
 void CASUValidateIntegration()
 {
@@ -237,6 +241,7 @@ void CASUFreeManager(CASUTypeManagerRef manager)
     [cache removeObjectWithKey:internalManager.mediationManager.managerID];
 }
 
+#pragma mark - General Ads functions
 void CASUSetLoadAdDelegate(CASUTypeManagerRef            manager,
                            CASUDidAdLoadedCallback       didLoaded,
                            CASUDidAdFailedToLoadCallback didFailedToLoad)
@@ -247,83 +252,22 @@ void CASUSetLoadAdDelegate(CASUTypeManagerRef            manager,
     internalManager.mediationManager.adLoadDelegate = internalManager;
 }
 
-void CASUSetBannerDelegate(CASUTypeManagerRef                   manager,
-                           CASUWillShownWithAdCallback          willShow,
-                           CASUDidShowAdFailedWithErrorCallback didShowWithError,
-                           CASUDidClickedAdCallback             didClick,
-                           CASUDidClosedAdCallback              didClosed)
-{
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.bannerCallback.willShownCallback = willShow;
-    internalManager.bannerCallback.didShowFailedCallback = didShowWithError;
-    internalManager.bannerCallback.didClickCallback = didClick;
-    internalManager.bannerCallback.didClosedCallback = didClosed;
-}
-
-void CASUSetInterstitialDelegate(CASUTypeManagerRef                   manager,
-                                 CASUWillShownWithAdCallback          willShow,
-                                 CASUDidShowAdFailedWithErrorCallback didShowWithError,
-                                 CASUDidClickedAdCallback             didClick,
-                                 CASUDidClosedAdCallback              didClosed)
-{
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.interstitialCallback.willShownCallback = willShow;
-    internalManager.interstitialCallback.didShowFailedCallback = didShowWithError;
-    internalManager.interstitialCallback.didClickCallback = didClick;
-    internalManager.interstitialCallback.didClosedCallback = didClosed;
-}
-
-void CASUSetRewardedDelegate(CASUTypeManagerRef                   manager,
-                             CASUWillShownWithAdCallback          willShow,
-                             CASUDidShowAdFailedWithErrorCallback didShowWithError,
-                             CASUDidClickedAdCallback             didClick,
-                             CASUDidCompletedAdCallback           didComplete,
-                             CASUDidClosedAdCallback              didClosed)
-{
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.rewardedCallback.willShownCallback = willShow;
-    internalManager.rewardedCallback.didShowFailedCallback = didShowWithError;
-    internalManager.rewardedCallback.didClickCallback = didClick;
-    internalManager.rewardedCallback.didCompleteCallback = didComplete;
-    internalManager.rewardedCallback.didClosedCallback = didClosed;
-}
-
-void CASUSetAppReturnDelegate(CASUTypeManagerRef                   manager,
-                              CASUWillShownWithAdCallback          willShow,
-                              CASUDidShowAdFailedWithErrorCallback didShowWithError,
-                              CASUDidClickedAdCallback             didClick,
-                              CASUDidCompletedAdCallback           didComplete,
-                              CASUDidClosedAdCallback              didClosed)
-{
-    CASUManager *internalManager = (__bridge  CASUManager *)manager;
-    internalManager.appReturnDelegate.willShownCallback = willShow;
-    internalManager.appReturnDelegate.didShowFailedCallback = didShowWithError;
-    internalManager.appReturnDelegate.didClickCallback = didClick;
-    internalManager.appReturnDelegate.didClosedCallback = didClosed;
-}
-
 void CASULoadAdWithType(CASUTypeManagerRef manager, NSInteger adType)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     [internalManager load:(CASType)adType];
 }
 
-void CASUShowAdWithType(CASUTypeManagerRef manager, NSInteger adType)
-{
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    [internalManager show:(CASType)adType];
-}
-
-void CASUHideBanner(CASUTypeManagerRef manager)
-{
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    [internalManager hideBanner];
-}
-
 BOOL CASUIsAdReadyWithType(CASUTypeManagerRef manager, NSInteger adType)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     return [internalManager.mediationManager isAdReadyWithType:(CASType)adType];
+}
+
+void CASUShowAdWithType(CASUTypeManagerRef manager, NSInteger adType)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    [internalManager show:(CASType)adType];
 }
 
 const char * CASUGetLastActiveMediationWithType(CASUTypeManagerRef manager, NSInteger adType)
@@ -342,6 +286,65 @@ void CASUEnableAdType(CASUTypeManagerRef manager, NSInteger adType, BOOL enable)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     [internalManager.mediationManager setEnabled:enable type:(CASType)adType];
+}
+
+void CASUSetLastPageAdContent(CASUTypeManagerRef manager, const char *contentJson)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    [internalManager setLastPageAdFor:CASUStringFromUTF8String(contentJson)];
+}
+
+#pragma mark - Interstitial Ads
+
+void CASUSetInterstitialDelegate(CASUTypeManagerRef                   manager,
+                                 CASUWillShownWithAdCallback          willShow,
+                                 CASUDidShowAdFailedWithErrorCallback didShowWithError,
+                                 CASUDidClickedAdCallback             didClick,
+                                 CASUDidClosedAdCallback              didClosed)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    internalManager.interstitialCallback.willShownCallback = willShow;
+    internalManager.interstitialCallback.didShowFailedCallback = didShowWithError;
+    internalManager.interstitialCallback.didClickCallback = didClick;
+    internalManager.interstitialCallback.didClosedCallback = didClosed;
+}
+
+#pragma mark - Rewarded Ads
+
+void CASUSetRewardedDelegate(CASUTypeManagerRef                   manager,
+                             CASUWillShownWithAdCallback          willShow,
+                             CASUDidShowAdFailedWithErrorCallback didShowWithError,
+                             CASUDidClickedAdCallback             didClick,
+                             CASUDidCompletedAdCallback           didComplete,
+                             CASUDidClosedAdCallback              didClosed)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    internalManager.rewardedCallback.willShownCallback = willShow;
+    internalManager.rewardedCallback.didShowFailedCallback = didShowWithError;
+    internalManager.rewardedCallback.didClickCallback = didClick;
+    internalManager.rewardedCallback.didCompleteCallback = didComplete;
+    internalManager.rewardedCallback.didClosedCallback = didClosed;
+}
+
+#pragma mark - Banner Ads
+
+void CASUSetBannerDelegate(CASUTypeManagerRef                   manager,
+                           CASUWillShownWithAdCallback          willShow,
+                           CASUDidShowAdFailedWithErrorCallback didShowWithError,
+                           CASUDidClickedAdCallback             didClick,
+                           CASUDidClosedAdCallback              didClosed)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    internalManager.bannerCallback.willShownCallback = willShow;
+    internalManager.bannerCallback.didShowFailedCallback = didShowWithError;
+    internalManager.bannerCallback.didClickCallback = didClick;
+    internalManager.bannerCallback.didClosedCallback = didClosed;
+}
+
+void CASUHideBanner(CASUTypeManagerRef manager)
+{
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    [internalManager hideBanner];
 }
 
 void CASUSetBannerSize(CASUTypeManagerRef manager, NSInteger bannerSize)
@@ -368,25 +371,35 @@ float CASUGetBannerWidthInPixels(CASUTypeManagerRef manager)
     return internalManager.bannerWidthInPixels;
 }
 
-void CASUSetLastPageAdContent(CASUTypeManagerRef manager, const char *contentJson)
+#pragma mark - App Return Ads
+
+void CASUSetAppReturnDelegate(CASUTypeManagerRef                   manager,
+                              CASUWillShownWithAdCallback          willShow,
+                              CASUDidShowAdFailedWithErrorCallback didShowWithError,
+                              CASUDidClickedAdCallback             didClick,
+                              CASUDidCompletedAdCallback           didComplete,
+                              CASUDidClosedAdCallback              didClosed)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
-    [internalManager setLastPageAdFor:CASUStringFromUTF8String(contentJson)];
+    internalManager.appReturnDelegate.willShownCallback = willShow;
+    internalManager.appReturnDelegate.didShowFailedCallback = didShowWithError;
+    internalManager.appReturnDelegate.didClickCallback = didClick;
+    internalManager.appReturnDelegate.didClosedCallback = didClosed;
 }
 
-void CASUEnableReturnAds(CASUTypeManagerRef manager)
+void CASUEnableAppReturnAds(CASUTypeManagerRef manager)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     [internalManager enableReturnAds];
 }
 
-void CASUDisableReturnAds(CASUTypeManagerRef manager)
+void CASUDisableAppReturnAds(CASUTypeManagerRef manager)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     [internalManager disableReturnAds];
 }
 
-void CASUSkipNextAppReturnAd(CASUTypeManagerRef manager)
+void CASUSkipNextAppReturnAds(CASUTypeManagerRef manager)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     [internalManager skipNextAppReturnAd];

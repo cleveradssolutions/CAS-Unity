@@ -101,22 +101,22 @@ namespace CAS.Android
             remove { _rewardedProxy.OnAdClosed -= value; }
         }
 
-        public event Action OnReturnAdShown
+        public event Action OnAppReturnAdShown
         {
             add { _returnProxy.OnAdShown += value; }
             remove { _returnProxy.OnAdShown -= value; }
         }
-        public event CASEventWithError OnReturnAdFailedToShow
+        public event CASEventWithError OnAppReturnAdFailedToShow
         {
             add { _returnProxy.OnAdFailedToShow += value; }
             remove { _returnProxy.OnAdFailedToShow -= value; }
         }
-        public event Action OnReturnAdClicked
+        public event Action OnAppReturnAdClicked
         {
             add { _returnProxy.OnAdClicked += value; }
             remove { _returnProxy.OnAdClicked -= value; }
         }
-        public event Action OnReturnAdClosed
+        public event Action OnAppReturnAdClosed
         {
             add { _returnProxy.OnAdClosed += value; }
             remove { _returnProxy.OnAdClosed -= value; }
@@ -282,12 +282,17 @@ namespace CAS.Android
             return _managerBridge.Call<bool>( "tryOpenDebugger" );
         }
 
-        public void SetReturnAdsEnabled( bool enable )
+        public void SetAppReturnAdsEnabled( bool enable )
         {
             if ( enable )
                 _managerBridge.Call( "enableReturnAds", _returnProxy );
             else
                 _managerBridge.Call( "disableReturnAds" );
+        }
+
+        public void SkipNextAppReturnAds()
+        {
+            _managerBridge.Call( "skipNextReturnAds" );
         }
     }
 }

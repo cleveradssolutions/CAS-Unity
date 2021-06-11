@@ -98,6 +98,13 @@ namespace CAS.UEditor
         #endregion
 
         #region Public API
+        public static string GetName( this AdNetwork network )
+        {
+            if (network == Dependency.adBase)
+                return Dependency.adBaseName;
+            return network.ToString();
+        }
+
         public static string GetNativeSettingsPath( BuildTarget platform, string managerId )
         {
             if (string.IsNullOrEmpty( managerId ))

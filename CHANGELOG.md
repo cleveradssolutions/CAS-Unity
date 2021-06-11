@@ -1,5 +1,21 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.3.0] - 2021-06-11
+### Dependencies
+- [Android] Wraps [2.3.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.3.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Features
+- Added the ability to enable automatic display of [interstitial ads for users who return to the open application](https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Return-Ads).
+## Changes
+> Ads Solution names have been changed to match terms with native platforms.
+- [Android] The `NotChildrenAds` solution has been renamed to `OptimalAds` solutions.
+- [Android] Removed the `MixedAudience` solution in favor of `OptimalAds` solutions.
+- [iOS] The `Recomended` solution has been renamed to `OptimalAds` solutions.
+- [iOS] Removed the `Main` solution in favor of `OptimalAds` solutions.
+## Bug Fixes
+- [Android] Fixed an issue due to which sometimes the banner ads was not visible on the screen.
+- [iOS] Fixed duplication of Google Utilities framework using Firebase and Unity 2019.4+.
+
 ## [2.2.4] - 2021-05-31
 ### Dependencies
 - [Android] Wraps [2.2.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

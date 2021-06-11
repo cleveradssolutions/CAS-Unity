@@ -275,7 +275,7 @@ namespace CAS.UEditor
                             item.locked = true;
                     }
 
-                    if (!string.IsNullOrEmpty( require ))
+                    if (require != noNetwork)
                     {
                         var item = mediation.Find( require );
                         if (item != null)
@@ -335,6 +335,7 @@ namespace CAS.UEditor
         internal void OnGUI( DependencyManager mediation, BuildTarget platform )
         {
             bool installed = !string.IsNullOrEmpty( installedVersion );
+            bool isErrorRemove = false;
             if (inBan && filter < 0 && !installed)
                 return;
             var dividerRect = EditorGUILayout.GetControlRect( GUILayout.Height( 1 ) );
@@ -344,18 +345,21 @@ namespace CAS.UEditor
             }
             EditorGUILayout.BeginHorizontal();
             if (( inBan && installed ) || ( installed && locked ) || ( isRequired && !locked && !installed ))
+            {
                 GUILayout.Label( HelpStyles.errorIconContent, GUILayout.Width( 20 ) );
+                isErrorRemove = true;
+            }
             else if (string.IsNullOrEmpty( url ))
                 GUILayout.Space( 25 );
             else if (GUILayout.Button( HelpStyles.helpIconContent, EditorStyles.label, GUILayout.Width( 20 ) ))
                 Application.OpenURL( url );
 
-            GUILayout.Label( name, GUILayout.ExpandWidth( false ) );
             //OnLabelGUI( labels );
-            GUILayout.FlexibleSpace();
-
+            
             if (installed)
             {
+                GUILayout.Label( name, GUILayout.ExpandWidth( false ) );
+                GUILayout.FlexibleSpace();
                 if (!isNewer || inBan)
                 {
                     GUILayout.Label( version, mediation.columnWidth );
@@ -368,26 +372,42 @@ namespace CAS.UEditor
                         ActivateDependencies( platform, mediation );
                 }
 
-                var requiredLabel = isRequired && !locked;
-                EditorGUI.BeginDisabledGroup( requiredLabel );
-                if (GUILayout.Button( requiredLabel ? "Required" : "Remove", EditorStyles.miniButton, mediation.columnWidth ))
-                    DisableDependencies( platform, mediation );
-                EditorGUI.EndDisabledGroup();
+                if(isRequired && !locked)
+                {
+                    GUILayout.Label( "Required", mediation.columnWidth );
+                }
+                else if (isErrorRemove)
+                {
+                    if (GUILayout.Button( "Remove", EditorStyles.miniButton, mediation.columnWidth ))
+                        DisableDependencies( platform, mediation );
+                }
+                else
+                {
+                    var tempToggle = true;
+                    if (tempToggle != GUILayout.Toggle( tempToggle, "", mediation.columnWidth ))
+                        DisableDependencies( platform, mediation );
+                }
             }
             else if (locked)
             {
+                GUILayout.Label( name, GUILayout.ExpandWidth( false ) );
+                GUILayout.FlexibleSpace();
                 EditorGUI.BeginDisabledGroup( true );
                 GUILayout.Label( "-", mediation.columnWidth );
                 GUILayout.Label( version, mediation.columnWidth );
-                GUILayout.Label( "Required", EditorStyles.miniButton, mediation.columnWidth );
+                GUILayout.Label( "Required", mediation.columnWidth );
                 EditorGUI.EndDisabledGroup();
             }
             else
             {
                 EditorGUI.BeginDisabledGroup( inBan || dependencies.Length == 0 );
+                if (GUILayout.Button( name, EditorStyles.label, GUILayout.ExpandWidth( false ) ))
+                    ActivateDependencies( platform, mediation );
+                GUILayout.FlexibleSpace();
                 GUILayout.Label( "none", mediation.columnWidth );
                 GUILayout.Label( version, mediation.columnWidth );
-                if (GUILayout.Button( "Install", EditorStyles.miniButton, mediation.columnWidth ))
+                var tempToggle = false;
+                if (tempToggle != GUILayout.Toggle( tempToggle, "", mediation.columnWidth ))
                     ActivateDependencies( platform, mediation );
                 EditorGUI.EndDisabledGroup();
             }
@@ -397,7 +417,7 @@ namespace CAS.UEditor
                 var footerText = new StringBuilder();
                 for (int i = 0; i < contains.Length; i++)
                 {
-                    if (!string.IsNullOrEmpty( contains[i] ) && contains[i] != "Base")
+                    if (contains[i] != adBase)
                     {
                         if (footerText.Length > 0)
                             footerText.Append( ", " );
@@ -412,6 +432,13 @@ namespace CAS.UEditor
                     //EditorGUILayout.HelpBox( string.Join( ", ", contains ), MessageType.None );
                     EditorGUI.indentLevel--;
                 }
+            }
+
+            if (!string.IsNullOrEmpty( comment ))
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.LabelField( comment, EditorStyles.wordWrappedMiniLabel );
+                EditorGUI.indentLevel--;
             }
         }
 
@@ -518,7 +545,7 @@ namespace CAS.UEditor
             {
                 EditorUtility.ClearProgressBar();
             }
-            if (!string.IsNullOrEmpty( require ) && !File.Exists( Utils.GetDependencyPath( require, platform ) ))
+            if (require != noNetwork && !File.Exists( Utils.GetDependencyPath( require.GetName(), platform ) ))
             {
                 var item = mediation.Find( require );
                 if (item != null)

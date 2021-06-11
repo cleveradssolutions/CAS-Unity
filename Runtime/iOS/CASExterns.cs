@@ -52,13 +52,17 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetiOSAppPauseOnBackground( bool pause );
+        #endregion
 
+        #region User Targeting options
         [DllImport( "__Internal" )]
         internal static extern void CASUSetUserGender( int gender );
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetUserAge( int age );
+        #endregion
 
+        #region Utils
         [DllImport( "__Internal" )]
         internal static extern string CASUGetSDKVersion();
 
@@ -121,53 +125,13 @@ namespace CAS.iOS
         );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUSetBannerDelegate(
-            IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillShownWithAdCallback willShow,
-            CASUDidShowAdFailedWithErrorCallback didShowWithError,
-            CASUDidClickedAdCallback didClick,
-            CASUDidClosedAdCallback didClosed
-        );
-
-        [DllImport( "__Internal" )]
-        internal static extern void CASUSetInterstitialDelegate(
-            IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillShownWithAdCallback willShow,
-            CASUDidShowAdFailedWithErrorCallback didShowWithError,
-            CASUDidClickedAdCallback didClick,
-            CASUDidClosedAdCallback didClosed
-        );
-
-        [DllImport( "__Internal" )]
-        internal static extern void CASUSetRewardedDelegate(
-            IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillShownWithAdCallback willShow,
-            CASUDidShowAdFailedWithErrorCallback didShowWithError,
-            CASUDidClickedAdCallback didClick,
-            CASUDidCompletedAdCallback didComplete,
-            CASUDidClosedAdCallback didClosed
-        );
-
-        [DllImport( "__Internal" )]
-        internal static extern void CASUSetAppReturnDelegate(
-            IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillShownWithAdCallback willShow,
-            CASUDidShowAdFailedWithErrorCallback didShowWithError,
-            CASUDidClickedAdCallback didClick,
-            CASUDidClosedAdCallback didClosed
-        );
-
-        [DllImport( "__Internal" )]
         internal static extern void CASULoadAdWithType( IntPtr manager, int adType );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUShowAdWithType( IntPtr manager, int adType );
-
-        [DllImport( "__Internal" )]
-        internal static extern void CASUHideBanner( IntPtr manager );
-
-        [DllImport( "__Internal" )]
         internal static extern bool CASUIsAdReadyWithType( IntPtr manager, int adType );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUShowAdWithType( IntPtr manager, int adType );
 
         [DllImport( "__Internal" )]
         internal static extern string CASUGetLastActiveMediationWithType( IntPtr manager, int adType );
@@ -177,6 +141,46 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern void CASUEnableAdType( IntPtr manager, int adType, bool enable );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSetLastPageAdContent( IntPtr manager, string contentJson );
+        #endregion
+
+        #region Interstitial Ads
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSetInterstitialDelegate(
+            IntPtr manager, // Manager Ptr from CASUCreateManager
+            CASUWillShownWithAdCallback willShow,
+            CASUDidShowAdFailedWithErrorCallback didShowWithError,
+            CASUDidClickedAdCallback didClick,
+            CASUDidClosedAdCallback didClosed
+        );
+        #endregion
+
+        #region Rewarded Ads
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSetRewardedDelegate(
+            IntPtr manager, // Manager Ptr from CASUCreateManager
+            CASUWillShownWithAdCallback willShow,
+            CASUDidShowAdFailedWithErrorCallback didShowWithError,
+            CASUDidClickedAdCallback didClick,
+            CASUDidCompletedAdCallback didComplete,
+            CASUDidClosedAdCallback didClosed
+        );
+        #endregion
+
+        #region Banner Ads
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSetBannerDelegate(
+            IntPtr manager, // Manager Ptr from CASUCreateManager
+            CASUWillShownWithAdCallback willShow,
+            CASUDidShowAdFailedWithErrorCallback didShowWithError,
+            CASUDidClickedAdCallback didClick,
+            CASUDidClosedAdCallback didClosed
+        );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUHideBanner( IntPtr manager );
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetBannerSize( IntPtr manager, int bannerSize );
@@ -189,15 +193,27 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern float CASUGetBannerWidthInPixels( IntPtr manager );
+        #endregion
+
+        #region App Return Ads
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUSetLastPageAdContent( IntPtr manager, string contentJson );
+        internal static extern void CASUSetAppReturnDelegate(
+            IntPtr manager, // Manager Ptr from CASUCreateManager
+            CASUWillShownWithAdCallback willShow,
+            CASUDidShowAdFailedWithErrorCallback didShowWithError,
+            CASUDidClickedAdCallback didClick,
+            CASUDidClosedAdCallback didClosed
+        );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUEnableReturnAds( IntPtr manager );
+        internal static extern void CASUEnableAppReturnAds( IntPtr manager );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUDisableReturnAds( IntPtr manager );
+        internal static extern void CASUDisableAppReturnAds( IntPtr manager );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSkipNextAppReturnAds( IntPtr manager );
         #endregion
     }
 }

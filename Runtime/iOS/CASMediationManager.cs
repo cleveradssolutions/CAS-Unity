@@ -33,10 +33,10 @@ namespace CAS.iOS
         public event Action OnRewardedAdClicked;
         public event Action OnRewardedAdCompleted;
         public event Action OnRewardedAdClosed;
-        public event Action OnReturnAdShown;
-        public event CASEventWithError OnReturnAdFailedToShow;
-        public event Action OnReturnAdClicked;
-        public event Action OnReturnAdClosed;
+        public event Action OnAppReturnAdShown;
+        public event CASEventWithError OnAppReturnAdFailedToShow;
+        public event Action OnAppReturnAdClicked;
+        public event Action OnAppReturnAdClosed;
         #endregion
 
         public CASMediationManager( CASInitSettings initData )
@@ -217,6 +217,19 @@ namespace CAS.iOS
         {
             CASExterns.CASUOpenDebugger( _managerPtr );
             return true;
+        }
+
+        public void SetAppReturnAdsEnabled( bool enable )
+        {
+            if (enable)
+                CASExterns.CASUEnableAppReturnAds( _managerPtr );
+            else
+                CASExterns.CASUDisableAppReturnAds( _managerPtr );
+        }
+
+        public void SkipNextAppReturnAds()
+        {
+            CASExterns.CASUSkipNextAppReturnAds( _managerPtr );
         }
 
         #region Callback methods
@@ -461,15 +474,15 @@ namespace CAS.iOS
         }
         #endregion
 
-        #region Interstitial Callback
+        #region App Return Ads Callback
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillShownWithAdCallback ) )]
         private static void ReturnAdWillShownWithAdCallback( IntPtr client )
         {
             try
             {
                 var instance = IntPtrToManagerClient( client );
-                if ( instance != null && instance.OnReturnAdShown != null )
-                    instance.OnReturnAdShown();
+                if ( instance != null && instance.OnAppReturnAdShown != null )
+                    instance.OnAppReturnAdShown();
             }
             catch ( Exception e )
             {
@@ -483,8 +496,8 @@ namespace CAS.iOS
             try
             {
                 var instance = IntPtrToManagerClient( client );
-                if ( instance != null && instance.OnReturnAdFailedToShow != null )
-                    instance.OnReturnAdFailedToShow( error );
+                if ( instance != null && instance.OnAppReturnAdFailedToShow != null )
+                    instance.OnAppReturnAdFailedToShow( error );
             }
             catch ( Exception e )
             {
@@ -498,8 +511,8 @@ namespace CAS.iOS
             try
             {
                 var instance = IntPtrToManagerClient( client );
-                if ( instance != null && instance.OnReturnAdClicked != null )
-                    instance.OnReturnAdClicked();
+                if ( instance != null && instance.OnAppReturnAdClicked != null )
+                    instance.OnAppReturnAdClicked();
             }
             catch ( Exception e )
             {
@@ -516,8 +529,8 @@ namespace CAS.iOS
 #if CAS_EXPIREMENTAL_ORIENTATION
                 EventExecutor.Add( instance.RestoreScreenOrientation );
 #endif
-                if ( instance != null && instance.OnReturnAdClosed != null )
-                    instance.OnReturnAdClosed();
+                if ( instance != null && instance.OnAppReturnAdClosed != null )
+                    instance.OnAppReturnAdClosed();
             }
             catch ( Exception e )
             {
@@ -527,19 +540,6 @@ namespace CAS.iOS
 
         #endregion
         #endregion
-
-        public void SetReturnAdsEnabled( bool enable )
-        {
-            if ( enable )
-                CASExterns.CASUEnableReturnAds( _managerPtr );
-            else
-                CASExterns.CASUDisableReturnAds( _managerPtr );
-        }
-
-        public void SkipNextAppReturnAd()
-        {
-            CASExterns.CASUSkipNextAppReturnAd( _managerPtr );
-        }
     }
 }
 #endif

@@ -79,19 +79,19 @@ namespace CAS
         /// <summary>
         /// Executed when the ad is displayed.
         /// </summary>
-        event Action OnReturnAdShown;
+        event Action OnAppReturnAdShown;
         /// <summary>
         /// Executed when the ad is failed to display.
         /// </summary>
-        event CASEventWithError OnReturnAdFailedToShow;
+        event CASEventWithError OnAppReturnAdFailedToShow;
         /// <summary>
         /// Executed when the user clicks on an Ad.
         /// </summary>
-        event Action OnReturnAdClicked;
+        event Action OnAppReturnAdClicked;
         /// <summary>
         /// Executed when the ad is closed.
         /// </summary>
-        event Action OnReturnAdClosed;
+        event Action OnAppReturnAdClosed;
         #endregion
 
         #region Mediation manager state
@@ -183,14 +183,18 @@ namespace CAS
         #endregion
 
         /// <summary>
-        /// Enable or disable Return Ads
+        /// The Return Ad which is displayed once the user returns to your application after a certain period of time.
+        /// To minimize the intrusiveness, short time periods are ignored.
+        /// Return ads are disabled by default.
         /// </summary>
-        /// <param name="enable"></param>
-        void SetReturnAdsEnabled( bool enable );
+        void SetAppReturnAdsEnabled( bool enable );
 
         /// <summary>
-        /// Ignore one showing AppReturnAd
+        /// Calling this method will indicate to skip one next ad impression when returning to the app.
+        ///
+        /// You can call this method when you intentionally redirect the user to another application (for example Google Play)
+        /// and do not want them to see ads when they return to your application.
         /// </summary>
-        void SkipNextAppReturnAd();
+        void SkipNextAppReturnAds();
     }
 }

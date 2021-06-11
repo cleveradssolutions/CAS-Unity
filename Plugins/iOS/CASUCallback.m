@@ -109,14 +109,12 @@
 }
 
 - (UIViewController *)viewControllerForPresentingAppReturnAd {
-    {
-    #if __has_include("UnityAppController.h")
-        return ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;
-    #else
-        NSLog(@"[CAS] Framework bridge cant find UnityAppController.h");
-        return nil;
-    #endif
-    }
+#if __has_include("UnityAppController.h")
+    return ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;
+#else
+    NSLog(@"[CAS] Framework bridge cant find UnityAppController.h");
+    return nil;
+#endif
 }
 
 @end
