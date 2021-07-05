@@ -1,4 +1,4 @@
-﻿#if UNITY_IOS || CASDeveloper
+﻿#if UNITY_IOS || (CASDeveloper && UNITY_EDITOR)
 using System;
 using System.Runtime.InteropServices;
 
@@ -81,7 +81,7 @@ namespace CAS.iOS
 
         #region CAS Callback types
         // Field Client is C# manager client ptr
-        internal delegate void CASUWillShownWithAdCallback( IntPtr client );
+        internal delegate void CASUWillOpeningWithAdCallbackAndMeta( IntPtr client, int net, double cpm, int accuracy );
         internal delegate void CASUDidShowAdFailedWithErrorCallback( IntPtr client, string error );
         internal delegate void CASUDidClickedAdCallback( IntPtr client );
         internal delegate void CASUDidCompletedAdCallback( IntPtr client );
@@ -150,7 +150,7 @@ namespace CAS.iOS
         [DllImport( "__Internal" )]
         internal static extern void CASUSetInterstitialDelegate(
             IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillShownWithAdCallback willShow,
+            CASUWillOpeningWithAdCallbackAndMeta willOpen,
             CASUDidShowAdFailedWithErrorCallback didShowWithError,
             CASUDidClickedAdCallback didClick,
             CASUDidClosedAdCallback didClosed
@@ -161,7 +161,7 @@ namespace CAS.iOS
         [DllImport( "__Internal" )]
         internal static extern void CASUSetRewardedDelegate(
             IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillShownWithAdCallback willShow,
+            CASUWillOpeningWithAdCallbackAndMeta willOpen,
             CASUDidShowAdFailedWithErrorCallback didShowWithError,
             CASUDidClickedAdCallback didClick,
             CASUDidCompletedAdCallback didComplete,
@@ -173,7 +173,7 @@ namespace CAS.iOS
         [DllImport( "__Internal" )]
         internal static extern void CASUSetBannerDelegate(
             IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillShownWithAdCallback willShow,
+            CASUWillOpeningWithAdCallbackAndMeta willOpen,
             CASUDidShowAdFailedWithErrorCallback didShowWithError,
             CASUDidClickedAdCallback didClick,
             CASUDidClosedAdCallback didClosed
@@ -200,7 +200,7 @@ namespace CAS.iOS
         [DllImport( "__Internal" )]
         internal static extern void CASUSetAppReturnDelegate(
             IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillShownWithAdCallback willShow,
+            CASUWillOpeningWithAdCallbackAndMeta willOpen,
             CASUDidShowAdFailedWithErrorCallback didShowWithError,
             CASUDidClickedAdCallback didClick,
             CASUDidClosedAdCallback didClosed

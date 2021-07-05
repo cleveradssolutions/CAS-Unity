@@ -177,17 +177,39 @@ namespace CAS.UEditor
             else
             {
                 dependencyManager.OnGUI( platform );
+                OnEDMAreaGUI();
+            }
 
+            OnAppAdsTxtGUI();
+            GUILayout.FlexibleSpace();
+            obj.ApplyModifiedProperties();
+        }
 
-                if (edmExist)
+        private void DrawSeparator()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+        }
+
+        private void OnAppAdsTxtGUI()
+        {
+            EditorGUILayout.Space();
+            var content = HelpStyles.GetContent( " Don’t forget to implement app-ads.txt", HelpStyles.helpIconContent.image );
+            if (GUILayout.Button( content, EditorStyles.label ))
+                Application.OpenURL( Utils.gitAppAdsTxtRepoUrl );
+        }
+
+        private void OnEDMAreaGUI()
+        {
+            if (edmExist)
+            {
+                if (platform == BuildTarget.Android)
                 {
-                    if (platform == BuildTarget.Android)
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
+                        "Please use Android Resolver after the change complete.", MessageType.Info );
+                    if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.ExpandHeight( true ) ))
                     {
-                        EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
-                            "Please use Android Resolver after the change complete.", MessageType.Info );
-                        if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.ExpandHeight( true ) ))
-                        {
 #if UNITY_ANDROID
                         var succses = Utils.TryResolveAndroidDependencies();
                         EditorUtility.DisplayDialog( "Android Dependencies",
@@ -198,34 +220,25 @@ namespace CAS.UEditor
                                 "Android resolver not enabled. Unity Android platform target must be selected.",
                                 "OK" );
 #endif
-                        }
-                        EditorGUILayout.EndHorizontal();
-                    }
-                }
-                else
-                {
-                    HelpStyles.BeginBoxScope();
-                    EditorGUILayout.HelpBox( "In order to properly include third party dependencies in your project, " +
-                        "an External Dependency Manager is required.", MessageType.Error );
-                    EditorGUILayout.BeginHorizontal();
-                    GUILayout.Label( "1. Download latest EDM4U.unitypackage", GUILayout.ExpandWidth( false ) );
-                    if (GUILayout.Button( "here", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-                    {
-                        Application.OpenURL( "https://github.com/googlesamples/unity-jar-resolver/releases" );
                     }
                     EditorGUILayout.EndHorizontal();
-                    GUILayout.Label( "2. Import the EDM4U.unitypackage into your project." );
-                    HelpStyles.EndBoxScope();
                 }
             }
-            GUILayout.FlexibleSpace();
-            obj.ApplyModifiedProperties();
-        }
-
-        private void DrawSeparator()
-        {
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
+            else
+            {
+                HelpStyles.BeginBoxScope();
+                EditorGUILayout.HelpBox( "In order to properly include third party dependencies in your project, " +
+                    "an External Dependency Manager is required.", MessageType.Error );
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label( "1. Download latest EDM4U.unitypackage", GUILayout.ExpandWidth( false ) );
+                if (GUILayout.Button( "here", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
+                {
+                    Application.OpenURL( "https://github.com/googlesamples/unity-jar-resolver/releases" );
+                }
+                EditorGUILayout.EndHorizontal();
+                GUILayout.Label( "2. Import the EDM4U.unitypackage into your project." );
+                HelpStyles.EndBoxScope();
+            }
         }
 
         private void OnManagerIDVerificationGUI()

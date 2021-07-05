@@ -185,7 +185,7 @@ namespace CAS.UEditor
             if (depManager != null)
             {
                 var crossPromoDependency = depManager.FindCrossPromotion();
-                if (crossPromoDependency != null && !crossPromoDependency.isInstalled())
+                if (crossPromoDependency != null && !crossPromoDependency.IsInstalled())
                     return;
             }
             try

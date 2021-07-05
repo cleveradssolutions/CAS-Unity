@@ -1,5 +1,31 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.4.0] - 2021-07-05
+### Dependencies
+- [Android] Wraps [2.4.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.4.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Features
+- Added alternative events `OnBannerAdOpening, OnInterstitialAdOpening, OnRewardedAdOpening` with ad display metadata.
+```csharp
+manager.OnInterstitialAdOpening += ( metadata ) =>
+{
+    if (metadata.priceAccuracy == PriceAccuracy.Undisclosed)
+    {
+        Debug.Log( "Begin impression " + metadata.type + " ads with undisclosed cost from " + metadata.network );
+    }
+    else
+    {
+        string accuracy = metadata.priceAccuracy == PriceAccuracy.Floor ? "a floor" : "an average";
+        Debug.Log( "Begin impression " + metadata.type + " ads with " + accuracy + " cost of " + metadata.cpm + " CPM from " + metadata.network );
+    }
+};
+```
+- The [ReturnToPlayAdObject](https://github.com/cleveradssolutions/CAS-Unity/wiki/Return-To-Play-Ad-Object) component has been added, which allows displaying ads when returning to the game without using scripts.
+- [iOS] Added check for minimum deployment version of iOS 10.0 before build.
+## Bug Fixes
+- [iOS] Fixed bug with ReturnToPlayAd.
+- [Editor] Fixed bug when building with `-batchmode` and disabled ads for the application.
+
 ## [2.3.0] - 2021-06-11
 ### Dependencies
 - [Android] Wraps [2.3.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

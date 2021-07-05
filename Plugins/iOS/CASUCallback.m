@@ -39,9 +39,12 @@
     }
 #endif
 
-    if (self.willShownCallback) {
-        if (self.client) {
-            self.willShownCallback(self.client);
+    if (self.client) {
+        if (self.willOpeningCallback) {
+            self.willOpeningCallback(self.client,
+                                     [[CASNetwork values] indexOfObject:adStatus.network],
+                                     adStatus.cpm,
+                                     adStatus.priceAccuracy);
         }
     }
 }

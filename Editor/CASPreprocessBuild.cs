@@ -165,7 +165,7 @@ namespace CAS.UEditor
 
                 ConfigurateGradleSettings();
 
-                if (!isBatchMode && PlayerSettings.Android.minSdkVersion < AndroidSdkVersions.AndroidApiLevel19)
+                if (PlayerSettings.Android.minSdkVersion < AndroidSdkVersions.AndroidApiLevel19)
                 {
                     DialogOrCancel( "CAS required minimum SDK API level 19 (KitKat).", BuildTarget.NoTarget, "Set API 19" );
                     PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel19;
@@ -173,12 +173,26 @@ namespace CAS.UEditor
             }
             else if (target == BuildTarget.iOS)
             {
-                if (!isBatchMode && PlayerSettings.muteOtherAudioSources)
+                if (PlayerSettings.muteOtherAudioSources)
                 {
-                    if (EditorUtility.DisplayDialog( casTitle, "Mute Other AudioSources are not supported. " +
+                    if (isBatchMode || EditorUtility.DisplayDialog( casTitle, "Mute Other AudioSources are not supported. " +
                         "Is a known issue with disabling sounds in Unity after closing interstitial ads.",
                         "Disable Mute AudioSources", "Continue" ))
                         PlayerSettings.muteOtherAudioSources = false;
+                }
+
+                try
+                {
+                    if (new Version( PlayerSettings.iOS.targetOSVersionString ) < new Version( 10, 0 ))
+                    {
+                        if (!isBatchMode)
+                            DialogOrCancel( "CAS required a higher minimum deployment target. Set iOS 10.0 and continue?", BuildTarget.NoTarget );
+                        PlayerSettings.iOS.targetOSVersionString = "10.0";
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException( e );
                 }
             }
 #if false
@@ -441,7 +455,7 @@ namespace CAS.UEditor
 
         private static bool RequestUpdateGradleVersion( string version = "" )
         {
-            return EditorUtility.DisplayDialog( "CAS Preprocess Build",
+            return Application.isBatchMode && EditorUtility.DisplayDialog( "CAS Preprocess Build",
                         "Android Gradle plugin " + version + " are not supports targeting Android 11. " +
                         "Do you want to upgrade to version with fix?",
                         "Update", "Continue" );
@@ -538,7 +552,7 @@ namespace CAS.UEditor
 
         private static void DialogOrCancel( string message, BuildTarget target, string btn = "Continue" )
         {
-            if (!EditorUtility.DisplayDialog( casTitle, message, btn, "Cancel build" ))
+            if (!Application.isBatchMode && !EditorUtility.DisplayDialog( casTitle, message, btn, "Cancel build" ))
                 Utils.StopBuildWithMessage( "Cancel build: " + message, target );
         }
 

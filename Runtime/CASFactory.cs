@@ -344,6 +344,25 @@ namespace CAS
             }
         }
 
+        internal static void ExecuteEvent( CASEventWithMeta action, AdMetaData meta )
+        {
+            if (action == null)
+                return;
+            if (executeEventsOnUnityThread)
+            {
+                EventExecutor.Add( () => action( meta ) );
+                return;
+            }
+            try
+            {
+                action( meta );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+        }
+
         internal static void ExecuteEvent( CASTypedEvent action, int typeId )
         {
             if (action == null)

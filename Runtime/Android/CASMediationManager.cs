@@ -1,4 +1,4 @@
-﻿#if UNITY_ANDROID || CASDeveloper
+﻿#if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
 using System;
 using UnityEngine;
 
@@ -18,6 +18,7 @@ namespace CAS.Android
         private LastPageAdContent _lastPageAdContent = null;
 
         public InitializationListenerProxy initializationListener;
+
         public string managerID { get; }
         public bool isTestAdMode { get; }
 
@@ -37,6 +38,11 @@ namespace CAS.Android
         {
             add { _bannerProxy.OnAdShown += value; }
             remove { _bannerProxy.OnAdShown -= value; }
+        }
+        public event CASEventWithMeta OnBannerAdOpening
+        {
+            add { _bannerProxy.OnAdOpening += value; }
+            remove { _bannerProxy.OnAdOpening -= value; }
         }
         public event CASEventWithError OnBannerAdFailedToShow
         {
@@ -59,6 +65,11 @@ namespace CAS.Android
             add { _interstitialProxy.OnAdShown += value; }
             remove { _interstitialProxy.OnAdShown -= value; }
         }
+        public event CASEventWithMeta OnInterstitialAdOpening
+        {
+            add { _interstitialProxy.OnAdOpening += value; }
+            remove { _interstitialProxy.OnAdOpening -= value; }
+        }
         public event CASEventWithError OnInterstitialAdFailedToShow
         {
             add { _interstitialProxy.OnAdFailedToShow += value; }
@@ -79,6 +90,11 @@ namespace CAS.Android
         {
             add { _rewardedProxy.OnAdShown += value; }
             remove { _rewardedProxy.OnAdShown -= value; }
+        }
+        public event CASEventWithMeta OnRewardedAdOpening
+        {
+            add { _rewardedProxy.OnAdOpening += value; }
+            remove { _rewardedProxy.OnAdOpening -= value; }
         }
         public event CASEventWithError OnRewardedAdFailedToShow
         {
@@ -105,6 +121,11 @@ namespace CAS.Android
         {
             add { _returnProxy.OnAdShown += value; }
             remove { _returnProxy.OnAdShown -= value; }
+        }
+        public event CASEventWithMeta OnAppReturnAdOpening
+        {
+            add { _returnProxy.OnAdOpening += value; }
+            remove { _returnProxy.OnAdOpening -= value; }
         }
         public event CASEventWithError OnAppReturnAdFailedToShow
         {
@@ -143,10 +164,10 @@ namespace CAS.Android
 
         public void CreateManager( CASInitSettings initData )
         {
-            _bannerProxy = new AdCallbackProxy();
-            _interstitialProxy = new AdCallbackProxy();
-            _rewardedProxy = new AdCallbackProxy();
-            _returnProxy = new AdCallbackProxy();
+            _bannerProxy = new AdCallbackProxy( AdType.Banner );
+            _interstitialProxy = new AdCallbackProxy( AdType.Interstitial );
+            _rewardedProxy = new AdCallbackProxy( AdType.Rewarded );
+            _returnProxy = new AdCallbackProxy( AdType.Interstitial );
             _adLoadProxy = new AdLoadCallbackProxy();
 
             if (initData.initListener != null)
@@ -284,7 +305,7 @@ namespace CAS.Android
 
         public void SetAppReturnAdsEnabled( bool enable )
         {
-            if ( enable )
+            if (enable)
                 _managerBridge.Call( "enableReturnAds", _returnProxy );
             else
                 _managerBridge.Call( "disableReturnAds" );

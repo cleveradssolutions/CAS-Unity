@@ -26,6 +26,7 @@
         Fyber,
         FairBid,
         Mintegral,
+        Admost,
         Smaato,
         HyperMX
     }

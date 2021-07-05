@@ -1,4 +1,4 @@
-﻿#if UNITY_IOS || CASDeveloper
+﻿#if UNITY_IOS || (CASDeveloper && UNITY_EDITOR)
 using System;
 using System.Collections.Generic;
 

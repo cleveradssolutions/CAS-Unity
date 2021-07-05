@@ -41,6 +41,7 @@ namespace CAS.UEditor
         internal const string gitUnityRepo = "CAS-Unity";
         internal const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
         internal const string supportURL = gitUnityRepoURL + "#support";
+        internal const string gitAppAdsTxtRepoUrl = gitRootURL + "App-ads.txt";
 
         internal const string generalDeprecateDependency = "General";
         internal const string teenDeprecateDependency = "Teen";
@@ -559,6 +560,17 @@ namespace CAS.UEditor
             if (!main)
                 return null;
             var cachePath = GetNativeSettingsPath( platform, managerID );
+            if (Application.isBatchMode)
+            {
+                if (data != null)
+                    // This content will be not save to cache
+                    return data.admob_app_id;
+                if (File.Exists( cachePath ))
+                    return GetAdmobAppIdFromJson( File.ReadAllText( cachePath ) );
+                StopBuildWithMessage( message, BuildTarget.NoTarget );
+                return null;
+            }
+
             if (data != null || File.Exists( cachePath ))
             {
                 var dialogResponse = EditorUtility.DisplayDialogComplex( title, message, "Use cache", "Cancel Build", "Select settings file" );

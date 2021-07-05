@@ -6,90 +6,107 @@ namespace CAS
     public delegate void CASTypedEvent( AdType adType );
     public delegate void CASTypedEventWithError( AdType adType, string error );
     public delegate void CASEventWithError( string error );
+    public delegate void CASEventWithMeta( AdMetaData meta );
 
     public interface IMediationManager
     {
         #region Events
         /// <summary>
-        /// Executed when <see cref="AdType"/> load ad response
+        /// Called when <see cref="AdType"/> load ad response
         /// </summary>
         event CASTypedEvent OnLoadedAd;
         /// <summary>
-        /// Executed when <see cref="AdType"/> failed to load ad response with error message
+        /// Called when <see cref="AdType"/> failed to load ad response with error message
         /// </summary>
         event CASTypedEventWithError OnFailedToLoadAd;
 
         /// <summary>
-        /// Executed when the ad is displayed.
+        /// Called when the ad is displayed.
         /// </summary>
         event Action OnBannerAdShown;
         /// <summary>
-        /// Executed when the ad is failed to display.
+        /// The same call as the <see cref="OnBannerAdShown"/> but with <see cref="AdMetaData"/> about the impression. 
+        /// </summary>
+        event CASEventWithMeta OnBannerAdOpening;
+        /// <summary>
+        /// Called when the ad is failed to display.
         /// The Banner may automatically appear when the Ad is ready again.
         /// This will trigger the <see cref="OnBannerAdShown"/> callback again.
         /// </summary>
         event CASEventWithError OnBannerAdFailedToShow;
         /// <summary>
-        /// Executed when the user clicks on an Ad.
+        /// Called when the user clicks on an Ad.
         /// </summary>
         event Action OnBannerAdClicked;
         /// <summary>
-        /// Executed when the ad is hidden from screen.
+        /// Called when the ad is hidden from screen.
         /// </summary>
         event Action OnBannerAdHidden;
 
         /// <summary>
-        /// Executed when the ad is displayed.
+        /// Called when the ad is displayed.
         /// </summary>
         event Action OnInterstitialAdShown;
         /// <summary>
-        /// Executed when the ad is failed to display.
+        /// The same call as the <see cref="OnInterstitialAdShown"/> but with <see cref="AdMetaData"/> about the impression. 
+        /// </summary>
+        event CASEventWithMeta OnInterstitialAdOpening;
+        /// <summary>
+        /// Called when the ad is failed to display.
         /// </summary>
         event CASEventWithError OnInterstitialAdFailedToShow;
         /// <summary>
-        /// Executed when the user clicks on an Ad.
+        /// Called when the user clicks on an Ad.
         /// </summary>
         event Action OnInterstitialAdClicked;
         /// <summary>
-        /// Executed when the ad is closed.
+        /// Called when the ad is closed.
         /// </summary>
         event Action OnInterstitialAdClosed;
 
         /// <summary>
-        /// Executed when the ad is displayed.
+        /// Called when the ad is displayed.
         /// </summary>
         event Action OnRewardedAdShown;
         /// <summary>
-        /// Executed when the ad is failed to display.
+        /// The same call as the <see cref="OnRewardedAdShown"/> but with <see cref="AdMetaData"/> about the impression. 
+        /// </summary>
+        event CASEventWithMeta OnRewardedAdOpening;
+        /// <summary>
+        /// Called when the ad is failed to display.
         /// </summary>
         event CASEventWithError OnRewardedAdFailedToShow;
         /// <summary>
-        /// Executed when the user clicks on an Ad.
+        /// Called when the user clicks on an Ad.
         /// </summary>
         event Action OnRewardedAdClicked;
         /// <summary>
-        /// Executed when the ad is completed.
+        /// Called when the ad is completed.
         /// </summary>
         event Action OnRewardedAdCompleted;
         /// <summary>
-        /// Executed when the ad is closed.
+        /// Called when the ad is closed.
         /// </summary>
         event Action OnRewardedAdClosed;
 
         /// <summary>
-        /// Executed when the ad is displayed.
+        /// Called when the ad is displayed.
         /// </summary>
         event Action OnAppReturnAdShown;
         /// <summary>
-        /// Executed when the ad is failed to display.
+        /// The same call as the <see cref="OnAppReturnAdShown"/> but with <see cref="AdMetaData"/> about the impression. 
+        /// </summary>
+        event CASEventWithMeta OnAppReturnAdOpening;
+        /// <summary>
+        /// Called when the ad is failed to display.
         /// </summary>
         event CASEventWithError OnAppReturnAdFailedToShow;
         /// <summary>
-        /// Executed when the user clicks on an Ad.
+        /// Called when the user clicks on an Ad.
         /// </summary>
         event Action OnAppReturnAdClicked;
         /// <summary>
-        /// Executed when the ad is closed.
+        /// Called when the ad is closed.
         /// </summary>
         event Action OnAppReturnAdClosed;
         #endregion

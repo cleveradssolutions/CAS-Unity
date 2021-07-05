@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace CAS.Unity
 {
-    [AddComponentMenu("")]
+    [AddComponentMenu( "" )]
     internal class CASMediationManager : MonoBehaviour, IMediationManager
     {
         public AdFlags enabledTypes;
@@ -22,6 +22,10 @@ namespace CAS.Unity
         private AdPosition _bannerPosition = AdPosition.BottomCenter;
         private AdSize _bannerSize = AdSize.Banner;
         private LastPageAdContent _lastPageAdContent;
+
+        private readonly AdMetaData dummyBannerMeta = new AdMetaData( AdType.Banner, AdNetwork.CrossPromotion, 0.0, PriceAccuracy.Undisclosed );
+        private readonly AdMetaData dummyInterMeta = new AdMetaData( AdType.Interstitial, AdNetwork.CrossPromotion, 0.0, PriceAccuracy.Undisclosed );
+        private readonly AdMetaData dummyRewardMeta = new AdMetaData( AdType.Rewarded, AdNetwork.CrossPromotion, 0.0, PriceAccuracy.Undisclosed );
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get { return true; } }
@@ -69,25 +73,31 @@ namespace CAS.Unity
         }
 
         #region Ad Events
+#pragma warning disable 67
         public event CASTypedEvent OnLoadedAd;
         public event CASTypedEventWithError OnFailedToLoadAd;
         public event Action OnBannerAdShown;
+        public event CASEventWithMeta OnBannerAdOpening;
         public event CASEventWithError OnBannerAdFailedToShow;
         public event Action OnBannerAdClicked;
         public event Action OnBannerAdHidden;
         public event Action OnInterstitialAdShown;
+        public event CASEventWithMeta OnInterstitialAdOpening;
         public event CASEventWithError OnInterstitialAdFailedToShow;
         public event Action OnInterstitialAdClicked;
         public event Action OnInterstitialAdClosed;
         public event Action OnRewardedAdShown;
+        public event CASEventWithMeta OnRewardedAdOpening;
         public event CASEventWithError OnRewardedAdFailedToShow;
         public event Action OnRewardedAdClicked;
         public event Action OnRewardedAdCompleted;
         public event Action OnRewardedAdClosed;
         public event Action OnAppReturnAdShown;
+        public event CASEventWithMeta OnAppReturnAdOpening;
         public event CASEventWithError OnAppReturnAdFailedToShow;
         public event Action OnAppReturnAdClicked;
         public event Action OnAppReturnAdClosed;
+#pragma warning restore 67
         #endregion
 
         public static IMediationManager CreateManager( CASInitSettings initSettings )
@@ -243,6 +253,11 @@ namespace CAS.Unity
             {
                 visibleTypes |= AdFlags.Banner;
                 eventsQueue.Add( OnBannerAdShown );
+                eventsQueue.Add( () =>
+                {
+                    if (OnBannerAdOpening != null)
+                        OnBannerAdOpening( dummyBannerMeta );
+                } );
             }
         }
 
@@ -276,6 +291,11 @@ namespace CAS.Unity
             {
                 visibleTypes |= AdFlags.Interstitial;
                 eventsQueue.Add( OnInterstitialAdShown );
+                eventsQueue.Add( () =>
+                {
+                    if (OnBannerAdOpening != null)
+                        OnBannerAdOpening( dummyInterMeta );
+                } );
             }
         }
 
@@ -303,6 +323,11 @@ namespace CAS.Unity
             {
                 visibleTypes |= AdFlags.Rewarded;
                 eventsQueue.Add( OnRewardedAdShown );
+                eventsQueue.Add( () =>
+                {
+                    if (OnRewardedAdOpening != null)
+                        OnRewardedAdOpening( dummyRewardMeta );
+                } );
             }
         }
         #endregion

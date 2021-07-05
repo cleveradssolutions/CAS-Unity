@@ -297,13 +297,13 @@ void CASUSetLastPageAdContent(CASUTypeManagerRef manager, const char *contentJso
 #pragma mark - Interstitial Ads
 
 void CASUSetInterstitialDelegate(CASUTypeManagerRef                   manager,
-                                 CASUWillShownWithAdCallback          willShow,
+                                 CASUWillOpeningWithAdCallbackAndMeta willOpen,
                                  CASUDidShowAdFailedWithErrorCallback didShowWithError,
                                  CASUDidClickedAdCallback             didClick,
                                  CASUDidClosedAdCallback              didClosed)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.interstitialCallback.willShownCallback = willShow;
+    internalManager.interstitialCallback.willOpeningCallback = willOpen;
     internalManager.interstitialCallback.didShowFailedCallback = didShowWithError;
     internalManager.interstitialCallback.didClickCallback = didClick;
     internalManager.interstitialCallback.didClosedCallback = didClosed;
@@ -312,14 +312,14 @@ void CASUSetInterstitialDelegate(CASUTypeManagerRef                   manager,
 #pragma mark - Rewarded Ads
 
 void CASUSetRewardedDelegate(CASUTypeManagerRef                   manager,
-                             CASUWillShownWithAdCallback          willShow,
+                             CASUWillOpeningWithAdCallbackAndMeta willOpen,
                              CASUDidShowAdFailedWithErrorCallback didShowWithError,
                              CASUDidClickedAdCallback             didClick,
                              CASUDidCompletedAdCallback           didComplete,
                              CASUDidClosedAdCallback              didClosed)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.rewardedCallback.willShownCallback = willShow;
+    internalManager.rewardedCallback.willOpeningCallback = willOpen;
     internalManager.rewardedCallback.didShowFailedCallback = didShowWithError;
     internalManager.rewardedCallback.didClickCallback = didClick;
     internalManager.rewardedCallback.didCompleteCallback = didComplete;
@@ -329,13 +329,13 @@ void CASUSetRewardedDelegate(CASUTypeManagerRef                   manager,
 #pragma mark - Banner Ads
 
 void CASUSetBannerDelegate(CASUTypeManagerRef                   manager,
-                           CASUWillShownWithAdCallback          willShow,
+                           CASUWillOpeningWithAdCallbackAndMeta willOpen,
                            CASUDidShowAdFailedWithErrorCallback didShowWithError,
                            CASUDidClickedAdCallback             didClick,
                            CASUDidClosedAdCallback              didClosed)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.bannerCallback.willShownCallback = willShow;
+    internalManager.bannerCallback.willOpeningCallback = willOpen;
     internalManager.bannerCallback.didShowFailedCallback = didShowWithError;
     internalManager.bannerCallback.didClickCallback = didClick;
     internalManager.bannerCallback.didClosedCallback = didClosed;
@@ -374,14 +374,13 @@ float CASUGetBannerWidthInPixels(CASUTypeManagerRef manager)
 #pragma mark - App Return Ads
 
 void CASUSetAppReturnDelegate(CASUTypeManagerRef                   manager,
-                              CASUWillShownWithAdCallback          willShow,
+                              CASUWillOpeningWithAdCallbackAndMeta willOpen,
                               CASUDidShowAdFailedWithErrorCallback didShowWithError,
                               CASUDidClickedAdCallback             didClick,
-                              CASUDidCompletedAdCallback           didComplete,
                               CASUDidClosedAdCallback              didClosed)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.appReturnDelegate.willShownCallback = willShow;
+    internalManager.appReturnDelegate.willOpeningCallback = willOpen;
     internalManager.appReturnDelegate.didShowFailedCallback = didShowWithError;
     internalManager.appReturnDelegate.didClickCallback = didClick;
     internalManager.appReturnDelegate.didClosedCallback = didClosed;

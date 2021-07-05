@@ -167,4 +167,36 @@ namespace CAS.AdObject
                 EditorStyles.wordWrappedMiniLabel );
         }
     }
+
+    [CustomEditor( typeof( ReturnToPlayAdObject ) )]
+    internal class ReturnToPlayAdObjectInspector : BaseAdObjectInspector
+    {
+        private SerializedProperty allowAdProp;
+        private SerializedProperty onAdFailedToShowProp;
+        private SerializedProperty onAdClosedProp;
+
+        private new void OnEnable()
+        {
+            base.OnEnable();
+            var obj = serializedObject;
+            allowAdProp = obj.FindProperty( "_allowReturnToPlayAd" );
+            onAdFailedToShowProp = obj.FindProperty( "OnAdFailedToShow" );
+            onAdClosedProp = obj.FindProperty( "OnAdClosed" );
+        }
+
+        protected override void OnAdditionalPropertiesGUI()
+        {
+            allowAdProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Allow Allow Return to play ads",
+                allowAdProp.boolValue
+            );
+        }
+
+        protected override void OnCallbacksGUI()
+        {
+            EditorGUILayout.PropertyField( onAdFailedToShowProp );
+            base.OnCallbacksGUI();
+            EditorGUILayout.PropertyField( onAdClosedProp );
+        }
+    }
 }

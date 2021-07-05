@@ -19,7 +19,7 @@ typedef void (*CASUDidAdFailedToLoadCallback)(CASUTypeManagerClientRef *client,
                                               NSInteger                adType,
                                               const char               *error);
 
-typedef void (*CASUWillShownWithAdCallback)(CASUTypeManagerClientRef *client);
+typedef void (*CASUWillOpeningWithAdCallbackAndMeta)(CASUTypeManagerClientRef *client, NSInteger net, double cpm, NSInteger accuracy);
 
 typedef void (*CASUDidShowAdFailedWithErrorCallback)(CASUTypeManagerClientRef *client,
                                                      const char               *error);
