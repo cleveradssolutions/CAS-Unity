@@ -205,6 +205,25 @@ namespace CAS.UEditor
             {
                 if (platform == BuildTarget.Android)
                 {
+#if UNITY_2019_3_OR_NEWER
+                    if (!File.Exists( Utils.projectGradlePath ))
+                        EditorGUILayout.HelpBox( "Please enable 'Custom Base Gradle Template' found under " +
+                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
+                        "to allow CAS update Grdale plugin version.", MessageType.Error );
+
+                    if (!File.Exists( Utils.launcherGradlePath ))
+                        EditorGUILayout.HelpBox( "Please enable 'Custom Launcher Gradle Template' found under " +
+                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
+                        "to allow CAS use MultiDEX.", MessageType.Warning );
+#else
+                    if (!File.Exists( Utils.mainGradlePath ))
+                    {
+                        EditorGUILayout.HelpBox( "Please enable 'Custom Gradle Template' found under " +
+                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
+                        "to allow CAS update Grdale plugin version and enable MultiDEX.", MessageType.Error );
+                    }
+#endif
+
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
                         "Please use Android Resolver after the change complete.", MessageType.Info );
@@ -216,9 +235,9 @@ namespace CAS.UEditor
                             succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
                             "OK" );
 #else
-                            EditorUtility.DisplayDialog( "Android Dependencies",
-                                "Android resolver not enabled. Unity Android platform target must be selected.",
-                                "OK" );
+                        EditorUtility.DisplayDialog( "Android Dependencies",
+                            "Android resolver not enabled. Unity Android platform target must be selected.",
+                            "OK" );
 #endif
                     }
                     EditorGUILayout.EndHorizontal();

@@ -255,7 +255,7 @@ namespace CAS.UEditor
                 Utils.StopBuildWithMessage(
                         "Build failed because CAS could not update Gradle plugin version in Unity 2019.3 without " +
                         "Custom Base Gradle Template. Please enable 'Custom Base Gradle Template' found under " +
-                        "'Player Settings > Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
+                        "'Player Settings -> Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
             }
 
             if (!multidexRequired)
@@ -266,15 +266,15 @@ namespace CAS.UEditor
                 Utils.StopBuildWithMessage(
                     "Build failed because CAS could not enable MultiDEX in Unity 2019.3 without " +
                     "Custom Launcher Gradle Template. Please enable 'Custom Launcher Gradle Template' found under " +
-                    "'Player Settings > Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
+                    "'Player Settings -> Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
             List<string> gradle = new List<string>( File.ReadAllLines( gradlePath ) );
 
 #else
             const string gradlePath = Utils.mainGradlePath;
             if (!File.Exists( gradlePath ))
             {
-                Debug.LogWarning( Utils.logTag + "We recomended use Gradle Build system. " +
-                        "Enable PlayerSettings> Publishing Settings> Custom Gradle Template" );
+                Debug.LogWarning( Utils.logTag + "We recommended enable 'Custom Launcher Gradle Template' found under " +
+                        "'Player Settings -> Settings for Android -> Publishing Settings' menu to allow CAS update Gradle plugin version." );
                 return;
             }
 
@@ -455,7 +455,7 @@ namespace CAS.UEditor
 
         private static bool RequestUpdateGradleVersion( string version = "" )
         {
-            return Application.isBatchMode && EditorUtility.DisplayDialog( "CAS Preprocess Build",
+            return Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
                         "Android Gradle plugin " + version + " are not supports targeting Android 11. " +
                         "Do you want to upgrade to version with fix?",
                         "Update", "Continue" );
