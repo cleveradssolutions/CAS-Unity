@@ -15,7 +15,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "2.4.1";
+        public const string wrapperVersion = "2.5.0";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -77,6 +77,7 @@ namespace CAS
         /// <param name="initCompleteAction">Initialization complete action</param>
         /// <exception cref="ArgumentNullException">Manager ID is empty.</exception>
         /// <exception cref="NotSupportedException">Not supported runtime platform</exception>
+        [Obsolete( "We recommend using the builder for initialization new manager.")]
         public static IMediationManager Initialize(
             string managerID,
             AdFlags enableAd = AdFlags.Everything,

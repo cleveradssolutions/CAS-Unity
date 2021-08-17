@@ -1,5 +1,17 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.5.0] - 2021-08-17
+### Dependencies
+- [Android] Wraps [2.5.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.4.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Changes
+- Chartboost is no longer supported. At the moment, Chartboost architecture does not allow us to effectively compete with other networks. 
+We will keep an eye on changes in the future and look forward to receiving support back.
+- Deprecated `CAS.MobileAds.BuildManager().WithTestAdMode(false)` in favor of `Assets>CleverAdsSolutions>Settings` menu.
+  > Defining test mode in the builder is not enough to get true test ads.
+- Deprecated `CAS.MobileAds.Initialize()` in favor of `BuildManager()`.
+  > Since the test ad mode is obsolete, we recommend using the builder with new initialization options.
+
 ## [2.4.1] - 2021-08-03
 ### Dependencies
 - [Android] Wraps [2.4.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

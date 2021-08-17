@@ -92,10 +92,11 @@ namespace CAS
         }
 
         /// <summary>
-        /// An demoAdMode is optional to enable Test ad mode that will always request test ads.
+        /// Option to enable Test ad mode that will always request test ads.
         /// If you're just looking to experiment with the SDK in a Hello World app, though, you can use the true with any manager ID string.
-        /// <b>Please remember to set False demo ad mode after tests done.</b>
+        /// <b>Don't forget to set False test ad mode to release application.</b>
         /// </summary>
+        [Obsolete( "Please set Test Ad Mode in `Assets>CleverAdsSolutions>Settings` menu to get true Test Ad." )]
         public CASInitSettings WithTestAdMode( bool test )
         {
             testAdMode = test;
