@@ -63,11 +63,13 @@ namespace CAS.AdObject
     }
 
     [CustomEditor( typeof( BannerAdObject ) )]
+    [CanEditMultipleObjects]
     internal class BannerAdObjectInspector : BaseAdObjectInspector
     {
         private SerializedProperty adPositionProp;
         private SerializedProperty adSizeProp;
         private SerializedProperty onAdHiddenProp;
+        private string[] allowedPositions;
 
         private new void OnEnable()
         {
@@ -77,12 +79,31 @@ namespace CAS.AdObject
             adSizeProp = obj.FindProperty( "adSize" );
 
             onAdHiddenProp = obj.FindProperty( "OnAdHidden" );
+
+            allowedPositions = new string[]{
+                "Top Center",
+                "Top Left",
+                "Top Right",
+                "Bottom Center",
+                "Bottom Left",
+                "Bottom Right"
+            };
         }
 
         protected override void OnAdditionalPropertiesGUI()
         {
-            EditorGUILayout.PropertyField( adPositionProp );
+            EditorGUI.BeginChangeCheck();
+            adPositionProp.intValue = EditorGUILayout.Popup( "Ad Position", adPositionProp.intValue, allowedPositions );
+            if (EditorGUI.EndChangeCheck() && Application.isPlaying)
+            {
+                ( ( BannerAdObject )target ).SetAdPositionEnumIndex( adPositionProp.intValue );
+            }
+            EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField( adSizeProp );
+            if (EditorGUI.EndChangeCheck() && Application.isPlaying)
+            {
+                ( ( BannerAdObject )target ).SetAdSizeEnumIndex( adSizeProp.intValue );
+            }
         }
 
         protected override void OnCallbacksGUI()
@@ -99,6 +120,7 @@ namespace CAS.AdObject
     }
 
     [CustomEditor( typeof( InterstitialAdObject ) )]
+    [CanEditMultipleObjects]
     internal class InterstitialAdObjectInspector : BaseAdObjectInspector
     {
         private SerializedProperty onAdFailedToShowProp;
@@ -127,6 +149,7 @@ namespace CAS.AdObject
     }
 
     [CustomEditor( typeof( RewardedAdObject ) )]
+    [CanEditMultipleObjects]
     internal class RewardedAdObjectInspector : BaseAdObjectInspector
     {
         private SerializedProperty onAdFailedToShowProp;
@@ -186,10 +209,15 @@ namespace CAS.AdObject
 
         protected override void OnAdditionalPropertiesGUI()
         {
+            EditorGUI.BeginChangeCheck();
             allowAdProp.boolValue = EditorGUILayout.ToggleLeft(
                 "Allow Allow Return to play ads",
                 allowAdProp.boolValue
             );
+            if (EditorGUI.EndChangeCheck() && Application.isPlaying)
+            {
+                ( ( ReturnToPlayAdObject )target ).allowReturnToPlayAd = allowAdProp.boolValue;
+            }
         }
 
         protected override void OnCallbacksGUI()

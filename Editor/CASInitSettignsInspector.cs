@@ -139,13 +139,22 @@ namespace CAS.UEditor
             allowedAdFlagsProp.intValue = Convert.ToInt32(
                EditorGUILayout.EnumFlagsField( "Allowed ads in app", ( AdFlags )allowedAdFlagsProp.intValue ) );
 
+
             EditorGUILayout.PropertyField( testAdModeProp );
             if (testAdModeProp.boolValue)
             {
                 EditorGUILayout.HelpBox( "Make sure you disable test ad mode and replace test manager ID with your own ad manager ID before publishing your app!", MessageType.Warning );
             }
-            GUILayout.Label( "CAS.MobileAds.BuildManager() default settings.",
-                EditorStyles.wordWrappedMiniLabel, GUILayout.ExpandHeight( false ) );
+            else if (EditorUserBuildSettings.development)
+            {
+                EditorGUILayout.HelpBox( "Development build enabled, only test ads are allowed. " +
+                    "\nMake sure you disable Development build and use real ad manager ID before publishing your app!", MessageType.Warning );
+            }
+            else
+            {
+                EditorGUILayout.LabelField( "When testing your app, make sure you use Test Ads mode rather than live ads. " +
+                "Failure to do so can lead to suspension of your account.", EditorStyles.wordWrappedMiniLabel );
+            }
             HelpStyles.EndBoxScope();
 
             OnBannerSizeGUI();

@@ -1,5 +1,25 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.5.1] - 2021-08-28
+### Dependencies
+- [Android] Wraps [2.5.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+## Features
+- Only Test Ads are used with the Development Build to avoid changing the Test Ads Mode checkbox.
+  > Make sure you disable Development build and use real ad manager ID before publishing your app!
+- [Editor] The Test Banner simulation is more similar to real size.
+- [Editor] The Test Banenr size and position can be changed in play mode using the inspector.
+- [Editor] The application is allowed to build when the server is not available. However, still not recommended and may reduce mediation revenue.
+- [Editor] Improved Admob App Id filling.
+## Bug Fixes
+- [Android] Fixed load the Banner Ads automatically after initialization.
+## Changes
+- Deprecated `CAS.MobileAds.BuildManager().WithManagerId()` in favor of `Assets>CleverAdsSolutions>Settings` menu and `CAS.MobileAds.BuildManager().WithManagerIdAtIndex()`.
+  > Defining Manager Id in the builder is not enough to setup the project correctly.
+## Added new mediation partner
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+[Pangle](https://www.pangleglobal.com/) - [Privacy Policy](https://www.pangleglobal.com/privacy/enduser-en)  
+> Available for Android only. Coming soon for iOS.
+
 ## [2.5.0] - 2021-08-17
 ### Dependencies
 - [Android] Wraps [2.5.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

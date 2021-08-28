@@ -46,14 +46,19 @@ namespace CAS.UEditor
         public static string GetActiveMediationPattern()
         {
             var target = Create( EditorUserBuildSettings.activeBuildTarget, Audience.Mixed, true );
-            if (target == null)
+            return GetActiveMediationPattern( target );
+        }
+
+        public static string GetActiveMediationPattern( DependencyManager manager )
+        {
+            if (manager == null)
                 return "";
 
             var networks = Enum.GetValues( typeof( AdNetwork ) );
             var result = new char[networks.Length];
             for (int i = 0; i < networks.Length; i++)
             {
-                var dependency = target.Find( ( ( AdNetwork )networks.GetValue( i ) ).GetName() );
+                var dependency = manager.Find( ( ( AdNetwork )networks.GetValue( i ) ).GetName() );
                 result[i] = ( dependency != null && dependency.IsInstalled() ) ? '1' : '0';
             }
             return new string( result );
@@ -88,9 +93,11 @@ namespace CAS.UEditor
     [Serializable]
     public partial class Dependency
     {
-        public const AdNetwork adBase = (AdNetwork)64;
+        public const AdNetwork adBase = ( AdNetwork )64;
         public const AdNetwork noNetwork = ( AdNetwork )65;
         public const string adBaseName = "Base";
+        public const string adOptimalName = "OptimalAds";
+        public const string adFamiliesName = "FamiliesAds";
 
         [Flags]
         public enum Label

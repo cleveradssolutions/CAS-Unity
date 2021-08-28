@@ -8,6 +8,7 @@ namespace CAS
     public class CASInitSettings : ScriptableObject
     {
 #pragma warning disable 649 // is never assigned to, and will always have its default value null
+        [Obsolete( "Please use IsTestAdMode() instead to get real runtime state." )]
         public bool testAdMode = false;
         [SerializeField]
         private string[] managerIds = { "demo" };
@@ -74,6 +75,8 @@ namespace CAS
         /// Or you can use a generic way to get the ID by ordinal index <see cref="WithManagerIdAtIndex(int)"/>
         /// </summary>
         /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
+        [Obsolete( "Please set Manager ID in `Assets>CleverAdsSolutions>Settings` menu to setup the project correctly. " +
+            "You can select Manager ID at index by WithManagerIdAtIndex(index)." )]
         public CASInitSettings WithManagerId( string managerId )
         {
             if (string.IsNullOrEmpty( managerId ))
@@ -160,6 +163,16 @@ namespace CAS
             if (managerIds == null || id == null)
                 return -1;
             return Array.IndexOf( managerIds, id );
+        }
+        public bool IsTestAdMode()
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+#if UNITY_EDITOR
+            return testAdMode || UnityEditor.EditorUserBuildSettings.development;
+#else
+            return testAdMode || Debug.isDebugBuild;
+#endif
+#pragma warning restore CS0618 // Type or member is obsolete
         }
         #endregion
     }

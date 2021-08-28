@@ -147,7 +147,7 @@ namespace CAS.Android
         public CASMediationManager( CASInitSettings initData )
         {
             managerID = initData.targetId;
-            isTestAdMode = initData.testAdMode;
+            isTestAdMode = initData.IsTestAdMode();
         }
 
         ~CASMediationManager()

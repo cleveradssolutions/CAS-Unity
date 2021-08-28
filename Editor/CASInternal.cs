@@ -255,9 +255,10 @@ namespace CAS.UEditor
                     installedVersion = dependency.Substring( beginIndex, dependency.IndexOf( '\"', beginIndex ) - beginIndex );
                     try
                     {
-                        var currVer = new Version( installedVersion );
-                        var targetVer = new Version( version );
-                        isNewer = currVer < targetVer;
+                        //var currVer = new Version( installedVersion );
+                        //var targetVer = new Version( version );
+                        //isNewer = currVer < targetVer;
+                        isNewer = installedVersion != version;
                     }
                     catch
                     {

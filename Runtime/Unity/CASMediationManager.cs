@@ -206,12 +206,12 @@ namespace CAS.Unity
 
         public float GetBannerHeightInPixels()
         {
-            return CalculateAdSizeOnScreen( _bannerSize ).y;
+            return CalculateAdRectOnScreen( _bannerSize, AdPosition.BottomCenter ).height;
         }
 
         public float GetBannerWidthInPixels()
         {
-            return CalculateAdSizeOnScreen( _bannerSize ).x;
+            return CalculateAdRectOnScreen( _bannerSize, AdPosition.BottomCenter ).width;
         }
 
         public bool TryOpenDebugger()
@@ -383,64 +383,86 @@ namespace CAS.Unity
         {
             if (( visibleTypes & AdFlags.Banner ) == AdFlags.Banner)
             {
-                Vector2 sizePX = CalculateAdSizeOnScreen( bannerSize );
-                Vector2 position = CalculateAdPositionOnScreen( bannerPosition, sizePX );
-                var rect = new Rect( position, sizePX );
-
-                rect.height *= 0.65f;
+                var rect = CalculateAdRectOnScreen( bannerSize, bannerPosition );
+                var totalHeight = rect.height;
+                rect.height = totalHeight * 0.65f;
                 if (GUI.Button( rect, "CAS " + bannerSize.ToString() + " Ad", _btnStyle ))
                     eventsQueue.Add( OnBannerAdClicked );
 
                 rect.y += rect.height;
-                rect.height = sizePX.y * 0.35f;
+                rect.height = totalHeight * 0.35f;
 
                 _emulateTabletScreen = GUI.Toggle( rect, _emulateTabletScreen,
                     _emulateTabletScreen ? "Switch to phone" : "Switch to tablet", _btnStyle );
             }
         }
 
-        public Vector2 CalculateAdSizeOnScreen( AdSize adSize )
+        public Rect CalculateAdRectOnScreen( AdSize size, AdPosition position )
         {
+            var screenWidth = Screen.width;
+            var screenHeight = Screen.height;
             const float phoneScale = 640;
             const float tabletScale = 1024;
-            float scale = Mathf.Max( Screen.width, Screen.height ) / ( _emulateTabletScreen ? tabletScale : phoneScale );
+            float scale = Mathf.Max( screenWidth, screenHeight ) / ( _emulateTabletScreen ? tabletScale : phoneScale );
+            bool isPortrait = screenWidth < screenHeight;
 
-            switch (adSize)
+            if (size == AdSize.SmartBanner)
+                size = _emulateTabletScreen ? AdSize.Leaderboard : AdSize.Banner;
+
+
+            Rect result = new Rect();
+            switch (size)
             {
                 case AdSize.AdaptiveBanner:
-                    return new Vector2( Screen.width, 50 * scale );
-                case AdSize.SmartBanner:
-                    if (_emulateTabletScreen)
-                        return new Vector2( 728.0f * scale, 90.0f * scale );
-                    else
-                        return new Vector2( 320.0f * scale, 50.0f * scale );
+                    result.width = screenWidth * ( isPortrait ? 1.0f : 0.8f );
+                    result.height = ( _emulateTabletScreen ? 90.0f : 50.0f ) * scale;
+                    break;
                 case AdSize.Leaderboard:
-                    return new Vector2( 728.0f * scale, 90.0f * scale );
+                    result.width = 728.0f * scale;
+                    result.height = 90.0f * scale;
+                    break;
                 case AdSize.MediumRectangle:
-                    return new Vector2( 300.0f * scale, 250.0f * scale );
+                    result.width = 300.0f * scale;
+                    result.height = 250.0f * scale;
+                    break;
                 default:
-                    return new Vector2( 320.0f * scale, 50.0f * scale );
+                    result.width = 320.0f * scale;
+                    result.height = 50.0f * scale;
+                    break;
             }
-        }
 
-        public Vector2 CalculateAdPositionOnScreen( AdPosition position, Vector2 pxSize )
-        {
             switch (position)
             {
                 case AdPosition.TopLeft:
-                    return Vector2.zero;
+                    if (isPortrait)
+                        result.y = scale * 20.0f;
+                    break;
                 case AdPosition.TopCenter:
-                    return new Vector2( Screen.width * 0.5f - pxSize.x * 0.5f, 0f );
+                    result.x = screenWidth * 0.5f - result.width * 0.5f;
+                    // For Portrait orientation add space for Safe area
+                    if (isPortrait)
+                        result.y = scale * 20.0f;
+                    break;
                 case AdPosition.TopRight:
-                    return new Vector2( Screen.width - pxSize.x, 0f );
+                    result.x = screenWidth - result.width;
+                    if (isPortrait)
+                        result.y = scale * 20.0f;
+                    break;
                 case AdPosition.BottomLeft:
-                    return new Vector2( 0f, Screen.height - pxSize.y );
+                    result.y = screenHeight - result.height;
+                    break;
                 case AdPosition.BottomRight:
-                    return new Vector2( Screen.width - pxSize.x, Screen.height - pxSize.y );
+                    result.x = screenWidth - result.width;
+                    result.y = screenHeight - result.height;
+                    break;
                 default:
-                    return new Vector2( Screen.width * 0.5f - pxSize.x * 0.5f, Screen.height - pxSize.y );
+                    result.x = screenWidth * 0.5f - result.width * 0.5f;
+                    result.y = screenHeight - result.height;
+                    break;
             }
+            return result;
         }
+
 
         private void OnGUIInterstitialAd()
         {

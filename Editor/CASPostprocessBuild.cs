@@ -18,13 +18,14 @@ namespace CAS.UEditor
                 return;
 
             var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
+            var depManager = DependencyManager.Create( BuildTarget.iOS, Audience.Mixed, true );
 
             string plistPath = Path.Combine( path, "Info.plist" );
-            ConfigureInfoPlist( plistPath, casSettings );
+            ConfigureInfoPlist( plistPath, casSettings, depManager );
 
             var projectPath = Path.Combine( path, "Unity-iPhone.xcodeproj/project.pbxproj" );
             var project = ConfigureXCodeProject( path, projectPath, casSettings );
-            ApplyCrosspromoDynamicLinks( projectPath, project, casSettings );
+            ApplyCrosspromoDynamicLinks( projectPath, project, casSettings, depManager );
             Debug.Log( CASEditorUtils.logTag + "Postrocess Build done." );
         }
 
@@ -53,18 +54,22 @@ namespace CAS.UEditor
         }
 #endif
 
-        private static void ConfigureInfoPlist( string plistPath, CASInitSettings casSettings )
+        private static void ConfigureInfoPlist( string plistPath, CASInitSettings casSettings, DependencyManager deps )
         {
             PlistDocument plist = new PlistDocument();
             plist.ReadFromFile( plistPath );
 
             #region Read Admob App ID from CAS Settings
-            string admobAppId = null;
-            if (casSettings.testAdMode)
+            bool admobAppIdRequired = deps == null;
+            if (deps != null)
             {
-                admobAppId = CASEditorUtils.iosAdmobSampleAppID;
+                var admobDep = deps.Find( AdNetwork.GoogleAds );
+                if (admobDep != null)
+                    admobAppIdRequired = admobDep.IsInstalled();
             }
-            else if (casSettings.managersCount > 0)
+
+            string admobAppId = null;
+            if (casSettings.managersCount > 0)
             {
                 string settingsPath = CASEditorUtils.GetNativeSettingsPath( BuildTarget.iOS, casSettings.GetManagerId( 0 ) );
                 if (File.Exists( settingsPath ))
@@ -75,14 +80,19 @@ namespace CAS.UEditor
                     }
                     catch (Exception e)
                     {
-                        CASEditorUtils.StopBuildWithMessage( e.ToString(), BuildTarget.iOS );
+                        if (!casSettings.IsTestAdMode() && admobAppIdRequired)
+                            CASEditorUtils.StopBuildWithMessage( e.ToString(), BuildTarget.iOS );
                     }
                 }
+            }
+            if (string.IsNullOrEmpty(admobAppId) && casSettings.IsTestAdMode())
+            {
+                admobAppId = CASEditorUtils.iosAdmobSampleAppID;
             }
 
             #endregion
 
-            if (admobAppId != null)
+            if (!string.IsNullOrEmpty( admobAppId))
                 plist.root.SetString( "GADApplicationIdentifier", admobAppId );
             plist.root.SetBoolean( "GADDelayAppMeasurementInit", true );
 
@@ -139,7 +149,7 @@ namespace CAS.UEditor
             var target = project.TargetGuidByName( PBXProject.GetUnityTargetName() );
 #endif
             //project.SetBuildProperty( target, "ENABLE_BITCODE", "No" );
-            project.AddBuildProperty( target, "OTHER_LDFLAGS", "-ObjC" );
+            //project.AddBuildProperty( target, "OTHER_LDFLAGS", "-ObjC" );
             //project.AddBuildProperty( target, "OTHER_LDFLAGS", "-lxml2 -ObjC -fobjc-arc" );
             //project.AddBuildProperty( target, "CLANG_ENABLE_MODULES", "YES" ); // InMobi required
             project.SetBuildProperty( target, "SWIFT_VERSION", "5.0" );
@@ -176,15 +186,13 @@ namespace CAS.UEditor
             return project;
         }
 
-        private static void ApplyCrosspromoDynamicLinks( string projectPath, PBXProject project, CASInitSettings casSettings )
+        private static void ApplyCrosspromoDynamicLinks( string projectPath, PBXProject project, CASInitSettings casSettings, DependencyManager deps )
         {
-            if (casSettings.testAdMode || casSettings.managersCount == 0
-                || string.IsNullOrEmpty( casSettings.GetManagerId( 0 ) ))
+            if (casSettings.managersCount == 0 || string.IsNullOrEmpty( casSettings.GetManagerId( 0 ) ))
                 return;
-            var depManager = DependencyManager.Create( BuildTarget.iOS, Audience.Mixed, false );
-            if (depManager != null)
+            if (deps != null)
             {
-                var crossPromoDependency = depManager.FindCrossPromotion();
+                var crossPromoDependency = deps.FindCrossPromotion();
                 if (crossPromoDependency != null && !crossPromoDependency.IsInstalled())
                     return;
             }

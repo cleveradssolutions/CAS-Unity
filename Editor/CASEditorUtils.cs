@@ -65,6 +65,7 @@ namespace CAS.UEditor
         internal class AdmobAppIdData
         {
             public string admob_app_id = null;
+#if false
             public int[] Banner = null;
             public int[] Interstitial = null;
             public int[] Rewarded = null;
@@ -75,6 +76,7 @@ namespace CAS.UEditor
                     && ( Banner == null || Banner.Length < 5 )
                     && ( Rewarded == null || Rewarded.Length < 5 );
             }
+#endif
         }
 
         [Serializable]
@@ -461,8 +463,45 @@ namespace CAS.UEditor
 #endif
         }
 
-        internal static string BuildRemoteUrl( string managerID, string country, BuildTarget platform )
+        private static string Md5Sum( string strToEncrypt )
         {
+            UTF8Encoding ue = new UTF8Encoding();
+            byte[] bytes = ue.GetBytes( strToEncrypt + "MeDiAtIoNhAsH" );
+            System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
+            byte[] hashBytes = md5.ComputeHash( bytes );
+            StringBuilder hashString = new StringBuilder();
+            for (int i = 0; i < hashBytes.Length; i++)
+                hashString.Append( Convert.ToString( hashBytes[i], 16 ).PadLeft( 2, '0' ) );
+            return hashString.ToString().PadLeft( 32, '0' );
+        }
+
+        internal static string DownloadRemoteSettings( string managerID, BuildTarget platform, CASInitSettings settings, DependencyManager deps )
+        {
+            const string title = "Update CAS remote settings";
+
+            string casV = "";
+            #region Find CAS Version
+            if (deps != null)
+            {
+                var casDep = deps.Find( Dependency.adOptimalName );
+                if (casDep != null)
+                    casV = casDep.installedVersion;
+                if (string.IsNullOrEmpty( casV ) && platform == BuildTarget.Android)
+                {
+                    casDep = deps.Find( Dependency.adFamiliesName );
+                    if (casDep != null)
+                        casV = casDep.installedVersion;
+                }
+                if (string.IsNullOrEmpty( casV ))
+                {
+                    casDep = deps.Find( Dependency.adBaseName );
+                    if (casDep != null)
+                        casV = casDep.version;
+                }
+            }
+            #endregion
+
+            #region Create request URL
             string platformCode;
             switch (platform)
             {
@@ -478,118 +517,81 @@ namespace CAS.UEditor
                     break;
             }
 
-            var result = new StringBuilder( "https://psvpromo.psvgamestudio.com/Scr/cas.php?platform=" )
+            var urlBuilder = new StringBuilder( "https://psvpromo.psvgamestudio.com/Scr/cas.php?platform=" )
                 .Append( platformCode )
                 .Append( "&bundle=" ).Append( UnityWebRequest.EscapeURL( managerID ) )
                 .Append( "&hash=" ).Append( Md5Sum( managerID + platformCode ) )
-                .Append( "&lang=" ).Append( SystemLanguage.English );
+                .Append( "&lang=" ).Append( SystemLanguage.English )
+                .Append( "&country=" ).Append( preferredCountry )
+                .Append( "&appDev=2" )
+                .Append( "&appV=" ).Append( PlayerSettings.bundleVersion )
+                .Append( "&coppa=" ).Append( ( int )settings.defaultAudienceTagged )
+                .Append( "&adTypes=" ).Append( ( int )settings.allowedAdFlags )
+                .Append( "&sdk=" ).Append( casV )
+                .Append( "&nets=" ).Append( DependencyManager.GetActiveMediationPattern( deps ) )
+                .Append( "&framework=Unity_" ).Append( Application.unityVersion );
+            #endregion
 
-            if (!string.IsNullOrEmpty( country ))
-                result.Append( "&country=" ).Append( country );
-            return result.ToString();
-        }
-
-        private static string Md5Sum( string strToEncrypt )
-        {
-            UTF8Encoding ue = new UTF8Encoding();
-            byte[] bytes = ue.GetBytes( strToEncrypt + "MeDiAtIoNhAsH" );
-            System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
-            byte[] hashBytes = md5.ComputeHash( bytes );
-            StringBuilder hashString = new StringBuilder();
-            for (int i = 0; i < hashBytes.Length; i++)
-                hashString.Append( Convert.ToString( hashBytes[i], 16 ).PadLeft( 2, '0' ) );
-            return hashString.ToString().PadLeft( 32, '0' );
-        }
-
-        internal static string DownloadRemoteSettings( string managerID, string country, BuildTarget platform, bool main )
-        {
-            const string title = "Update CAS remote settings";
-            string url = BuildRemoteUrl( managerID, country, platform );
-            string message = null;
-
-            AdmobAppIdData data = null;
-            using (var loader = UnityWebRequest.Get( url ))
+            using (var loader = UnityWebRequest.Get( urlBuilder.ToString() ))
             {
-                loader.SendWebRequest();
-                while (!loader.isDone)
+                try
                 {
-                    if (EditorUtility.DisplayCancelableProgressBar( title, managerID,
-                        Mathf.Repeat( ( float )EditorApplication.timeSinceStartup, 1.0f ) ))
+                    loader.SendWebRequest();
+                    while (!loader.isDone)
                     {
-                        loader.Dispose();
-                        message = "Update CAS Settings canceled";
-                        break;
+                        if (EditorUtility.DisplayCancelableProgressBar( title, managerID,
+                            Mathf.Repeat( ( float )EditorApplication.timeSinceStartup, 1.0f ) ))
+                        {
+                            loader.Dispose();
+                            throw new Exception( "Update CAS Settings canceled" );
+                        }
                     }
-                }
-                EditorUtility.ClearProgressBar();
-                if (message == null)
-                {
                     if (string.IsNullOrEmpty( loader.error ))
                     {
-                        EditorUtility.DisplayProgressBar( title, "Write CAS settings", 0.7f );
                         var content = loader.downloadHandler.text.Trim();
                         if (string.IsNullOrEmpty( content ))
-                            StopBuildWithMessage( "Server have no settings for " + managerID +
-                                " Please try using a different identifier in the first place or contact support." +
-                                " To test build please use Test Ad Mode in settings.", platform );
+                            throw new Exception( "ManagerID [" + managerID + "] is not registered in CAS." );
 
-                        try
-                        {
-                            data = JsonUtility.FromJson<AdmobAppIdData>( content );
-                            if (main && data.IsDisabled())
-                            {
-                                message = "Ads are currently disabled for your application. You can use the cached settings or try later.";
-                            }
-                            else
-                            {
-                                WriteSettingsForPlatform( content, managerID, platform );
-                                return data.admob_app_id;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            message = e.ToString();
-                        }
+                        EditorUtility.DisplayProgressBar( title, "Write CAS settings", 0.7f );
+                        var data = JsonUtility.FromJson<AdmobAppIdData>( content );
+                        WriteSettingsForPlatform( content, managerID, platform );
+                        return data.admob_app_id;
                     }
-                    else
-                    {
-                        message = "Server response " + loader.responseCode + ": " + loader.error;
-                    }
+                    throw new Exception( "Server response " + loader.responseCode + ": " + loader.error );
+                }
+                finally
+                {
+                    EditorUtility.ClearProgressBar();
                 }
             }
-            if (!main)
-                return null;
+        }
+
+        public static string ReadAppIdFromCache( string managerID, BuildTarget platform, string error )
+        {
+            const string title = "Update CAS remote settings";
             var cachePath = GetNativeSettingsPath( platform, managerID );
-            if (Application.isBatchMode)
+            int dialogResponse = 0;
+
+
+            if (!Application.isBatchMode)
+                dialogResponse = EditorUtility.DisplayDialogComplex( title,
+                    error +
+                    "\nPlease try using a real identifier in the first place else contact support." +
+                    "\n- Warning! -" +
+                    "\n1. Continue build the app for release with current settings can reduce monetization revenue." +
+                    "\n2. When build to testing your app, make sure you use Test Ads mode rather than live ads. " +
+                    "Failure to do so can lead to suspension of your account.",
+                    "Continue", "Cancel Build", "Select settings file" );
+
+            if (dialogResponse == 0)
             {
-                if (data != null)
-                    // This content will be not save to cache
-                    return data.admob_app_id;
                 if (File.Exists( cachePath ))
                     return GetAdmobAppIdFromJson( File.ReadAllText( cachePath ) );
-                StopBuildWithMessage( message, BuildTarget.NoTarget );
                 return null;
             }
-
-            if (data != null || File.Exists( cachePath ))
+            if (dialogResponse == 1)
             {
-                var dialogResponse = EditorUtility.DisplayDialogComplex( title, message, "Use cache", "Cancel Build", "Select settings file" );
-                if (dialogResponse == 0)
-                {
-                    if (data == null)
-                        return GetAdmobAppIdFromJson( File.ReadAllText( cachePath ) );
-                    // This content will be not save to cache
-                    return data.admob_app_id;
-                }
-                if (dialogResponse == 1)
-                {
-                    StopBuildWithMessage( message, BuildTarget.NoTarget );
-                    return null;
-                }
-            }
-            else if (!EditorUtility.DisplayDialog( title, message, "Select settings file", "Cancel Build" ))
-            {
-                StopBuildWithMessage( message, BuildTarget.NoTarget );
+                StopBuildWithMessage( "Build canceled", BuildTarget.NoTarget );
                 return null;
             }
 
@@ -604,12 +606,11 @@ namespace CAS.UEditor
                     return GetAdmobAppIdFromJson( content );
                 }
             }
-            catch
+            catch (Exception e)
             {
-                StopBuildWithMessage( "Selected wrong file: " + filePath, BuildTarget.NoTarget );
-                return null;
+                Debug.LogException( e );
             }
-            StopBuildWithMessage( message, BuildTarget.NoTarget );
+            StopBuildWithMessage( "Selected wrong settings file: " + filePath, BuildTarget.NoTarget );
             return null;
         }
 

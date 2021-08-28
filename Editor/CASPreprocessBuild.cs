@@ -37,10 +37,9 @@ namespace CAS.UEditor
             {
                 ValidateIntegration( target );
             }
-            catch (Exception e)
+            finally
             {
                 EditorUtility.ClearProgressBar();
-                throw e;
             }
         }
         #endregion
@@ -56,23 +55,24 @@ namespace CAS.UEditor
                 Utils.StopBuildWithMessage( "Settings not found. Please use menu Assets/CleverAdsSolutions/Settings " +
                     "to create and set settings for build.", target );
 
+            var deps = DependencyManager.Create( target, Audience.Mixed, true );
             if (!isBatchMode)
             {
                 var newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
                 if (newCASVersion != null)
                     DialogOrCancel( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", target );
 
-                var dependencyManager = DependencyManager.Create( target, Audience.Mixed, false );
-                if (dependencyManager != null)
+
+                if (deps != null)
                 {
-                    if (!dependencyManager.installedAny)
+                    if (!deps.installedAny)
                         Utils.StopBuildWithMessage( "Dependencies of native SDK were not found. " +
                         "Please use 'Assets/CleverAdsSolutions/Settings' menu to integrate solutions or any SDK separately.", target );
 
                     bool isNewerVersionExist = false;
-                    for (int i = 0; i < dependencyManager.solutions.Length; i++)
+                    for (int i = 0; i < deps.solutions.Length; i++)
                     {
-                        if (dependencyManager.solutions[i].isNewer)
+                        if (deps.solutions[i].isNewer)
                         {
                             isNewerVersionExist = true;
                             break;
@@ -80,9 +80,9 @@ namespace CAS.UEditor
                     }
                     if (!isNewerVersionExist)
                     {
-                        for (int i = 0; i < dependencyManager.networks.Length; i++)
+                        for (int i = 0; i < deps.networks.Length; i++)
                         {
-                            if (dependencyManager.networks[i].isNewer)
+                            if (deps.networks[i].isNewer)
                             {
                                 isNewerVersionExist = true;
                                 break;
@@ -102,45 +102,34 @@ namespace CAS.UEditor
                 }
             }
 
+            if (settings.managersCount == 0 || string.IsNullOrEmpty( settings.GetManagerId( 0 ) ))
+                StopBuildIDNotFound( target );
+
             string admobAppId = null;
-            if (settings.testAdMode)
+            string updateSettingsError = "";
+            for (int i = 0; i < settings.managersCount; i++)
             {
-                //DialogOrCancel( "CAS Mediation work in Test Ad mode.", BuildTarget.NoTarget );
-
-                if (target == BuildTarget.Android)
+                var managerId = settings.GetManagerId( i );
+                if (managerId != null && managerId.Length > 4)
                 {
-                    admobAppId = Utils.androidAdmobSampleAppID;
-                }
-                else
-                {
-                    admobAppId = Utils.iosAdmobSampleAppID;
-                }
-            }
-            else
-            {
-                if (settings.managersCount == 0)
-                    StopBuildIDNotFound( target );
-
-                for (int i = 0; i < settings.managersCount; i++)
-                {
-                    if (!string.IsNullOrEmpty( settings.GetManagerId( i ) ))
+                    string newAppId = null;
+                    try
                     {
-                        var newAppId = Utils.DownloadRemoteSettings( settings.GetManagerId( i ), Utils.preferredCountry, target, i == 0 );
-                        if (string.IsNullOrEmpty( admobAppId ))
-                            admobAppId = newAppId;
+                        newAppId = Utils.DownloadRemoteSettings( managerId, target, settings, deps );
                     }
-                    else if (i == 0)
-                        StopBuildIDNotFound( target );
+                    catch (Exception e)
+                    {
+                        Debug.LogError( Utils.logTag + e.Message );
+                        updateSettingsError = e.Message;
+                    }
+
+                    if (newAppId != null && string.IsNullOrEmpty( admobAppId ) && newAppId.Contains( '~' ))
+                        admobAppId = newAppId;
                 }
             }
 
-            if (string.IsNullOrEmpty( admobAppId ))
-                Utils.StopBuildWithMessage( "CAS server provides wrong settings for managerID " + settings.GetManagerId( 0 ) +
-                    ". Please try using a different identifier in the first place or contact support.", target );
-
-            if (admobAppId.IndexOf( '~' ) < 0)
-                Utils.StopBuildWithMessage( "CAS server provides invalid Admob App Id not match pattern ca-app-pub-0000000000000000~0000000000. " +
-                    "Please try using a different identifier in the first place or contact support.", target );
+            if (string.IsNullOrEmpty( admobAppId ) && !settings.IsTestAdMode())
+                admobAppId = Utils.ReadAppIdFromCache( settings.GetManagerId( 0 ), target, updateSettingsError );
 
             if (target == BuildTarget.Android)
             {
@@ -195,15 +184,11 @@ namespace CAS.UEditor
                     Debug.LogException( e );
                 }
             }
-#if false
-            if (target == BuildTarget.Android && allowReimportDeps)
-            {
-                bool success = Utils.TryResolveAndroidDependencies();
-                if (!success)
-                    Utils.StopBuildWithMessage( "Cancel build: Resolution Failed. See the log for details.", BuildTarget.NoTarget );
-            }
-#endif
-            Debug.Log( Utils.logTag + "Preprocess Build done." );
+            if (settings.IsTestAdMode())
+                Debug.LogWarning( Utils.logTag + "Test Ads Mode enabled! Make sure the build is for testing purposes only!" +
+                    "\nUse 'Assets/CleverAdsSolutions/Settings' menu to disable Test Ad Mode." );
+            else
+                Debug.Log( Utils.logTag + "Preprocess Build done." );
             EditorUtility.DisplayProgressBar( "Hold on", "Prepare components...", 0.95f );
         }
 
@@ -483,6 +468,9 @@ namespace CAS.UEditor
 
             string manifestPath = Path.GetFullPath( Utils.androidLibManifestPath );
 
+            if (string.IsNullOrEmpty( admobAppId ))
+                admobAppId = Utils.androidAdmobSampleAppID;
+
             CopyTemplateIfNeedToAndroidLib(
                     Utils.androidLibManifestTemplateFile, Utils.androidLibManifestPath );
 
@@ -560,7 +548,7 @@ namespace CAS.UEditor
         {
             Utils.StopBuildWithMessage( "Settings not found manager ids for " + target.ToString() +
                         " platform. For a successful build, you need to specify at least one ID" +
-                        " that you use in the project. To test integration, you can use test mode.", target );
+                        " that you use in the project. To test integration, you can use test mode with 'demo' manager id.", target );
         }
     }
 }
