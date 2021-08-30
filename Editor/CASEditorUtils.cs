@@ -499,6 +499,19 @@ namespace CAS.UEditor
                         casV = casDep.version;
                 }
             }
+
+            if (casV.Length > 0)
+            {
+                try
+                {
+                    var parsesV = new System.Version( casV );
+                    casV = parsesV.Major.ToString() + parsesV.Minor.ToString() + parsesV.Build.ToString( "D2" );
+                }
+                catch
+                {
+                    casV = "";
+                }
+            }
             #endregion
 
             #region Create request URL
