@@ -216,20 +216,35 @@ namespace CAS.UEditor
                 {
 #if UNITY_2019_3_OR_NEWER
                     if (!File.Exists( Utils.projectGradlePath ))
+                    {
+                        EditorGUILayout.LabelField( "Custom Base Gradle Template disabled" );
                         EditorGUILayout.HelpBox( "Please enable 'Custom Base Gradle Template' found under " +
-                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
-                        "to allow CAS update Grdale plugin version.", MessageType.Error );
+                            "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
+                            "to allow CAS update Grdale plugin version.", MessageType.Error );
+                    }
 
                     if (!File.Exists( Utils.launcherGradlePath ))
+                    {
+                        EditorGUILayout.LabelField( "Custom Launcher Gradle Template disabled" );
                         EditorGUILayout.HelpBox( "Please enable 'Custom Launcher Gradle Template' found under " +
-                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
-                        "to allow CAS use MultiDEX.", MessageType.Warning );
+                            "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
+                            "to allow CAS use MultiDEX.", MessageType.Error );
+                    }
+
+                    if (!File.Exists( Utils.propertiesGradlePath ))
+                    {
+                        EditorGUILayout.LabelField( "Custom Gradle Properties Template disabled" );
+                        EditorGUILayout.HelpBox( "Please enable 'Custom Gradle Properties Template' found under " +
+                            "'Player Settings > Settings for Android -> Publishing Settings' menu. " +
+                            "to enabling Jetifier.", MessageType.Error );
+                    }
 #else
                     if (!File.Exists( Utils.mainGradlePath ))
                     {
+                        EditorGUILayout.LabelField( "Custom Gradle Template disabled" );
                         EditorGUILayout.HelpBox( "Please enable 'Custom Gradle Template' found under " +
-                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
-                        "to allow CAS update Grdale plugin version and enable MultiDEX.", MessageType.Error );
+                            "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
+                            "to allow CAS update Grdale plugin version and enable MultiDEX.", MessageType.Error );
                     }
 #endif
 

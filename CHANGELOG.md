@@ -1,5 +1,14 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.5.2] - 2021-09-07
+### Dependencies
+- [Android] Wraps [2.5.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.4.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Added new mediation partner
+You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
+[Smaato](https://www.smaato.com/) - [Privacy Policy](https://www.smaato.com/privacy/)  
+> Available for Android only. Coming soon for iOS.
+
 ## [2.5.1] - 2021-08-28
 ### Dependencies
 - [Android] Wraps [2.5.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

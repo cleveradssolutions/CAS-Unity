@@ -19,8 +19,8 @@
         IronSource,
         YandexAds,
         OwnVAST,
-        AmazonAds,
-        Verizon,
+        MAX,
+        Smaato,
         MoPub,
         Tapjoy,
         Fyber,
@@ -28,7 +28,8 @@
         Mintegral,
         Pangle,
         Admost,
-        Smaato,
+        Verizon,
+        AmazonAds,
         HyperMX
     }
 }
