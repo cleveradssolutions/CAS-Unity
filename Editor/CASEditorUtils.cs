@@ -111,11 +111,21 @@ namespace CAS.UEditor
 
         public static string GetNativeSettingsPath( BuildTarget platform, string managerId )
         {
-            if (string.IsNullOrEmpty( managerId ))
+            if ( string.IsNullOrEmpty( managerId ) )
                 return "";
 
-            string root = platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
-            return root + managerId.Length.ToString() + managerId[managerId.Length - 1] + ".json";
+            char suffixLetter = managerId[managerId.Length - 1];
+            if ( platform == BuildTarget.Android )
+            {
+                if ( char.IsUpper( suffixLetter ) )
+                    return androidResSettingsPath + ".json";
+                else
+                    return androidResSettingsPath + managerId.Length.ToString() + suffixLetter + ".json";
+            }
+            else
+            {
+                return iosResSettingsPath + managerId.Length.ToString() + suffixLetter + ".json";
+            }
         }
 
         public static CASInitSettings GetSettingsAsset( BuildTarget platform, bool create = true )
