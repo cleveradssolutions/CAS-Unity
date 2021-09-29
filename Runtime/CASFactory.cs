@@ -253,7 +253,7 @@ namespace CAS
             {
                 return ( string )Type.GetType( "CAS.UEditor.DependencyManager, CleverAdsSolutions-Editor", true )
                     .GetMethod( "GetActiveMediationPattern",
-                        System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public )
+                        System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public, null, new Type[0], null )
                     .Invoke( null, null );
             }
             catch (Exception e)

@@ -66,6 +66,8 @@ namespace CAS.UEditor
 
         public Dependency Find( AdNetwork network )
         {
+            if (network == Dependency.noNetwork)
+                return null;
             return Find( network.GetName() );
         }
 
@@ -116,16 +118,29 @@ namespace CAS.UEditor
         public AdNetwork require = noNetwork;
         public string url;
         public int filter;
-        public string[] dependencies;
-        public AdNetwork[] contains;
+        public string[] dependencies = new string[0];
+        public string[] depsToAllTargets = new string[0];
+        public AdNetwork[] contains = new AdNetwork[0];
         public string[] source;
         public string comment;
         public Label labels = Label.Banner | Label.Inter | Label.Reward;
 
         public string installedVersion { get; set; }
         public bool isNewer { get; set; }
+        /// <summary>
+        /// Is required for another dependency
+        /// </summary>
         public bool isRequired { get; set; }
+        /// <summary>
+        /// Has installed from another dependency
+        /// </summary>
         public bool locked { get; set; }
+        /// <summary>
+        /// Not supported for current configuration
+        /// </summary>
+        public bool notSupported { get; set; }
+
+        [Obsolete( "Renamed to `notSupported`" )]
         public bool inBan { get; set; }
 
         public Dependency() { }

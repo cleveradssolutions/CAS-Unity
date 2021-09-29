@@ -1,4 +1,6 @@
-﻿#if UNITY_ANDROID || UNITY_IOS || CASDeveloper
+﻿#define AppendPackagingOptions
+
+#if UNITY_ANDROID || UNITY_IOS || CASDeveloper
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -153,6 +155,7 @@ namespace CAS.UEditor
                 SetAdmobAppIdToAndroidManifest( admobAppId, false, promoAlias );
 
                 ConfigurateGradleSettings();
+
 
                 if (PlayerSettings.Android.minSdkVersion < AndroidSdkVersions.AndroidApiLevel19)
                 {
@@ -315,7 +318,9 @@ namespace CAS.UEditor
             }
 
             var sourceCompatibilityExist = false;
+#if AppendPackagingOptions
             var packagingOptExist = false;
+#endif
 
             // Find Default Config
             while (line < gradle.Count && !gradle[line].Contains( defaultConfig ))
@@ -324,8 +329,10 @@ namespace CAS.UEditor
                     sourceCompatibilityExist = true;
                 if (!sourceCompatibilityExist && gradle[line].Contains( targetCompatibility ))
                     sourceCompatibilityExist = true;
+#if AppendPackagingOptions
                 if (!packagingOptExist && gradle[line].Contains( excludeOption ))
                     packagingOptExist = true;
+#endif
                 ++line;
             }
 
@@ -352,6 +359,7 @@ namespace CAS.UEditor
                 }
             }
 
+#if AppendPackagingOptions
             if (!packagingOptExist)
             {
                 gradle.InsertRange( line, new[] {
@@ -363,6 +371,7 @@ namespace CAS.UEditor
                 Debug.Log( Utils.logTag + "Append Packaging options to exclude duplicate files." );
                 line += 4;
             }
+#endif
 
             // Find multidexEnable
             if (multidexExist)

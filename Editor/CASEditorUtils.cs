@@ -24,7 +24,7 @@ namespace CAS.UEditor
         public const string androidLibManifestPath = androidLibFolderPath + "/AndroidManifest.xml";
         public const string androidLibPropertiesPath = androidLibFolderPath + "/project.properties";
 
-        public const string iosResSettingsPath = editorFolderPath + "/ios_cas_settings";
+        public const string iosResSettingsPath = "ProjectSettings/ios_cas_settings";
 
         public const string promoDependency = "CrossPromotion";
 
@@ -47,7 +47,6 @@ namespace CAS.UEditor
         internal const string generalDeprecateDependency = "General";
         internal const string teenDeprecateDependency = "Teen";
         internal const string promoDeprecateDependency = "Promo";
-        internal const string dependenciesExtension = "Dependencies.xml";
 
         internal const string logTag = "[CleverAdsSolutions] ";
         internal const string editorRuntimeActiveAdPrefs = "typesadsavailable";
@@ -99,6 +98,19 @@ namespace CAS.UEditor
         {
             OpenSettingsWindow( BuildTarget.iOS );
         }
+
+        [MenuItem( "Assets/CleverAdsSolutions/Documentation..." )]
+        public static void OpenDocumentationMenu()
+        {
+            OpenDocumentation( gitUnityRepo );
+        }
+
+        [MenuItem( "Assets/CleverAdsSolutions/Report Issue..." )]
+        public static void ReportIssueMenu()
+        {
+            Application.OpenURL( gitRootURL + gitUnityRepo + "/issues" );
+        }
+
         #endregion
 
         #region Public API
@@ -111,21 +123,12 @@ namespace CAS.UEditor
 
         public static string GetNativeSettingsPath( BuildTarget platform, string managerId )
         {
-            if ( string.IsNullOrEmpty( managerId ) )
+            if (string.IsNullOrEmpty( managerId ))
                 return "";
 
-            char suffixLetter = managerId[managerId.Length - 1];
-            if ( platform == BuildTarget.Android )
-            {
-                if ( char.IsUpper( suffixLetter ) )
-                    return androidResSettingsPath + ".json";
-                else
-                    return androidResSettingsPath + managerId.Length.ToString() + suffixLetter + ".json";
-            }
-            else
-            {
-                return iosResSettingsPath + managerId.Length.ToString() + suffixLetter + ".json";
-            }
+            string root = platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
+            string suffixChar = char.ToLower( managerId[managerId.Length - 1] ).ToString();
+            return root + managerId.Length.ToString() + suffixChar + ".json";
         }
 
         public static CASInitSettings GetSettingsAsset( BuildTarget platform, bool create = true )
@@ -142,20 +145,55 @@ namespace CAS.UEditor
             return asset;
         }
 
-        public static bool IsDependencyExists( string dependency, BuildTarget target )
+        public static bool IsDependencyExists( string name, BuildTarget platform )
         {
-            return AssetDatabase.FindAssets( GetDependencyName( dependency, target ) ).Length > 0;
+            return AssetDatabase.FindAssets( GetDependencyName( name, platform ) ).Length > 0;
         }
 
-        public static string GetDependencyName( string dependency, BuildTarget target )
+        public static string GetDependencyName( string name, BuildTarget platform )
         {
-            return "CAS" + target.ToString() + dependency + "Dependencies";
+            return "CAS" + platform.ToString() + name + "Dependencies";
         }
 
         public static string GetDependencyPath( string name, BuildTarget platform )
         {
-            return editorFolderPath + "/CAS" + platform.ToString() + name + dependenciesExtension;
+            var depFileName = GetDependencyName( name, platform );
+            var foundDepFiles = AssetDatabase.FindAssets( depFileName );
+            for (int i = 0; i < foundDepFiles.Length; i++)
+            {
+                var pathToFile = AssetDatabase.GUIDToAssetPath( foundDepFiles[i] );
+                if (pathToFile.EndsWith( ".xml" ))
+                    return pathToFile;
+            }
+            return null;
         }
+
+        public static string GetDependencyPathOrDefault( string name, BuildTarget platform )
+        {
+            var foundPath = GetDependencyPath( name, platform );
+            if (foundPath != null)
+                return foundPath;
+
+            return editorFolderPath + "/" + GetDependencyName( name, platform ) + ".xml";
+        }
+
+        #region Deprecated Dependencies paths
+
+        internal static bool IsDeprecateDependencyExists( string dependency, BuildTarget target )
+        {
+            return AssetDatabase.FindAssets( GetDeprecateDependencyName( dependency, target ) ).Length > 0;
+        }
+
+        internal static string GetDeprecateDependencyName( string dependency, BuildTarget target )
+        {
+            return "CAS" + dependency + target.ToString() + "Dependencies";
+        }
+
+        internal static string GetDeprecatedDependencyPath( string name, BuildTarget platform )
+        {
+            return editorFolderPath + "/CAS" + name + platform.ToString() + "Dependencies.xml";
+        }
+        #endregion
 
         public static bool IsAndroidDependenciesResolverExist()
         {
@@ -240,7 +278,7 @@ namespace CAS.UEditor
             if (GUILayout.Button( "Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
                 Application.OpenURL( gitRootURL + gitRepoName + "#support" );
             if (GUILayout.Button( "Wiki", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( gitRootURL + gitRepoName + "/wiki" );
+                OpenDocumentation( gitRepoName );
             if (GUILayout.Button( "CleverAdsSolutions.com", EditorStyles.toolbarButton ))
                 Application.OpenURL( websiteURL );
             EditorGUILayout.EndHorizontal();
@@ -298,6 +336,7 @@ namespace CAS.UEditor
             }
         }
 
+        [Obsolete( "Please migrate to new implementation OnHeaderGUI()" )]
         public static void AboutRepoGUI( string gitRepoName, bool allowedPackageUpdate, string currVersion, ref string newCASVersion )
         {
             EditorGUILayout.BeginHorizontal();
@@ -347,6 +386,12 @@ namespace CAS.UEditor
         #endregion
 
         #region Internal API
+
+        internal static void OpenDocumentation( string gitRepoName )
+        {
+            Application.OpenURL( gitRootURL + gitRepoName + "/wiki" );
+        }
+
         internal static bool IsFirebaseServiceExist( string service )
         {
             if (AssetDatabase.FindAssets( "Firebase." + service ).Length > 0)
@@ -367,24 +412,6 @@ namespace CAS.UEditor
             return JsonUtility.FromJson<AdmobAppIdData>( json ).admob_app_id;
         }
 
-        internal static void CreateFolderInAssets( string folderName )
-        {
-            if (!AssetDatabase.IsValidFolder( rootCASFolderPath ))
-                AssetDatabase.CreateFolder( "Assets", "CleverAdsSolutions" );
-            if (!AssetDatabase.IsValidFolder( rootCASFolderPath + "/" + folderName ))
-                AssetDatabase.CreateFolder( rootCASFolderPath, folderName );
-        }
-
-        internal static bool IsDeprecateDependencyExists( string dependency, BuildTarget target )
-        {
-            return AssetDatabase.FindAssets( GetDeprecateDependencyName( dependency, target ) ).Length > 0;
-        }
-
-        internal static string GetDeprecateDependencyName( string dependency, BuildTarget target )
-        {
-            return "CAS" + dependency + target.ToString() + "Dependencies";
-        }
-
         internal static string GetTemplatePath( string templateFile )
         {
             string templateFolder = "/Templates/" + templateFile;
@@ -399,11 +426,6 @@ namespace CAS.UEditor
                 }
             }
             return path;
-        }
-
-        internal static string GetDeprecatedDependencyPath( string name, BuildTarget platform )
-        {
-            return editorFolderPath + "/CAS" + name + platform.ToString() + dependenciesExtension;
         }
 
         internal static bool TryCopyFile( string source, string dest )
@@ -554,6 +576,9 @@ namespace CAS.UEditor
                 .Append( "&sdk=" ).Append( casV )
                 .Append( "&nets=" ).Append( DependencyManager.GetActiveMediationPattern( deps ) )
                 .Append( "&framework=Unity_" ).Append( Application.unityVersion );
+            if (platform == BuildTarget.Android)
+                urlBuilder.Append( "&appVC=" ).Append( PlayerSettings.Android.bundleVersionCode );
+
             #endregion
 
             using (var loader = UnityWebRequest.Get( urlBuilder.ToString() ))
@@ -813,6 +838,13 @@ namespace CAS.UEditor
             tempContent.image = image;
             tempContent.tooltip = tooltip;
             return tempContent;
+        }
+
+        public static void Devider()
+        {
+            var dividerRect = EditorGUILayout.GetControlRect( GUILayout.Height( 1 ) );
+            if (Event.current.type == EventType.Repaint) //draw the divider
+                GUI.skin.box.Draw( dividerRect, GUIContent.none, 0 );
         }
     }
 }

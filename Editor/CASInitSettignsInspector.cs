@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using Utils = CAS.UEditor.CASEditorUtils;
 using System.IO;
+using System.Reflection;
 
 namespace CAS.UEditor
 {
@@ -32,6 +33,7 @@ namespace CAS.UEditor
         private string newCASVersion = null;
         private bool deprecateDependenciesExist;
         private bool edmExist;
+        private PropertyInfo edmIOSStaticLinkProp = null;
 
         private string[] deprecatedAssets = null;
 
@@ -92,10 +94,20 @@ namespace CAS.UEditor
                     break;
             }
 
+            // Remove deprecated CAS settings raw data
             if (File.Exists( Utils.androidResSettingsPath + ".json" ))
                 AssetDatabase.MoveAssetToTrash( Utils.androidResSettingsPath + ".json" );
 
             edmExist = Utils.IsAndroidDependenciesResolverExist();
+            try
+            {
+                edmIOSStaticLinkProp = Type.GetType( "Google.IOSResolver, Google.IOSResolver", true )
+                    .GetProperty( "PodfileStaticLinkFrameworks", BindingFlags.Public | BindingFlags.Static );
+            }
+            catch
+            {
+                edmIOSStaticLinkProp = null;
+            }
         }
 
         private void DrawListHeader( Rect rect )
@@ -139,10 +151,10 @@ namespace CAS.UEditor
             allowedAdFlagsProp.intValue = Convert.ToInt32(
                EditorGUILayout.EnumFlagsField( "Allowed ads in app", ( AdFlags )allowedAdFlagsProp.intValue ) );
 
-
             EditorGUILayout.PropertyField( testAdModeProp );
             if (testAdModeProp.boolValue)
             {
+
                 EditorGUILayout.HelpBox( "Make sure you disable test ad mode and replace test manager ID with your own ad manager ID before publishing your app!", MessageType.Warning );
             }
             else if (EditorUserBuildSettings.development)
@@ -204,70 +216,13 @@ namespace CAS.UEditor
         {
             EditorGUILayout.Space();
             var content = HelpStyles.GetContent( " Don’t forget to implement app-ads.txt", HelpStyles.helpIconContent.image );
-            if (GUILayout.Button( content, EditorStyles.label ))
+            if (GUILayout.Button( content, EditorStyles.label, GUILayout.ExpandWidth( false ) ))
                 Application.OpenURL( Utils.gitAppAdsTxtRepoUrl );
         }
 
         private void OnEDMAreaGUI()
         {
-            if (edmExist)
-            {
-                if (platform == BuildTarget.Android)
-                {
-#if UNITY_2019_3_OR_NEWER
-                    if (!File.Exists( Utils.projectGradlePath ))
-                    {
-                        EditorGUILayout.LabelField( "Custom Base Gradle Template disabled" );
-                        EditorGUILayout.HelpBox( "Please enable 'Custom Base Gradle Template' found under " +
-                            "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
-                            "to allow CAS update Grdale plugin version.", MessageType.Error );
-                    }
-
-                    if (!File.Exists( Utils.launcherGradlePath ))
-                    {
-                        EditorGUILayout.LabelField( "Custom Launcher Gradle Template disabled" );
-                        EditorGUILayout.HelpBox( "Please enable 'Custom Launcher Gradle Template' found under " +
-                            "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
-                            "to allow CAS use MultiDEX.", MessageType.Error );
-                    }
-
-                    if (!File.Exists( Utils.propertiesGradlePath ))
-                    {
-                        EditorGUILayout.LabelField( "Custom Gradle Properties Template disabled" );
-                        EditorGUILayout.HelpBox( "Please enable 'Custom Gradle Properties Template' found under " +
-                            "'Player Settings > Settings for Android -> Publishing Settings' menu. " +
-                            "to enabling Jetifier.", MessageType.Error );
-                    }
-#else
-                    if (!File.Exists( Utils.mainGradlePath ))
-                    {
-                        EditorGUILayout.LabelField( "Custom Gradle Template disabled" );
-                        EditorGUILayout.HelpBox( "Please enable 'Custom Gradle Template' found under " +
-                            "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
-                            "to allow CAS update Grdale plugin version and enable MultiDEX.", MessageType.Error );
-                    }
-#endif
-
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
-                        "Please use Android Resolver after the change complete.", MessageType.Info );
-                    if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.ExpandHeight( true ) ))
-                    {
-#if UNITY_ANDROID
-                        var succses = Utils.TryResolveAndroidDependencies();
-                        EditorUtility.DisplayDialog( "Android Dependencies",
-                            succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
-                            "OK" );
-#else
-                        EditorUtility.DisplayDialog( "Android Dependencies",
-                            "Android resolver not enabled. Unity Android platform target must be selected.",
-                            "OK" );
-#endif
-                    }
-                    EditorGUILayout.EndHorizontal();
-                }
-            }
-            else
+            if (!edmExist)
             {
                 HelpStyles.BeginBoxScope();
                 EditorGUILayout.HelpBox( "In order to properly include third party dependencies in your project, " +
@@ -275,14 +230,92 @@ namespace CAS.UEditor
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Label( "1. Download latest EDM4U.unitypackage", GUILayout.ExpandWidth( false ) );
                 if (GUILayout.Button( "here", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-                {
                     Application.OpenURL( "https://github.com/googlesamples/unity-jar-resolver/releases" );
-                }
                 EditorGUILayout.EndHorizontal();
                 GUILayout.Label( "2. Import the EDM4U.unitypackage into your project." );
                 HelpStyles.EndBoxScope();
+                return;
+            }
+            if (platform == BuildTarget.Android)
+            {
+#if UNITY_2019_3_OR_NEWER
+                if (!File.Exists( Utils.projectGradlePath ))
+                {
+                    OnWarningGUI( "Custom Base Gradle Template disabled",
+                        "Please enable 'Custom Base Gradle Template' found under " +
+                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
+                        "to allow CAS update Grdale plugin version.",
+                        MessageType.Error );
+                }
+
+                if (!File.Exists( Utils.launcherGradlePath ))
+                {
+                    OnWarningGUI( "Custom Launcher Gradle Template disabled",
+                        "Please enable 'Custom Launcher Gradle Template' found under " +
+                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
+                        "to allow CAS use MultiDEX.",
+                        MessageType.Error );
+                }
+
+                if (!File.Exists( Utils.propertiesGradlePath ))
+                {
+                    OnWarningGUI( "Custom Gradle Properties Template disabled",
+                        "Please enable 'Custom Gradle Properties Template' found under " +
+                        "'Player Settings > Settings for Android -> Publishing Settings' menu " +
+                        "to allow CAS use Jetifier.",
+                        MessageType.Error );
+                }
+#else
+                if (!File.Exists( Utils.mainGradlePath ))
+                {
+                    OnWarningGUI( "Custom Gradle Template disabled",
+                        "Please enable 'Custom Gradle Template' found under " +
+                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
+                        "to allow CAS update Grdale plugin version and enable MultiDEX.",
+                        MessageType.Error );
+                }
+#endif
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
+                    "Please use Android Resolver after the change complete.", MessageType.Info );
+                if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.ExpandHeight( true ) ))
+                {
+#if UNITY_ANDROID
+                    var succses = Utils.TryResolveAndroidDependencies();
+                    EditorUtility.DisplayDialog( "Android Dependencies",
+                        succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
+                        "OK" );
+#else
+                    EditorUtility.DisplayDialog( "Android Dependencies",
+                        "Android resolver not enabled. Unity Android platform target must be selected.",
+                        "OK" );
+#endif
+                }
+                EditorGUILayout.EndHorizontal();
+                return;
+            }
+            if (platform == BuildTarget.iOS)
+            {
+                if (edmIOSStaticLinkProp != null && !( bool )edmIOSStaticLinkProp.GetValue( null ))
+                {
+                    OnWarningGUI( "Link frameworks statically disabled",
+                        "Please enable 'Add use_frameworks!' and 'Link frameworks statically' found under " +
+                        "'Assets -> External Dependency Manager -> iOS Resolver -> Settings' menu.\n" +
+                        "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.",
+                        MessageType.Warning );
+                }
             }
         }
+
+        private void OnWarningGUI( string title, string message, MessageType type )
+        {
+            HelpStyles.BeginBoxScope();
+            EditorGUILayout.HelpBox( title, type );
+            EditorGUILayout.LabelField( message, EditorStyles.wordWrappedLabel );
+            HelpStyles.EndBoxScope();
+        }
+
 
         private void OnManagerIDVerificationGUI()
         {
