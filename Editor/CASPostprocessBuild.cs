@@ -7,6 +7,10 @@ using UnityEditor.Callbacks;
 using UnityEditor.iOS.Xcode;
 using UnityEngine;
 
+#if UNITY_2019_3_OR_NEWER
+using UnityEditor.iOS.Xcode.Extensions;
+#endif
+
 namespace CAS.UEditor
 {
     internal class CASPostprocessBuild
@@ -53,7 +57,7 @@ namespace CAS.UEditor
 
 #if UNITY_2019_3_OR_NEWER || CASDeveloper
         [PostProcessBuild( 47 )]//must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40) and that it's added before "pod install" (50)
-        private static void FixPodFileBug( BuildTarget target, string buildPath )
+        public static void FixPodFileBug( BuildTarget target, string buildPath )
         {
             if (target != BuildTarget.iOS)
                 return;
@@ -86,6 +90,7 @@ namespace CAS.UEditor
             string frameworkTargetGuid;
             GetTargetsGUID( project, out mainTargetGuid, out frameworkTargetGuid );
             EmbedDynamicLibrariesIfNeeded( buildPath, project, mainTargetGuid, depManager );
+            SaveXCode( project, buildPath );
         }
 #endif
 
@@ -401,8 +406,10 @@ namespace CAS.UEditor
             for (int i = 0; i < deps.networks.Length; i++)
             {
                 var dynamicLibraryPath = deps.networks[i].embedFramework;
-                if (dynamicLibraryPath == null
-                    || !Directory.Exists( Path.Combine( buildPath, "Pods", dynamicLibraryPath ) ))
+                if (string.IsNullOrEmpty( dynamicLibraryPath ))
+                    continue;
+                dynamicLibraryPath = Path.Combine( "Pods", dynamicLibraryPath );
+                if (!Directory.Exists( Path.Combine( buildPath, dynamicLibraryPath ) ))
                     continue;
 
 #if UNITY_2019_3_OR_NEWER

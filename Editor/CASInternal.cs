@@ -476,7 +476,11 @@ namespace CAS.UEditor
                     addSources = false;
                 }
 
-                AppendSDK( addSources, platform, mediation, builder );
+                // EDM4U have a bug.
+                // Dependencies that will be added For All Targets must be at the end of the list of dependencies.
+                // Otherwise, those dependencies that should not be for all targets will be tagged for all targets.
+                AppendSDK( addSources, platform, mediation, builder, false );
+                AppendSDK( addSources, platform, mediation, builder, true );
 
                 builder.Append( "  </" ).Append( depTagName ).Append( "s>" ).AppendLine()
                        .AppendLine( "</dependencies>" );
@@ -509,18 +513,19 @@ namespace CAS.UEditor
             }
         }
 
-        private void AppendSDK( bool addSources, BuildTarget platform, DependencyManager mediation, StringBuilder builder )
+        private void AppendSDK( bool addSources, BuildTarget platform, DependencyManager mediation, StringBuilder builder, bool allowAllTargets )
         {
             for (int i = 0; i < depsSDK.Count; i++)
             {
-                AppendDependency( mediation, depsSDK[i], addSources && i == 0, platform, builder );
+                if (allowAllTargets == depsSDK[i].addToAllTargets)
+                    AppendDependency( mediation, depsSDK[i], addSources && i == 0, platform, builder );
             }
 
             for (int i = 0; i < contains.Length; i++)
             {
                 var item = mediation.Find( contains[i] );
                 if (item != null)
-                    item.AppendSDK( false, platform, mediation, builder );
+                    item.AppendSDK( false, platform, mediation, builder, allowAllTargets );
             }
         }
 

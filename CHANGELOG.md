@@ -5,13 +5,17 @@
 - [Android] Wraps [2.5.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.4.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 ## Features
+- [iOS] Official release for iOS 15 support.
 - [iOS] Improvements in the framework structure to avoid problems with classes implemented in both targets.
+- [iOS] Added overwriting of App Transport Security settings in `Info.plist`.
+- [iOS] Added recording of all used SDKs to the Podfile.
 - [iOS] Added warning when Link frameworks statically disabled.
   > We recommend enabling `Add use_frameworks!` and `Link frameworks statically` found under `Assets -> External Dependency Manager -> iOS Resolver -> Settings` menu.
   > Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.
 ## Bug Fixes
 - Fixed a rare error in the name of the cas settings file.
 - Fixed native dependency management when moving `Dependencies.xml` files from `Assets/CleverAdsSolutions` folder. 
+- [iOS] Fixes for iOS build with Unity 2019.3+ and XCode 13.
 
 ## [2.5.2] - 2021-09-07
 ### Dependencies

@@ -6,6 +6,7 @@ using UnityEditorInternal;
 using Utils = CAS.UEditor.CASEditorUtils;
 using System.IO;
 using System.Reflection;
+using System.Text;
 
 namespace CAS.UEditor
 {
@@ -32,8 +33,9 @@ namespace CAS.UEditor
         private bool allowedPackageUpdate;
         private string newCASVersion = null;
         private bool deprecateDependenciesExist;
-        private bool edmExist;
+        private Version edmVersion;
         private PropertyInfo edmIOSStaticLinkProp = null;
+        private string environmentDetails;
 
         private string[] deprecatedAssets = null;
 
@@ -98,16 +100,27 @@ namespace CAS.UEditor
             if (File.Exists( Utils.androidResSettingsPath + ".json" ))
                 AssetDatabase.MoveAssetToTrash( Utils.androidResSettingsPath + ".json" );
 
-            edmExist = Utils.IsAndroidDependenciesResolverExist();
+            edmVersion = Utils.GetEDM4UVersion( platform );
+            if (edmVersion != null && edmVersion < Utils.minEDM4UVersion)
+                edmVersion = null;
             try
             {
-                edmIOSStaticLinkProp = Type.GetType( "Google.IOSResolver, Google.IOSResolver", true )
-                    .GetProperty( "PodfileStaticLinkFrameworks", BindingFlags.Public | BindingFlags.Static );
+                if (platform == BuildTarget.iOS)
+                    edmIOSStaticLinkProp = Type.GetType( "Google.IOSResolver, Google.IOSResolver", true )
+                        .GetProperty( "PodfileStaticLinkFrameworks", BindingFlags.Public | BindingFlags.Static );
             }
             catch
             {
                 edmIOSStaticLinkProp = null;
             }
+
+
+            var environmentBuilder = new StringBuilder( "Environment Details: " )
+                .Append( "Unity - " ).Append( Application.unityVersion ).Append( "; " )
+                .Append( "Platform - " ).Append( Application.platform ).Append( "; " );
+            if (edmVersion != null)
+                environmentBuilder.Append( "EDM4U - " ).Append( edmVersion ).Append( "; " );
+            environmentDetails = environmentBuilder.ToString();
         }
 
         private void DrawListHeader( Rect rect )
@@ -202,6 +215,9 @@ namespace CAS.UEditor
             }
 
             OnAppAdsTxtGUI();
+
+            EditorGUILayout.HelpBox( environmentDetails, MessageType.None );
+
             GUILayout.FlexibleSpace();
             obj.ApplyModifiedProperties();
         }
@@ -222,7 +238,7 @@ namespace CAS.UEditor
 
         private void OnEDMAreaGUI()
         {
-            if (!edmExist)
+            if (edmVersion == null)
             {
                 HelpStyles.BeginBoxScope();
                 EditorGUILayout.HelpBox( "In order to properly include third party dependencies in your project, " +
@@ -236,6 +252,7 @@ namespace CAS.UEditor
                 HelpStyles.EndBoxScope();
                 return;
             }
+
             if (platform == BuildTarget.Android)
             {
 #if UNITY_2019_3_OR_NEWER

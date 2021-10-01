@@ -38,6 +38,11 @@ namespace CAS.UEditor
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
         public const string websiteURL = "https://cleveradssolutions.com";
+
+        public static System.Version minEDM4UVersion
+        {
+            get { return new System.Version( 1, 2, 164 ); }
+        }
         #endregion
 
         #region Internal Constants
@@ -207,6 +212,25 @@ namespace CAS.UEditor
             catch
             {
                 return false;
+            }
+        }
+
+        public static System.Version GetEDM4UVersion( BuildTarget platform )
+        {
+            try
+            {
+                Type resolverType = null;
+                if (platform == BuildTarget.Android)
+                    resolverType = Type.GetType( "Google.AndroidResolverVersionNumber, Google.JarResolver", false );
+                else if (platform == BuildTarget.iOS)
+                    resolverType = Type.GetType( "Google.IOSResolverVersionNumber, Google.IOSResolver", false );
+                if (resolverType == null)
+                    return null;
+                return resolverType.GetProperty( "Value" ).GetValue( null ) as System.Version;
+            }
+            catch
+            {
+                return null;
             }
         }
 
