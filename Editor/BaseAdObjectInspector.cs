@@ -211,7 +211,7 @@ namespace CAS.AdObject
         {
             EditorGUI.BeginChangeCheck();
             allowAdProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Allow Allow Return to play ads",
+                "Allow ads to show on return to game",
                 allowAdProp.boolValue
             );
             if (EditorGUI.EndChangeCheck() && Application.isPlaying)

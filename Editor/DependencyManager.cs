@@ -113,17 +113,33 @@ namespace CAS.UEditor
             Obsolete = 32
         }
 
+        [Serializable]
+        public class SDK
+        {
+            public string name;
+            public string version;
+            public bool addToAllTargets;
+
+            public SDK( string name, string version, bool addToAllTargets = false )
+            {
+                this.name = name;
+                this.version = version;
+                this.addToAllTargets = addToAllTargets;
+            }
+        }
+
         public string name;
         public string version;
         public AdNetwork require = noNetwork;
         public string url;
         public int filter;
         public string[] dependencies = new string[0];
-        public string[] depsToAllTargets = new string[0];
+        public List<SDK> depsSDK = new List<SDK>();
         public AdNetwork[] contains = new AdNetwork[0];
         public string[] source;
         public string comment;
         public Label labels = Label.Banner | Label.Inter | Label.Reward;
+        public string embedFramework;
 
         public string installedVersion { get; set; }
         public bool isNewer { get; set; }

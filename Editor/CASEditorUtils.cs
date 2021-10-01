@@ -34,6 +34,8 @@ namespace CAS.UEditor
         public const string propertiesGradlePath = "Assets/Plugins/Android/gradleTemplate.properties";
         public const string packageManifestPath = "Packages/manifest.json";
 
+        public const string swiftEnableFileInXCode = "Libraries/com.cleversolutions.ads.unity/Plugins/iOS/CASUEnable.swift";
+
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
         public const string websiteURL = "https://cleveradssolutions.com";
         #endregion

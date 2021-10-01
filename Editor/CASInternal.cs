@@ -340,11 +340,23 @@ namespace CAS.UEditor
 
             //OnLabelGUI( labels );
 
+            string sdkVersion = null;
+            for (int i = 0; i < depsSDK.Count; i++)
+            {
+                if (depsSDK[i].version != version)
+                {
+                    sdkVersion = depsSDK[i].version;
+                    break;
+                }
+            }
+
             if (installed || locked)
             {
                 EditorGUI.BeginDisabledGroup( ( !installed && locked ) || ( installed && isRequired && !locked ) );
                 if (!GUILayout.Toggle( true, name, GUILayout.ExpandWidth( false ) ))
                     DisableDependencies( platform, mediation );
+                if (sdkVersion != null)
+                    GUILayout.Label( sdkVersion, EditorStyles.centeredGreyMiniLabel, GUILayout.ExpandWidth( false ) );
                 GUILayout.FlexibleSpace();
 
                 if (locked || notSupported)
@@ -356,7 +368,10 @@ namespace CAS.UEditor
                 {
                     GUILayout.Label( installedVersion, mediation.columnWidth );
                     if (GUILayout.Button( version, EditorStyles.miniButton, mediation.columnWidth ))
+                    {
                         ActivateDependencies( platform, mediation );
+                        GUIUtility.ExitGUI();
+                    }
                 }
                 else
                 {
@@ -367,11 +382,15 @@ namespace CAS.UEditor
             }
             else
             {
-                EditorGUI.BeginDisabledGroup( notSupported || ( dependencies.Length == 0 && depsToAllTargets.Length == 0 ) );
+                EditorGUI.BeginDisabledGroup( notSupported || ( dependencies.Length == 0 && depsSDK.Count == 0 ) );
 
                 if (GUILayout.Toggle( false, name, GUILayout.ExpandWidth( false ) ))
+                {
                     ActivateDependencies( platform, mediation );
-
+                    GUIUtility.ExitGUI();
+                }
+                if (sdkVersion != null)
+                    GUILayout.Label( sdkVersion, EditorStyles.centeredGreyMiniLabel, GUILayout.ExpandWidth( false ) );
                 GUILayout.FlexibleSpace();
                 GUILayout.Label( "none", mediation.columnWidth );
                 GUILayout.Label( version, mediation.columnWidth );
@@ -429,7 +448,7 @@ namespace CAS.UEditor
 
         public void ActivateDependencies( BuildTarget platform, DependencyManager mediation )
         {
-            if (dependencies.Length == 0 && depsToAllTargets.Length == 0)
+            if (dependencies.Length == 0 && depsSDK.Count == 0)
             {
                 Debug.LogError( Utils.logTag + name + " have no dependencies. Please try reimport CAS package." );
                 return;
@@ -439,25 +458,7 @@ namespace CAS.UEditor
                 return;
             }
 
-            string depTagName;
-            string sourceTagName;
-            string sourcesTagName;
-            string depAttrName;
-            if (platform == BuildTarget.Android)
-            {
-                depTagName = "androidPackage";
-                sourcesTagName = "repositories";
-                sourceTagName = "repository";
-                depAttrName = "spec";
-            }
-            else
-            {
-                depTagName = "iosPod";
-                sourcesTagName = "sources";
-                sourceTagName = "source";
-                depAttrName = "name";
-            }
-
+            string depTagName = platform == BuildTarget.Android ? "androidPackage" : "iosPod";
             bool addSources = true;
             var destination = Utils.GetDependencyPathOrDefault( name, platform );
             EditorUtility.DisplayProgressBar( "Create dependency", destination, 0.2f );
@@ -471,14 +472,12 @@ namespace CAS.UEditor
 
                 for (int i = 0; i < dependencies.Length; i++)
                 {
-                    AppendDependency( mediation, dependencies[i], false, addSources, depTagName, sourceTagName, sourcesTagName, depAttrName, builder );
+                    AppendDependency( mediation, new SDK( dependencies[i], version ), addSources, platform, builder );
                     addSources = false;
                 }
-                for (int i = 0; i < depsToAllTargets.Length; i++)
-                {
-                    AppendDependency( mediation, depsToAllTargets[i], true, addSources, depTagName, sourceTagName, sourcesTagName, depAttrName, builder );
-                    addSources = false;
-                }
+
+                AppendSDK( addSources, platform, mediation, builder );
+
                 builder.Append( "  </" ).Append( depTagName ).Append( "s>" ).AppendLine()
                        .AppendLine( "</dependencies>" );
 
@@ -510,43 +509,66 @@ namespace CAS.UEditor
             }
         }
 
-        private void AppendDependency( DependencyManager mediation, string dependency, bool toAllTarget, bool addSources, string depTagName, string sourceTagName, string sourcesTagName, string depAttrName, StringBuilder builder )
+        private void AppendSDK( bool addSources, BuildTarget platform, DependencyManager mediation, StringBuilder builder )
         {
+            for (int i = 0; i < depsSDK.Count; i++)
+            {
+                AppendDependency( mediation, depsSDK[i], addSources && i == 0, platform, builder );
+            }
+
+            for (int i = 0; i < contains.Length; i++)
+            {
+                var item = mediation.Find( contains[i] );
+                if (item != null)
+                    item.AppendSDK( false, platform, mediation, builder );
+            }
+        }
+
+        private void AppendDependency( DependencyManager mediation, SDK sdk, bool addSources, BuildTarget platform, StringBuilder builder )
+        {
+            var depTagName = platform == BuildTarget.Android ? "androidPackage" : "iosPod";
+            var depAttrName = platform == BuildTarget.Android ? "spec" : "name";
+            var sourcesTagName = platform == BuildTarget.Android ? "repositories" : "sources";
+
             builder.Append( "    <" ).Append( depTagName ).Append( ' ' )
-                                    .Append( depAttrName ).Append( "=\"" ).Append( dependency )
-                                    .Append( "\" version=\"" ).Append( version ).Append( "\"" );
-            if (toAllTarget)
+                                    .Append( depAttrName ).Append( "=\"" ).Append( sdk.name )
+                                    .Append( "\" version=\"" ).Append( sdk.version ).Append( "\"" );
+            if (sdk.addToAllTargets)
                 builder.Append( " addToAllTargets=\"true\"" );
 
-            builder.Append( ">" ).AppendLine();
             if (addSources && ( source.Length > 0 || contains.Length > 0 ))
             {
+                builder.Append( ">" ).AppendLine();
                 builder.Append( "      <" ).Append( sourcesTagName ).Append( '>' ).AppendLine();
 
-                int containsIndex = 0;
-                Dependency item = this;
-                do
+                AppendSources( platform, builder );
+
+                for (int i = 0; i < contains.Length; i++)
                 {
-                    for (int sourceIndex = 0; sourceIndex < item.source.Length; sourceIndex++)
-                        builder.Append( "        <" ).Append( sourceTagName ).Append( '>' )
-                            .Append( item.source[sourceIndex] )
-                            .Append( "</" ).Append( sourceTagName ).Append( '>' ).AppendLine();
-
-                    item = null;
-                    while (containsIndex < contains.Length && item == null)
-                        item = mediation.Find( contains[containsIndex++] );
-
+                    var item = mediation.Find( contains[i] );
                     if (item != null)
                     {
                         item.locked = true;
+                        item.AppendSources( platform, builder );
                     }
-                } while (item != null);
+                }
 
                 builder.Append( "      </" ).Append( sourcesTagName ).Append( '>' ).AppendLine();
+                builder.Append( "    </" ).Append( depTagName ).Append( '>' ).AppendLine();
             }
-            builder.Append( "    </" ).Append( depTagName ).Append( '>' ).AppendLine();
+            else
+            {
+                builder.Append( "/>" ).AppendLine();
+            }
+        }
 
-
+        private void AppendSources( BuildTarget platform, StringBuilder builder )
+        {
+            var sourceTagName = platform == BuildTarget.Android ? "repository" : "source";
+            for (int i = 0; i < source.Length; i++)
+                builder.Append( "        <" ).Append( sourceTagName ).Append( '>' )
+                    .Append( source[i] )
+                    .Append( "</" ).Append( sourceTagName ).Append( '>' ).AppendLine();
         }
         #endregion
     }
