@@ -5,13 +5,11 @@ using UnityEngine;
 
 namespace CAS.iOS
 {
-    internal class CASMediationManager : IMediationManager
+    internal class CASMediationManager : CASViewFactory, IMediationManager
     {
-        private IntPtr _managerPtr;
-        private IntPtr _managerClientPtr;
+        private IntPtr _managerRef;
+        private IntPtr _managerClient;
         private InitCompleteAction _initCompleteAction;
-        private AdSize _bannerSize = AdSize.Banner;
-        private AdPosition _bannerPosition = AdPosition.BottomCenter;
         private LastPageAdContent _lastPageAdContent = null;
 
         public string managerID { get; }
@@ -20,11 +18,7 @@ namespace CAS.iOS
         #region Ad Events
         public event CASTypedEvent OnLoadedAd;
         public event CASTypedEventWithError OnFailedToLoadAd;
-        public event Action OnBannerAdShown;
-        public event CASEventWithMeta OnBannerAdOpening;
-        public event CASEventWithError OnBannerAdFailedToShow;
-        public event Action OnBannerAdClicked;
-        public event Action OnBannerAdHidden;
+
         public event Action OnInterstitialAdShown;
         public event CASEventWithMeta OnInterstitialAdOpening;
         public event CASEventWithError OnInterstitialAdFailedToShow;
@@ -53,7 +47,9 @@ namespace CAS.iOS
         {
             try
             {
-                CASExterns.CASUFreeManager( _managerPtr );
+                CASExterns.CASUFreeManager( _managerRef );
+                _managerRef = IntPtr.Zero;
+                ( ( GCHandle )_managerClient ).Free();
             }
             catch (Exception e)
             {
@@ -65,9 +61,9 @@ namespace CAS.iOS
         {
             _initCompleteAction = initData.initListener;
 
-            CASExterns.CASUSetPluginPlatformWithName( "Unity", Application.unityVersion );
+            CASExterns.CASUSetUnityVersion( Application.unityVersion );
 
-            _managerClientPtr = ( IntPtr )GCHandle.Alloc( this );
+            _managerClient = ( IntPtr )GCHandle.Alloc( this );
 
             if (initData.extras != null && initData.extras.Count != 0)
             {
@@ -80,8 +76,8 @@ namespace CAS.iOS
                     extrasValues[extraI] = extra.Value;
                     extraI++;
                 }
-                _managerPtr = CASExterns.CASUCreateManagerWithExtras(
-                    _managerClientPtr,
+                _managerRef = CASExterns.CASUCreateManagerWithExtras(
+                    _managerClient,
                     InitializationCompleteCallback,
                     managerID,
                     ( int )initData.allowedAdFlags,
@@ -93,8 +89,8 @@ namespace CAS.iOS
             }
             else
             {
-                _managerPtr = CASExterns.CASUCreateManager(
-                    _managerClientPtr,
+                _managerRef = CASExterns.CASUCreateManager(
+                    _managerClient,
                     InitializationCompleteCallback,
                     managerID,
                     ( int )initData.allowedAdFlags,
@@ -102,60 +98,28 @@ namespace CAS.iOS
                 );
             }
 
-            CASExterns.CASUSetLoadAdDelegate( _managerPtr,
-                DidAdLoadedCallback,
-                DidAdFailedToLoadCallback );
-
-            CASExterns.CASUSetBannerDelegate( _managerPtr,
-                BannerOpeningWithAdCallbackAndMeta,
-                BannerDidShowAdFailedWithErrorCallback,
-                BannerDidClickedAdCallback,
-                BannerDidClosedAdCallback );
-
-            CASExterns.CASUSetInterstitialDelegate( _managerPtr,
-                InterstitialOpeningWithAdCallbackAndMeta,
+            CASExterns.CASUSetInterstitialDelegate( _managerRef,
+                InterstitialLoadedAdCallback,
+                InterstitialFailedAdCallback,
+                InterstitialOpeningWithMetaCallback,
                 InterstitialDidShowAdFailedWithErrorCallback,
                 InterstitialDidClickedAdCallback,
                 InterstitialDidClosedAdCallback );
 
-            CASExterns.CASUSetRewardedDelegate( _managerPtr,
+            CASExterns.CASUSetRewardedDelegate( _managerRef,
+                RewardedLoadedAdCallback,
+                RewardedFailedAdCallback,
                 RewardedOpeningWithAdCallbackAndMeta,
                 RewardedDidShowAdFailedWithErrorCallback,
                 RewardedDidClickedAdCallback,
                 RewardedDidCompletedAdCallback,
                 RewardedDidClosedAdCallback );
 
-            CASExterns.CASUSetAppReturnDelegate( _managerPtr,
+            CASExterns.CASUSetAppReturnDelegate( _managerRef,
                 ReturnAdOpeningWithAdCallback,
                 ReturnAdDidShowAdFailedWithErrorCallback,
                 ReturnAdDidClickedAdCallback,
                 ReturnAdDidClosedAdCallback );
-        }
-
-        public AdSize bannerSize
-        {
-            get { return _bannerSize; }
-            set
-            {
-                if (_bannerSize != value && _bannerSize != 0)
-                {
-                    _bannerSize = value;
-                    CASExterns.CASUSetBannerSize( _managerPtr, ( int )value );
-                }
-            }
-        }
-
-        public AdPosition bannerPosition
-        {
-            get { return _bannerPosition; }
-            set
-            {
-                if (_bannerPosition != value && value != AdPosition.Undefined)
-                {
-                    _bannerPosition = value;
-                    CASExterns.CASUSetBannerPosition( _managerPtr, ( int )value );
-                }
-            }
         }
 
         public LastPageAdContent lastPageAdContent
@@ -167,73 +131,126 @@ namespace CAS.iOS
                 {
                     _lastPageAdContent = value;
                     string json = value == null ? "" : JsonUtility.ToJson( value );
-                    CASExterns.CASUSetLastPageAdContent( _managerPtr, json );
+                    CASExterns.CASUSetLastPageAdContent( _managerRef, json );
                 }
             }
         }
 
         public string GetLastActiveMediation( AdType adType )
         {
-            return CASExterns.CASUGetLastActiveMediationWithType( _managerPtr, ( int )adType );
-        }
-
-        public void HideBanner()
-        {
-            CASExterns.CASUHideBanner( _managerPtr );
+            return CASExterns.CASUGetLastActiveMediationWithType( _managerRef, ( int )adType );
         }
 
         public bool IsEnabledAd( AdType adType )
         {
-            return CASExterns.CASUIsAdEnabledType( _managerPtr, ( int )adType );
+            return CASExterns.CASUIsAdEnabledType( _managerRef, ( int )adType );
         }
 
         public bool IsReadyAd( AdType adType )
         {
-            return CASExterns.CASUIsAdReadyWithType( _managerPtr, ( int )adType );
+            switch (adType)
+            {
+                case AdType.Banner:
+                    return IsGlobalViewReady();
+                case AdType.Interstitial:
+                    return CASExterns.CASUIsInterstitialReady( _managerRef );
+                case AdType.Rewarded:
+                    return CASExterns.CASUIsRewardedReady( _managerRef );
+                default:
+                    return false;
+            }
         }
 
         public void LoadAd( AdType adType )
         {
-            CASExterns.CASULoadAdWithType( _managerPtr, ( int )adType );
+            switch (adType)
+            {
+                case AdType.Banner:
+                    GetOrCreateGlobalView().Load();
+                    break;
+                case AdType.Interstitial:
+                    CASExterns.CASULoadInterstitial( _managerRef );
+                    break;
+                case AdType.Rewarded:
+                    CASExterns.CASULoadReward( _managerRef );
+                    break;
+            }
         }
 
         public void SetEnableAd( AdType adType, bool enabled )
         {
-            CASExterns.CASUEnableAdType( _managerPtr, ( int )adType, enabled );
+            CASExterns.CASUEnableAdType( _managerRef, ( int )adType, enabled );
         }
 
         public void ShowAd( AdType adType )
         {
-            CASExterns.CASUShowAdWithType( _managerPtr, ( int )adType );
+            switch (adType)
+            {
+                case AdType.Banner:
+                    ShowBanner();
+                    break;
+                case AdType.Interstitial:
+                    CASExterns.CASUPresentInterstitial( _managerRef );
+                    break;
+                case AdType.Rewarded:
+                    CASExterns.CASUPresentRewarded( _managerRef );
+                    break;
+            }
         }
 
-        public float GetBannerHeightInPixels()
+        protected override IAdView CreateAdView( AdSize size )
         {
-            return CASExterns.CASUGetBannerHeightInPixels( _managerPtr );
+            var view = new CASView( this, size );
+            var viewClient = ( IntPtr )GCHandle.Alloc( view );
+            view.Attach( CASExterns.CASUCreateAdView( _managerRef, viewClient, ( int )size ), viewClient );
+            return view;
         }
 
-        public float GetBannerWidthInPixels()
+        public override void CallbackOnDestroy( IAdView view )
         {
-            return CASExterns.CASUGetBannerWidthInPixels( _managerPtr );
+            base.CallbackOnDestroy( view );
+            CASExterns.CASUDestroyAdView( ( ( CASView )view )._viewRef, _managerRef, ( int )view.size );
         }
 
         public bool TryOpenDebugger()
         {
-            CASExterns.CASUOpenDebugger( _managerPtr );
+            CASExterns.CASUOpenDebugger( _managerRef );
             return true;
         }
 
         public void SetAppReturnAdsEnabled( bool enable )
         {
             if (enable)
-                CASExterns.CASUEnableAppReturnAds( _managerPtr );
+                CASExterns.CASUEnableAppReturnAds( _managerRef );
             else
-                CASExterns.CASUDisableAppReturnAds( _managerPtr );
+                CASExterns.CASUDisableAppReturnAds( _managerRef );
         }
 
         public void SkipNextAppReturnAds()
         {
-            CASExterns.CASUSkipNextAppReturnAds( _managerPtr );
+            CASExterns.CASUSkipNextAppReturnAds( _managerRef );
+        }
+
+        public override void OnLoadedCallback( AdType type )
+        {
+            if (OnLoadedAd != null)
+                OnLoadedAd( type );
+        }
+
+        public override void OnFailedCallback( AdType type, AdError error )
+        {
+            if (OnFailedToLoadAd != null)
+                OnFailedToLoadAd( type, error.GetMessage() );
+        }
+
+        private void OnInterstitialLoadedCallback()
+        {
+            OnLoadedCallback( AdType.Interstitial );
+        }
+
+        private void OnRewardedLoadedCallback()
+        {
+            OnLoadedCallback( AdType.Rewarded );
         }
 
         #region Callback methods
@@ -243,120 +260,72 @@ namespace CAS.iOS
             return handle.Target as CASMediationManager;
         }
 
+        private static CASView IntPtrToAdViewClient( IntPtr managerClient )
+        {
+            GCHandle handle = ( GCHandle )managerClient;
+            return handle.Target as CASView;
+        }
+
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUInitializationCompleteCallback ) )]
         private static void InitializationCompleteCallback( IntPtr client, bool success, string error )
         {
             if (MobileAds.settings.isDebugMode)
                 Debug.Log( "[CleverAdsSolutions] InitializationComplete " + success );
             var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance._initCompleteAction, success, error );
-        }
-
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidAdLoadedCallback ) )]
-        private static void DidAdLoadedCallback( IntPtr client, int adType )
-        {
-            if (MobileAds.settings.isDebugMode)
-                Debug.Log( "[CleverAdsSolutions] DidAdLoadedCallback " + adType );
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnLoadedAd, adType );
-        }
-
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidAdFailedToLoadCallback ) )]
-        private static void DidAdFailedToLoadCallback( IntPtr client, int adType, string error )
-        {
-            if (MobileAds.settings.isDebugMode)
-                Debug.Log( "[CleverAdsSolutions] DidAdFailedToLoadCallback " + adType + " :" + error );
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null)
-                CASFactory.ExecuteEvent( instance.OnFailedToLoadAd, adType, error );
-        }
-
-        #region Banner Callback
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithAdCallbackAndMeta ) )]
-        private static void BannerOpeningWithAdCallbackAndMeta( IntPtr client, int net, double cpm, int accuracy )
-        {
-            try
+            if (instance != null && instance._initCompleteAction != null)
             {
-                if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] BannerOpening " + net + " cpm:" + cpm + " accuracy:" + accuracy );
-                var instance = IntPtrToManagerClient( client );
-                if (instance == null)
-                    return;
-                if (instance.OnBannerAdShown != null)
-                    instance.OnBannerAdShown();
-                if (instance.OnBannerAdOpening != null)
-                    instance.OnBannerAdOpening(
-                        new AdMetaData( AdType.Banner, ( AdNetwork )net, cpm, ( PriceAccuracy )accuracy ) );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
+                CASFactory.ExecuteEvent( () =>
+                {
+                    if (instance._initCompleteAction != null)
+                        instance._initCompleteAction( success, error );
+                } );
             }
         }
-
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidShowAdFailedWithErrorCallback ) )]
-        private static void BannerDidShowAdFailedWithErrorCallback( IntPtr client, string error )
-        {
-            try
-            {
-                if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] BannerDidShowAdFailed " + error );
-                var instance = IntPtrToManagerClient( client );
-                if (instance != null && instance.OnBannerAdFailedToShow != null)
-                    instance.OnBannerAdFailedToShow( error );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-        }
-
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClickedAdCallback ) )]
-        private static void BannerDidClickedAdCallback( IntPtr client )
-        {
-            try
-            {
-                if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] BannerDidClicked" );
-                var instance = IntPtrToManagerClient( client );
-                if (instance != null && instance.OnBannerAdClicked != null)
-                    instance.OnBannerAdClicked();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-        }
-
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClosedAdCallback ) )]
-        private static void BannerDidClosedAdCallback( IntPtr client )
-        {
-            try
-            {
-                if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] BannerDidClosed" );
-                var instance = IntPtrToManagerClient( client );
-                if (instance != null && instance.OnBannerAdHidden != null)
-                    instance.OnBannerAdHidden();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-        }
-        #endregion
 
         #region Interstitial Callback
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithAdCallbackAndMeta ) )]
-        private static void InterstitialOpeningWithAdCallbackAndMeta( IntPtr client, int net, double cpm, int accuracy )
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidLoadedAdCallback ) )]
+        private static void InterstitialLoadedAdCallback( IntPtr manager )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] InterstitialOpening " + net + " cpm:" + cpm + " accuracy:" + accuracy );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Interstitial Loaded" );
+                var instance = IntPtrToManagerClient( manager );
+                if (instance != null)
+                    CASFactory.ExecuteEvent( instance.OnInterstitialLoadedCallback );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+        }
+
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidFailedAdCallback ) )]
+        private static void InterstitialFailedAdCallback( IntPtr manager, int error )
+        {
+            try
+            {
+                var adError = ( AdError )error;
+                if (MobileAds.settings.isDebugMode)
+                    Debug.Log( "[CleverAdsSolutions] Interstitial Failed with error: " + adError.ToString() );
+                var instance = IntPtrToManagerClient( manager );
+                if (instance != null)
+                    CASFactory.ExecuteEvent( () => instance.OnFailedCallback( AdType.Interstitial, adError ) );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+        }
+
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithMetaCallback ) )]
+        private static void InterstitialOpeningWithMetaCallback( IntPtr manager, int net, double cpm, int accuracy )
+        {
+            try
+            {
+                if (MobileAds.settings.isDebugMode)
+                    Debug.Log( "[CleverAdsSolutions] Interstitial Opening " + net + " cpm:" + cpm + " accuracy:" + accuracy );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance == null)
                     return;
                 if (instance.OnInterstitialAdShown != null)
@@ -373,13 +342,13 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidShowAdFailedWithErrorCallback ) )]
-        private static void InterstitialDidShowAdFailedWithErrorCallback( IntPtr client, string error )
+        private static void InterstitialDidShowAdFailedWithErrorCallback( IntPtr manager, string error )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] InterstitialDidShowAdFailed " + error );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Interstitial Show Ad Failed with error: " + error );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance != null && instance.OnInterstitialAdFailedToShow != null)
                     instance.OnInterstitialAdFailedToShow( error );
             }
@@ -390,13 +359,13 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClickedAdCallback ) )]
-        private static void InterstitialDidClickedAdCallback( IntPtr client )
+        private static void InterstitialDidClickedAdCallback( IntPtr manager )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] InterstitialDidClicked" );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Interstitial Clicked" );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance != null && instance.OnInterstitialAdClicked != null)
                     instance.OnInterstitialAdClicked();
             }
@@ -407,13 +376,13 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClosedAdCallback ) )]
-        private static void InterstitialDidClosedAdCallback( IntPtr client )
+        private static void InterstitialDidClosedAdCallback( IntPtr manager )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] InterstitialDidClosed" );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Interstitial Closed" );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance != null && instance.OnInterstitialAdClosed != null)
                     instance.OnInterstitialAdClosed();
             }
@@ -425,14 +394,49 @@ namespace CAS.iOS
         #endregion
 
         #region Rewarded Callback
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithAdCallbackAndMeta ) )]
-        private static void RewardedOpeningWithAdCallbackAndMeta( IntPtr client, int net, double cpm, int accuracy )
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidLoadedAdCallback ) )]
+        private static void RewardedLoadedAdCallback( IntPtr manager )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] RewardedOpening " + net + " cpm:" + cpm + " accuracy:" + accuracy );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Rewarded Loaded" );
+                var instance = IntPtrToManagerClient( manager );
+                if (instance != null)
+                    CASFactory.ExecuteEvent( instance.OnRewardedLoadedCallback );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+        }
+
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidFailedAdCallback ) )]
+        private static void RewardedFailedAdCallback( IntPtr manager, int error )
+        {
+            try
+            {
+                var adError = ( AdError )error;
+                if (MobileAds.settings.isDebugMode)
+                    Debug.Log( "[CleverAdsSolutions] Rewarded Failed with error: " + adError.ToString() );
+                var instance = IntPtrToManagerClient( manager );
+                if (instance != null)
+                    CASFactory.ExecuteEvent( () => instance.OnFailedCallback( AdType.Rewarded, adError ) );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+        }
+
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithMetaCallback ) )]
+        private static void RewardedOpeningWithAdCallbackAndMeta( IntPtr manager, int net, double cpm, int accuracy )
+        {
+            try
+            {
+                if (MobileAds.settings.isDebugMode)
+                    Debug.Log( "[CleverAdsSolutions] Rewarded Opening " + net + " cpm:" + cpm + " accuracy:" + accuracy );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance == null)
                     return;
                 if (instance.OnRewardedAdShown != null)
@@ -448,13 +452,13 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidShowAdFailedWithErrorCallback ) )]
-        private static void RewardedDidShowAdFailedWithErrorCallback( IntPtr client, string error )
+        private static void RewardedDidShowAdFailedWithErrorCallback( IntPtr manager, string error )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] RewardedDidShowAdFailed " + error );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Rewarded  Show Ad Failed with error: " + error );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance != null && instance.OnRewardedAdFailedToShow != null)
                     instance.OnRewardedAdFailedToShow( error );
             }
@@ -465,13 +469,13 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClickedAdCallback ) )]
-        private static void RewardedDidClickedAdCallback( IntPtr client )
+        private static void RewardedDidClickedAdCallback( IntPtr manager )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] RewardedDidClicked" );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Rewarded Clicked" );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance != null && instance.OnRewardedAdClicked != null)
                     instance.OnRewardedAdClicked();
             }
@@ -482,13 +486,13 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidCompletedAdCallback ) )]
-        private static void RewardedDidCompletedAdCallback( IntPtr client )
+        private static void RewardedDidCompletedAdCallback( IntPtr manager )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] RewardedDidCompleted" );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Rewarded Completed" );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance != null && instance.OnRewardedAdCompleted != null)
                     instance.OnRewardedAdCompleted();
             }
@@ -499,13 +503,13 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClosedAdCallback ) )]
-        private static void RewardedDidClosedAdCallback( IntPtr client )
+        private static void RewardedDidClosedAdCallback( IntPtr manager )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] RewardedDidClosed" );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Rewarded Closed" );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance != null && instance.OnRewardedAdClosed != null)
                     instance.OnRewardedAdClosed();
             }
@@ -517,14 +521,14 @@ namespace CAS.iOS
         #endregion
 
         #region App Return Ads Callback
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithAdCallbackAndMeta ) )]
-        private static void ReturnAdOpeningWithAdCallback( IntPtr client, int net, double cpm, int accuracy )
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithMetaCallback ) )]
+        private static void ReturnAdOpeningWithAdCallback( IntPtr manager, int net, double cpm, int accuracy )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] ReturnAdOpening " + net + " cpm: " + cpm + " accuracy: " + accuracy );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Return Ad Opening " + net + " cpm: " + cpm + " accuracy: " + accuracy );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance == null)
                     return;
                 if (instance.OnAppReturnAdShown != null)
@@ -540,13 +544,13 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidShowAdFailedWithErrorCallback ) )]
-        private static void ReturnAdDidShowAdFailedWithErrorCallback( IntPtr client, string error )
+        private static void ReturnAdDidShowAdFailedWithErrorCallback( IntPtr manager, string error )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] ReturnAdDidShowAdFailed " + error );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Return Ad Show Failed " + error );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance != null && instance.OnAppReturnAdFailedToShow != null)
                     instance.OnAppReturnAdFailedToShow( error );
             }
@@ -557,13 +561,13 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClickedAdCallback ) )]
-        private static void ReturnAdDidClickedAdCallback( IntPtr client )
+        private static void ReturnAdDidClickedAdCallback( IntPtr manager )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] ReturnAdDidClicked" );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Return Ad Clicked" );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance != null && instance.OnAppReturnAdClicked != null)
                     instance.OnAppReturnAdClicked();
             }
@@ -574,13 +578,13 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClosedAdCallback ) )]
-        private static void ReturnAdDidClosedAdCallback( IntPtr client )
+        private static void ReturnAdDidClosedAdCallback( IntPtr manager )
         {
             try
             {
                 if (MobileAds.settings.isDebugMode)
-                    Debug.Log( "[CleverAdsSolutions] ReturnAdDidClosed" );
-                var instance = IntPtrToManagerClient( client );
+                    Debug.Log( "[CleverAdsSolutions] Return Ad Closed" );
+                var instance = IntPtrToManagerClient( manager );
                 if (instance != null && instance.OnAppReturnAdClosed != null)
                     instance.OnAppReturnAdClosed();
             }
@@ -589,7 +593,6 @@ namespace CAS.iOS
                 Debug.LogException( e );
             }
         }
-
         #endregion
         #endregion
     }

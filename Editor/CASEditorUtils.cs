@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEditor;
@@ -50,6 +51,7 @@ namespace CAS.UEditor
         internal const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
         internal const string supportURL = gitUnityRepoURL + "#support";
         internal const string gitAppAdsTxtRepoUrl = gitRootURL + "App-ads.txt";
+        internal const string attributionReportEndPoint = "https://postbacks-app.com"; // MAX
 
         internal const string generalDeprecateDependency = "General";
         internal const string teenDeprecateDependency = "Teen";
@@ -64,7 +66,7 @@ namespace CAS.UEditor
         internal const string androidLibPropTemplateFile = "CASLibProperties.txt";
         internal const string iosSKAdNetworksTemplateFile = "CASSKAdNetworks.txt";
 
-        internal const string preferredCountry = "BR"; // ISO2: US, RU ...
+        internal const string editorIconNamePrefix = "cas_editoricon_";
         #endregion
 
         #region Internal structures
@@ -140,16 +142,41 @@ namespace CAS.UEditor
 
         public static CASInitSettings GetSettingsAsset( BuildTarget platform, bool create = true )
         {
-            if (!AssetDatabase.IsValidFolder( "Assets/Resources" ))
-                AssetDatabase.CreateFolder( "Assets", "Resources" );
-            var assetPath = "Assets/Resources/CASSettings" + platform.ToString() + ".asset";
-            var asset = AssetDatabase.LoadAssetAtPath<CASInitSettings>( assetPath );
-            if (create && !asset)
+            return ( CASInitSettings )GetSettingsAsset(
+                "CASSettings" + platform.ToString(), "Assets/Resources", typeof( CASInitSettings ), create, "/Resources" );
+        }
+
+        public static UnityEngine.Object GetSettingsAsset( string name, string location, Type type, bool create, string requireDir )
+        {
+            var found = AssetDatabase.FindAssets( name, new string[] { "Assets" } );
+            for (int i = 0; i < found.Length; i++)
             {
-                asset = ScriptableObject.CreateInstance<CASInitSettings>();
-                AssetDatabase.CreateAsset( asset, assetPath );
+                var assetPath = AssetDatabase.GUIDToAssetPath( found[i] );
+                if (assetPath.StartsWith( "Assets/" ) && assetPath.EndsWith( ".asset" ))
+                {
+                    if (string.IsNullOrEmpty( requireDir ) || Path.GetDirectoryName( assetPath ).EndsWith( requireDir ))
+                    {
+                        try
+                        {
+                            var asset = AssetDatabase.LoadAssetAtPath( assetPath, type );
+                            if (asset)
+                                return asset;
+                            AssetDatabase.DeleteAsset( assetPath );
+                        }
+                        catch { }
+                    }
+                }
             }
-            return asset;
+            if (!create)
+                return null;
+            var result = ScriptableObject.CreateInstance( type );
+            if (!AssetDatabase.IsValidFolder( location ))
+            {
+                Directory.CreateDirectory( location );
+                AssetDatabase.ImportAsset( location );
+            }
+            AssetDatabase.CreateAsset( result, location + "/" + name + ".asset" );
+            return result;
         }
 
         public static bool IsDependencyExists( string name, BuildTarget platform )
@@ -182,6 +209,21 @@ namespace CAS.UEditor
                 return foundPath;
 
             return editorFolderPath + "/" + GetDependencyName( name, platform ) + ".xml";
+        }
+
+        public static KeyValuePair[] DefaultUserTrackingUsageDescription()
+        {
+            return new KeyValuePair[]{
+                new KeyValuePair( "en", "Get ads that are more interesting and support keeping this game free by allowing tracking." ),
+                new KeyValuePair( "de", "\\\"Erlauben\\\" drücken benutzt Gerätinformationen für relevantere Werbeinhalte" ),
+                new KeyValuePair( "ru", "Получайте более интересную рекламу и помогайте этой игре быть бесплатной, поделившись информацией о устройстве." ),
+                new KeyValuePair( "es", "Presionando \\\"Permitir\\\", se usa la información del dispositivo para obtener contenido publicitario más relevante" ),
+                new KeyValuePair( "fr", "\\\"Autoriser\\\" permet d'utiliser les infos du téléphone pour afficher des contenus publicitaires plus pertinents" ),
+                new KeyValuePair( "ja", "\\\"許可\\\"をクリックすることで、デバイス情報を元により最適な広告を表示することができます" ),
+                new KeyValuePair( "ko", "\\\"허용\\\"을 누르면 더 관련성 높은 광고 콘텐츠를 제공하기 위해 기기 정보가 사용됩니다" ),
+                new KeyValuePair( "zh-Hans", "点击\\\"允许\\\"以使用设备信息获得更加相关的广告内容" ),
+                new KeyValuePair( "zh-Hant", "點擊\\\"允許\\\"以使用設備信息獲得更加相關的廣告內容" )
+            };
         }
 
         #region Deprecated Dependencies paths
@@ -226,7 +268,7 @@ namespace CAS.UEditor
                     resolverType = Type.GetType( "Google.IOSResolverVersionNumber, Google.IOSResolver", false );
                 if (resolverType == null)
                     return null;
-                return resolverType.GetProperty( "Value" ).GetValue( null ) as System.Version;
+                return resolverType.GetProperty( "Value" ).GetValue( null, null ) as System.Version;
             }
             catch
             {
@@ -248,7 +290,7 @@ namespace CAS.UEditor
                     else
                         autoResolve = ( bool )resolverType.GetProperty( "AutomaticResolutionEnabled",
                             BindingFlags.Public | BindingFlags.Static )
-                            .GetValue( null );
+                            .GetValue( null, null );
                     if (!autoResolve)
                     {
                         try
@@ -277,7 +319,7 @@ namespace CAS.UEditor
             try
             {
                 var newVerStr = GetLatestVersion( repo, force, currVersion );
-                if (newVerStr != null && newVerStr != currVersion)
+                if (newVerStr != null && newVerStr != currVersion && !currVersion.Contains( "-RC" ))
                 {
                     var currVer = new System.Version( currVersion );
                     var newVer = new System.Version( newVerStr );
@@ -313,8 +355,7 @@ namespace CAS.UEditor
         public static void OnHeaderGUI( string gitRepoName, bool allowedPackageUpdate, string currVersion, ref string newCASVersion )
         {
             EditorGUILayout.BeginHorizontal( EditorStyles.toolbar );
-            if (GUILayout.Button( HelpStyles.helpIconContent, EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( gitRootURL + gitRepoName + "/wiki" );
+            HelpStyles.HelpButton( gitRootURL + gitRepoName + "/wiki" );
 
             if (GUILayout.Button( gitRepoName + " " + currVersion, EditorStyles.toolbarButton ))
                 Application.OpenURL( gitRootURL + gitRepoName + "/releases" );
@@ -522,22 +563,11 @@ namespace CAS.UEditor
 #endif
         }
 
-        private static string Md5Sum( string strToEncrypt )
-        {
-            UTF8Encoding ue = new UTF8Encoding();
-            byte[] bytes = ue.GetBytes( strToEncrypt + "MeDiAtIoNhAsH" );
-            System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
-            byte[] hashBytes = md5.ComputeHash( bytes );
-            StringBuilder hashString = new StringBuilder();
-            for (int i = 0; i < hashBytes.Length; i++)
-                hashString.Append( Convert.ToString( hashBytes[i], 16 ).PadLeft( 2, '0' ) );
-            return hashString.ToString().PadLeft( 32, '0' );
-        }
-
         internal static string DownloadRemoteSettings( string managerID, BuildTarget platform, CASInitSettings settings, DependencyManager deps )
         {
             const string title = "Update CAS remote settings";
 
+            var editorSettings = CASEditorSettings.Load();
             string casV = "";
             #region Find CAS Version
             if (deps != null)
@@ -574,34 +604,39 @@ namespace CAS.UEditor
             #endregion
 
             #region Create request URL
-            string platformCode;
-            switch (platform)
-            {
-                case BuildTarget.Android:
-                    platformCode = "0";
-                    break;
-                case BuildTarget.iOS:
-                    platformCode = "1";
-                    break;
-                default:
-                    platformCode = "9";
-                    Debug.LogError( "Not supported platform for CAS " + platform.ToString() );
-                    break;
-            }
+            #region Hash
+            var managerIdBytes = new UTF8Encoding().GetBytes( managerID );
+            var suffix = new byte[] { 48, 77, 101, 68, 105, 65, 116, 73, 111, 78, 104, 65, 115, 72 };
+            if (platform == BuildTarget.iOS)
+                suffix[0] = 49;
+            var sourceBytes = new byte[managerID.Length + suffix.Length];
+            Array.Copy( managerIdBytes, 0, sourceBytes, 0, managerIdBytes.Length );
+            Array.Copy( suffix, 0, sourceBytes, managerIdBytes.Length, suffix.Length );
+
+            var hashBytes = new System.Security.Cryptography.MD5CryptoServiceProvider().ComputeHash( sourceBytes );
+            StringBuilder hashBuilder = new StringBuilder();
+            for (int i = 0; i < hashBytes.Length; i++)
+                hashBuilder.Append( Convert.ToString( hashBytes[i], 16 ).PadLeft( 2, '0' ) );
+            var hash = hashBuilder.ToString().PadLeft( 32, '0' );
+            #endregion
 
             var urlBuilder = new StringBuilder( "https://psvpromo.psvgamestudio.com/Scr/cas.php?platform=" )
-                .Append( platformCode )
+                .Append( platform == BuildTarget.Android ? 0 : 1 )
                 .Append( "&bundle=" ).Append( UnityWebRequest.EscapeURL( managerID ) )
-                .Append( "&hash=" ).Append( Md5Sum( managerID + platformCode ) )
+                .Append( "&hash=" ).Append( hash )
                 .Append( "&lang=" ).Append( SystemLanguage.English )
-                .Append( "&country=" ).Append( preferredCountry )
                 .Append( "&appDev=2" )
                 .Append( "&appV=" ).Append( PlayerSettings.bundleVersion )
                 .Append( "&coppa=" ).Append( ( int )settings.defaultAudienceTagged )
                 .Append( "&adTypes=" ).Append( ( int )settings.allowedAdFlags )
                 .Append( "&sdk=" ).Append( casV )
                 .Append( "&nets=" ).Append( DependencyManager.GetActiveMediationPattern( deps ) )
+                .Append( "&orient=" ).Append( GetOrientationId() )
                 .Append( "&framework=Unity_" ).Append( Application.unityVersion );
+            if (string.IsNullOrEmpty( editorSettings.mostPopularCountryOfUsers ))
+                urlBuilder.Append( "&country=" ).Append( "US" );
+            else
+                urlBuilder.Append( "&country=" ).Append( editorSettings.mostPopularCountryOfUsers );
             if (platform == BuildTarget.Android)
                 urlBuilder.Append( "&appVC=" ).Append( PlayerSettings.Android.bundleVersionCode );
 
@@ -726,11 +761,16 @@ namespace CAS.UEditor
 
         internal static string GetLatestVersion( string repo, bool force, string currVersion )
         {
-            if (!force && !HasTimePassed( editorLatestVersionTimestampPrefs + repo, 1, false ))
+            if (!force)
             {
-                var last = EditorPrefs.GetString( editorLatestVersionPrefs + repo );
-                if (!string.IsNullOrEmpty( last ))
-                    return last;
+                var editorSettings = CASEditorSettings.Load();
+                if (!editorSettings.autoCheckForUpdatesEnabled
+                    || !HasTimePassed( editorLatestVersionTimestampPrefs + repo, 1, false ))
+                {
+                    var last = EditorPrefs.GetString( editorLatestVersionPrefs + repo );
+                    if (!string.IsNullOrEmpty( last ))
+                        return last;
+                }
             }
 
             const string title = "Get latest CAS version info";
@@ -779,6 +819,24 @@ namespace CAS.UEditor
             return null;
         }
 
+        private static int GetOrientationId()
+        {
+            var orientation = Screen.orientation;
+            if (orientation == ScreenOrientation.Portrait || orientation == ScreenOrientation.PortraitUpsideDown)
+                return 1;
+            if (orientation == ScreenOrientation.Landscape || orientation == ScreenOrientation.LandscapeRight)
+                return 2;
+            var supportPortrait = Screen.autorotateToPortrait || Screen.autorotateToPortraitUpsideDown;
+            var supportLandscape = Screen.autorotateToLandscapeLeft || Screen.autorotateToLandscapeRight;
+            if (supportPortrait && supportLandscape)
+                return 0;
+            if (supportPortrait)
+                return 1;
+            if (supportLandscape)
+                return 2;
+            return 0;
+        }
+
         private static void SaveLatestRepoVersion( string repo, string version )
         {
             EditorPrefs.SetString( editorLatestVersionPrefs + repo, version );
@@ -816,6 +874,19 @@ namespace CAS.UEditor
         #endregion
     }
 
+    [Serializable]
+    public class KeyValuePair
+    {
+        public string key;
+        public string value;
+
+        public KeyValuePair( string key, string value )
+        {
+            this.key = key;
+            this.value = value;
+        }
+    }
+
     public static class HelpStyles
     {
         public static GUIStyle labelStyle;
@@ -826,6 +897,8 @@ namespace CAS.UEditor
         public static GUIContent helpIconContent;
         public static GUIContent errorIconContent;
         private static GUIContent tempContent;
+
+        public static Texture[] formatIcons;
 
         static HelpStyles()
         {
@@ -846,6 +919,51 @@ namespace CAS.UEditor
             tempContent = new GUIContent();
             largeTitleStyle = new GUIStyle( EditorStyles.boldLabel );
             largeTitleStyle.fontSize = 18;
+
+            formatIcons = new Texture[5 * 2];
+            var editorIcons = AssetDatabase.FindAssets( CASEditorUtils.editorIconNamePrefix );
+            for (int i = 0; i < editorIcons.Length; i++)
+            {
+                var iconPath = AssetDatabase.GUIDToAssetPath( editorIcons[i] );
+                var asset = AssetDatabase.LoadAssetAtPath<Texture2D>( iconPath );
+                var suffix = iconPath.Substring( iconPath.LastIndexOf( '_' ) + 1 );
+                var index = -1;
+                switch (suffix)
+                {
+                    case "banner.png":
+                        index = 0;
+                        break;
+                    case "inter.png":
+                        index = 1;
+                        break;
+                    case "reward.png":
+                        index = 2;
+                        break;
+                    case "native.png":
+                        index = 3;
+                        break;
+                    case "mrec.png":
+                        index = 4;
+                        break;
+                }
+                if (index > -1)
+                    formatIcons[index + ( iconPath.Contains( "_dark_" ) ? 5 : 0 )] = asset;
+            }
+        }
+
+        public static Texture GetFormatIcon( AdFlags format, bool active )
+        {
+            int iconIndex;
+            switch (format)
+            {
+                case AdFlags.Banner: iconIndex = 0; break;
+                case AdFlags.Interstitial: iconIndex = 1; break;
+                case AdFlags.Rewarded: iconIndex = 2; break;
+                case AdFlags.Native: iconIndex = 3; break;
+                case AdFlags.MediumRectangle: iconIndex = 4; break;
+                default: return null;
+            }
+            return formatIcons[active ? iconIndex : iconIndex + 5];
         }
 
         public static void BeginBoxScope()
@@ -871,6 +989,13 @@ namespace CAS.UEditor
             var dividerRect = EditorGUILayout.GetControlRect( GUILayout.Height( 1 ) );
             if (Event.current.type == EventType.Repaint) //draw the divider
                 GUI.skin.box.Draw( dividerRect, GUIContent.none, 0 );
+        }
+
+        public static void HelpButton( string url )
+        {
+            if (GUILayout.Button( helpIconContent, EditorStyles.label, GUILayout.ExpandWidth( false ) ))
+                Application.OpenURL( url );
+
         }
     }
 }

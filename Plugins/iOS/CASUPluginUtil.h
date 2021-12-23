@@ -6,6 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -15,7 +16,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)saveObject:(nullable id)obj withKey:(nonnull NSString *)key;
 - (void)removeObjectWithKey:(nonnull NSString *)key;
 
-@property(class) BOOL pauseOnBackground;
++ (UIViewController *)unityGLViewController;
++ (void)onAdsWillPressent;
++ (void)onAdsDidClosed;
+
+@property (class) BOOL pauseOnBackground;
 @end
 
 NS_ASSUME_NONNULL_END

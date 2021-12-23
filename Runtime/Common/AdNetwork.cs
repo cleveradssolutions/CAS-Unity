@@ -1,35 +1,37 @@
-﻿namespace CAS
+﻿using System;
+
+namespace CAS
 {
     public enum AdNetwork
     {
-        GoogleAds,
+        LastPage = -1,
+        GoogleAds = 0,
         Vungle,
         Kidoz,
-        Chartboost,
+        [Obsolete( "No longer supported" )] Chartboost,
         UnityAds,
         AppLovin,
         SuperAwesome,
-        StartApp,
+        [Obsolete( "No longer supported" )] StartApp,
         AdColony,
         FacebookAN,
         InMobi,
-        MobFox,
+        [Obsolete( "No longer supported" )] MobFox,
         MyTarget,
         CrossPromotion,
         IronSource,
         YandexAds,
-        OwnVAST,
+        [Obsolete( "No longer supported" )] OwnVAST,
         MAX,
-        Smaato,
-        MoPub,
+        [Obsolete( "No longer supported" )] Smaato,
+        [Obsolete( "No longer supported" )] MoPub,
         Tapjoy,
-        Fyber,
+        [Obsolete( "No longer supported" )] Fyber,
         FairBid,
         Mintegral,
         Pangle,
-        Admost,
-        Verizon,
-        AmazonAds,
-        HyperMX
+        [Obsolete( "No longer supported" )] Verizon,
+        [Obsolete( "No longer supported" )] AmazonAds,
+        [Obsolete( "No longer supported" )] HyperMX
     }
 }

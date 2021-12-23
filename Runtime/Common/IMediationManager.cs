@@ -6,43 +6,28 @@ namespace CAS
     public delegate void CASTypedEvent( AdType adType );
     public delegate void CASTypedEventWithError( AdType adType, string error );
     public delegate void CASEventWithError( string error );
+    public delegate void CASEventWithAdError( AdError error );
     public delegate void CASEventWithMeta( AdMetaData meta );
 
-    public interface IMediationManager
+    /// <summary>
+    /// Interface for managing CAS mediation.
+    /// Get instance using the <see cref="MobileAds.BuildManager"/> builder.
+    /// <para>Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK </para>
+    /// </summary>
+    public interface IMediationManager: ISingleBannerManager
     {
-        #region Events
         /// <summary>
         /// Called when <see cref="AdType"/> load ad response
+        /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.OnLoaded instead.</para>
         /// </summary>
         event CASTypedEvent OnLoadedAd;
         /// <summary>
         /// Called when <see cref="AdType"/> failed to load ad response with error message
+        /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.OnFailed instead.</para>
         /// </summary>
         event CASTypedEventWithError OnFailedToLoadAd;
 
-        /// <summary>
-        /// Called when the ad is displayed.
-        /// </summary>
-        event Action OnBannerAdShown;
-        /// <summary>
-        /// The same call as the <see cref="OnBannerAdShown"/> but with <see cref="AdMetaData"/> about the impression. 
-        /// </summary>
-        event CASEventWithMeta OnBannerAdOpening;
-        /// <summary>
-        /// Called when the ad is failed to display.
-        /// The Banner may automatically appear when the Ad is ready again.
-        /// This will trigger the <see cref="OnBannerAdShown"/> callback again.
-        /// </summary>
-        event CASEventWithError OnBannerAdFailedToShow;
-        /// <summary>
-        /// Called when the user clicks on an Ad.
-        /// </summary>
-        event Action OnBannerAdClicked;
-        /// <summary>
-        /// Called when the ad is hidden from screen.
-        /// </summary>
-        event Action OnBannerAdHidden;
-
+        #region Interstitial Ads events
         /// <summary>
         /// Called when the ad is displayed.
         /// </summary>
@@ -56,14 +41,16 @@ namespace CAS
         /// </summary>
         event CASEventWithError OnInterstitialAdFailedToShow;
         /// <summary>
-        /// Called when the user clicks on an Ad.
+        /// Called when the user clicks on the Ad.
         /// </summary>
         event Action OnInterstitialAdClicked;
         /// <summary>
         /// Called when the ad is closed.
         /// </summary>
         event Action OnInterstitialAdClosed;
+        #endregion
 
+        #region Rewarded Ads events
         /// <summary>
         /// Called when the ad is displayed.
         /// </summary>
@@ -77,7 +64,7 @@ namespace CAS
         /// </summary>
         event CASEventWithError OnRewardedAdFailedToShow;
         /// <summary>
-        /// Called when the user clicks on an Ad.
+        /// Called when the user clicks on the Ad.
         /// </summary>
         event Action OnRewardedAdClicked;
         /// <summary>
@@ -88,7 +75,76 @@ namespace CAS
         /// Called when the ad is closed.
         /// </summary>
         event Action OnRewardedAdClosed;
+        #endregion
 
+        /// <summary>
+        /// CAS manager (Placement) identifier
+        /// </summary>
+        string managerID { get; }
+
+        /// <summary>
+        /// Is Mediation manager use test ads for current session.
+        /// </summary>
+        bool isTestAdMode { get; }
+
+        /// <summary>
+        /// The latest free ad page for your own promotion.
+        /// <br>This ad page will be displayed when there is no paid ad to show or internet availability.</br>
+        /// <para>**Attention!** Impressions and clicks on this ad page don't make money.</para>
+        /// <para>By default, this page will not be displayed while the ad content is NULL.</para>
+        /// </summary>
+        LastPageAdContent lastPageAdContent { get; set; }
+
+        /// <summary>
+        /// Get last active mediation ad name of selected <see cref="AdType"/>.
+        /// <para>Can return Empty String.</para>
+        /// </summary>
+        string GetLastActiveMediation( AdType adType );
+
+        /// <summary>
+        /// Check selected <see cref="AdType"/> is processing.
+        /// </summary>
+        bool IsEnabledAd( AdType adType );
+
+        /// <summary>
+        /// Set enabled <see cref="AdType"/> to processing.
+        /// <para>The state will not be saved between sessions.</para>
+        /// </summary>
+        void SetEnableAd( AdType adType, bool enabled );
+
+        /// <summary>
+        /// Manual load <see cref="AdType"/> Ad.
+        /// <para>Please call load before each show ad whe active load mode is <see cref="LoadingManagerMode.Manual"/>.</para>
+        /// <para>You can get a callback for the successful loading of an ad by subscribe <see cref="OnLoadedAd"/>.</para>
+        /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.Load() instead.</para>
+        /// </summary>
+        void LoadAd( AdType adType );
+
+        /// <summary>
+        /// Check ready selected <see cref="AdType"/> to show.
+        /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.isReady instead.</para>
+        /// </summary>
+        bool IsReadyAd( AdType adType );
+
+        /// <summary>
+        /// Force show ad by selected <see cref="AdType"/>.
+        /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.SetActive(true) instead.</para>
+        /// </summary>
+        void ShowAd( AdType adType );
+
+        /// <summary>
+        /// Get the ad view interface for specific <paramref name="size"/>.
+        /// <para>If a view for this size has already been created then a reference to it
+        /// will be returned without creating a new one.</para>
+        /// <para>The newly created AdView has an inactive state. When you are ready to show the ad on the screen,
+        /// simply call a <see cref="IAdView.SetActive(bool)"/> method.</para>
+        /// <para>If you no longer need the AdView with this size, please call <see cref="IDisposable.Dispose()"/> to free memory.</para>
+        /// <para>After calling Dispose(), you can use GetAdView method to create a new view.</para>
+        /// </summary>
+        /// <param name="size">The ad size you want using.</param>
+        IAdView GetAdView( AdSize size );
+
+        #region Return to App Ads
         /// <summary>
         /// Called when the ad is displayed.
         /// </summary>
@@ -102,116 +158,28 @@ namespace CAS
         /// </summary>
         event CASEventWithError OnAppReturnAdFailedToShow;
         /// <summary>
-        /// Called when the user clicks on an Ad.
+        /// Called when the user clicks on the Ad.
         /// </summary>
         event Action OnAppReturnAdClicked;
         /// <summary>
         /// Called when the ad is closed.
         /// </summary>
         event Action OnAppReturnAdClosed;
-        #endregion
-
-        #region Mediation manager state
-        /// <summary>
-        /// CAS manager (Placement) identifier
-        /// </summary>
-        string managerID { get; }
-
-        /// <summary>
-        /// Is Mediation manager use test ads for current session.
-        /// </summary>
-        bool isTestAdMode { get; }
-
-        /// <summary>
-        /// The latest free ad page for your own promotion.
-        /// This ad page will be displayed when there is no paid ad to show or internet availability.
-        ///
-        /// **Attention!** Impressions and clicks on this ad page don't make money.
-        ///
-        /// By default, this page will not be displayed while the ad content is NULL.
-        /// </summary>
-        LastPageAdContent lastPageAdContent { get; set; }
-
-        /// <summary>
-        /// Get last active mediation ad name of selected <see cref="AdType"/>.
-        /// Can return Empty Sting.
-        /// </summary>
-        string GetLastActiveMediation( AdType adType );
-
-        /// <summary>
-        /// Check selected <see cref="AdType"/> is processing.
-        /// </summary>
-        bool IsEnabledAd( AdType adType );
-
-        /// <summary>
-        /// Set enabled <see cref="AdType"/> to processing.
-        /// The state will not be saved between sessions.
-        /// </summary>
-        void SetEnableAd( AdType adType, bool enabled );
-        #endregion
-
-        /// <summary>
-        /// Manual load <see cref="AdType"/> Ad.
-        /// For <see cref="AdType.Banner"/> can be reloaded for any active <see cref="LoadingManagerMode"/>.
-        /// For other Ad types allowed only with <see cref="LoadingManagerMode.Manual"/>.
-        /// Please call load before each show ad.
-        /// You can get a callback for the successful loading of an ad by subscribe <see cref="OnLoadedAd"/>.
-        /// </summary>
-        void LoadAd( AdType adType );
-
-        /// <summary>
-        /// Check ready selected <see cref="AdType"/> to show.
-        /// </summary>
-        bool IsReadyAd( AdType adType );
-
-        /// <summary>
-        /// Force show ad by selected <see cref="AdType"/>.
-        /// </summary>
-        void ShowAd( AdType adType );
-
-        #region Banner Ad
-        /// <summary>
-        /// The size of the Banner Ad.
-        /// We recommended set once immediately after <see cref="MobileAds.Initialize(string, AdFlags, bool, InitCompleteAction)"/>.
-        /// If active <see cref="LoadingManagerMode.Manual"/>
-        /// then please call <see cref="LoadAd(AdType)"/> each banner size changed.
-        /// </summary>
-        AdSize bannerSize { get; set; }
-
-        /// <summary>
-        /// The position of the Banner Ad using <see cref="AdPosition"/>.
-        /// </summary>
-        AdPosition bannerPosition { get; set; }
-
-        /// <summary>
-        /// Hide banner from screen. Call <see cref="ShowAd(AdType)"/> for <see cref="AdType.Banner"/> to show again.
-        /// </summary>
-        void HideBanner();
-
-        /// <summary>
-        /// The Banner Ad Height in pixels of current <see cref="AdSize"/>
-        /// </summary>
-        float GetBannerHeightInPixels();
-
-        /// <summary>
-        /// The Banner Ad Width in pixels of current <see cref="AdSize"/>
-        /// </summary>
-        float GetBannerWidthInPixels();
-        #endregion
 
         /// <summary>
         /// The Return Ad which is displayed once the user returns to your application after a certain period of time.
-        /// To minimize the intrusiveness, short time periods are ignored.
-        /// Return ads are disabled by default.
+        /// <para>To minimize the intrusiveness, short time periods are ignored.</para>
+        /// <para>Return ads are disabled by default.</para>
         /// </summary>
         void SetAppReturnAdsEnabled( bool enable );
 
         /// <summary>
         /// Calling this method will indicate to skip one next ad impression when returning to the app.
-        ///
-        /// You can call this method when you intentionally redirect the user to another application (for example Google Play)
-        /// and do not want them to see ads when they return to your application.
+        /// <para>You can call this method when you intentionally redirect the user to another application (for example Google Play)
+        /// and do not want them to see ads when they return to your application.</para>
         /// </summary>
         void SkipNextAppReturnAds();
+
+        #endregion
     }
 }

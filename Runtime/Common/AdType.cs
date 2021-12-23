@@ -7,6 +7,7 @@ namespace CAS
         Banner,
         Interstitial,
         Rewarded,
+        [Obsolete( "Comming soon" )]
         Native,
         None,
 
@@ -22,6 +23,7 @@ namespace CAS
         Interstitial = 2,
         Rewarded = 4,
         Native = 8,
-        Everything = Banner | Interstitial | Rewarded | Native
+        MediumRectangle = 16,
+        Everything = Banner | Interstitial | Rewarded | Native | MediumRectangle
     }
 }

@@ -7,38 +7,25 @@
 
 #import "CASUCallback.h"
 #import "CASUPluginUtil.h"
-#if __has_include("UnityInterface.h")
-#import "UnityInterface.h"
-#endif
 #if __has_include(<FirebaseAnalytics/FIRAnalytics.h>)
 #import <FirebaseAnalytics/FIRAnalytics.h>
-#endif
-#if __has_include("UnityAppController.h")
-#import "UnityAppController.h"
 #endif
 
 @implementation CASUCallback
 {
-    BOOL fullScreenAd;
+    BOOL withComplete;
 }
 
-- (id)initForFullScreen:(BOOL)isFullScreen {
+- (id)initWithComplete:(BOOL)complete {
     self = [super init];
     if (self) {
-        fullScreenAd = isFullScreen;
+        withComplete = complete;
     }
     return self;
 }
 
 - (void)willShownWithAd:(id<CASStatusHandler>)adStatus {
-#if __has_include("UnityInterface.h")
-    if (fullScreenAd) {
-        if ([CASUPluginUtil pauseOnBackground]) {
-            UnityPause(YES);
-        }
-    }
-#endif
-
+    [CASUPluginUtil onAdsWillPressent];
     if (self.client) {
         if (self.willOpeningCallback) {
             self.willOpeningCallback(self.client,
@@ -50,13 +37,7 @@
 }
 
 - (void)didShowAdFailedWithError:(NSString *)error {
-#if __has_include("UnityInterface.h")
-    if (fullScreenAd) {
-        if (UnityIsPaused()) {
-            UnityPause(NO);
-        }
-    }
-#endif
+    [CASUPluginUtil onAdsDidClosed];
     if (self.didShowFailedCallback) {
         if (self.client) {
             self.didShowFailedCallback(self.client, [error cStringUsingEncoding:NSUTF8StringEncoding]);
@@ -65,6 +46,9 @@
 }
 
 - (void)didCompletedAd {
+    if (!withComplete) {
+        return;
+    }
     if (self.didCompleteCallback) {
         if (self.client) {
             self.didCompleteCallback(self.client);
@@ -82,20 +66,14 @@
 
 - (void)didClosedAd {
     // Escape from callback when App on background. Not supported for Cross Promo logic.
-//    extern bool _didResignActive;
-//    if (_didResignActive) {
-//        // We are in the middle of the shutdown sequence, and at this point unity runtime is already destroyed.
-//        // We shall not call unity API, and definitely not script callbacks, so nothing to do here
-//        return;
-//    }
+    //    extern bool _didResignActive;
+    //    if (_didResignActive) {
+    //        // We are in the middle of the shutdown sequence, and at this point unity runtime is already destroyed.
+    //        // We shall not call unity API, and definitely not script callbacks, so nothing to do here
+    //        return;
+    //    }
 
-#if __has_include("UnityInterface.h")
-    if (fullScreenAd) {
-        if (UnityIsPaused()) {
-            UnityPause(NO);
-        }
-    }
-#endif
+    [CASUPluginUtil onAdsDidClosed];
     if (self.didClosedCallback) {
         if (self.client) {
             self.didClosedCallback(self.client);
@@ -104,20 +82,15 @@
 }
 
 - (void)log:(NSString *)eventName:(NSDictionary<NSString *, id> *)map {
-#if __has_include(<FirebaseAnalytics/FIRAnalytics.h>)
+    #if __has_include(<FirebaseAnalytics/FIRAnalytics.h>)
     [FIRAnalytics logEventWithName:eventName parameters:map];
-#else
+    #else
     NSLog(@"[CAS] Framework bridge cant find Firebase Analytics");
-#endif
+    #endif
 }
 
 - (UIViewController *)viewControllerForPresentingAppReturnAd {
-#if __has_include("UnityAppController.h")
-    return ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;
-#else
-    NSLog(@"[CAS] Framework bridge cant find UnityAppController.h");
-    return nil;
-#endif
+    return [CASUPluginUtil unityGLViewController];
 }
 
 @end

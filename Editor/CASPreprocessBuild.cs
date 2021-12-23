@@ -52,7 +52,7 @@ namespace CAS.UEditor
                 return;
 
             var isBatchMode = Application.isBatchMode;
-            var settings = Utils.GetSettingsAsset( target );
+            var settings = Utils.GetSettingsAsset( target, false );
             if (!settings)
                 Utils.StopBuildWithMessage( "Settings not found. Please use menu Assets/CleverAdsSolutions/Settings " +
                     "to create and set settings for build.", target );
@@ -95,12 +95,6 @@ namespace CAS.UEditor
                     if (isNewerVersionExist)
                         DialogOrCancel( "There is a new versions of the native dependencies available for update." +
                             "Please use 'Assets/CleverAdsSolutions/Settings' menu to update.", target );
-                }
-
-                if (settings.bannerSize == AdSize.Banner && Utils.IsPortraitOrientation())
-                {
-                    DialogOrCancel( "For portrait applications, we recommend using the adaptive banner size." +
-                            "This will allow you to get more expensive advertising.", target );
                 }
             }
 
@@ -148,10 +142,10 @@ namespace CAS.UEditor
                     Utils.androidLibPropTemplateFile, Utils.androidLibPropertiesPath );
 
                 HashSet<string> promoAlias = new HashSet<string>();
+                // TODO: Create option to disable CrossPromo Querries generator
                 for (int i = 0; i < settings.managersCount; i++)
-                {
                     Utils.GetCrossPromoAlias( target, settings.GetManagerId( i ), promoAlias );
-                }
+
                 SetAdmobAppIdToAndroidManifest( admobAppId, false, promoAlias );
 
                 ConfigurateGradleSettings();
@@ -159,20 +153,12 @@ namespace CAS.UEditor
 
                 if (PlayerSettings.Android.minSdkVersion < AndroidSdkVersions.AndroidApiLevel19)
                 {
-                    DialogOrCancel( "CAS required minimum SDK API level 19 (KitKat).", BuildTarget.NoTarget, "Set API 19" );
+                    DialogOrCancel( "CAS required a higher minimum SDK API level. Set SDK level 19 (KitKat) and continue?", BuildTarget.NoTarget );
                     PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel19;
                 }
             }
             else if (target == BuildTarget.iOS)
             {
-                if (PlayerSettings.muteOtherAudioSources)
-                {
-                    if (isBatchMode || EditorUtility.DisplayDialog( casTitle, "Mute Other AudioSources are not supported. " +
-                        "Is a known issue with disabling sounds in Unity after closing interstitial ads.",
-                        "Disable Mute AudioSources", "Continue" ))
-                        PlayerSettings.muteOtherAudioSources = false;
-                }
-
                 try
                 {
                     if (new Version( PlayerSettings.iOS.targetOSVersionString ) < new Version( 10, 0 ))
@@ -187,7 +173,9 @@ namespace CAS.UEditor
                     Debug.LogException( e );
                 }
             }
-            if (settings.IsTestAdMode())
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (settings.testAdMode && !EditorUserBuildSettings.development) // Use directrly property to avoid Debug build
+#pragma warning restore CS0618 // Type or member is obsolete
                 Debug.LogWarning( Utils.logTag + "Test Ads Mode enabled! Make sure the build is for testing purposes only!" +
                     "\nUse 'Assets/CleverAdsSolutions/Settings' menu to disable Test Ad Mode." );
             else
@@ -208,7 +196,7 @@ namespace CAS.UEditor
             //        "Project should use Gradle tools version 3.4+." );
             //}
 
-            bool multidexRequired = true; //TODO: Open API change state
+            bool multidexRequired = CASEditorSettings.Load().multiDexEnabled;
 
             const string multidexObsoleted = "implementation 'com.android.support:multidex:1.0.3'";
             const string multidexImplementation = "implementation 'androidx.multidex:multidex:2.0.1'";
@@ -278,42 +266,50 @@ namespace CAS.UEditor
                 Utils.StopBuildWithMessage( "Not found Dependencies scope in Gradle template. " +
                     "Please try delete and create new mainTemplate.gradle", BuildTarget.NoTarget );
 
-            bool multidexExist = !multidexRequired;
-            if (multidexRequired)
+            bool multidexExist = false;
+
+            // chek exist
+            while (line < gradle.Count && !gradle[line].Contains( "}" ))
             {
-                // chek exist
-                while (line < gradle.Count && !gradle[line].Contains( "}" ))
+                if (gradle[line].Contains( multidexObsoleted ))
                 {
-                    if (gradle[line].Contains( multidexObsoleted ))
+                    if (multidexRequired)
                     {
                         gradle[line] = "    " + multidexImplementation;
+
                         Debug.Log( Utils.logTag + "Replace dependency " + multidexObsoleted +
                             " to " + multidexImplementation );
-                        multidexExist = true;
-                        break;
                     }
-                    if (gradle[line].Contains( multidexImplementation ))
+                    else
                     {
-                        multidexExist = true;
-                        break;
+                        gradle[line] = "";
                     }
-
-                    line++;
+                    multidexExist = true;
+                    break;
+                }
+                if (gradle[line].Contains( multidexImplementation ))
+                {
+                    if (!multidexRequired)
+                        gradle[line] = "";
+                    multidexExist = true;
+                    break;
                 }
 
-                // write dependency
-                if (!multidexExist)
+                line++;
+            }
+
+            // write dependency
+            if (!multidexExist && multidexRequired)
+            {
+                if (Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
+                        "Including the CAS SDK may cause the 64K limit on methods that can be packaged in an Android dex file to be breached" +
+                        "Do you want to use the MultiDex support library to building your app correctly?",
+                        "Enable MultiDex", "Continue" ))
                 {
-                    if (Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
-                            "Including the CAS SDK may cause the 64K limit on methods that can be packaged in an Android dex file to be breached" +
-                            "Do you want to use the MultiDex support library to building your app correctly?",
-                            "Enable MultiDex", "Continue" ))
-                    {
-                        gradle.Insert( line, "    " + multidexImplementation );
-                        Debug.Log( Utils.logTag + "Append dependency " + multidexImplementation );
-                        line++;
-                        multidexExist = true;
-                    }
+                    gradle.Insert( line, "    " + multidexImplementation );
+                    Debug.Log( Utils.logTag + "Append dependency " + multidexImplementation );
+                    line++;
+                    multidexExist = true;
                 }
             }
 
@@ -382,13 +378,15 @@ namespace CAS.UEditor
                 {
                     if (gradle[line].Contains( multidexConfig ))
                     {
+                        if (!multidexRequired)
+                            gradle[line] = "";
                         multidexEnabled = true;
                         break;
                     }
                     line++;
                 }
 
-                if (!multidexEnabled)
+                if (!multidexEnabled && multidexRequired)
                 {
                     gradle.Insert( defaultConfigLine + 1, "        " + multidexConfig );
                     Debug.Log( Utils.logTag + "Enable Multidex in Default Config" );
@@ -418,7 +416,7 @@ namespace CAS.UEditor
                     var verStr = versionLine.Substring( index + gradlePluginVersion.Length, 5 );
                     try
                     {
-                        System.Version version = new System.Version( verStr );
+                        var version = new Version( verStr );
                         if (version.Major == 4)
                         {
                             if (version.Minor == 0 & version.Build < 1 && RequestUpdateGradleVersion( version.ToString() ))
@@ -450,9 +448,9 @@ namespace CAS.UEditor
         private static bool RequestUpdateGradleVersion( string version = "" )
         {
             return Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
-                        "Android Gradle plugin " + version + " are not supports targeting Android 11. " +
-                        "Do you want to upgrade to version with fix?",
-                        "Update", "Continue" );
+                    "Android Gradle Plugin " + version + " are not supports targeting Android 11. " +
+                    "Do you want to upgrade Gradle Plugin Version?",
+                    "Upgrade", "Continue" );
         }
 
         private static void CopyTemplateIfNeedToAndroidLib( string template, string path )
@@ -556,8 +554,8 @@ namespace CAS.UEditor
         private static void StopBuildIDNotFound( BuildTarget target )
         {
             Utils.StopBuildWithMessage( "Settings not found manager ids for " + target.ToString() +
-                        " platform. For a successful build, you need to specify at least one ID" +
-                        " that you use in the project. To test integration, you can use test mode with 'demo' manager id.", target );
+                " platform. For a successful build, you need to specify at least one ID" +
+                " that you use in the project. To test integration, you can use test mode with 'demo' manager id.", target );
         }
     }
 }

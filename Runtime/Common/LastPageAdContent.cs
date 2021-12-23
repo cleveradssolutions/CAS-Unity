@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace CAS
 {
+    /// <summary>
+    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Configuring-Last-Page-Ad
+    /// </summary>
     [Serializable]
     public class LastPageAdContent
     {

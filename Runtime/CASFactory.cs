@@ -14,6 +14,8 @@ namespace CAS
         private static List<Action<IMediationManager>> initCallback = new List<Action<IMediationManager>>();
         private static Dictionary<string, string> globalExtras;
 
+        internal static bool isDebug { get { return GetAdsSettings().isDebugMode; } }
+
         internal static IMediationManager GetMainManagerOrNull()
         {
             return managers == null || managers.Count < 1 ? null : managers[0];
@@ -167,7 +169,10 @@ namespace CAS
             if (manager == null)
                 throw new NotSupportedException( "Current platform: " + Application.platform.ToString() );
 
-            manager.bannerSize = initSettings.bannerSize; // Before onInitManager callback
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (initSettings.bannerSize != 0) // Before onInitManager callback
+                manager.bannerSize = initSettings.bannerSize;
+#pragma warning restore CS0618 // Type or member is obsolete
 
             var managerIndex = initSettings.IndexOfManagerId( initSettings.targetId );
             if (managerIndex < 0)
@@ -198,7 +203,7 @@ namespace CAS
             return manager;
         }
 
-        internal static void GetReadyManagerByIndexAsync( Action<IMediationManager> callback, int index )
+        internal static bool TryGetManagerByIndexAsync( Action<IMediationManager> callback, int index )
         {
             if (index < 0)
                 throw new ArgumentOutOfRangeException( "index", "Manager index cannot be less than 0" );
@@ -206,7 +211,7 @@ namespace CAS
             if (managers != null && index < managers.Count && managers[index] != null)
             {
                 callback( managers[index] );
-                return;
+                return true;
             }
 
             if (index != 0)
@@ -219,6 +224,7 @@ namespace CAS
             for (int i = initCallback.Count; i <= index; i++)
                 initCallback.Add( null );
             initCallback[index] += callback;
+            return false;
         }
 
         internal static void UnsubscribeReadyManagerAsync( Action<IMediationManager> callback, int index )
@@ -279,7 +285,7 @@ namespace CAS
             var result = new List<AdNetwork>();
             for (int i = 0; i < pattern.Length; i++)
             {
-                if (pattern[i] == '1')
+                if (pattern[i] != '0')
                     result.Add( ( AdNetwork )i );
             }
             return result.ToArray();
@@ -290,7 +296,7 @@ namespace CAS
 #if UNITY_EDITOR
             var pattern = GetActiveMediationPattern();
             if (( int )network < pattern.Length)
-                return pattern[( int )network] == '1';
+                return pattern[( int )network] != '0';
 #elif UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {
@@ -305,7 +311,6 @@ namespace CAS
         }
         #endregion
 
-        #region Execute events wrapper
         internal static void ExecuteEvent( Action action )
         {
             if (action == null)
@@ -325,100 +330,10 @@ namespace CAS
             }
         }
 
-        internal static void ExecuteEvent( CASEventWithError action, string error )
+        internal static void UnityLog( string message )
         {
-            if (action == null)
-                return;
-            if (executeEventsOnUnityThread)
-            {
-                EventExecutor.Add( () => action( error ) );
-                return;
-            }
-            try
-            {
-                action( error );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
+            if (GetAdsSettings().isDebugMode)
+                Debug.Log( "[CleverAdsSolutions] " + message );
         }
-
-        internal static void ExecuteEvent( CASEventWithMeta action, AdMetaData meta )
-        {
-            if (action == null)
-                return;
-            if (executeEventsOnUnityThread)
-            {
-                EventExecutor.Add( () => action( meta ) );
-                return;
-            }
-            try
-            {
-                action( meta );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-        }
-
-        internal static void ExecuteEvent( CASTypedEvent action, int typeId )
-        {
-            if (action == null)
-                return;
-            if (executeEventsOnUnityThread)
-            {
-                EventExecutor.Add( () => action( ( AdType )typeId ) );
-                return;
-            }
-            try
-            {
-                action( ( AdType )typeId );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-        }
-
-        internal static void ExecuteEvent( CASTypedEventWithError action, int typeId, string error )
-        {
-            if (action == null)
-                return;
-            if (executeEventsOnUnityThread)
-            {
-                EventExecutor.Add( () => action( ( AdType )typeId, error ) );
-                return;
-            }
-            try
-            {
-                action( ( AdType )typeId, error );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-        }
-
-        internal static void ExecuteEvent( InitCompleteAction action, bool success, string error )
-        {
-            if (action == null)
-                return;
-            if (executeEventsOnUnityThread)
-            {
-                EventExecutor.Add( () => action( success, error ) );
-                return;
-            }
-            try
-            {
-                action( success, error );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-        }
-        #endregion
     }
 }

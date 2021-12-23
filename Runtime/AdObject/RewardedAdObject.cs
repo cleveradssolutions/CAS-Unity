@@ -37,19 +37,16 @@ namespace CAS.AdObject
         #region MonoBehaviour
         private void Start()
         {
-            try
-            {
+            MobileAds.settings.isExecuteEventsOnUnityThread = true;
+            if (!CASFactory.TryGetManagerByIndexAsync( OnManagerReady, managerId.index ))
                 OnAdFailedToLoad.Invoke( "Manager not initialized yet" );
-            }
-            finally
-            {
-                MobileAds.settings.isExecuteEventsOnUnityThread = true;
-                CASFactory.GetReadyManagerByIndexAsync( OnManagerReady, managerId.index );
-            }
         }
 
         private void OnManagerReady( IMediationManager manager )
         {
+            if (!this) // When object are destroyed
+                return;
+
             this.manager = manager;
             manager.OnLoadedAd += OnRewardedAdLoaded;
             manager.OnFailedToLoadAd += OnRewardedAdFailedToLoad;

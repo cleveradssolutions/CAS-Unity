@@ -10,8 +10,8 @@ namespace CAS.Android
         #region Clever Ads Solutions SDK class names
         internal const string NativeBridgeClassName = "com.cleversolutions.ads.unity.CASBridge";
         internal const string NativeSettingsClassName = "com.cleversolutions.ads.unity.CASBridgeSettings";
+        //internal const string NativeViewClassName = "com.cleversolutions.ads.unity.CASViewWrapper";
         internal const string AdCallbackClassName = "com.cleversolutions.ads.unity.CASCallback";
-        internal const string AdLoadCallbackClassName = "com.cleversolutions.ads.AdLoadCallback";
         internal const string OnInitializationListenerClassName = "com.cleversolutions.ads.OnInitializationListener";
 
         internal const string UnityActivityClassName = "com.unity3d.player.UnityPlayer";
@@ -49,26 +49,25 @@ namespace CAS.Android
 
         public void onInitialization( bool success, AndroidJavaObject error )
         {
-            if (MobileAds.settings.isDebugMode)
-                Debug.Log( "[CleverAdsSolutions] onInitialization " + success );
-            manager.initializationListener = null;
-            CASFactory.ExecuteEvent( initCompleteAction, success, "" );
-            initCompleteAction = null;
+            onInitialization( success, "" );
         }
 
         public void onInitialization( bool success, string error )
         {
-            if (MobileAds.settings.isDebugMode)
+            if (CASFactory.isDebug)
                 Debug.Log( "[CleverAdsSolutions] onInitialization " + success );
             manager.initializationListener = null;
-            CASFactory.ExecuteEvent( initCompleteAction, success, error );
+            if (initCompleteAction != null)
+                CASFactory.ExecuteEvent( () => initCompleteAction( success, error ) );
             initCompleteAction = null;
         }
     }
 
-    internal class AdCallbackProxy : AndroidJavaProxy
+    internal class AdEventsProxy : AndroidJavaProxy
     {
         private readonly AdType adType;
+        public event Action OnAdLoaded;
+        public event CASEventWithAdError OnAdFailed;
         public event Action OnAdShown;
         public event CASEventWithMeta OnAdOpening;
         public event CASEventWithError OnAdFailedToShow;
@@ -76,77 +75,79 @@ namespace CAS.Android
         public event Action OnAdCompleted;
         public event Action OnAdClosed;
 
-        public AdCallbackProxy( AdType adType ) : base( CASJavaProxy.AdCallbackClassName )
+        public AdEventsProxy( AdType adType ) : base( CASJavaProxy.AdCallbackClassName )
         {
             this.adType = adType;
         }
 
+        public void onLoaded()
+        {
+            if (CASFactory.isDebug)
+                Debug.Log( "[CleverAdsSolutions] onLoaded " + adType.ToString() );
+            CASFactory.ExecuteEvent( OnAdLoaded );
+        }
+
+        public void onFailed( int error )
+        {
+            if (CASFactory.isDebug)
+                Debug.Log( "[CleverAdsSolutions] onFailed " + adType.ToString() + " error: " + Enum.GetName( typeof( AdError ), error ) );
+            if (OnAdFailed != null)
+            {
+                CASFactory.ExecuteEvent( () =>
+                {
+                    if (OnAdFailed != null) OnAdFailed( ( AdError )error );
+                } );
+            }
+        }
+
         public void onOpening( int net, double cpm, int accuracy )
         {
-            if (MobileAds.settings.isDebugMode)
+            if (CASFactory.isDebug)
                 Debug.Log( "[CleverAdsSolutions] onOpening " + adType.ToString() + " net: " + net + " cpm: " + cpm + " accuracy: " + accuracy );
             CASFactory.ExecuteEvent( OnAdShown );
             if (OnAdOpening != null)
             {
-                CASFactory.ExecuteEvent( OnAdOpening,
-                    new AdMetaData( adType, ( AdNetwork )net, cpm, ( PriceAccuracy )accuracy ) );
+                CASFactory.ExecuteEvent( () =>
+                {
+                    if (OnAdOpening != null)
+                        OnAdOpening( new AdMetaData( adType, ( AdNetwork )net, cpm, ( PriceAccuracy )accuracy ) );
+                } );
             }
         }
 
         public void onShowFailed( string message )
         {
-            if (MobileAds.settings.isDebugMode)
+            if (CASFactory.isDebug)
                 Debug.Log( "[CleverAdsSolutions] onShowFailed " + adType.ToString() + " with error: " + message );
-            CASFactory.ExecuteEvent( OnAdFailedToShow, message );
+            if (OnAdFailedToShow != null)
+            {
+                CASFactory.ExecuteEvent( () =>
+                {
+                    if (OnAdFailedToShow != null)
+                        OnAdFailedToShow( message );
+                } );
+            }
         }
 
         public void onClicked()
         {
-            if (MobileAds.settings.isDebugMode)
+            if (CASFactory.isDebug)
                 Debug.Log( "[CleverAdsSolutions] onClicked " + adType.ToString() );
             CASFactory.ExecuteEvent( OnAdClicked );
         }
 
         public void onComplete()
         {
-            if (MobileAds.settings.isDebugMode)
+            if (CASFactory.isDebug)
                 Debug.Log( "[CleverAdsSolutions] onComplete " + adType.ToString() );
             CASFactory.ExecuteEvent( OnAdCompleted );
         }
 
         public void onClosed()
         {
-            if (MobileAds.settings.isDebugMode)
+            if (CASFactory.isDebug)
                 Debug.Log( "[CleverAdsSolutions] onClosed " + adType.ToString() );
             CASFactory.ExecuteEvent( OnAdClosed );
-        }
-    }
-
-    internal class AdLoadCallbackProxy : AndroidJavaProxy
-    {
-        public event CASTypedEvent OnLoadedAd;
-        public event CASTypedEventWithError OnFailedToLoadAd;
-
-        public AdLoadCallbackProxy() : base( CASJavaProxy.AdLoadCallbackClassName ) { }
-
-        public void onAdLoaded( AndroidJavaObject type )
-        {
-            if (OnLoadedAd == null)
-                return;
-            int typeId = type.Call<int>( "ordinal" );
-            if (MobileAds.settings.isDebugMode)
-                Debug.Log( "[CleverAdsSolutions] onAdLoaded " + typeId );
-            CASFactory.ExecuteEvent( OnLoadedAd, typeId );
-        }
-
-        public void onAdFailedToLoad( AndroidJavaObject type, string error )
-        {
-            if (OnFailedToLoadAd == null)
-                return;
-            int typeId = type.Call<int>( "ordinal" );
-            if (MobileAds.settings.isDebugMode)
-                Debug.Log( "[CleverAdsSolutions] onAdFailedToLoad " + typeId );
-            CASFactory.ExecuteEvent( OnFailedToLoadAd, typeId, error );
         }
     }
 }

@@ -33,7 +33,7 @@ namespace CAS.AdObject
                     if (manager != null)
                         manager.SetAppReturnAdsEnabled( _allowReturnToPlayAd );
                     else
-                        CASFactory.GetReadyManagerByIndexAsync( OnManagerReady, managerId.index );
+                        CASFactory.TryGetManagerByIndexAsync( OnManagerReady, managerId.index );
                 }
             }
         }
@@ -41,15 +41,9 @@ namespace CAS.AdObject
         #region MonoBehaviour
         private void Start()
         {
-            try
-            {
+            MobileAds.settings.isExecuteEventsOnUnityThread = true;
+            if (!CASFactory.TryGetManagerByIndexAsync( OnManagerReady, managerId.index ))
                 OnAdFailedToLoad.Invoke( "Manager not initialized yet" );
-            }
-            finally
-            {
-                MobileAds.settings.isExecuteEventsOnUnityThread = true;
-                CASFactory.GetReadyManagerByIndexAsync( OnManagerReady, managerId.index );
-            }
         }
 
         private void OnManagerReady( IMediationManager manager )

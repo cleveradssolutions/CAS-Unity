@@ -17,33 +17,18 @@
                       enable:(NSUInteger)types
                       demoAd:(BOOL)demoAd
                    forClient:(CASUTypeManagerClientRef _Nullable *_Nullable)client
-             mediationExtras:(NSDictionary<NSString *, NSString *> *_Nullable)extras
+             mediationExtras:(NSMutableDictionary<NSString *, NSString *> *_Nullable)extras
                       onInit:(nullable CASUInitializationCompleteCallback)onInit;
 
-@property (nonatomic, strong, nonnull) CASMediationManager *mediationManager;
-@property (nonatomic, strong, nullable) CASBannerView *bannerView;
-@property (nonatomic, strong, nonnull) CASSize *bannerActiveSize;
-
-@property (nonatomic, strong, nullable) CASUCallback *bannerCallback;
-@property (nonatomic, strong, nullable) CASUCallback *interstitialCallback;
-@property (nonatomic, strong, nullable) CASUCallback *rewardedCallback;
+@property (nonatomic, assign) CASUTypeManagerClientRef _Nullable *_Nullable client;
+@property (nonatomic, strong, nonnull) CASMediationManager *casManager;
+@property (nonatomic, strong, nullable) CASUCallback *interCallback;
+@property (nonatomic, strong, nullable) CASUCallback *rewardCallback;
 @property (nonatomic, strong, nullable) CASUCallback *appReturnDelegate;
 
-@property (nonatomic, strong, nullable) NSLayoutConstraint *horizontalConstraint;
-@property (nonatomic, strong, nullable) NSLayoutConstraint *verticalConstraint;
+- (void)presentInter;
+- (void)presentReward;
 
-@property (nonatomic, assign) CASUTypeManagerClientRef _Nullable *_Nullable client;
-@property (nonatomic, assign, nullable) CASUDidAdLoadedCallback didAdLoadedCallback;
-@property (nonatomic, assign, nullable) CASUDidAdFailedToLoadCallback didAdFailedToLoadCallback;
-
-@property (nonatomic, readonly) CGFloat bannerHeightInPixels;
-@property (nonatomic, readonly) CGFloat bannerWidthInPixels;
-
-- (void)load:(CASType)type;
-- (void)show:(CASType)type;
-- (void)hideBanner;
-- (void)setBannerSize:(NSInteger)sizeId;
-- (void)setBannerPosition:(NSInteger)positionId;
 - (void)setLastPageAdFor:(NSString *_Nullable)content;
 - (void)enableReturnAds;
 - (void)disableReturnAds;

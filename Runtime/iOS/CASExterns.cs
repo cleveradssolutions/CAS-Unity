@@ -7,12 +7,26 @@ namespace CAS.iOS
     // Externs used by the iOS component.
     internal class CASExterns
     {
+        #region CAS Callback types
+        internal delegate void CASUDidLoadedAdCallback( IntPtr manager );
+        internal delegate void CASUDidFailedAdCallback( IntPtr manager, int error );
+        internal delegate void CASUWillOpeningWithMetaCallback( IntPtr manager, int net, double cpm, int accuracy );
+        internal delegate void CASUDidShowAdFailedWithErrorCallback( IntPtr manager, string error );
+        internal delegate void CASUDidClickedAdCallback( IntPtr manager );
+        internal delegate void CASUDidCompletedAdCallback( IntPtr manager );
+        internal delegate void CASUDidClosedAdCallback( IntPtr manager );
+
+        internal delegate void CASUInitializationCompleteCallback( IntPtr manager, bool success, string error );
+
+        internal delegate void CASUATTCompletion( int status );
+        #endregion
+
         #region CAS Settings
         [DllImport( "__Internal" )]
         internal static extern void CASUSetAnalyticsCollectionWithEnabled( bool enabled );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUSetPluginPlatformWithName( string name, string version );
+        internal static extern void CASUSetUnityVersion( string version );
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetTestDeviceWithIds( string[] testDeviceIDs, int testDeviceIDLength );
@@ -79,19 +93,6 @@ namespace CAS.iOS
         internal static extern void CASUOpenDebugger( IntPtr manager );
         #endregion
 
-        #region CAS Callback types
-        // Field Client is C# manager client ptr
-        internal delegate void CASUWillOpeningWithAdCallbackAndMeta( IntPtr client, int net, double cpm, int accuracy );
-        internal delegate void CASUDidShowAdFailedWithErrorCallback( IntPtr client, string error );
-        internal delegate void CASUDidClickedAdCallback( IntPtr client );
-        internal delegate void CASUDidCompletedAdCallback( IntPtr client );
-        internal delegate void CASUDidClosedAdCallback( IntPtr client );
-
-        internal delegate void CASUInitializationCompleteCallback( IntPtr client, bool success, string error );
-        internal delegate void CASUDidAdLoadedCallback( IntPtr client, int adType );
-        internal delegate void CASUDidAdFailedToLoadCallback( IntPtr client, int adType, string error );
-        #endregion
-
         #region CAS Manager
         [DllImport( "__Internal" )]
         internal static extern IntPtr CASUCreateManager(
@@ -115,84 +116,116 @@ namespace CAS.iOS
         );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUFreeManager( IntPtr manager );
+        internal static extern void CASUFreeManager( IntPtr managerRef );
+        #endregion
+
+        #region General Ads functions
+        [DllImport( "__Internal" )]
+        internal static extern string CASUGetLastActiveMediationWithType( IntPtr managerRef, int adType );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUSetLoadAdDelegate(
-            IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUDidAdLoadedCallback didLoaded,
-            CASUDidAdFailedToLoadCallback didFailedToLoad
-        );
+        internal static extern bool CASUIsAdEnabledType( IntPtr managerRef, int adType );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASULoadAdWithType( IntPtr manager, int adType );
+        internal static extern void CASUEnableAdType( IntPtr managerRef, int adType, bool enable );
 
         [DllImport( "__Internal" )]
-        internal static extern bool CASUIsAdReadyWithType( IntPtr manager, int adType );
-
-        [DllImport( "__Internal" )]
-        internal static extern void CASUShowAdWithType( IntPtr manager, int adType );
-
-        [DllImport( "__Internal" )]
-        internal static extern string CASUGetLastActiveMediationWithType( IntPtr manager, int adType );
-
-        [DllImport( "__Internal" )]
-        internal static extern bool CASUIsAdEnabledType( IntPtr manager, int adType );
-
-        [DllImport( "__Internal" )]
-        internal static extern void CASUEnableAdType( IntPtr manager, int adType, bool enable );
-
-        [DllImport( "__Internal" )]
-        internal static extern void CASUSetLastPageAdContent( IntPtr manager, string contentJson );
+        internal static extern void CASUSetLastPageAdContent( IntPtr managerRef, string contentJson );
         #endregion
 
         #region Interstitial Ads
         [DllImport( "__Internal" )]
         internal static extern void CASUSetInterstitialDelegate(
-            IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillOpeningWithAdCallbackAndMeta willOpen,
+            IntPtr managerRef, // Manager Ptr from CASUCreateManager
+            CASUDidLoadedAdCallback didLoad,
+            CASUDidFailedAdCallback didFaied,
+            CASUWillOpeningWithMetaCallback willOpen,
             CASUDidShowAdFailedWithErrorCallback didShowWithError,
             CASUDidClickedAdCallback didClick,
             CASUDidClosedAdCallback didClosed
         );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASULoadInterstitial( IntPtr managerRef );
+
+        [DllImport( "__Internal" )]
+        internal static extern bool CASUIsInterstitialReady( IntPtr managerRef );
+
+        [DllImport( "__Internal" )]
+        internal static extern bool CASUPresentInterstitial( IntPtr managerRef );
         #endregion
 
         #region Rewarded Ads
         [DllImport( "__Internal" )]
         internal static extern void CASUSetRewardedDelegate(
             IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillOpeningWithAdCallbackAndMeta willOpen,
+            CASUDidLoadedAdCallback didLoad,
+            CASUDidFailedAdCallback didFaied,
+            CASUWillOpeningWithMetaCallback willOpen,
             CASUDidShowAdFailedWithErrorCallback didShowWithError,
             CASUDidClickedAdCallback didClick,
             CASUDidCompletedAdCallback didComplete,
             CASUDidClosedAdCallback didClosed
         );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASULoadReward( IntPtr managerRef );
+
+        [DllImport( "__Internal" )]
+        internal static extern bool CASUIsRewardedReady( IntPtr managerRef );
+
+        [DllImport( "__Internal" )]
+        internal static extern bool CASUPresentRewarded( IntPtr managerRef );
         #endregion
 
-        #region Banner Ads
+        #region AdView
         [DllImport( "__Internal" )]
-        internal static extern void CASUSetBannerDelegate(
-            IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillOpeningWithAdCallbackAndMeta willOpen,
-            CASUDidShowAdFailedWithErrorCallback didShowWithError,
-            CASUDidClickedAdCallback didClick,
-            CASUDidClosedAdCallback didClosed
+        internal static extern IntPtr CASUCreateAdView(
+            IntPtr managerRef, // Manager Ptr from CASUCreateManager
+            IntPtr client, // C# manager client ptr
+            int adSizeCode
         );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUHideBanner( IntPtr manager );
+        internal static extern void CASUDestroyAdView( IntPtr viewRef, IntPtr managerRef, int adSizeCode );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUSetBannerSize( IntPtr manager, int bannerSize );
+        internal static extern void CASUAttachAdViewDelegate(
+            IntPtr viewRef,
+            CASUDidLoadedAdCallback didLoad,
+            CASUDidFailedAdCallback didFailed,
+            CASUWillOpeningWithMetaCallback willPresent,
+            CASUDidClickedAdCallback didClicked );
 
         [DllImport( "__Internal" )]
-        internal static extern void CASUSetBannerPosition( IntPtr manager, int bannerPos );
+        internal static extern void CASUPresentAdView( IntPtr viewRef );
 
         [DllImport( "__Internal" )]
-        internal static extern float CASUGetBannerHeightInPixels( IntPtr manager );
+        internal static extern void CASUHideAdView( IntPtr viewRef );
 
         [DllImport( "__Internal" )]
-        internal static extern float CASUGetBannerWidthInPixels( IntPtr manager );
+        internal static extern void CASUSetAdViewPosition( IntPtr viewRef, int posCode, int x, int y );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSetAdViewRefreshInterval( IntPtr viewRef, int interval );
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASULoadAdView( IntPtr viewRef );
+
+        [DllImport( "__Internal" )]
+        internal static extern bool CASUIsAdViewReady( IntPtr viewRef );
+
+        [DllImport( "__Internal" )]
+        internal static extern int CASUGetAdViewHeightInPixels( IntPtr viewRef );
+
+        [DllImport( "__Internal" )]
+        internal static extern int CASUGetAdViewWidthInPixels( IntPtr viewRef );
+
+        [DllImport( "__Internal" )]
+        internal static extern int CASUGetAdViewXOffsetInPixels( IntPtr viewRef );
+
+        [DllImport( "__Internal" )]
+        internal static extern int CASUGetAdViewYOffsetInPixels( IntPtr viewRef );
         #endregion
 
         #region App Return Ads
@@ -200,7 +233,7 @@ namespace CAS.iOS
         [DllImport( "__Internal" )]
         internal static extern void CASUSetAppReturnDelegate(
             IntPtr manager, // Manager Ptr from CASUCreateManager
-            CASUWillOpeningWithAdCallbackAndMeta willOpen,
+            CASUWillOpeningWithMetaCallback willOpen,
             CASUDidShowAdFailedWithErrorCallback didShowWithError,
             CASUDidClickedAdCallback didClick,
             CASUDidClosedAdCallback didClosed
@@ -215,6 +248,12 @@ namespace CAS.iOS
         [DllImport( "__Internal" )]
         internal static extern void CASUSkipNextAppReturnAds( IntPtr manager );
         #endregion
+
+        [DllImport( "__Internal" )]
+        internal static extern void CASURequestATT( CASUATTCompletion callback );
+
+        [DllImport( "__Internal" )]
+        internal static extern int CASUGetATTStatus();
     }
 }
 #endif

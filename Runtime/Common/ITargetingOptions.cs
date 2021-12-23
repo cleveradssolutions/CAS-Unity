@@ -5,6 +5,9 @@
         Unknown, Male, Female
     }
 
+    /// <summary>
+    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Targeting-Options
+    /// </summary>
     public interface ITargetingOptions
     {
         /// <summary>

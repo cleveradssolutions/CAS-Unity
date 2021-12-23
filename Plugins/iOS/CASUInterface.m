@@ -8,11 +8,10 @@
 #import <Foundation/Foundation.h>
 #import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
 #import "CASUManager.h"
+#import "CASUView.h"
 #import "CASUTypes.h"
 #import "CASUPluginUtil.h"
-#if __has_include("UnityAppController.h")
-#import "UnityAppController.h"
-#endif
+#import "CASUATTManager.h"
 
 static NSString * CASUStringFromUTF8String(const char *bytes)
 {
@@ -36,12 +35,12 @@ void CASUSetAnalyticsCollectionWithEnabled(BOOL enabled)
     [[CAS settings] setAnalyticsCollectionWithEnabled:enabled];
 }
 
-void CASUSetPluginPlatformWithName(const char *name, const char *version)
+void CASUSetUnityVersion(const char *version)
 {
-    [[CAS settings] setPluginPlatformWithName:CASUStringFromUTF8String(name) version:CASUStringFromUTF8String(version)];
+    [[CAS settings] setPluginPlatformWithName:@"Unity" version:CASUStringFromUTF8String(version)];
 }
 
-void CASUSetTestDeviceWithIds(const char **testDeviceIDs, NSInteger testDeviceIDLength)
+void CASUSetTestDeviceWithIds(const char **testDeviceIDs, int testDeviceIDLength)
 {
     NSMutableArray *testDeviceIDsArray = [[NSMutableArray alloc] init];
     for (int i = 0; i < testDeviceIDLength; i++) {
@@ -50,32 +49,32 @@ void CASUSetTestDeviceWithIds(const char **testDeviceIDs, NSInteger testDeviceID
     [[CAS settings] setTestDeviceWithIds:testDeviceIDsArray];
 }
 
-void CASUSetBannerRefreshWithInterval(NSInteger interval)
+void CASUSetBannerRefreshWithInterval(int interval)
 {
     [[CAS settings] setBannerRefreshWithInterval:interval];
 }
 
-void CASUSetInterstitialWithInterval(NSInteger interval)
+void CASUSetInterstitialWithInterval(int interval)
 {
     [[CAS settings] setInterstitialWithInterval:interval];
 }
 
-void CASURestartInterstitialInterval()
+void CASURestartInterstitialInterval(void)
 {
     [[CAS settings] restartInterstitialInterval];
 }
 
-void CASUUpdateUserConsent(NSInteger consent)
+void CASUUpdateUserConsent(int consent)
 {
     [[CAS settings] updateUserWithConsent:(CASConsentStatus)consent];
 }
 
-void CASUUpdateCCPAWithStatus(NSInteger doNotSell)
+void CASUUpdateCCPAWithStatus(int doNotSell)
 {
     [[CAS settings] updateCCPAWithStatus:(CASCCPAStatus)doNotSell];
 }
 
-void CASUSetTaggedWithAudience(NSInteger audience)
+void CASUSetTaggedWithAudience(int audience)
 {
     [[CAS settings] setTaggedWithAudience:(CASAudience)audience];
 }
@@ -90,7 +89,7 @@ void CASUSetMuteAdSoundsTo(BOOL muted)
     [[CAS settings] setMuteAdSoundsTo:muted];
 }
 
-void CASUSetLoadingWithMode(NSInteger mode)
+void CASUSetLoadingWithMode(int mode)
 {
     [[CAS settings] setLoadingWithMode:(CASLoadingManagerMode)mode];
 }
@@ -112,26 +111,25 @@ void CASUSetTrackLocationEnabled(BOOL enabled)
 
 #pragma mark - User targeting options
 
-void CASUSetUserGender(NSInteger gender)
+void CASUSetUserGender(int gender)
 {
     [[CAS targetingOptions] setGender:(Gender)gender];
 }
 
-void CASUSetUserAge(NSInteger age)
+void CASUSetUserAge(int age)
 {
     [[CAS targetingOptions] setAge:age];
 }
 
 #pragma mark - Utils
 
-void CASUValidateIntegration()
+void CASUValidateIntegration(void)
 {
     [CAS validateIntegration];
 }
 
 void CASUOpenDebugger(CASUTypeManagerRef manager)
 {
-#if __has_include("UnityAppController.h")
     UIStoryboard *storyboard =
         [UIStoryboard storyboardWithName:@"CASTestSuit"
                                   bundle:[NSBundle bundleForClass:[CASUManager class]]];
@@ -142,8 +140,7 @@ void CASUOpenDebugger(CASUTypeManagerRef manager)
     if (storyboard) {
         UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"DebuggerController"];
         if (vc) {
-            UIViewController *root = ((UnityAppController *)[UIApplication sharedApplication].delegate).rootViewController;
-
+            UIViewController *root = [CASUPluginUtil unityGLViewController];
             SEL selector = NSSelectorFromString(@"setTargetManager:");
             if (![vc respondsToSelector:selector]) {
                 NSLog(@"[CAS] Framework bridge cant connect to CASTestSuit");
@@ -151,22 +148,21 @@ void CASUOpenDebugger(CASUTypeManagerRef manager)
             }
 
             CASUManager *internalManager = (__bridge CASUManager *)manager;
-            [vc performSelector:selector withObject:[internalManager mediationManager]];
+            [vc performSelector:selector withObject:[internalManager casManager]];
             vc.modalPresentationStyle = UIModalPresentationFullScreen;
             [root presentViewController:vc animated:YES completion:nil];
             return;
         }
     }
-#endif
     NSLog(@"[CAS] Framework bridge cant find CASDebugger");
 }
 
-const char * CASUGetActiveMediationPattern()
+const char * CASUGetActiveMediationPattern(void)
 {
     return cStringCopy([CASNetwork getActiveNetworkPattern].UTF8String);
 }
 
-BOOL CASUIsActiveMediationNetwork(NSInteger net)
+BOOL CASUIsActiveMediationNetwork(int net)
 {
     NSArray *values = [CASNetwork values];
     if (net > 0 && net < [values count]) {
@@ -175,7 +171,7 @@ BOOL CASUIsActiveMediationNetwork(NSInteger net)
     return NO;
 }
 
-const char * CASUGetSDKVersion()
+const char * CASUGetSDKVersion(void)
 {
     return cStringCopy([CAS getSDKVersion].UTF8String);
 }
@@ -195,9 +191,8 @@ CASUTypeManagerRef CASUCreateManager(CASUTypeManagerClientRef           *client,
                                  forClient:client
                            mediationExtras:nil
                                     onInit:onInit];
-
     CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
-    [cache saveObject:manager withKey:manager.mediationManager.managerID];
+    [cache saveObject:manager withKey:manager.casManager.managerID];
     return (__bridge CASUTypeManagerRef)manager;
 }
 
@@ -223,158 +218,225 @@ CASUTypeManagerRef CASUCreateManagerWithExtras(CASUTypeManagerClientRef         
                                     onInit:onInit];
 
     CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
-    [cache saveObject:manager withKey:manager.mediationManager.managerID];
+    [cache saveObject:manager withKey:manager.casManager.managerID];
     return (__bridge CASUTypeManagerRef)manager;
 }
 
-void CASUFreeManager(CASUTypeManagerRef manager)
+void CASUFreeManager(CASUTypeManagerRef managerRef)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.mediationManager.adLoadDelegate = nil;
-    internalManager.bannerView.delegate = nil;
-    internalManager.bannerCallback = nil;
-    internalManager.interstitialCallback = nil;
-    internalManager.rewardedCallback = nil;
-    internalManager.appReturnDelegate = nil;
-    [internalManager disableReturnAds];
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    manager.casManager.adLoadDelegate = nil;
+    manager.interCallback = nil;
+    manager.rewardCallback = nil;
+    manager.appReturnDelegate = nil;
+    [manager disableReturnAds];
     CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
-    [cache removeObjectWithKey:internalManager.mediationManager.managerID];
+    [cache removeObjectWithKey:manager.casManager.managerID];
 }
 
 #pragma mark - General Ads functions
-void CASUSetLoadAdDelegate(CASUTypeManagerRef            manager,
-                           CASUDidAdLoadedCallback       didLoaded,
-                           CASUDidAdFailedToLoadCallback didFailedToLoad)
+const char * CASUGetLastActiveMediationWithType(CASUTypeManagerRef managerRef, int adType)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.didAdLoadedCallback = didLoaded;
-    internalManager.didAdFailedToLoadCallback = didFailedToLoad;
-    internalManager.mediationManager.adLoadDelegate = internalManager;
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    return cStringCopy([manager.casManager getLastActiveMediationWithType:(CASType)adType].UTF8String);
 }
 
-void CASULoadAdWithType(CASUTypeManagerRef manager, NSInteger adType)
+BOOL CASUIsAdEnabledType(CASUTypeManagerRef managerRef, int adType)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    [internalManager load:(CASType)adType];
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    return [manager.casManager isAdReadyWithType:(CASType)adType];
 }
 
-BOOL CASUIsAdReadyWithType(CASUTypeManagerRef manager, NSInteger adType)
+void CASUEnableAdType(CASUTypeManagerRef managerRef, int adType, BOOL enable)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    return [internalManager.mediationManager isAdReadyWithType:(CASType)adType];
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    [manager.casManager setEnabled:enable type:(CASType)adType];
 }
 
-void CASUShowAdWithType(CASUTypeManagerRef manager, NSInteger adType)
+void CASUSetLastPageAdContent(CASUTypeManagerRef managerRef, const char *contentJson)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    [internalManager show:(CASType)adType];
-}
-
-const char * CASUGetLastActiveMediationWithType(CASUTypeManagerRef manager, NSInteger adType)
-{
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    return cStringCopy([internalManager.mediationManager getLastActiveMediationWithType:(CASType)adType].UTF8String);
-}
-
-BOOL CASUIsAdEnabledType(CASUTypeManagerRef manager, NSInteger adType)
-{
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    return [internalManager.mediationManager isAdReadyWithType:(CASType)adType];
-}
-
-void CASUEnableAdType(CASUTypeManagerRef manager, NSInteger adType, BOOL enable)
-{
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    [internalManager.mediationManager setEnabled:enable type:(CASType)adType];
-}
-
-void CASUSetLastPageAdContent(CASUTypeManagerRef manager, const char *contentJson)
-{
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    [internalManager setLastPageAdFor:CASUStringFromUTF8String(contentJson)];
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    [manager setLastPageAdFor:CASUStringFromUTF8String(contentJson)];
 }
 
 #pragma mark - Interstitial Ads
 
-void CASUSetInterstitialDelegate(CASUTypeManagerRef                   manager,
-                                 CASUWillOpeningWithAdCallbackAndMeta willOpen,
+void CASUSetInterstitialDelegate(CASUTypeManagerRef                   managerRef,
+                                 CASUDidLoadedAdCallback              didLoaded,
+                                 CASUDidFailedAdCallback              didFailed,
+                                 CASUWillOpeningWithMetaCallback      willOpen,
                                  CASUDidShowAdFailedWithErrorCallback didShowWithError,
                                  CASUDidClickedAdCallback             didClick,
                                  CASUDidClosedAdCallback              didClosed)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.interstitialCallback.willOpeningCallback = willOpen;
-    internalManager.interstitialCallback.didShowFailedCallback = didShowWithError;
-    internalManager.interstitialCallback.didClickCallback = didClick;
-    internalManager.interstitialCallback.didClosedCallback = didClosed;
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    manager.interCallback.didLoadedCallback = didLoaded;
+    manager.interCallback.didFailedCallback = didFailed;
+    manager.interCallback.willOpeningCallback = willOpen;
+    manager.interCallback.didShowFailedCallback = didShowWithError;
+    manager.interCallback.didClickCallback = didClick;
+    manager.interCallback.didClosedCallback = didClosed;
+}
+
+void CASULoadInterstitial(CASUTypeManagerRef managerRef)
+{
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    [manager.casManager loadInterstitial];
+}
+
+BOOL CASUIsInterstitialReady(CASUTypeManagerRef managerRef)
+{
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    return [manager.casManager isAdReadyWithType:CASTypeInterstitial];
+}
+
+void CASUPresentInterstitial(CASUTypeManagerRef managerRef)
+{
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    [manager presentInter];
 }
 
 #pragma mark - Rewarded Ads
 
-void CASUSetRewardedDelegate(CASUTypeManagerRef                   manager,
-                             CASUWillOpeningWithAdCallbackAndMeta willOpen,
+void CASUSetRewardedDelegate(CASUTypeManagerRef                   managerRef,
+                             CASUDidLoadedAdCallback              didLoaded,
+                             CASUDidFailedAdCallback              didFailed,
+                             CASUWillOpeningWithMetaCallback      willOpen,
                              CASUDidShowAdFailedWithErrorCallback didShowWithError,
                              CASUDidClickedAdCallback             didClick,
                              CASUDidCompletedAdCallback           didComplete,
                              CASUDidClosedAdCallback              didClosed)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.rewardedCallback.willOpeningCallback = willOpen;
-    internalManager.rewardedCallback.didShowFailedCallback = didShowWithError;
-    internalManager.rewardedCallback.didClickCallback = didClick;
-    internalManager.rewardedCallback.didCompleteCallback = didComplete;
-    internalManager.rewardedCallback.didClosedCallback = didClosed;
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    manager.rewardCallback.didLoadedCallback = didLoaded;
+    manager.rewardCallback.didFailedCallback = didFailed;
+    manager.rewardCallback.willOpeningCallback = willOpen;
+    manager.rewardCallback.didShowFailedCallback = didShowWithError;
+    manager.rewardCallback.didClickCallback = didClick;
+    manager.rewardCallback.didCompleteCallback = didComplete;
+    manager.rewardCallback.didClosedCallback = didClosed;
 }
 
-#pragma mark - Banner Ads
-
-void CASUSetBannerDelegate(CASUTypeManagerRef                   manager,
-                           CASUWillOpeningWithAdCallbackAndMeta willOpen,
-                           CASUDidShowAdFailedWithErrorCallback didShowWithError,
-                           CASUDidClickedAdCallback             didClick,
-                           CASUDidClosedAdCallback              didClosed)
+void CASULoadReward(CASUTypeManagerRef managerRef)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    internalManager.bannerCallback.willOpeningCallback = willOpen;
-    internalManager.bannerCallback.didShowFailedCallback = didShowWithError;
-    internalManager.bannerCallback.didClickCallback = didClick;
-    internalManager.bannerCallback.didClosedCallback = didClosed;
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    [manager.casManager loadRewardedAd];
 }
 
-void CASUHideBanner(CASUTypeManagerRef manager)
+BOOL CASUIsRewardedReady(CASUTypeManagerRef managerRef)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    [internalManager hideBanner];
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    return [manager.casManager isAdReadyWithType:CASTypeRewarded];
 }
 
-void CASUSetBannerSize(CASUTypeManagerRef manager, NSInteger bannerSize)
+void CASUPresentRewarded(CASUTypeManagerRef managerRef)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    [ internalManager setBannerSize:bannerSize];
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    [manager presentReward];
 }
 
-void CASUSetBannerPosition(CASUTypeManagerRef manager, NSInteger bannerPos)
+#pragma mark - AdView
+
+CASUTypeViewRef CASUCreateAdView(CASUTypeManagerRef    managerRef,
+                                 CASUTypeViewClientRef *client,
+                                 int                   adSizeCode)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    [internalManager setBannerPosition:bannerPos];
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    CASUView *view = [[CASUView alloc] initWithManager:manager.casManager forClient:client size:adSizeCode];
+    CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
+    [cache saveObject:view withKey:[NSString stringWithFormat:@"%@_%d", manager.casManager.managerID, adSizeCode]];
+    return (__bridge CASUTypeViewRef)view;
 }
 
-float CASUGetBannerHeightInPixels(CASUTypeManagerRef manager)
+void CASUDestroyAdView(CASUTypeViewRef    viewRef,
+                       CASUTypeManagerRef managerRef,
+                       int                adSizeCode)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    return internalManager.bannerHeightInPixels;
+    CASUView *view = (__bridge CASUView *)viewRef;
+    [view destroy];
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+    CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
+    [cache removeObjectWithKey:[NSString stringWithFormat:@"%@_%d", manager.casManager.managerID, adSizeCode]];
 }
 
-float CASUGetBannerWidthInPixels(CASUTypeManagerRef manager)
+void CASUAttachAdViewDelegate(CASUTypeViewRef                 viewRef,
+                              CASUDidLoadedAdCallback         didLoad,
+                              CASUDidFailedAdCallback         didFailed,
+                              CASUWillOpeningWithMetaCallback willPresent,
+                              CASUDidClickedAdCallback        didClicked)
 {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-    return internalManager.bannerWidthInPixels;
+    CASUView *view = (__bridge CASUView *)viewRef;
+    view.adLoadedCallback = didLoad;
+    view.adFailedCallback = didFailed;
+    view.adPresentedCallback = willPresent;
+    view.adClickedCallback = didClicked;
+    [view attach];
+}
+
+void CASUPresentAdView(CASUTypeViewRef viewRef)
+{
+    CASUView *view = (__bridge CASUView *)viewRef;
+    [view present];
+}
+
+void CASUHideAdView(CASUTypeViewRef viewRef)
+{
+    CASUView *view = (__bridge CASUView *)viewRef;
+    [view hide];
+}
+
+void CASUSetAdViewPosition(CASUTypeViewRef viewRef, int posCode, int x, int y)
+{
+    CASUView *view = (__bridge CASUView *)viewRef;
+    [view setPositionCode:posCode withX:x withY:y];
+}
+
+void CASUSetAdViewRefreshInterval(CASUTypeViewRef viewRef, int interval)
+{
+    CASUView *view = (__bridge CASUView *)viewRef;
+    [view setRefreshInterval:interval];
+}
+
+void CASULoadAdView(CASUTypeViewRef viewRef)
+{
+    CASUView *view = (__bridge CASUView *)viewRef;
+    [view load];
+}
+
+BOOL CASUIsAdViewReady(CASUTypeViewRef viewRef)
+{
+    CASUView *view = (__bridge CASUView *)viewRef;
+    return [view isReady];
+}
+
+int CASUGetAdViewHeightInPixels(CASUTypeViewRef viewRef)
+{
+    CASUView *view = (__bridge CASUView *)viewRef;
+    return view.heightInPixels;
+}
+
+int CASUGetAdViewWidthInPixels(CASUTypeViewRef viewRef)
+{
+    CASUView *view = (__bridge CASUView *)viewRef;
+    return view.widthInPixels;
+}
+
+int CASUGetAdViewXOffsetInPixels(CASUTypeViewRef viewRef)
+{
+    CASUView *view = (__bridge CASUView *)viewRef;
+    return view.xOffsetInPixels;
+}
+
+int CASUGetAdViewYOffsetInPixels(CASUTypeViewRef viewRef)
+{
+    CASUView *view = (__bridge CASUView *)viewRef;
+    return view.yOffsetInPixels;
 }
 
 #pragma mark - App Return Ads
 
 void CASUSetAppReturnDelegate(CASUTypeManagerRef                   manager,
-                              CASUWillOpeningWithAdCallbackAndMeta willOpen,
+                              CASUWillOpeningWithMetaCallback      willOpen,
                               CASUDidShowAdFailedWithErrorCallback didShowWithError,
                               CASUDidClickedAdCallback             didClick,
                               CASUDidClosedAdCallback              didClosed)
@@ -402,4 +464,16 @@ void CASUSkipNextAppReturnAds(CASUTypeManagerRef manager)
 {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
     [internalManager skipNextAppReturnAd];
+}
+
+#pragma mark - ATT API
+
+void CASURequestATT(CASUATTCompletion completion)
+{
+    [CASUATTManager trackingAuthorizationRequest:completion];
+}
+
+NSUInteger CASUGetATTStatus(void)
+{
+    return [CASUATTManager getTrackingAuthorizationStatus];
 }

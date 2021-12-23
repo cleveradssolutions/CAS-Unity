@@ -58,8 +58,8 @@ namespace CAS.UEditor
             var result = new char[networks.Length];
             for (int i = 0; i < networks.Length; i++)
             {
-                var dependency = manager.Find( ( ( AdNetwork )networks.GetValue( i ) ).GetName() );
-                result[i] = ( dependency != null && dependency.IsInstalled() ) ? '1' : '0';
+                var dependency = manager.Find( ( AdNetwork )networks.GetValue( i ) );
+                result[i] = ( dependency != null && dependency.IsInstalled() ) ? dependency.mediation : '0';
             }
             return new string( result );
         }
@@ -68,6 +68,8 @@ namespace CAS.UEditor
         {
             if (network == Dependency.noNetwork)
                 return null;
+            if (network == AdNetwork.MAX)
+                network = AdNetwork.AppLovin;
             return Find( network.GetName() );
         }
 
@@ -129,6 +131,7 @@ namespace CAS.UEditor
         }
 
         public string name;
+        public string altName = string.Empty;
         public string version;
         public AdNetwork require = noNetwork;
         public string url;
@@ -140,6 +143,7 @@ namespace CAS.UEditor
         public string comment;
         public Label labels = Label.Banner | Label.Inter | Label.Reward;
         public string embedFramework;
+        public char mediation = '1';
 
         public string installedVersion { get; set; }
         public bool isNewer { get; set; }
@@ -160,6 +164,11 @@ namespace CAS.UEditor
         public bool inBan { get; set; }
 
         public Dependency() { }
+
+        public Dependency( AdNetwork network )
+        {
+            this.name = network.GetName();
+        }
 
         public Dependency( AdNetwork network, string url, string version, int filter, AdNetwork? require, params string[] dependencies )
         {
