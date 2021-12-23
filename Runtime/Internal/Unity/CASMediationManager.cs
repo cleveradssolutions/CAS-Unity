@@ -323,7 +323,7 @@ namespace CAS.Unity
         {
             if (action == null)
                 return;
-            Log( "Event " + action.Target.GetType().FullName + "." + action.Method.Name );
+            //Log( "Event " + action.Target.GetType().FullName + "." + action.Method.Name );
             _eventsQueue.Add( action );
         }
 
@@ -331,7 +331,7 @@ namespace CAS.Unity
         {
             if (action == null)
                 return;
-            Log( "Event " + action.Target.GetType().FullName + "." + action.Method.Name );
+            //Log( "Event " + action.Target.GetType().FullName + "." + action.Method.Name );
             StartCoroutine( DelayAction( action, delay ) );
         }
 
