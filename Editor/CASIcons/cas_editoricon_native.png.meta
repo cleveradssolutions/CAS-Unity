@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: f276c06ecab4244a883d11b531139346
+labels:
+- CleverAdsSolutions
 TextureImporter:
   fileIDToRecycleName: {}
   externalObjects: {}
