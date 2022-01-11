@@ -19,8 +19,5 @@ To file bugs, make feature requests, or suggest improvements for the Unity Plugi
 ## Support
 mailto:support@cleveradssolutions.com
 
-Technical support Max skype: `m.shevchenko_15`  
-Network support Vitaly skype: `zanzavital`  
-
 ## License
 The CAS Unity plugin is available under a commercial license. See the LICENSE file for more info.
