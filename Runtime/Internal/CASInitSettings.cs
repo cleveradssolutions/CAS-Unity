@@ -7,15 +7,17 @@ namespace CAS
     [Serializable]
     public class CASInitSettings : ScriptableObject
     {
+        #region Fields
 #pragma warning disable 649 // is never assigned to, and will always have its default value null
         [Obsolete( "Please use IsTestAdMode() instead to get real runtime state." )]
         public bool testAdMode = false;
         [SerializeField]
         private string[] managerIds = { "demo" };
-        public AdFlags allowedAdFlags = AdFlags.Everything;
+        public AdFlags allowedAdFlags = AdFlags.None;
         [SerializeField]
         private Audience audienceTagged = Audience.Children;
-        public AdSize bannerSize = AdSize.Banner;
+        [Obsolete("Used only from obsolete Banner Size API. Better use new IAdView interface instead.")]
+        public AdSize bannerSize = 0;
 
         [SerializeField]
         private int bannerRefresh = 30;
@@ -36,6 +38,7 @@ namespace CAS
         internal Dictionary<string, string> extras;
         internal InitCompleteAction initListener;
 #pragma warning restore 649
+        #endregion
 
         /// <summary>
         /// Initialize new <see cref="IMediationManager"/> and save to <see cref="MobileAds.manager"/> field.
@@ -53,8 +56,8 @@ namespace CAS
         #region Initialization options
         /// <summary>
         /// An manager ID is a unique ID number assigned to each of your ad placements when they're created in CAS.
-        /// Using Manager Id at Index from list `Assets/CleverAdsSolutions/Settings` menu.
-        /// Index 0 by default when the method is not called.
+        /// <para>Using Manager Id at Index from list <b>`Assets/CleverAdsSolutions/Settings`</b> menu.</para>
+        /// <para>Index 0 by default when the method is not called.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
         public CASInitSettings WithManagerIdAtIndex( int index )
@@ -68,24 +71,6 @@ namespace CAS
         }
 
         /// <summary>
-        /// An manager ID is a unique ID number assigned to each of your ad placements when they're created in CAS.
-        /// The manager ID is added to your app's code and used to identify ad requests.
-        /// <b>Attention</b> The identifier is different for each platforms.
-        /// You need to define different identifiers depending on the current platform.
-        /// Or you can use a generic way to get the ID by ordinal index <see cref="WithManagerIdAtIndex(int)"/>
-        /// </summary>
-        /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
-        [Obsolete( "Please set Manager ID in `Assets>CleverAdsSolutions>Settings` menu to setup the project correctly. " +
-            "You can select Manager ID at index by WithManagerIdAtIndex(index)." )]
-        public CASInitSettings WithManagerId( string managerId )
-        {
-            if (string.IsNullOrEmpty( managerId ))
-                throw new ArgumentNullException( "managerId", "Manager ID is empty" );
-            targetId = managerId;
-            return this;
-        }
-
-        /// <summary>
         /// Set listener to initialization complete result callback.
         /// </summary>
         public CASInitSettings WithInitListener( InitCompleteAction listener )
@@ -95,27 +80,16 @@ namespace CAS
         }
 
         /// <summary>
-        /// Option to enable Test ad mode that will always request test ads.
-        /// If you're just looking to experiment with the SDK in a Hello World app, though, you can use the true with any manager ID string.
-        /// <b>Don't forget to set False test ad mode to release application.</b>
-        /// </summary>
-        [Obsolete( "Please set Test Ad Mode in `Assets>CleverAdsSolutions>Settings` menu to get true Test Ad." )]
-        public CASInitSettings WithTestAdMode( bool test )
-        {
-            testAdMode = test;
-            return this;
-        }
-
-        /// <summary>
         /// An Enabled Ad types is option to increase application performance by initializing only those ad types that will be used.
-        /// Changes in current session only.
-        /// Ad types can be enabled manually after initialize by <see cref="IMediationManager.SetEnableAd(AdType, bool)"/>
-        ///
-        /// For example: .withEnabledAdTypes(AdFlags.Banner | AdFlags.Interstitial)
+        /// <para>For example: .withEnabledAdTypes(AdFlags.Banner, AdFlags.Interstitial)</para>
+        /// <para>Changes in current session only.</para>
+        /// <para>Ad types can be enabled manually after initialize by <see cref="IMediationManager.SetEnableAd(AdType, bool)"/></para>
         /// </summary>
-        public CASInitSettings WithEnabledAdTypes( AdFlags adTypes )
+        public CASInitSettings WithEnabledAdTypes( params AdFlags[] adTypes )
         {
-            allowedAdFlags = adTypes;
+            allowedAdFlags = AdFlags.None;
+            for (int i = 0; i < adTypes.Length; i++)
+                allowedAdFlags |= adTypes[i];
             return this;
         }
 
@@ -141,9 +115,39 @@ namespace CAS
             return this;
         }
 
+        /// <summary>
+        /// An manager ID is a unique ID number assigned to each of your ad placements when they're created in CAS.
+        /// <para>Typically, Manager ID for Adnroid equals the App Bundle ID, and for iOS the iTunes ID.</para>
+        /// <para>The manager ID is added to your app's code and used to identify ad requests.</para>
+        /// <para><b>Attention</b> The identifier is different for each platforms.
+        /// You need to define different identifiers depending on the current platform.</para>
+        /// <para>You can use a generic way to get the ID by ordinal index <see cref="WithManagerIdAtIndex(int)"/> for current platform.</para>
+        /// <para>Please set all used Manager IDs in `Assets > CleverAdsSolutions > Settings` menu to setup the project correctly.</para>
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
+        public CASInitSettings WithManagerId( string managerId )
+        {
+            if (string.IsNullOrEmpty( managerId ))
+                throw new ArgumentNullException( "managerId", "Manager ID is empty" );
+            targetId = managerId;
+            return this;
+        }
+
+        /// <summary>
+        /// Option to enable Test ad mode that will always request test ads.
+        /// <para>If you're just looking to experiment with the SDK in a Hello World app, though, you can use the true with any manager ID string.</para>
+        /// <para><b>Don't forget to set False test ad mode to release application.</b></para>
+        /// </summary>
+        [Obsolete( "Please set Test Ad Mode in `Assets>CleverAdsSolutions>Settings` menu to get true Test Ad, " +
+            "also Development build work same." )]
+        public CASInitSettings WithTestAdMode( bool test )
+        {
+            testAdMode = test;
+            return this;
+        }
         #endregion
 
-        #region
+        #region Settings getters
         public Audience defaultAudienceTagged { get { return audienceTagged; } }
         public int defaultBannerRefresh { get { return bannerRefresh; } }
         public int defaultInterstitialInterval { get { return interstitialInterval; } }

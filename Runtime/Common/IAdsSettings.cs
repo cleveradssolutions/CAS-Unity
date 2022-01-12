@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace CAS
 {
+    /// <summary>
+    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws
+    /// </summary>
     public enum ConsentStatus
     {
         /// <summary>
@@ -19,6 +22,9 @@ namespace CAS
         Denied,
     }
 
+    /// <summary>
+    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws
+    /// </summary>
     public enum CCPAStatus
     {
         /// <summary>
@@ -35,6 +41,9 @@ namespace CAS
         OptInSale,
     }
 
+    /// <summary>
+    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws
+    /// </summary>
     public enum Audience
     {
         Mixed,
@@ -48,85 +57,87 @@ namespace CAS
         NotChildren,
     }
 
+    /// <summary>
+    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Configuring-SDK
+    /// </summary>
     public interface IAdsSettings
     {
         /// <summary>
         /// If your application uses Google Analytics (Firebase)
         /// then Clever Ads Solutions collects ad impressions and states analytics.  
-        /// This flag has no effect on ad revenue.
-        /// Disabling analytics collection may save internet traffic and improve application performance.
+        /// <para>This flag has no effect on ad revenue.</para>
+        /// <para>Disabling analytics collection may save internet traffic and improve application performance.</para>
         /// Disabled by default.
         /// </summary>
         bool analyticsCollectionEnabled { get; set; }
 
         /// <summary>
         /// An ad unit’s automatic refresh rate (in seconds) determines how often a new ad request is generated for that ad unit.  
-        /// Ad requests should not be made when the device screen is turned off.
-        /// We recomended using refresh rate 30 seconds.However,
-        /// you can choose any value you want longer than 10 seconds.
-        /// 30 seconds by default.
+        /// <para>Ad requests should not be made when the device screen is turned off.</para>
+        /// <para>We recomended using refresh rate 30 seconds.</para>
+        /// <para>However, you can choose any value you want longer than 10 seconds.</para>
+        /// <para>30 seconds by default.</para>
         /// </summary>
         int bannerRefreshInterval { get; set; }
 
         /// <summary>
         /// You can limit the posting of an interstitial ad to a period of time in seconds after the ad is closed,
         /// during which display attempts will fail.
-        /// Default: 0 seconds.
-        ///
-        /// Note that the interval starts only after the Interstitial Ad closes <see cref="IMediationManager.OnInterstitialAdClosed"/>.
-        /// If you need to wait for a period of time after the start of the game or after showing a Rewarded Ad
-        /// until next Interstitial Ad impression then please call the following method: <see cref="RestartInterstitialInterval"/>
+        /// <para>Default: 0 seconds.</para>
+        /// <para>Note that the interval starts only after the Interstitial Ad closes <see cref="IMediationManager.OnInterstitialAdClosed"/>.</para>
+        /// <para>If you need to wait for a period of time after the start of the game or after showing a Rewarded Ad
+        /// until next Interstitial Ad impression then please call the following method: <see cref="RestartInterstitialInterval"/></para>
         /// </summary>
         int interstitialInterval { get; set; }
 
         /// <summary>
         /// Restart interval until next Interstitial ad display.
-        /// By default, the interval before first Interstitial Ad impression is ignored.
-        /// You can use this method to delay displaying ad.
+        /// <para>By default, the interval before first Interstitial Ad impression is ignored.</para>
+        /// <para>You can use this method to delay displaying ad.</para>
         /// </summary>
         void RestartInterstitialInterval();
 
         /// <summary>
         /// GDPR user Consent SDK Implementation for ads on session.
-        /// Default: <see cref="ConsentStatus.Undefined"/>
+        /// <para>Default: <see cref="ConsentStatus.Undefined"/></para>
         /// </summary>
         ConsentStatus userConsent { get; set; }
 
         /// <summary>
         /// Whether or not user has opted out of the sale of their personal information.
-        /// Default: <see cref="CCPAStatus.Undefined"/>
+        /// <para>Default: <see cref="CCPAStatus.Undefined"/></para>
         /// </summary>
         CCPAStatus userCCPAStatus { get; set; }
 
         /// <summary>
         /// Ad filters by Audience
-        /// Default: <see cref="Audience.Mixed"/>
+        /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
         /// </summary>
         Audience taggedAudience { get; set; }
 
         /// <summary>
         /// The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdc with tag `CAS`.  
-        /// Disabling Debug Mode may improve application performance.
+        /// <para>Disabling Debug Mode may improve application performance.</para>
         /// Disabled by default.
         /// </summary>
         bool isDebugMode { get; set; }
 
         /// <summary>
         /// Sounds in ads mute state
-        /// Disabled by default.
+        /// <para>Disabled by default.</para>
         /// </summary>
         bool isMutedAdSounds { get; set; }
 
         /// <summary>
         /// CAS mediation processing mode of ad requests.
-        /// Default: <see cref="LoadingManagerMode.Optimal"/>
+        /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
         /// </summary>
         LoadingManagerMode loadingMode { get; set; }
 
         /// <summary>
         /// Identifiers corresponding to test devices which will always request test ads.
-        /// The test device identifier for the current device is logged to the console when the first
-        /// ad request is made.
+        /// <para>The test device identifier for the current device is logged to the console when the first
+        /// ad request is made.</para>
         /// </summary>
         void SetTestDeviceIds( List<string> testDeviceIds );
 
@@ -137,37 +148,32 @@ namespace CAS
 
         /// <summary>
         /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
-        /// You can use <see cref="EventExecutor.Add(Action)"/> to schedule each calls on the next Update() loop.
-        /// OR enable this property to automatically schedule all calls on the next Update() loop.
-        /// 
-        /// Disabled by default.
+        /// <para>You can use <see cref="EventExecutor.Add(Action)"/> to schedule each calls on the next Update() loop.
+        /// OR enable this property to automatically schedule all calls on the next Update() loop.</para>
+        /// <para>Disabled by default.</para>
         /// </summary>
         bool isExecuteEventsOnUnityThread { get; set; }
 
         /// <summary>
         /// This option will compare ad cost and serve regular interstitial ads
         /// when rewarded video ads are expected to generate less revenue.
-        /// Interstitial Ads does not require to watch the video to the end,
-        /// but the <see cref="IMediationManager.OnRewardedAdCompleted"/> callback will be triggered in any case.
-        ///
-        /// Disabled by default.
+        /// <para>Interstitial Ads does not require to watch the video to the end,
+        /// but the <see cref="IMediationManager.OnRewardedAdCompleted"/> callback will be triggered in any case.</para>
+        /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
         /// </summary>
         bool allowInterstitialAdsWhenVideoCostAreLower { get; set; }
 
         /// <summary>
         /// The SDK automatically collects location data if the user allowed the app to track the location.
-        ///
-        /// Only iOS supported right now.
-        /// 
-        /// Disabled by default.
+        /// <para>iOS supported only right now.</para>
+        /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
         /// </summary>
         bool trackLocationEnabled { get; set; }
 
         /// <summary>
         /// Indicates if the Unity app should be paused when a full screen ad (interstitial
         /// or rewarded video ad) is displayed.
-        /// 
-        /// Enabled by default.
+        /// <para>Enabled by default.</para>
         /// </summary>
         bool iOSAppPauseOnBackground { get; set; }
     }

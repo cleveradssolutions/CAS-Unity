@@ -21,17 +21,22 @@ namespace CAS.UEditor
             if (buildTarget != BuildTarget.iOS)
                 return;
 
-            var casSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS );
+            // Init Settings can be null
+            var initSettings = CASEditorUtils.GetSettingsAsset( BuildTarget.iOS, false );
+            var editorSettings = CASEditorSettings.Load();
             var depManager = DependencyManager.Create( BuildTarget.iOS, Audience.Mixed, true );
 
             string plistPath = Path.Combine( buildPath, "Info.plist" );
             PlistDocument plist = new PlistDocument();
             plist.ReadFromFile( plistPath );
 
-            UpdateGADAppId( casSettings, depManager, plist );
+            UpdateGADDelayMeasurement( plist, editorSettings );
+            UpdateGADAppId( plist, initSettings, depManager );
             UpdateSKAdNetworksInfo( plist );
             UpdateLSApplicationQueriesSchames( plist );
-            UpdateAppTransportSecuritySettingsIfNeeded( plist );
+            UpdateAppTransportSecuritySettings( plist );
+            SetAttributionReportEndpoint( plist, editorSettings );
+            SetDefaultUserTrackingDescription( plist, editorSettings );
 
             File.WriteAllText( plistPath, plist.WriteToString() );
 
@@ -40,17 +45,19 @@ namespace CAS.UEditor
             string frameworkTargetGuid;
             GetTargetsGUID( project, out mainTargetGuid, out frameworkTargetGuid );
 
-            project.AddBuildProperty( frameworkTargetGuid, "SWIFT_VERSION", "5.0" );
-            project.AddBuildProperty( frameworkTargetGuid, "CLANG_ENABLE_MODULES", "YES" );
+            var swiftVersion = project.GetBuildPropertyForAnyConfig( frameworkTargetGuid, "SWIFT_VERSION" );
+            if (string.IsNullOrEmpty( swiftVersion ))
+                project.SetBuildProperty( frameworkTargetGuid, "SWIFT_VERSION", "5.0" );
+            project.SetBuildProperty( frameworkTargetGuid, "CLANG_ENABLE_MODULES", "YES" );
 
-            CopyRawSettingsFile( buildPath, project, mainTargetGuid, casSettings );
+            CopyRawSettingsFile( buildPath, project, mainTargetGuid, initSettings );
             EnableSwiftForMainTarget( buildPath, project, mainTargetGuid );
-            EmbedSwiftStandardLibrariesIfNeeded( project, mainTargetGuid );
-            SetExecutablePathIfNeeded( buildPath, project, mainTargetGuid, depManager );
+            EmbedSwiftStandardLibraries( project, mainTargetGuid );
+            SetExecutablePath( buildPath, project, mainTargetGuid, depManager );
 
             SaveXCode( project, buildPath );
 
-            ApplyCrosspromoDynamicLinks( buildPath, mainTargetGuid, casSettings, depManager );
+            ApplyCrosspromoDynamicLinks( buildPath, mainTargetGuid, initSettings, depManager );
 
             Debug.Log( CASEditorUtils.logTag + "Postrocess Build done." );
         }
@@ -78,21 +85,35 @@ namespace CAS.UEditor
                 sw.WriteLine( "end" );
             }
         }
+#endif
 
         [PostProcessBuild( int.MaxValue )]
         public static void OnCocoaPodsReady( BuildTarget buildTarget, string buildPath )
         {
             if (buildTarget != BuildTarget.iOS)
                 return;
-            var depManager = DependencyManager.Create( BuildTarget.iOS, Audience.Mixed, true );
+
+            var editorSettings = CASEditorSettings.Load();
+            var needLocalizeUserTracking = IsNeedLocalizeUserTrackingDescription( editorSettings );
+            var needEmbedDynamicLibraries = IsNeedEmbedDynamicLibraries();
+            if (!needEmbedDynamicLibraries && !needLocalizeUserTracking)
+                return;
+
             var project = OpenXCode( buildPath );
             string mainTargetGuid;
             string frameworkTargetGuid;
             GetTargetsGUID( project, out mainTargetGuid, out frameworkTargetGuid );
-            EmbedDynamicLibrariesIfNeeded( buildPath, project, mainTargetGuid, depManager );
+            if (needLocalizeUserTracking)
+                LocalizeUserTrackingDescription( buildPath, project, mainTargetGuid, editorSettings );
+
+            if (needEmbedDynamicLibraries)
+            {
+                var depManager = DependencyManager.Create( BuildTarget.iOS, Audience.Mixed, true );
+                EmbedDynamicLibrariesIfNeeded( buildPath, project, mainTargetGuid, depManager );
+            }
+
             SaveXCode( project, buildPath );
         }
-#endif
 
         #region Utils
         private static string GetXCodeProjectPath( string buildPath )
@@ -128,8 +149,15 @@ namespace CAS.UEditor
         #endregion
 
         #region Info PList
-        private static void UpdateGADAppId( CASInitSettings casSettings, DependencyManager deps, PlistDocument plist )
+        private static void UpdateGADDelayMeasurement( PlistDocument plist, CASEditorSettings editorSettings )
         {
+            plist.root.SetBoolean( "GADDelayAppMeasurementInit", editorSettings.delayAppMeasurementGADInit );
+        }
+
+        private static void UpdateGADAppId( PlistDocument plist, CASInitSettings initSettings, DependencyManager deps )
+        {
+            if (!initSettings)
+                return;
             #region Read Admob App ID from CAS Settings
             bool admobAppIdRequired = deps == null;
             if (deps != null)
@@ -140,9 +168,9 @@ namespace CAS.UEditor
             }
 
             string admobAppId = null;
-            if (casSettings.managersCount > 0)
+            if (initSettings.managersCount > 0)
             {
-                string settingsPath = CASEditorUtils.GetNativeSettingsPath( BuildTarget.iOS, casSettings.GetManagerId( 0 ) );
+                string settingsPath = CASEditorUtils.GetNativeSettingsPath( BuildTarget.iOS, initSettings.GetManagerId( 0 ) );
                 if (File.Exists( settingsPath ))
                 {
                     try
@@ -151,12 +179,12 @@ namespace CAS.UEditor
                     }
                     catch (Exception e)
                     {
-                        if (!casSettings.IsTestAdMode() && admobAppIdRequired)
+                        if (!initSettings.IsTestAdMode() && admobAppIdRequired)
                             CASEditorUtils.StopBuildWithMessage( e.ToString(), BuildTarget.iOS );
                     }
                 }
             }
-            if (string.IsNullOrEmpty( admobAppId ) && casSettings.IsTestAdMode())
+            if (string.IsNullOrEmpty( admobAppId ) && initSettings.IsTestAdMode())
             {
                 admobAppId = CASEditorUtils.iosAdmobSampleAppID;
             }
@@ -165,7 +193,6 @@ namespace CAS.UEditor
 
             if (!string.IsNullOrEmpty( admobAppId ))
                 plist.root.SetString( "GADApplicationIdentifier", admobAppId );
-            plist.root.SetBoolean( "GADDelayAppMeasurementInit", true );
         }
 
         private static void UpdateSKAdNetworksInfo( PlistDocument plist )
@@ -199,15 +226,72 @@ namespace CAS.UEditor
 
         private static void UpdateLSApplicationQueriesSchames( PlistDocument plist )
         {
-            PlistElementArray applicationQueriesSchemes;
+
+            PlistElementArray schemesList;
             var applicationQueriesSchemesField = plist.root["LSApplicationQueriesSchemes"];
             if (applicationQueriesSchemesField == null)
-                applicationQueriesSchemes = plist.root.CreateArray( "LSApplicationQueriesSchemes" );
+                schemesList = plist.root.CreateArray( "LSApplicationQueriesSchemes" );
             else
-                applicationQueriesSchemes = applicationQueriesSchemesField.AsArray();
-            foreach (var scheme in new[] { "fb", "instagram", "tumblr", "twitter" })
-                if (applicationQueriesSchemes.values.Find( x => x.AsString() == scheme ) == null)
-                    applicationQueriesSchemes.AddString( scheme );
+                schemesList = applicationQueriesSchemesField.AsArray();
+            var schemes = new string[] { "fb", "instagram", "tumblr", "twitter" };
+            for (int i = 0; i < schemes.Length; i++)
+            {
+                var scheme = schemes[i];
+                if (string.IsNullOrEmpty( scheme ))
+                    continue;
+                var exist = false;
+                for (int findI = 0; findI < schemesList.values.Count; findI++)
+                {
+                    if (schemesList.values[findI].AsString() == scheme)
+                    {
+                        exist = true;
+                        break;
+                    }
+                }
+                if (!exist)
+                    schemesList.AddString( scheme );
+            }
+        }
+
+        private static void UpdateAppTransportSecuritySettings( PlistDocument plist )
+        {
+            PlistElement atsRoot;
+            plist.root.values.TryGetValue( "NSAppTransportSecurity", out atsRoot );
+
+            if (atsRoot == null || atsRoot.GetType() != typeof( PlistElementDict ))
+            {
+                // Add the missing App Transport Security settings for publishers if needed. 
+                Debug.Log( CASEditorUtils.logTag + "Adding App Transport Security settings..." );
+                atsRoot = plist.root.CreateDict( "NSAppTransportSecurity" );
+                atsRoot.AsDict().SetBoolean( "NSAllowsArbitraryLoads", true );
+                return;
+            }
+
+            // Check if both NSAllowsArbitraryLoads and NSAllowsArbitraryLoadsInWebContent are present
+            // and remove NSAllowsArbitraryLoadsInWebContent if both are present.
+            var atsRootDict = atsRoot.AsDict().values;
+            if (atsRootDict.ContainsKey( "NSAllowsArbitraryLoads" )
+                && atsRootDict.ContainsKey( "NSAllowsArbitraryLoadsInWebContent" ))
+            {
+                Debug.Log( CASEditorUtils.logTag + "Removing NSAllowsArbitraryLoadsInWebContent" );
+                atsRootDict.Remove( "NSAllowsArbitraryLoadsInWebContent" );
+            }
+        }
+
+        private static void SetAttributionReportEndpoint( PlistDocument plist, CASEditorSettings settings )
+        {
+            if (!string.IsNullOrEmpty( settings.attributionReportEndpoint ))
+                plist.root.SetString( "NSAdvertisingAttributionReportEndpoint", settings.attributionReportEndpoint );
+        }
+
+        private static void SetDefaultUserTrackingDescription( PlistDocument plist, CASEditorSettings settings )
+        {
+            if (settings.userTrackingUsageDescription.Length == 0)
+                return;
+            var description = settings.userTrackingUsageDescription[0].value;
+            if (string.IsNullOrEmpty( description ))
+                return;
+            plist.root.SetString( "NSUserTrackingUsageDescription", description );
         }
         #endregion
 
@@ -243,7 +327,7 @@ namespace CAS.UEditor
         /// 
         /// Issue Reference: https://github.com/facebook/facebook-sdk-for-unity/issues/506
         /// </summary>
-        private static void EmbedSwiftStandardLibrariesIfNeeded( PBXProject project, string mainTargetGuid )
+        private static void EmbedSwiftStandardLibraries( PBXProject project, string mainTargetGuid )
         {
             string embedStandardLib = "YES";
             try
@@ -264,6 +348,9 @@ namespace CAS.UEditor
 
         private static void CopyRawSettingsFile( string rootPath, PBXProject project, string target, CASInitSettings casSettings )
         {
+            if (!casSettings)
+                return;
+
             var resourcesBuildPhase = project.GetResourcesBuildPhaseByTarget( target );
             for (int i = 0; i < casSettings.managersCount; i++)
             {
@@ -294,7 +381,7 @@ namespace CAS.UEditor
 
         private static void ApplyCrosspromoDynamicLinks( string buildPath, string targetGuid, CASInitSettings casSettings, DependencyManager deps )
         {
-            if (casSettings.managersCount == 0 || string.IsNullOrEmpty( casSettings.GetManagerId( 0 ) ))
+            if (!casSettings || casSettings.IsTestAdMode() || casSettings.managersCount == 0 || string.IsNullOrEmpty( casSettings.GetManagerId( 0 ) ))
                 return;
             if (deps != null)
             {
@@ -324,31 +411,6 @@ namespace CAS.UEditor
             }
         }
 
-        private static void UpdateAppTransportSecuritySettingsIfNeeded( PlistDocument plist )
-        {
-            PlistElement atsRoot;
-            plist.root.values.TryGetValue( "NSAppTransportSecurity", out atsRoot );
-
-            if (atsRoot == null || atsRoot.GetType() != typeof( PlistElementDict ))
-            {
-                // Add the missing App Transport Security settings for publishers if needed. 
-                Debug.Log( CASEditorUtils.logTag + "Adding App Transport Security settings..." );
-                atsRoot = plist.root.CreateDict( "NSAppTransportSecurity" );
-                atsRoot.AsDict().SetBoolean( "NSAllowsArbitraryLoads", true );
-                return;
-            }
-
-            // Check if both NSAllowsArbitraryLoads and NSAllowsArbitraryLoadsInWebContent are present
-            // and remove NSAllowsArbitraryLoadsInWebContent if both are present.
-            var atsRootDict = atsRoot.AsDict().values;
-            if (atsRootDict.ContainsKey( "NSAllowsArbitraryLoads" )
-                && atsRootDict.ContainsKey( "NSAllowsArbitraryLoadsInWebContent" ))
-            {
-                Debug.Log( CASEditorUtils.logTag + "Removing NSAllowsArbitraryLoadsInWebContent" );
-                atsRootDict.Remove( "NSAllowsArbitraryLoadsInWebContent" );
-            }
-        }
-
         private static void AddSwiftSupport( string buildPath, PBXProject project, string targetGuid )
         {
             var swiftFileRelativePath = "Classes/CASSwiftEnable.swift";
@@ -370,7 +432,7 @@ namespace CAS.UEditor
             project.AddFileToBuild( targetGuid, swiftFileGuid );
         }
 
-        private static void SetExecutablePathIfNeeded( string buildPath, PBXProject project, string targetGuid, DependencyManager deps )
+        private static void SetExecutablePath( string buildPath, PBXProject project, string targetGuid, DependencyManager deps )
         {
 #if !UNITY_2019_3_OR_NEWER
 #if UNITY_2018_2_OR_NEWER
@@ -401,6 +463,15 @@ namespace CAS.UEditor
             //project.AddBuildProperty( targetGuid, "VALIDATE_WORKSPACE", "YES" );
         }
 
+        private static bool IsNeedEmbedDynamicLibraries()
+        {
+#if UNITY_2019_3_OR_NEWER
+            return true;
+#else
+            return false;
+#endif
+        }
+
         private static void EmbedDynamicLibrariesIfNeeded( string buildPath, PBXProject project, string targetGuid, DependencyManager deps )
         {
             for (int i = 0; i < deps.networks.Length; i++)
@@ -418,76 +489,87 @@ namespace CAS.UEditor
 #endif
             }
         }
-        #endregion
 
-        private static void LocalizeUserTrackingDescriptionIfNeeded( string localizedUserTrackingDescription, string localeCode, string buildPath, PBXProject project, string targetGuid )
+        private static bool IsNeedLocalizeUserTrackingDescription( CASEditorSettings settings )
+        {
+            return settings.userTrackingUsageDescription.Length > 1;
+        }
+
+        private static void LocalizeUserTrackingDescription( string buildPath, PBXProject project, string targetGuid, CASEditorSettings settings )
         {
             const string LegacyResourcesDirectoryName = "Resources";
-            const string CASResourcesDirectoryName = "CASResources";
+            const string CASResourcesDirectoryName = "CASUResources";
+
+            if (settings.userTrackingUsageDescription.Length < 2)
+                return;
+
             // Use the legacy resources directory name if the build is being appended (the "Resources" directory already exists if it is an incremental build).
             var resourcesDirectoryName = Directory.Exists( Path.Combine( buildPath, LegacyResourcesDirectoryName ) )
                 ? LegacyResourcesDirectoryName : CASResourcesDirectoryName;
             var resourcesDirectoryPath = Path.Combine( buildPath, resourcesDirectoryName );
-            var localeSpecificDirectoryName = localeCode + ".lproj";
-            var localeSpecificDirectoryPath = Path.Combine( resourcesDirectoryPath, localeSpecificDirectoryName );
-            var infoPlistStringsFilePath = Path.Combine( localeSpecificDirectoryPath, "InfoPlist.strings" );
 
-            // Check if localization has been disabled between builds, and remove them as needed.
-            if (string.IsNullOrEmpty( localizedUserTrackingDescription ))
+            for (int i = 0; i < settings.userTrackingUsageDescription.Length; i++)
             {
-                if (!File.Exists( infoPlistStringsFilePath )) return;
+                var keyValue = settings.userTrackingUsageDescription[i];
+                var description = keyValue.value;
+                var localeCode = keyValue.key;
+                if (string.IsNullOrEmpty( localeCode ))
+                    continue;
+                var localeSpecificDirectoryName = localeCode + ".lproj";
+                var localeSpecificDirectoryPath = Path.Combine( resourcesDirectoryPath, localeSpecificDirectoryName );
+                var infoPlistStringsFilePath = Path.Combine( localeSpecificDirectoryPath, "InfoPlist.strings" );
 
-                File.Delete( infoPlistStringsFilePath );
-                return;
-            }
-
-            // Create intermediate directories as needed.
-            if (!Directory.Exists( resourcesDirectoryPath ))
-            {
-                Directory.CreateDirectory( resourcesDirectoryPath );
-            }
-
-            if (!Directory.Exists( localeSpecificDirectoryPath ))
-            {
-                Directory.CreateDirectory( localeSpecificDirectoryPath );
-            }
-
-            var localizedDescriptionLine = "\"NSUserTrackingUsageDescription\" = \"" + localizedUserTrackingDescription + "\";\n";
-            // File already exists, update it in case the value changed between builds.
-            if (File.Exists( infoPlistStringsFilePath ))
-            {
-                var output = new List<string>();
-                var lines = File.ReadAllLines( infoPlistStringsFilePath );
-                var keyUpdated = false;
-                foreach (var line in lines)
+                // Check if localization has been disabled between builds, and remove them as needed.
+                if (string.IsNullOrEmpty( description ))
                 {
-                    if (line.Contains( "NSUserTrackingUsageDescription" ))
+                    if (File.Exists( infoPlistStringsFilePath ))
+                        File.Delete( infoPlistStringsFilePath );
+                    continue;
+                }
+
+                // Create intermediate directories as needed.
+                if (!Directory.Exists( resourcesDirectoryPath ))
+                    Directory.CreateDirectory( resourcesDirectoryPath );
+                if (!Directory.Exists( localeSpecificDirectoryPath ))
+                    Directory.CreateDirectory( localeSpecificDirectoryPath );
+
+
+                var localizedDescriptionLine = "\"NSUserTrackingUsageDescription\" = \"" + description + "\";\n";
+                // File already exists, update it in case the value changed between builds.
+                if (File.Exists( infoPlistStringsFilePath ))
+                {
+                    var output = new List<string>();
+                    var lines = File.ReadAllLines( infoPlistStringsFilePath );
+                    var keyUpdated = false;
+                    foreach (var line in lines)
                     {
+                        if (line.Contains( "NSUserTrackingUsageDescription" ))
+                        {
+                            output.Add( localizedDescriptionLine );
+                            keyUpdated = true;
+                        }
+                        else
+                        {
+                            output.Add( line );
+                        }
+                    }
+
+                    if (!keyUpdated)
                         output.Add( localizedDescriptionLine );
-                        keyUpdated = true;
-                    }
-                    else
-                    {
-                        output.Add( line );
-                    }
-                }
 
-                if (!keyUpdated)
+                    File.WriteAllText( infoPlistStringsFilePath, string.Join( "\n", output.ToArray() ) + "\n" );
+                }
+                // File doesn't exist, create one.
+                else
                 {
-                    output.Add( localizedDescriptionLine );
+                    File.WriteAllText( infoPlistStringsFilePath, "/* Localized versions of Info.plist keys - Generated by CAS plugin */\n" + localizedDescriptionLine );
                 }
 
-                File.WriteAllText( infoPlistStringsFilePath, string.Join( "\n", output.ToArray() ) + "\n" );
+                var guid = project.AddFolderReference( localeSpecificDirectoryPath, Path.Combine( resourcesDirectoryName, localeSpecificDirectoryName ) );
+                project.AddFileToBuild( targetGuid, guid );
             }
-            // File doesn't exist, create one.
-            else
-            {
-                File.WriteAllText( infoPlistStringsFilePath, "/* Localized versions of Info.plist keys - Generated by AL MAX plugin */\n" + localizedDescriptionLine );
-            }
-
-            var guid = project.AddFolderReference( localeSpecificDirectoryPath, Path.Combine( resourcesDirectoryName, localeSpecificDirectoryName ) );
-            project.AddFileToBuild( targetGuid, guid );
         }
+        #endregion
     }
 }
 #endif

@@ -26,9 +26,19 @@ namespace CAS.UEditor
         private SerializedProperty analyticsCollectionEnabledProp;
         private SerializedProperty interWhenNoRewardedAdProp;
 
+        private SerializedObject editorSettingsObj;
+        private SerializedProperty autoCheckForUpdatesEnabledProp;
+        private SerializedProperty delayAppMeasurementGADInitProp;
+        private SerializedProperty multiDexEnabledProp;
+        private SerializedProperty permissionAdIdRemovedProp;
+        private SerializedProperty mostPopularCountryOfUsersProp;
+        private SerializedProperty attributionReportEndpointProp;
+        private SerializedProperty userTrackingUsageDescriptionProp;
+
         private DependencyManager dependencyManager;
 
         private ReorderableList managerIdsList;
+        private ReorderableList userTrackingList;
         private BuildTarget platform;
         private bool allowedPackageUpdate;
         private string newCASVersion = null;
@@ -71,7 +81,7 @@ namespace CAS.UEditor
             {
                 drawHeaderCallback = DrawListHeader,
                 drawElementCallback = DrawListElement,
-                onCanRemoveCallback = ( list ) => list.count > 1,
+                onCanRemoveCallback = DisabledRemoveLastItemFromList,
             };
 
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
@@ -121,11 +131,30 @@ namespace CAS.UEditor
             if (edmVersion != null)
                 environmentBuilder.Append( "EDM4U - " ).Append( edmVersion ).Append( "; " );
             environmentDetails = environmentBuilder.ToString();
+
+
+            editorSettingsObj = new SerializedObject( CASEditorSettings.Load( true ) );
+            autoCheckForUpdatesEnabledProp = editorSettingsObj.FindProperty( "autoCheckForUpdatesEnabled" );
+            delayAppMeasurementGADInitProp = editorSettingsObj.FindProperty( "delayAppMeasurementGADInit" );
+            multiDexEnabledProp = editorSettingsObj.FindProperty( "multiDexEnabled" );
+            permissionAdIdRemovedProp = editorSettingsObj.FindProperty( "permissionAdIdRemoved" );
+
+            mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty( "mostPopularCountryOfUsers" );
+            attributionReportEndpointProp = editorSettingsObj.FindProperty( "attributionReportEndpoint" );
+
+            userTrackingUsageDescriptionProp = editorSettingsObj.FindProperty( "userTrackingUsageDescription" );
+
+            userTrackingList = new ReorderableList( editorSettingsObj, userTrackingUsageDescriptionProp, true, true, true, true )
+            {
+                drawHeaderCallback = DrawNSTrackingListHeader,
+                drawElementCallback = DrawNSTrackingListElement,
+                onCanRemoveCallback = DisabledRemoveLastItemFromList,
+            };
         }
 
         private void DrawListHeader( Rect rect )
         {
-            EditorGUI.LabelField( rect, "Manager ID's" );
+            EditorGUI.LabelField( rect, "Manager ID's " + ( platform == BuildTarget.iOS ? "(iTunes ID)" : "(Bundle ID)" ) );
         }
 
         private void DrawListElement( Rect rect, int index, bool isActive, bool isFocused )
@@ -133,6 +162,40 @@ namespace CAS.UEditor
             var item = managerIdsProp.GetArrayElementAtIndex( index );
             rect.yMin += 1;
             rect.yMax -= 1;
+            item.stringValue = EditorGUI.TextField( rect, item.stringValue );
+        }
+
+        private bool DisabledRemoveLastItemFromList( ReorderableList list )
+        {
+            return list.count > 1;
+        }
+
+        private void DrawNSTrackingListHeader( Rect rect )
+        {
+            EditorGUI.LabelField( rect, "(ISO-639) : NSUserTrackingUsageDescription" );
+        }
+
+        private void DrawNSTrackingListElement( Rect rect, int index, bool isActive, bool isFocused )
+        {
+            var item = userTrackingUsageDescriptionProp.GetArrayElementAtIndex( index );
+            rect.yMin += 1;
+            rect.yMax -= 1;
+            var maxX = rect.xMax;
+            rect.xMax = rect.xMin + 40;
+
+            item.Next( true );
+            var langCode = item.stringValue;
+            EditorGUI.BeginChangeCheck();
+            langCode = EditorGUI.TextField( rect, langCode );
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (langCode.Length > 2)
+                    langCode = langCode.Substring( 0, 2 );
+                item.stringValue = langCode.ToLower();
+            }
+            rect.xMin = rect.xMax + 5;
+            rect.xMax = maxX;
+            item.Next( false );
             item.stringValue = EditorGUI.TextField( rect, item.stringValue );
         }
 
@@ -151,55 +214,44 @@ namespace CAS.UEditor
         {
             var obj = serializedObject;
             obj.UpdateIfRequiredOrScript();
+            editorSettingsObj.UpdateIfRequiredOrScript();
 
-            HelpStyles.BeginBoxScope();
             if (managerIdsList.count > 1)
             {
                 var appId = managerIdsProp.GetArrayElementAtIndex( 0 ).stringValue;
                 if (!string.IsNullOrEmpty( appId ))
-                    EditorGUILayout.LabelField( "Application id:", appId );
+                    EditorGUILayout.LabelField( "Application id in CAS:", appId );
             }
             managerIdsList.DoLayoutList();
             OnManagerIDVerificationGUI();
-            allowedAdFlagsProp.intValue = Convert.ToInt32(
-               EditorGUILayout.EnumFlagsField( "Allowed ads in app", ( AdFlags )allowedAdFlagsProp.intValue ) );
-
-            EditorGUILayout.PropertyField( testAdModeProp );
-            if (testAdModeProp.boolValue)
-            {
-
-                EditorGUILayout.HelpBox( "Make sure you disable test ad mode and replace test manager ID with your own ad manager ID before publishing your app!", MessageType.Warning );
-            }
-            else if (EditorUserBuildSettings.development)
-            {
-                EditorGUILayout.HelpBox( "Development build enabled, only test ads are allowed. " +
-                    "\nMake sure you disable Development build and use real ad manager ID before publishing your app!", MessageType.Warning );
-            }
-            else
-            {
-                EditorGUILayout.LabelField( "When testing your app, make sure you use Test Ads mode rather than live ads. " +
-                "Failure to do so can lead to suspension of your account.", EditorStyles.wordWrappedMiniLabel );
-            }
-            HelpStyles.EndBoxScope();
-
-            OnBannerSizeGUI();
-            bannerRefreshProp.intValue = Mathf.Clamp(
-                 EditorGUILayout.IntField( "Banner refresh rate(sec)", bannerRefreshProp.intValue ), 10, short.MaxValue );
-
+            DrawTestAdMode();
             DrawSeparator();
-            interstitialIntervalProp.intValue = Math.Max( 0,
-                EditorGUILayout.IntField( "Interstitial impression interval(sec)", interstitialIntervalProp.intValue ) );
-            interWhenNoRewardedAdProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Allow Interstitial Ad when the cost of the Rewarded Ad is lower",
-                interWhenNoRewardedAdProp.boolValue );
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            var mediumFlag = ( int )AdFlags.MediumRectangle;
+            EditorGUI.BeginDisabledGroup( ( allowedAdFlagsProp.intValue & mediumFlag ) == mediumFlag );
+            var banner = DrawAdFlagToggle( AdFlags.Banner );
+            EditorGUI.EndDisabledGroup();
+            EditorGUI.BeginDisabledGroup( !banner );
+            DrawAdFlagToggle( AdFlags.MediumRectangle );
+            EditorGUI.EndDisabledGroup();
+            var inter = DrawAdFlagToggle( AdFlags.Interstitial );
+            var reward = DrawAdFlagToggle( AdFlags.Rewarded );
+            DrawAdFlagToggle( AdFlags.Native );
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+            if (banner)
+                DrawBannerScope();
+            if (inter)
+                DrawInterstitialScope();
+            if (reward)
+                DrawRewardedScope( inter );
+
+            IsAdFormatsNotUsed();
             DrawSeparator();
-            OnLoadingModeGUI();
-            OnIOSLocationUsageDescriptionGUI();
-            EditorGUILayout.PropertyField( debugModeProp );
-            EditorGUILayout.PropertyField( analyticsCollectionEnabledProp );
             OnEditroRuntimeActiveAdGUI();
-
-            DrawSeparator();
+            OnLoadingModeGUI();
             OnAudienceGUI();
             DeprecatedDependenciesGUI();
 
@@ -215,16 +267,250 @@ namespace CAS.UEditor
             }
 
             OnAppAdsTxtGUI();
+            DrawSeparator();
 
-            EditorGUILayout.HelpBox( environmentDetails, MessageType.None );
-
-            GUILayout.FlexibleSpace();
+            OnUserTrackingGUI();
+            OnIOSLocationUsageDescriptionGUI();
+            OnEditorEnvirementGUI();
             obj.ApplyModifiedProperties();
+            editorSettingsObj.ApplyModifiedProperties();
+        }
+
+        private void OnUserTrackingGUI()
+        {
+            if (platform != BuildTarget.iOS)
+                return;
+            var enabled = userTrackingUsageDescriptionProp.arraySize > 0;
+            EditorGUILayout.BeginHorizontal();
+            if (enabled != EditorGUILayout.ToggleLeft( "Set User Tracking Usage description", enabled ))
+            {
+                enabled = !enabled;
+                if (enabled)
+                {
+                    var defDescr = Utils.DefaultUserTrackingUsageDescription();
+                    userTrackingUsageDescriptionProp.arraySize = defDescr.Length;
+                    for (int i = 0; i < defDescr.Length; i++)
+                    {
+                        var pair = userTrackingUsageDescriptionProp.GetArrayElementAtIndex( i );
+                        pair.Next( true );
+                        pair.stringValue = defDescr[i].key;
+                        pair.Next( false );
+                        pair.stringValue = defDescr[i].value;
+                    }
+                }
+                else
+                {
+                    userTrackingUsageDescriptionProp.ClearArray();
+                }
+            }
+            HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Asking-Permissions" );
+            EditorGUILayout.EndHorizontal();
+            if (enabled)
+                userTrackingList.DoLayoutList();
+        }
+
+        private void OnEditorEnvirementGUI()
+        {
+            analyticsCollectionEnabledProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Impression Analytics collection (Firebase)", null,
+                "If your application uses Google Analytics(Firebase) then CAS collects ad impressions and states to analytic.\n" +
+                "Disabling analytics collection may save internet traffic and improve application performance.\n" +
+                "The Analytics collection has no effect on ad revenue." ), analyticsCollectionEnabledProp.boolValue );
+            debugModeProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Verbose Debug logging", null,
+                "The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdk with tag CAS. " +
+                "Disabling the Debug Mode may improve application performance." ), debugModeProp.boolValue );
+
+            if (platform == BuildTarget.Android)
+            {
+                permissionAdIdRemovedProp.boolValue = EditorGUILayout.ToggleLeft(
+                    "Remove permission to use Advertising ID (AD_ID)",
+                    permissionAdIdRemovedProp.boolValue );
+
+                EditorGUILayout.BeginHorizontal();
+                multiDexEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                    "Multi DEX enabled",
+                    multiDexEnabledProp.boolValue );
+                HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Include-Android#enable-multidex" );
+                EditorGUILayout.EndHorizontal();
+            }
+            else
+            {
+                EditorGUILayout.BeginHorizontal();
+                var reportEndpointEnabled = attributionReportEndpointProp.stringValue.Length > 0;
+                if (reportEndpointEnabled != EditorGUILayout.ToggleLeft(
+                    "Set Attribution Report endpoint", reportEndpointEnabled ))
+                {
+                    reportEndpointEnabled = !reportEndpointEnabled;
+                    if (reportEndpointEnabled)
+                        attributionReportEndpointProp.stringValue = Utils.attributionReportEndPoint;
+                    else
+                        attributionReportEndpointProp.stringValue = string.Empty;
+                }
+                HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Include-iOS#ios-15-global-skadnetwork-reporting" );
+                EditorGUILayout.EndHorizontal();
+
+                if (reportEndpointEnabled)
+                {
+                    EditorGUI.indentLevel++;
+                    attributionReportEndpointProp.stringValue = EditorGUILayout.TextField(
+                        attributionReportEndpointProp.stringValue );
+                    EditorGUI.indentLevel--;
+                }
+            }
+            delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
+                    "Delay measurement of the Google SDK initialization",
+                    delayAppMeasurementGADInitProp.boolValue );
+            autoCheckForUpdatesEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Auto check for CAS updates enabled",
+                autoCheckForUpdatesEnabledProp.boolValue );
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label( "Most popular country of users (ISO2)", GUILayout.ExpandWidth( false ) );
+            EditorGUI.BeginChangeCheck();
+            var countryCode = mostPopularCountryOfUsersProp.stringValue;
+            countryCode = EditorGUILayout.TextField( countryCode, GUILayout.Width( 25.0f ) );
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (countryCode.Length > 2)
+                    countryCode = countryCode.Substring( 0, 2 );
+                mostPopularCountryOfUsersProp.stringValue = countryCode.ToUpper();
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.HelpBox( environmentDetails, MessageType.None );
+        }
+
+        private bool IsAdFormatsNotUsed()
+        {
+            if (allowedAdFlagsProp.intValue == 0 || allowedAdFlagsProp.intValue == ( int )AdFlags.Native)
+            {
+                EditorGUILayout.HelpBox( "Please activate the ad formats that you want to use in your game.", MessageType.Error );
+                return true;
+            }
+            return false;
+        }
+
+        private void DrawTestAdMode()
+        {
+            EditorGUILayout.PropertyField( testAdModeProp );
+            EditorGUI.indentLevel++;
+            if (testAdModeProp.boolValue)
+                EditorGUILayout.HelpBox( "Make sure you disable test ad mode and replace test manager ID with your own ad manager ID before publishing your app!", MessageType.Warning );
+            else if (EditorUserBuildSettings.development)
+                EditorGUILayout.HelpBox( "Development build enabled, only test ads are allowed. " +
+                    "\nMake sure you disable Development build and use real ad manager ID before publishing your app!", MessageType.Warning );
+            else
+                EditorGUILayout.HelpBox( "When testing your app, make sure you use Test Ads mode or Development Build. " +
+                "Failure to do so can lead to suspension of your account.", MessageType.None );
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawInterstitialScope()
+        {
+            EditorGUILayout.LabelField( "Interstitial ads:" );
+            EditorGUI.indentLevel++;
+            interstitialIntervalProp.intValue = Math.Max( 0,
+            EditorGUILayout.IntField( "Impression interval(sec)", interstitialIntervalProp.intValue ) );
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawRewardedScope( bool allowInter )
+        {
+            EditorGUILayout.LabelField( "Rewarded ads:" );
+            EditorGUI.indentLevel++;
+            EditorGUI.BeginDisabledGroup( !allowInter );
+            interWhenNoRewardedAdProp.boolValue = EditorGUILayout.ToggleLeft(
+               HelpStyles.GetContent( "Increase filling by Interstitial ads", null,
+               "Sometimes a situation occurs when filling Rewarded ads is not enough, " +
+               "in this case, you can allow the display of Interstitial ads to receiving a reward in any case." ),
+                allowInter && interWhenNoRewardedAdProp.boolValue );
+            EditorGUI.EndDisabledGroup();
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawBannerScope()
+        {
+            EditorGUILayout.LabelField( "Ad View:" );
+            EditorGUI.indentLevel++;
+            bannerRefreshProp.intValue = Mathf.Clamp(
+                  EditorGUILayout.IntField( "Refresh rate(sec)", bannerRefreshProp.intValue ), 0, short.MaxValue );
+
+            var obsoleteAPI = bannerSizeProp.intValue > 0;
+            if (obsoleteAPI != EditorGUILayout.Toggle( "Use Single Banner(Obsolete)", obsoleteAPI ))
+            {
+                obsoleteAPI = !obsoleteAPI;
+                bannerSizeProp.intValue = obsoleteAPI ? 1 : 0;
+            }
+            if (obsoleteAPI)
+            {
+                EditorGUILayout.PropertyField( bannerSizeProp, HelpStyles.GetContent( "Single Ad size", null ) );
+                //if (settings.bannerSize == AdSize.Banner && Utils.IsPortraitOrientation())
+                //{
+                //    DialogOrCancel( "For portrait applications, we recommend using the adaptive banner size." +
+                //            "This will allow you to get more expensive advertising.", target );
+                //}
+                EditorGUI.indentLevel++;
+                switch (( AdSize )bannerSizeProp.intValue)
+                {
+                    case AdSize.Banner:
+                        EditorGUILayout.HelpBox( "Size in DPI: 320:50", MessageType.None );
+                        break;
+                    case AdSize.AdaptiveBanner:
+                        EditorGUILayout.HelpBox( "Pick the best ad size in full width screen for improved performance.", MessageType.None );
+                        break;
+                    case AdSize.SmartBanner:
+                        EditorGUILayout.HelpBox( "Typically, Smart Banners on phones have a Banner size. " +
+                            "Or on tablets a Leaderboard size", MessageType.None );
+                        break;
+                    case AdSize.Leaderboard:
+                        EditorGUILayout.HelpBox( "Size in DPI: 728:90", MessageType.None );
+                        break;
+                    case AdSize.MediumRectangle:
+                        EditorGUILayout.HelpBox( "Size in DPI: 300:250", MessageType.None );
+                        var enableMrec = allowedAdFlagsProp.intValue | ( int )AdFlags.MediumRectangle;
+                        if (enableMrec != allowedAdFlagsProp.intValue)
+                            allowedAdFlagsProp.intValue = enableMrec;
+                        break;
+                }
+                EditorGUI.indentLevel--;
+            }
+            EditorGUI.indentLevel--;
+        }
+
+        private bool DrawAdFlagToggle( AdFlags flag )
+        {
+            var flagInt = ( int )flag;
+            var enabled = ( allowedAdFlagsProp.intValue & flagInt ) == flagInt;
+            var icon = HelpStyles.GetFormatIcon( flag, enabled );
+            var content = HelpStyles.GetContent( "", icon, "Use " + flag.ToString() + " placement" );
+
+            EditorGUI.BeginDisabledGroup( flag == AdFlags.Native );
+            if (flag == AdFlags.Native)
+            {
+                if (enabled)
+                {
+                    allowedAdFlagsProp.intValue = allowedAdFlagsProp.intValue ^ flagInt;
+                    enabled = false;
+                }
+                content.tooltip = "Native ads coming soon";
+            }
+            if (icon == null)
+            {
+                content.text = content.tooltip;
+                content.tooltip = "";
+            }
+            if (enabled != GUILayout.Toggle( enabled, content, "button", GUILayout.ExpandWidth( false ), GUILayout.MinWidth( 45 ) ))
+            {
+                enabled = !enabled;
+                if (enabled)
+                    allowedAdFlagsProp.intValue = allowedAdFlagsProp.intValue | flagInt;
+                else
+                    allowedAdFlagsProp.intValue = allowedAdFlagsProp.intValue ^ flagInt;
+            }
+            EditorGUI.EndDisabledGroup();
+            return enabled;
         }
 
         private void DrawSeparator()
         {
-            EditorGUILayout.Space();
             EditorGUILayout.Space();
         }
 
@@ -314,12 +600,20 @@ namespace CAS.UEditor
             }
             if (platform == BuildTarget.iOS)
             {
-                if (edmIOSStaticLinkProp != null && !( bool )edmIOSStaticLinkProp.GetValue( null ))
+                if (edmIOSStaticLinkProp != null && !( bool )edmIOSStaticLinkProp.GetValue( null, null ))
                 {
                     OnWarningGUI( "Link frameworks statically disabled",
                         "Please enable 'Add use_frameworks!' and 'Link frameworks statically' found under " +
                         "'Assets -> External Dependency Manager -> iOS Resolver -> Settings' menu.\n" +
                         "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.",
+                        MessageType.Warning );
+                }
+
+                if (PlayerSettings.muteOtherAudioSources)
+                {
+                    OnWarningGUI( "Mute Other AudioSources enabled in PlayerSettings",
+                        "Known issue with muted all sounds in Unity Game after closing interstitial ads. " +
+                        "We recommend not using 'Mute Other AudioSources'.",
                         MessageType.Warning );
                 }
             }
@@ -362,15 +656,21 @@ namespace CAS.UEditor
             switch (targetAudience)
             {
                 case Audience.Mixed:
-                    EditorGUILayout.HelpBox( "This app is aimed at audiences of all ages and will have some restrictions for children.",
+                    EditorGUILayout.HelpBox( "The app is intended for audiences of all ages and complying with COPPA.",
                         MessageType.None );
                     break;
                 case Audience.Children:
                     EditorGUILayout.HelpBox( "Children restrictions and Families Ads Program participation apply to this app. Audience under 12 years old.",
                         MessageType.None );
+                    if (platform == BuildTarget.Android && !permissionAdIdRemovedProp.boolValue)
+                    {
+                        EditorGUILayout.HelpBox( "Families Policy require that apps not use the Ad ID. " +
+                            "We recommend that you remove the permission using the checkbox below.",
+                            MessageType.Warning );
+                    }
                     break;
                 case Audience.NotChildren:
-                    EditorGUILayout.HelpBox( "Audience over 12 years old only.", MessageType.None );
+                    EditorGUILayout.HelpBox( "Audience over 12 years old only. There are no restrictions on filling.", MessageType.None );
                     break;
             }
             EditorGUI.indentLevel--;
@@ -381,46 +681,16 @@ namespace CAS.UEditor
             if (platform != BuildTarget.iOS)
                 return;
 
-            EditorGUILayout.PropertyField( trackLocationEnabledProp );
-            if (trackLocationEnabledProp.boolValue)
-            {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.HelpBox( "Location data will be collected if the user allowed the app to track the location.", MessageType.None );
-                EditorGUI.indentLevel--;
-            }
-        }
-
-        private void OnBannerSizeGUI()
-        {
-            EditorGUILayout.PropertyField( bannerSizeProp );
-            EditorGUI.indentLevel++;
-            switch (( AdSize )bannerSizeProp.intValue)
-            {
-                case AdSize.Banner:
-                    EditorGUILayout.HelpBox( "Current size: 320:50", MessageType.None );
-                    break;
-                case AdSize.AdaptiveBanner:
-                    EditorGUILayout.HelpBox( "Pick the best ad size in full width screen for improved performance.", MessageType.None );
-                    break;
-                case AdSize.SmartBanner:
-                    EditorGUILayout.HelpBox( "Typically, Smart Banners on phones have a Banner size. " +
-                        "Or on tablets a Leaderboard size", MessageType.None );
-                    break;
-                case AdSize.Leaderboard:
-                    EditorGUILayout.HelpBox( "Current size: 728:90", MessageType.None );
-                    break;
-                case AdSize.MediumRectangle:
-                    EditorGUILayout.HelpBox( "Current size: 300:250", MessageType.None );
-                    break;
-            }
-            EditorGUI.indentLevel--;
+            trackLocationEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Location collection when user allowed", trackLocationEnabledProp.boolValue );
         }
 
         private void OnLoadingModeGUI()
         {
-            var loadingMode = ( LoadingManagerMode )EditorGUILayout.EnumPopup( "Loading mode",
-                    ( LoadingManagerMode )loadingModeProp.enumValueIndex );
-            loadingModeProp.enumValueIndex = ( int )loadingMode;
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PropertyField( loadingModeProp, HelpStyles.GetContent( "Loading mode", null ) );
+            HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Configuring-SDK#loading-mode" );
+            EditorGUILayout.EndHorizontal();
         }
 
         private void OnEditroRuntimeActiveAdGUI()

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using CAS.UEditor;
 
 namespace CAS.AdObject
 {
@@ -63,47 +64,71 @@ namespace CAS.AdObject
     }
 
     [CustomEditor( typeof( BannerAdObject ) )]
-    [CanEditMultipleObjects]
     internal class BannerAdObjectInspector : BaseAdObjectInspector
     {
         private SerializedProperty adPositionProp;
         private SerializedProperty adSizeProp;
+        private SerializedProperty adOffsetProp;
         private SerializedProperty onAdHiddenProp;
-        private string[] allowedPositions;
+        private BannerAdObject adView;
+        private readonly string[] allowedPositions = new string[]{
+            "Top Center",
+            "Top Left",
+            "Top Right",
+            "Bottom Center",
+            "Bottom Left",
+            "Bottom Right"
+        };
 
         private new void OnEnable()
         {
             base.OnEnable();
             var obj = serializedObject;
             adPositionProp = obj.FindProperty( "adPosition" );
+            adOffsetProp = obj.FindProperty( "adOffset" );
             adSizeProp = obj.FindProperty( "adSize" );
 
             onAdHiddenProp = obj.FindProperty( "OnAdHidden" );
-
-            allowedPositions = new string[]{
-                "Top Center",
-                "Top Left",
-                "Top Right",
-                "Bottom Center",
-                "Bottom Left",
-                "Bottom Right"
-            };
+            adView = target as BannerAdObject;
         }
 
         protected override void OnAdditionalPropertiesGUI()
         {
+            var isPlaying = Application.isPlaying;
             EditorGUI.BeginChangeCheck();
             adPositionProp.intValue = EditorGUILayout.Popup( "Ad Position", adPositionProp.intValue, allowedPositions );
-            if (EditorGUI.EndChangeCheck() && Application.isPlaying)
+            if (EditorGUI.EndChangeCheck())
             {
-                ( ( BannerAdObject )target ).SetAdPositionEnumIndex( adPositionProp.intValue );
+                adOffsetProp.vector2IntValue = Vector2Int.zero;
+                if (isPlaying)
+                    adView.SetAdPositionEnumIndex( adPositionProp.intValue );
             }
+
+            EditorGUI.indentLevel++;
+            EditorGUI.BeginDisabledGroup( adPositionProp.intValue != ( int )AdPosition.TopLeft );
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PropertyField( adOffsetProp );
+            GUILayout.Label( "DP", GUILayout.ExpandWidth( false ) );
+            EditorGUILayout.EndHorizontal();
+            if (EditorGUI.EndChangeCheck() && isPlaying)
+            {
+                var newPos = adOffsetProp.vector2IntValue;
+                adView.SetAdPosition( newPos.x, newPos.y );
+            }
+            EditorGUI.EndDisabledGroup();
+            if (isPlaying)
+            {
+                EditorGUI.BeginDisabledGroup( true );
+                EditorGUILayout.RectField( "Rect in pixels", adView.rectInPixels );
+                EditorGUI.EndDisabledGroup();
+            }
+            EditorGUI.indentLevel--;
+
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField( adSizeProp );
             if (EditorGUI.EndChangeCheck() && Application.isPlaying)
-            {
-                ( ( BannerAdObject )target ).SetAdSizeEnumIndex( adSizeProp.intValue );
-            }
+                adView.SetAdSizeEnumIndex( adSizeProp.intValue );
         }
 
         protected override void OnCallbacksGUI()

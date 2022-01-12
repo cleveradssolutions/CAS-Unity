@@ -52,7 +52,7 @@ namespace CAS.UEditor
                 return;
 
             var isBatchMode = Application.isBatchMode;
-            var settings = Utils.GetSettingsAsset( target );
+            var settings = Utils.GetSettingsAsset( target, false );
             if (!settings)
                 Utils.StopBuildWithMessage( "Settings not found. Please use menu Assets/CleverAdsSolutions/Settings " +
                     "to create and set settings for build.", target );
@@ -96,12 +96,6 @@ namespace CAS.UEditor
                         DialogOrCancel( "There is a new versions of the native dependencies available for update." +
                             "Please use 'Assets/CleverAdsSolutions/Settings' menu to update.", target );
                 }
-
-                if (settings.bannerSize == AdSize.Banner && Utils.IsPortraitOrientation())
-                {
-                    DialogOrCancel( "For portrait applications, we recommend using the adaptive banner size." +
-                            "This will allow you to get more expensive advertising.", target );
-                }
             }
 
             if (settings.managersCount == 0 || string.IsNullOrEmpty( settings.GetManagerId( 0 ) ))
@@ -137,6 +131,8 @@ namespace CAS.UEditor
             {
                 EditorUtility.DisplayProgressBar( casTitle, "Validate CAS Android Build Settings", 0.8f );
 
+                var editorSettings = CASEditorSettings.Load();
+
                 const string deprecatedPluginPath = "Assets/Plugins/CAS";
                 if (AssetDatabase.IsValidFolder( deprecatedPluginPath ))
                 {
@@ -144,35 +140,27 @@ namespace CAS.UEditor
                     Debug.Log( "Removed deprecated plugin: " + deprecatedPluginPath );
                 }
 
-                CopyTemplateIfNeedToAndroidLib(
-                    Utils.androidLibPropTemplateFile, Utils.androidLibPropertiesPath );
-
                 HashSet<string> promoAlias = new HashSet<string>();
+                // TODO: Create option to disable CrossPromo Querries generator
                 for (int i = 0; i < settings.managersCount; i++)
-                {
                     Utils.GetCrossPromoAlias( target, settings.GetManagerId( i ), promoAlias );
-                }
-                SetAdmobAppIdToAndroidManifest( admobAppId, false, promoAlias );
 
-                ConfigurateGradleSettings();
+                UpdateAndroidPluginManifest( admobAppId, promoAlias, editorSettings );
 
+                ConfigurateGradleSettings( editorSettings );
 
-                if (PlayerSettings.Android.minSdkVersion < AndroidSdkVersions.AndroidApiLevel19)
+#if !UNITY_2021_2_OR_NEWER
+                // 19 - AndroidSdkVersions.AndroidApiLevel19
+                // Deprecated in Unity 2021.2
+                if (PlayerSettings.Android.minSdkVersion < ( AndroidSdkVersions )19)
                 {
-                    DialogOrCancel( "CAS required minimum SDK API level 19 (KitKat).", BuildTarget.NoTarget, "Set API 19" );
-                    PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel19;
+                    DialogOrCancel( "CAS required a higher minimum SDK API level. Set SDK level 19 (KitKat) and continue?", BuildTarget.NoTarget );
+                    PlayerSettings.Android.minSdkVersion = ( AndroidSdkVersions )19;
                 }
+#endif
             }
             else if (target == BuildTarget.iOS)
             {
-                if (PlayerSettings.muteOtherAudioSources)
-                {
-                    if (isBatchMode || EditorUtility.DisplayDialog( casTitle, "Mute Other AudioSources are not supported. " +
-                        "Is a known issue with disabling sounds in Unity after closing interstitial ads.",
-                        "Disable Mute AudioSources", "Continue" ))
-                        PlayerSettings.muteOtherAudioSources = false;
-                }
-
                 try
                 {
                     if (new Version( PlayerSettings.iOS.targetOSVersionString ) < new Version( 10, 0 ))
@@ -187,7 +175,9 @@ namespace CAS.UEditor
                     Debug.LogException( e );
                 }
             }
-            if (settings.IsTestAdMode())
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (settings.testAdMode && !EditorUserBuildSettings.development) // Use directrly property to avoid Debug build
+#pragma warning restore CS0618 // Type or member is obsolete
                 Debug.LogWarning( Utils.logTag + "Test Ads Mode enabled! Make sure the build is for testing purposes only!" +
                     "\nUse 'Assets/CleverAdsSolutions/Settings' menu to disable Test Ad Mode." );
             else
@@ -195,7 +185,7 @@ namespace CAS.UEditor
             EditorUtility.DisplayProgressBar( "Hold on", "Prepare components...", 0.95f );
         }
 
-        private static void ConfigurateGradleSettings()
+        private static void ConfigurateGradleSettings( CASEditorSettings settings )
         {
             //const string enabledAndroidX = "\"android.useAndroidX\", true";
             //const string enabledResolveInGradle = "// Android Resolver Dependencies";
@@ -208,7 +198,7 @@ namespace CAS.UEditor
             //        "Project should use Gradle tools version 3.4+." );
             //}
 
-            bool multidexRequired = true; //TODO: Open API change state
+            bool multidexRequired = settings.multiDexEnabled;
 
             const string multidexObsoleted = "implementation 'com.android.support:multidex:1.0.3'";
             const string multidexImplementation = "implementation 'androidx.multidex:multidex:2.0.1'";
@@ -278,42 +268,50 @@ namespace CAS.UEditor
                 Utils.StopBuildWithMessage( "Not found Dependencies scope in Gradle template. " +
                     "Please try delete and create new mainTemplate.gradle", BuildTarget.NoTarget );
 
-            bool multidexExist = !multidexRequired;
-            if (multidexRequired)
+            bool multidexExist = false;
+
+            // chek exist
+            while (line < gradle.Count && !gradle[line].Contains( "}" ))
             {
-                // chek exist
-                while (line < gradle.Count && !gradle[line].Contains( "}" ))
+                if (gradle[line].Contains( multidexObsoleted ))
                 {
-                    if (gradle[line].Contains( multidexObsoleted ))
+                    if (multidexRequired)
                     {
                         gradle[line] = "    " + multidexImplementation;
+
                         Debug.Log( Utils.logTag + "Replace dependency " + multidexObsoleted +
                             " to " + multidexImplementation );
-                        multidexExist = true;
-                        break;
                     }
-                    if (gradle[line].Contains( multidexImplementation ))
+                    else
                     {
-                        multidexExist = true;
-                        break;
+                        gradle[line] = "";
                     }
-
-                    line++;
+                    multidexExist = true;
+                    break;
+                }
+                if (gradle[line].Contains( multidexImplementation ))
+                {
+                    if (!multidexRequired)
+                        gradle[line] = "";
+                    multidexExist = true;
+                    break;
                 }
 
-                // write dependency
-                if (!multidexExist)
+                line++;
+            }
+
+            // write dependency
+            if (!multidexExist && multidexRequired)
+            {
+                if (Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
+                        "Including the CAS SDK may cause the 64K limit on methods that can be packaged in an Android dex file to be breached" +
+                        "Do you want to use the MultiDex support library to building your app correctly?",
+                        "Enable MultiDex", "Continue" ))
                 {
-                    if (Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
-                            "Including the CAS SDK may cause the 64K limit on methods that can be packaged in an Android dex file to be breached" +
-                            "Do you want to use the MultiDex support library to building your app correctly?",
-                            "Enable MultiDex", "Continue" ))
-                    {
-                        gradle.Insert( line, "    " + multidexImplementation );
-                        Debug.Log( Utils.logTag + "Append dependency " + multidexImplementation );
-                        line++;
-                        multidexExist = true;
-                    }
+                    gradle.Insert( line, "    " + multidexImplementation );
+                    Debug.Log( Utils.logTag + "Append dependency " + multidexImplementation );
+                    line++;
+                    multidexExist = true;
                 }
             }
 
@@ -382,13 +380,15 @@ namespace CAS.UEditor
                 {
                     if (gradle[line].Contains( multidexConfig ))
                     {
+                        if (!multidexRequired)
+                            gradle[line] = "";
                         multidexEnabled = true;
                         break;
                     }
                     line++;
                 }
 
-                if (!multidexEnabled)
+                if (!multidexEnabled && multidexRequired)
                 {
                     gradle.Insert( defaultConfigLine + 1, "        " + multidexConfig );
                     Debug.Log( Utils.logTag + "Enable Multidex in Default Config" );
@@ -418,7 +418,7 @@ namespace CAS.UEditor
                     var verStr = versionLine.Substring( index + gradlePluginVersion.Length, 5 );
                     try
                     {
-                        System.Version version = new System.Version( verStr );
+                        var version = new Version( verStr );
                         if (version.Major == 4)
                         {
                             if (version.Minor == 0 & version.Build < 1 && RequestUpdateGradleVersion( version.ToString() ))
@@ -450,100 +450,128 @@ namespace CAS.UEditor
         private static bool RequestUpdateGradleVersion( string version = "" )
         {
             return Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
-                        "Android Gradle plugin " + version + " are not supports targeting Android 11. " +
-                        "Do you want to upgrade to version with fix?",
-                        "Update", "Continue" );
+                    "Android Gradle Plugin " + version + " are not supports targeting Android 11. " +
+                    "Do you want to upgrade Gradle Plugin Version?",
+                    "Upgrade", "Continue" );
         }
 
-        private static void CopyTemplateIfNeedToAndroidLib( string template, string path )
+        private static void CreateAndroidLibIfNedded()
         {
-            if (!File.Exists( path ))
+            if (!AssetDatabase.IsValidFolder( Utils.androidLibFolderPath ))
             {
-                if (!AssetDatabase.IsValidFolder( Utils.androidLibFolderPath ))
-                {
-                    Directory.CreateDirectory( Utils.androidLibFolderPath );
-                    AssetDatabase.ImportAsset( Utils.androidLibFolderPath );
-                }
-                var templateFile = Utils.GetTemplatePath( template );
-                if (templateFile == null || !Utils.TryCopyFile( templateFile, path ))
-                    Utils.StopBuildWithMessage( "Build failed", BuildTarget.NoTarget );
+                Directory.CreateDirectory( Utils.androidLibFolderPath );
+                AssetDatabase.ImportAsset( Utils.androidLibFolderPath );
             }
         }
 
-        private static void SetAdmobAppIdToAndroidManifest( string admobAppId, bool newFile, HashSet<string> queries )
+        [MenuItem( "Test/ManifestUpdate" )]
+        private static void TestManifestUpdate()
+        {
+            UpdateAndroidPluginManifest( "admobID", new HashSet<string>(), CASEditorSettings.Load() );
+        }
+
+        private static void UpdateAndroidPluginManifest( string admobAppId, HashSet<string> queries, CASEditorSettings settings, bool firstTry = true )
         {
             const string metaAdmobApplicationID = "com.google.android.gms.ads.APPLICATION_ID";
+            const string metaAdmobDelayInit = "com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT";
+
             XNamespace ns = "http://schemas.android.com/apk/res/android";
+            XNamespace nsTools = "http://schemas.android.com/tools";
+            XName nameAttribute = ns + "name";
+            XName valueAttribute = ns + "value";
 
             string manifestPath = Path.GetFullPath( Utils.androidLibManifestPath );
 
             if (string.IsNullOrEmpty( admobAppId ))
                 admobAppId = Utils.androidAdmobSampleAppID;
 
-            CopyTemplateIfNeedToAndroidLib(
-                    Utils.androidLibManifestTemplateFile, Utils.androidLibManifestPath );
+            CreateAndroidLibIfNedded();
 
-            bool appIdUpdated = false;
-            XElement elemManifest = null;
+            if (!File.Exists( Utils.androidLibPropertiesPath ))
+            {
+                const string pluginProperties =
+                    "# This file is automatically generated by CAS Unity plugin.\n" +
+                    "# Do not modify this file -- YOUR CHANGES WILL BE ERASED!\n" +
+                    "android.library=true\n" +
+                    "target=android-29\n";
+                File.WriteAllText( Utils.androidLibPropertiesPath, pluginProperties );
+                AssetDatabase.ImportAsset( Utils.androidLibPropertiesPath );
+            }
+
             try
             {
-                XDocument manifest = XDocument.Load( manifestPath );
-                elemManifest = manifest.Element( "manifest" );
-                XElement elemApplication = elemManifest.Element( "application" );
-                IEnumerable<XElement> metas = elemApplication.Descendants()
-                    .Where( elem => elem.Name.LocalName.Equals( "meta-data" ) );
+                var document = new XDocument(
+                    new XDeclaration( "1.0", "utf-8", null ),
+                    new XComment( "This file is automatically generated by CAS Unity plugin from `Assets > CleverAdsSolutions > Android Settings`" ),
+                    new XComment( "Do not modify this file -- YOUR CHANGES WILL BE ERASED!" ) );
+                var elemManifest = new XElement( "manifest",
+                    new XAttribute( XNamespace.Xmlns + "android", ns ),
+                    new XAttribute( XNamespace.Xmlns + "tools", nsTools ),
+                    new XAttribute( "package", "com.cleversolutions.ads.unitycas" ),
+                    new XAttribute( ns + "versionName", MobileAds.wrapperVersion ),
+                    new XAttribute( ns + "versionCode", 1 ) );
+                document.Add( elemManifest );
 
-                foreach (XElement elem in metas)
-                {
-                    if (appIdUpdated)
-                        break;
-                    IEnumerable<XAttribute> attrs = elem.Attributes();
-                    foreach (XAttribute attr in attrs)
-                    {
-                        if (attr.Name.Namespace.Equals( ns )
-                                && attr.Name.LocalName.Equals( "name" ) && attr.Value.Equals( metaAdmobApplicationID ))
-                        {
-                            elem.SetAttributeValue( ns + "value", admobAppId );
-                            appIdUpdated = true;
-                            break;
-                        }
-                    }
-                }
+                var delayInitState = settings.delayAppMeasurementGADInit ? "true" : "false";
 
-                var elemQueries = elemManifest.Element( "queries" );
-                if (elemQueries != null)
-                    elemQueries.Remove();
+                var elemApplication = new XElement( "application" );
+
+                var elemAppIdMeta = new XElement( "meta-data",
+                        new XAttribute( nameAttribute, metaAdmobApplicationID ),
+                        new XAttribute( valueAttribute, admobAppId ) );
+                elemApplication.Add( elemAppIdMeta );
+
+                var elemDelayInitMeta = new XElement( "meta-data",
+                        new XAttribute( nameAttribute, metaAdmobDelayInit ),
+                        new XAttribute( valueAttribute, delayInitState ) );
+                elemApplication.Add( elemDelayInitMeta );
+
+                var elemUsesLibrary = new XElement( "uses-library",
+                    new XAttribute( ns + "required", "false" ),
+                    new XAttribute( nameAttribute, "org.apache.http.legacy" ) );
+                elemApplication.Add( elemUsesLibrary );
+                elemManifest.Add( elemApplication );
+
+                var elemInternetPermission = new XElement( "uses-permission",
+                    new XAttribute( nameAttribute, "android.permission.INTERNET" ) );
+                elemManifest.Add( elemInternetPermission );
+
+                var elemNetworkPermission = new XElement( "uses-permission",
+                    new XAttribute( nameAttribute, "android.permission.ACCESS_NETWORK_STATE" ) );
+                elemManifest.Add( elemNetworkPermission );
+
+                var elemWIFIPermission = new XElement( "uses-permission",
+                    new XAttribute( nameAttribute, "android.permission.ACCESS_WIFI_STATE" ) );
+                elemManifest.Add( elemWIFIPermission );
+
+                var elemAdIDPermission = new XElement( "uses-permission",
+                    new XAttribute( nameAttribute, "com.google.android.gms.permission.AD_ID" ) );
+                if (settings.permissionAdIdRemoved)
+                    elemAdIDPermission.SetAttributeValue( nsTools + "node", "remove" );
+                elemManifest.Add( elemAdIDPermission );
 
                 if (queries.Count > 0)
                 {
-                    elemQueries = new XElement( "queries" );
+                    var elemQueries = new XElement( "queries" );
                     elemQueries.Add( new XComment( "CAS Cross promotion" ) );
                     foreach (var item in queries)
                     {
                         elemQueries.Add( new XElement( "package",
-                            new XAttribute( ns + "name", item ) ) );
+                            new XAttribute( nameAttribute, item ) ) );
                     }
                     elemManifest.Add( elemQueries );
                 }
+                
+                var exist = File.Exists( Utils.androidLibManifestPath );
+                // XDocument required absolute path
+                document.Save( manifestPath );
+                // But Unity not support absolute path
+                if (!exist)
+                    AssetDatabase.ImportAsset( Utils.androidLibManifestPath );
             }
             catch (Exception e)
             {
                 Debug.LogException( e );
-            }
-            if (appIdUpdated)
-            {
-                if (elemManifest != null)
-                    elemManifest.Save( manifestPath );
-            }
-            else
-            {
-                if (newFile)
-                    Utils.StopBuildWithMessage(
-                        "AndroidManifest.xml is not valid. Try re-importing the plugin.", BuildTarget.Android );
-
-                Debug.LogWarning( Utils.logTag + "AndroidManifest.xml is not valid. Created new file by template." );
-                AssetDatabase.DeleteAsset( Utils.androidLibManifestPath );
-                SetAdmobAppIdToAndroidManifest( admobAppId, true, queries );
             }
         }
 
@@ -556,8 +584,8 @@ namespace CAS.UEditor
         private static void StopBuildIDNotFound( BuildTarget target )
         {
             Utils.StopBuildWithMessage( "Settings not found manager ids for " + target.ToString() +
-                        " platform. For a successful build, you need to specify at least one ID" +
-                        " that you use in the project. To test integration, you can use test mode with 'demo' manager id.", target );
+                " platform. For a successful build, you need to specify at least one ID" +
+                " that you use in the project. To test integration, you can use test mode with 'demo' manager id.", target );
         }
     }
 }

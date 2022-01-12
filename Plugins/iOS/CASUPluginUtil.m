@@ -8,6 +8,21 @@
 #import "CASUPluginUtil.h"
 #import <CleverAdsSolutions/CleverAdsSolutions.h>
 
+#if __has_include("UnityAppController.h")
+#import "UnityAppController.h"
+#else
+#ifdef __cplusplus
+extern "C" {
+#endif
+UIViewController * UnityGetGLViewController(void);
+UIWindow * UnityGetMainWindow(void);
+int UnityIsPaused();
+void UnityPause(int pause);
+#ifdef __cplusplus
+}
+#endif
+#endif
+
 @interface CASUPluginUtil ()
 /// References to objects Google Mobile ads objects created from Unity.
 @property (nonatomic, strong) NSMutableDictionary *internalReferences;
@@ -24,7 +39,6 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedInstance = [[self alloc] init];
-        
     });
     return sharedInstance;
 }
@@ -53,10 +67,29 @@
 static BOOL _pauseOnBackground = YES;
 
 + (BOOL)pauseOnBackground {
-  return _pauseOnBackground;
+    return _pauseOnBackground;
 }
 
 + (void)setPauseOnBackground:(BOOL)pause {
-  _pauseOnBackground = pause;
+    _pauseOnBackground = pause;
 }
+
++ (UIViewController *)unityGLViewController {
+    return UnityGetGLViewController()
+            ? : UnityGetMainWindow().rootViewController
+            ? : [[UIApplication sharedApplication].keyWindow rootViewController];
+}
+
++ (void)onAdsWillPressent {
+    if ([CASUPluginUtil pauseOnBackground]) {
+        UnityPause(YES);
+    }
+}
+
++ (void)onAdsDidClosed {
+    if (UnityIsPaused()) {
+        UnityPause(NO);
+    }
+}
+
 @end
