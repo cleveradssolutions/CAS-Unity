@@ -1,5 +1,58 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.6.1] - 2022-01-12
+### Dependencies
+- [Android] Wraps [2.6.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.6.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+- Unity Consent dialog [2.0.0](https://github.com/cleveradssolutions/CAS-Unity-Consent/releases)
+## Features
+- Added support for [Android 12](https://developer.android.com/about/versions/12) devices for apps targeting API 31.
+- Added [CAS.ATTrackingStatus.Request(callback)](https://github.com/cleveradssolutions/CAS-Unity/wiki/Asking-Permissions), which provides a Tracking Authorization request and the Tracking Authorization status of the iOS application.
+- Added [Delay measurement of the Google SDK initialization](https://developers.google.com/admob/ump/android/quick-start#delay_app_measurement_optional) option in `CleverAdsSlutions > Settings` window.
+- Added option to disable `Auto check for CAS updates` in `CleverAdsSlutions > Settings` window when you would like to check for updates yourself.
+- Added option to select `Most popular country of users` in `CleverAdsSlutions > Settings` window to prepare a CAS resources for the selected country..
+- [Android] Improved Proguard compatibility. Reduced the SDK size.
+- [Android] Added option to disable `Multi DEX` in `Android Settings` window when your app does not require splitting into multiple dex.
+- [iOS] Added `Set User Tracking Usage desciption` option in `iOS Settings` to configure localizad description of Tracking Authorization Request.
+## Changes
+- The CAS no longer affects to Facebook Audience network [Data processing options for Users in California](https://developers.facebook.com/docs/marketing-apis/data-processing-options/) and [iOS Advertising Tracking Enabled](https://developers.facebook.com/docs/audience-network/setting-up/platform-setup/ios/advertising-tracking-enabled)
+:warning: You will need to implement the flag irrespective of the use of mediation.  
+```cs
+CAS.ATTrackingStatus.Request((status) => {
+  CAS.MobileAds.BuildManager()
+    .WithMediationExtras(MediationExtras.facebookDataProcessing, "LDU_1_1000")
+    .WithMediationExtras(MediationExtras.facebookAdvertiserTracking, track ? "1" : "0")
+    .Initialize();
+});
+```
+- [Android] With Android 12 many mediation partners are starting to include the `com.google.android.gms.permission.AD_ID` permission.  
+:warning: Use new `Remove permission to use Advertising ID` option in `Android Settings` window to remove the permission for all manifests.  
+Also, some mediation partners are already working with a new `App set ID` that you can add to your game in the `Android Settings > Advanced Integration` section.
+## Banner Ads update
+- Improved calculation of the `AdSize.AdaptiveBanner`.
+- We had to rethink the structure of banners and banner sizes to make their work clearer and more efficient.
+- Each a `AdSize` has its own unique ad view. ~~Single `AdSize` instance for `IMediationManager`~~.
+- Added a new `IAdView` interface to manage the single `AdSize` instance.
+```cs
+IMediationManager manager = MobileAds.BuildManager().Initialize();
+IAdView adView = manager.GetAdView( AdSize.MediumRectangle );
+```
+- Separated the `AdSize.MediumRectangle` from `AdFlags.Banner` format to new `AdFlags.MediumRectangle` format to better configuration of the mediation manager.
+## Bug Fixes
+- Fixed compilation error with Unity 2021.2 and newer.
+- Fixed compilation error with .NET 3.5.
+## Update Cross promotion
+- Improved stability and performance.
+- [Android] Improved detection of installed applications that have cross-promo SDK version 2.6+ on Android 11+. 
+- Added load error "Impression cap" when ad creative has reached its daily cap for user.
+- Added option of creative to lock rotation of full-screen ads.
+- Added option of creative to disable background for full-screen ads.
+- Added option of creative to disable banner for full-screen ads.
+## Mediation partners update
+- The composition of the `Optimal` solution has been changed: + Pangle, + TapJoy, + MyTarget, ~~Kidoz~~, ~~FairBid~~
+- [iOS] Create new a Families solution designed for applications aimed at a children's audience.
+- Removed support for the following networks: FairBid, Start.IO, Smaato, MoPub 
+
 ## [2.5.3] - 2021-09-29
 ### Dependencies
 - [Android] Wraps [2.5.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

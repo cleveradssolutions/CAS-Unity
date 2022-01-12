@@ -109,19 +109,31 @@
 }
 
 - (int)xOffsetInPixels {
-    return CGRectGetMinX(self.bannerView.bounds) * [UIScreen mainScreen].scale;
+    if (self.bannerView) {
+        return CGRectGetMinX(self.bannerView.bounds) * [UIScreen mainScreen].scale;
+    }
+    return 0;
 }
 
 - (int)yOffsetInPixels {
-    return CGRectGetMinY(self.bannerView.bounds) * [UIScreen mainScreen].scale;
+    if (self.bannerView) {
+        return CGRectGetMinY(self.bannerView.bounds) * [UIScreen mainScreen].scale;
+    }
+    return 0;
 }
 
 - (int)heightInPixels {
-    return CGRectGetHeight(CGRectStandardize(self.bannerView.frame)) * [UIScreen mainScreen].scale;
+    if (self.bannerView) {
+        return CGRectGetHeight(CGRectStandardize(self.bannerView.frame)) * [UIScreen mainScreen].scale;
+    }
+    return 0;
 }
 
 - (int)widthInPixels {
-    return CGRectGetWidth(CGRectStandardize(self.bannerView.frame)) * [UIScreen mainScreen].scale;
+    if (self.bannerView) {
+        return CGRectGetWidth(CGRectStandardize(self.bannerView.frame)) * [UIScreen mainScreen].scale;
+    }
+    return 0;
 }
 
 - (void)setPositionCode:(int)code withX:(int)x withY:(int)y {

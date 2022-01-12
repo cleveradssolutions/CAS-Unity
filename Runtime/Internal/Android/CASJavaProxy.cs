@@ -58,8 +58,13 @@ namespace CAS.Android
                 Debug.Log( "[CleverAdsSolutions] onInitialization " + success );
             manager.initializationListener = null;
             if (initCompleteAction != null)
-                CASFactory.ExecuteEvent( () => initCompleteAction( success, error ) );
-            initCompleteAction = null;
+            {
+                CASFactory.ExecuteEvent( () =>
+                {
+                    initCompleteAction( success, error );
+                    initCompleteAction = null;
+                } );
+            }
         }
     }
 

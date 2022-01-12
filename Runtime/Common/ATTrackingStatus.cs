@@ -96,18 +96,20 @@ namespace CAS
 #endif
         private static void ATTRequestCompleted( int status )
         {
+            if (CASFactory.isDebug)
+                Debug.Log( "[CleverAdsSolutions] AT Tracking Status: " + ( ( AuthorizationStatus )status ).ToString() );
+
             try
             {
+                // Callback in UI Thread from native side
                 if (_completeCallback != null)
-                {
                     _completeCallback( ( AuthorizationStatus )status );
-                    _completeCallback = null;
-                }
             }
             catch (Exception e)
             {
                 Debug.LogException( e );
             }
+            _completeCallback = null;
         }
         #endregion
     }

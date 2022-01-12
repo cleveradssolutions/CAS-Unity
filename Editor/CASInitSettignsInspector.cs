@@ -30,6 +30,7 @@ namespace CAS.UEditor
         private SerializedProperty autoCheckForUpdatesEnabledProp;
         private SerializedProperty delayAppMeasurementGADInitProp;
         private SerializedProperty multiDexEnabledProp;
+        private SerializedProperty permissionAdIdRemovedProp;
         private SerializedProperty mostPopularCountryOfUsersProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
@@ -136,6 +137,7 @@ namespace CAS.UEditor
             autoCheckForUpdatesEnabledProp = editorSettingsObj.FindProperty( "autoCheckForUpdatesEnabled" );
             delayAppMeasurementGADInitProp = editorSettingsObj.FindProperty( "delayAppMeasurementGADInit" );
             multiDexEnabledProp = editorSettingsObj.FindProperty( "multiDexEnabled" );
+            permissionAdIdRemovedProp = editorSettingsObj.FindProperty( "permissionAdIdRemoved" );
 
             mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty( "mostPopularCountryOfUsers" );
             attributionReportEndpointProp = editorSettingsObj.FindProperty( "attributionReportEndpoint" );
@@ -280,7 +282,7 @@ namespace CAS.UEditor
                 return;
             var enabled = userTrackingUsageDescriptionProp.arraySize > 0;
             EditorGUILayout.BeginHorizontal();
-            if (enabled != EditorGUILayout.ToggleLeft( "Set user tracking usage description", enabled ))
+            if (enabled != EditorGUILayout.ToggleLeft( "Set User Tracking Usage description", enabled ))
             {
                 enabled = !enabled;
                 if (enabled)
@@ -309,16 +311,20 @@ namespace CAS.UEditor
 
         private void OnEditorEnvirementGUI()
         {
-            debugModeProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Debug Logging", null,
-                "The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdk with tag CAS. " +
-                "Disabling the Debug Mode may improve application performance." ), debugModeProp.boolValue );
-            analyticsCollectionEnabledProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Analytics Collectiion", null,
+            analyticsCollectionEnabledProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Impression Analytics collection (Firebase)", null,
                 "If your application uses Google Analytics(Firebase) then CAS collects ad impressions and states to analytic.\n" +
                 "Disabling analytics collection may save internet traffic and improve application performance.\n" +
                 "The Analytics collection has no effect on ad revenue." ), analyticsCollectionEnabledProp.boolValue );
+            debugModeProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Verbose Debug logging", null,
+                "The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdk with tag CAS. " +
+                "Disabling the Debug Mode may improve application performance." ), debugModeProp.boolValue );
 
             if (platform == BuildTarget.Android)
             {
+                permissionAdIdRemovedProp.boolValue = EditorGUILayout.ToggleLeft(
+                    "Remove permission to use Advertising ID (AD_ID)",
+                    permissionAdIdRemovedProp.boolValue );
+
                 EditorGUILayout.BeginHorizontal();
                 multiDexEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
                     "Multi DEX enabled",
@@ -349,17 +355,16 @@ namespace CAS.UEditor
                         attributionReportEndpointProp.stringValue );
                     EditorGUI.indentLevel--;
                 }
-
-                delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
+            }
+            delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
                     "Delay measurement of the Google SDK initialization",
                     delayAppMeasurementGADInitProp.boolValue );
-            }
             autoCheckForUpdatesEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
                 "Auto check for CAS updates enabled",
                 autoCheckForUpdatesEnabledProp.boolValue );
 
             EditorGUILayout.BeginHorizontal();
-            GUILayout.Label( "Most popular country ISO2 of users", GUILayout.ExpandWidth( false ) );
+            GUILayout.Label( "Most popular country of users (ISO2)", GUILayout.ExpandWidth( false ) );
             EditorGUI.BeginChangeCheck();
             var countryCode = mostPopularCountryOfUsersProp.stringValue;
             countryCode = EditorGUILayout.TextField( countryCode, GUILayout.Width( 25.0f ) );
@@ -393,7 +398,7 @@ namespace CAS.UEditor
                 EditorGUILayout.HelpBox( "Development build enabled, only test ads are allowed. " +
                     "\nMake sure you disable Development build and use real ad manager ID before publishing your app!", MessageType.Warning );
             else
-                EditorGUILayout.HelpBox( "When testing your app, make sure you use Test Ads mode rather than live ads. " +
+                EditorGUILayout.HelpBox( "When testing your app, make sure you use Test Ads mode or Development Build. " +
                 "Failure to do so can lead to suspension of your account.", MessageType.None );
             EditorGUI.indentLevel--;
         }
@@ -657,6 +662,12 @@ namespace CAS.UEditor
                 case Audience.Children:
                     EditorGUILayout.HelpBox( "Children restrictions and Families Ads Program participation apply to this app. Audience under 12 years old.",
                         MessageType.None );
+                    if (platform == BuildTarget.Android && !permissionAdIdRemovedProp.boolValue)
+                    {
+                        EditorGUILayout.HelpBox( "Families Policy require that apps not use the Ad ID. " +
+                            "We recommend that you remove the permission using the checkbox below.",
+                            MessageType.Warning );
+                    }
                     break;
                 case Audience.NotChildren:
                     EditorGUILayout.HelpBox( "Audience over 12 years old only. There are no restrictions on filling.", MessageType.None );
@@ -671,13 +682,7 @@ namespace CAS.UEditor
                 return;
 
             trackLocationEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Track Location for iOS enabled", trackLocationEnabledProp.boolValue );
-            if (trackLocationEnabledProp.boolValue)
-            {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.HelpBox( "Location data will be collected if the user allowed the app to track the location.", MessageType.None );
-                EditorGUI.indentLevel--;
-            }
+                "Location collection when user allowed", trackLocationEnabledProp.boolValue );
         }
 
         private void OnLoadingModeGUI()

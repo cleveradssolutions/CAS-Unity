@@ -10,6 +10,7 @@ namespace CAS.UEditor
         public bool autoCheckForUpdatesEnabled = true;
         public bool delayAppMeasurementGADInit = true;
         public bool multiDexEnabled = true;
+        public bool permissionAdIdRemoved = false;
 
         /// <summary>
         /// ISO2 such as US, RU ...
