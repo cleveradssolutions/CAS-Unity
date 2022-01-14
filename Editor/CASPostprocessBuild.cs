@@ -15,10 +15,10 @@ namespace CAS.UEditor
 {
     internal class CASPostprocessBuild
     {
-        [PostProcessBuild()]
-        public static void OnPostProcessBuild( BuildTarget buildTarget, string buildPath )
+        [PostProcessBuild( 47 )]//must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40) and that it's added before "pod install" (50)
+        public static void FixPodFileBug( BuildTarget target, string buildPath )
         {
-            if (buildTarget != BuildTarget.iOS)
+            if (target != BuildTarget.iOS)
                 return;
 
             // Init Settings can be null
@@ -59,33 +59,30 @@ namespace CAS.UEditor
 
             ApplyCrosspromoDynamicLinks( buildPath, mainTargetGuid, initSettings, depManager );
 
-            Debug.Log( CASEditorUtils.logTag + "Postrocess Build done." );
-        }
-
 #if UNITY_2019_3_OR_NEWER || CASDeveloper
-        [PostProcessBuild( 47 )]//must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40) and that it's added before "pod install" (50)
-        public static void FixPodFileBug( BuildTarget target, string buildPath )
-        {
-            if (target != BuildTarget.iOS)
-                return;
             var podPath = buildPath + "/Podfile";
-            if (!File.Exists( podPath ))
+            if (File.Exists( podPath ))
+            {
+                var content = File.ReadAllText( podPath );
+                if (!content.Contains( "'Unity-iPhone'" ))
+                {
+                    using (StreamWriter sw = File.AppendText( podPath ))
+                    {
+                        sw.WriteLine();
+                        sw.WriteLine( "target 'Unity-iPhone' do" );
+                        sw.WriteLine( "end" );
+                    }
+                }
+            }
+            else
             {
                 Debug.LogError( CASEditorUtils.logTag + "Podfile not found.\n" +
-                    "Please add `target 'Unity-iPhone' do end` to the Podfile in root folder of XCode project and call `pod install --no-repo-update`" );
-                return;
+                    "Please add `target 'Unity-iPhone' do end` to the Podfile in root folder " +
+                    "of XCode project and call `pod install --no-repo-update`" );
             }
-            var content = File.ReadAllText( podPath );
-            if (content.Contains( "'Unity-iPhone'" ))
-                return;
-            using (StreamWriter sw = File.AppendText( podPath ))
-            {
-                sw.WriteLine();
-                sw.WriteLine( "target 'Unity-iPhone' do" );
-                sw.WriteLine( "end" );
-            }
-        }
 #endif
+            Debug.Log( CASEditorUtils.logTag + "Postrocess Build done." );
+        }
 
         [PostProcessBuild( int.MaxValue )]
         public static void OnCocoaPodsReady( BuildTarget buildTarget, string buildPath )

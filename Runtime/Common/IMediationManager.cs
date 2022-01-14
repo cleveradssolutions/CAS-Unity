@@ -108,6 +108,8 @@ namespace CAS
 
         /// <summary>
         /// Set enabled <see cref="AdType"/> to processing.
+        /// <para>If processing is inactive then all calls to the selected ad type
+        /// will fail with error <see cref="AdError.ManagerIsDisabled"/>.</para>
         /// <para>The state will not be saved between sessions.</para>
         /// </summary>
         void SetEnableAd( AdType adType, bool enabled );

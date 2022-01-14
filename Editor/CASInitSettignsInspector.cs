@@ -303,7 +303,7 @@ namespace CAS.UEditor
                     userTrackingUsageDescriptionProp.ClearArray();
                 }
             }
-            HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Asking-Permissions" );
+            HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/App-Tracking-Transparency" );
             EditorGUILayout.EndHorizontal();
             if (enabled)
                 userTrackingList.DoLayoutList();
@@ -582,7 +582,7 @@ namespace CAS.UEditor
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
                     "Please use Android Resolver after the change complete.", MessageType.Info );
-                if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.ExpandHeight( true ) ))
+                if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.Height( 38 ) ))
                 {
 #if UNITY_ANDROID
                     var succses = Utils.TryResolveAndroidDependencies();
