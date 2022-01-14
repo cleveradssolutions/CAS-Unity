@@ -464,12 +464,6 @@ namespace CAS.UEditor
             }
         }
 
-        [MenuItem( "Test/ManifestUpdate" )]
-        private static void TestManifestUpdate()
-        {
-            UpdateAndroidPluginManifest( "admobID", new HashSet<string>(), CASEditorSettings.Load() );
-        }
-
         private static void UpdateAndroidPluginManifest( string admobAppId, HashSet<string> queries, CASEditorSettings settings, bool firstTry = true )
         {
             const string metaAdmobApplicationID = "com.google.android.gms.ads.APPLICATION_ID";

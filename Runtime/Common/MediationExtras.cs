@@ -69,9 +69,9 @@ namespace CAS
         /// <summary>
         /// Advertising Tracking Enabled for Audience Network for iOS Only.
         /// <para>Set the `FBAdSettings.setAdvertiserTrackingEnabled` flag.</para>
-        /// <para>The setAdvertiserTrackingEnabled "1" flag allows you to inform Audience Network whether to use the data to deliver personalized ads in line with your own legal obligations,
-        /// platform terms, and commitments you’ve made to your users.</para>
-        /// <para>If the flag is set to "0" we will not be able to deliver personalized ads.</para>
+        /// <para>Value "1" flag to inform Audience Network to use the data to deliver personalized ads
+        /// in line with your own legal obligations, platform terms, and commitments you’ve made to your users</para>
+        /// <para>Value "0" flag to inform Audience Network to not be able to deliver personalized ads.</para>
         /// </summary>
         public static string facebookAdvertiserTracking = "FB_track";
 

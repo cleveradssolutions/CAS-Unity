@@ -77,7 +77,7 @@ namespace CAS
         /// <summary>
         /// For greater control over where a AdView is placed on screen than what's offered by <see cref="AdPosition"/> values.
         /// <para>The top-left corner of the AdView will be positioned
-        /// at the <paramref name="x"/> and <paramref name="y"/> values passed to the constructor,
+        /// at the <paramref name="x"/> and <paramref name="y"/> values passed to the method,
         /// where the origin is the top-left of the screen.</para>
         /// <para>The coordinates on the screen are determined not in pixels, but in Density-independent Pixels(DP)!</para>
         /// <para>When the ad view is positioned using coordinates, the <see cref="position"/> == <see cref="AdPosition.TopLeft"/></para>

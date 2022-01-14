@@ -660,7 +660,7 @@ namespace CAS.UEditor
                         MessageType.None );
                     break;
                 case Audience.Children:
-                    EditorGUILayout.HelpBox( "Children restrictions and Families Ads Program participation apply to this app. Audience under 12 years old.",
+                    EditorGUILayout.HelpBox( "Children restrictions and Google Families Ads Program participation apply to this app. Audience under 12 years old.",
                         MessageType.None );
                     if (platform == BuildTarget.Android && !permissionAdIdRemovedProp.boolValue)
                     {
@@ -670,7 +670,7 @@ namespace CAS.UEditor
                     }
                     break;
                 case Audience.NotChildren:
-                    EditorGUILayout.HelpBox( "Audience over 12 years old only. There are no restrictions on filling.", MessageType.None );
+                    EditorGUILayout.HelpBox( "Audience over 12 years old only. There are no restrictions on ad filling.", MessageType.None );
                     break;
             }
             EditorGUI.indentLevel--;

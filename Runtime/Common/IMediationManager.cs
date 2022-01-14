@@ -134,12 +134,12 @@ namespace CAS
 
         /// <summary>
         /// Get the ad view interface for specific <paramref name="size"/>.
-        /// <para>If a view for this size has already been created then a reference to it
+        /// <para>If a view for specific size has already been created then a reference to it
         /// will be returned without creating a new one.</para>
         /// <para>The newly created AdView has an inactive state. When you are ready to show the ad on the screen,
         /// simply call a <see cref="IAdView.SetActive(bool)"/> method.</para>
         /// <para>If you no longer need the AdView with this size, please call <see cref="IDisposable.Dispose()"/> to free memory.</para>
-        /// <para>After calling Dispose(), you can use GetAdView method to create a new view.</para>
+        /// <para>After calling Dispose(), you can use GetAdView() method to create a new view.</para>
         /// </summary>
         /// <param name="size">The ad size you want using.</param>
         IAdView GetAdView( AdSize size );
