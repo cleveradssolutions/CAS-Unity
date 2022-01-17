@@ -212,9 +212,8 @@ namespace CAS.UEditor
 
         public override void OnInspectorGUI()
         {
-            var obj = serializedObject;
-            obj.UpdateIfRequiredOrScript();
-            editorSettingsObj.UpdateIfRequiredOrScript();
+            serializedObject.Update();
+            editorSettingsObj.Update();
 
             if (managerIdsList.count > 1)
             {
@@ -272,8 +271,8 @@ namespace CAS.UEditor
             OnUserTrackingGUI();
             OnIOSLocationUsageDescriptionGUI();
             OnEditorEnvirementGUI();
-            obj.ApplyModifiedProperties();
             editorSettingsObj.ApplyModifiedProperties();
+            serializedObject.ApplyModifiedProperties();
         }
 
         private void OnUserTrackingGUI()

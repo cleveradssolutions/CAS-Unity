@@ -141,7 +141,7 @@ namespace CAS.UEditor
         public static CASInitSettings GetSettingsAsset( BuildTarget platform, bool create = true )
         {
             return ( CASInitSettings )GetSettingsAsset(
-                "CASSettings" + platform.ToString(), "Assets/Resources", typeof( CASInitSettings ), create, "/Resources" );
+                "CASSettings" + platform.ToString(), "Assets/Resources", typeof( CASInitSettings ), create, "Resources" );
         }
 
         public static UnityEngine.Object GetSettingsAsset( string name, string location, Type type, bool create, string requireDir )
