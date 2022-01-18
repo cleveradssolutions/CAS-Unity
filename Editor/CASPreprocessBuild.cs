@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using System.Linq;
 using System;
 using Utils = CAS.UEditor.CASEditorUtils;
+using System.Text;
 
 #if UNITY_2018_1_OR_NEWER
 using UnityEditor.Build.Reporting;
@@ -165,8 +166,7 @@ namespace CAS.UEditor
                 {
                     if (new Version( PlayerSettings.iOS.targetOSVersionString ) < new Version( 10, 0 ))
                     {
-                        if (!isBatchMode)
-                            DialogOrCancel( "CAS required a higher minimum deployment target. Set iOS 10.0 and continue?", BuildTarget.NoTarget );
+                        DialogOrCancel( "CAS required a higher minimum deployment target. Set iOS 10.0 and continue?", BuildTarget.NoTarget );
                         PlayerSettings.iOS.targetOSVersionString = "10.0";
                     }
                 }
@@ -185,6 +185,7 @@ namespace CAS.UEditor
             EditorUtility.DisplayProgressBar( "Hold on", "Prepare components...", 0.95f );
         }
 
+        #region Configurate Gradle Settings
         private static void ConfigurateGradleSettings( CASEditorSettings settings )
         {
             //const string enabledAndroidX = "\"android.useAndroidX\", true";
@@ -200,6 +201,61 @@ namespace CAS.UEditor
 
             bool multidexRequired = settings.multiDexEnabled;
 
+#if UNITY_2019_3_OR_NEWER
+            const string projectGradlePath = Utils.projectGradlePath;
+            if (File.Exists( projectGradlePath ))
+            {
+                try
+                {
+                    var projectGradle = new List<string>( File.ReadAllLines( projectGradlePath ) );
+                    projectGradle = UpdateBaseGradleFile( projectGradle, projectGradlePath );
+                    File.WriteAllLines( projectGradlePath, projectGradle.ToArray() );
+                    AssetDatabase.ImportAsset( projectGradlePath );
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException( e );
+                }
+            }
+            else
+            {
+                Utils.StopBuildWithMessage(
+                        "Build failed because CAS could not update Gradle plugin version in Unity 2019.3 without " +
+                        "Custom Base Gradle Template. Please enable 'Custom Base Gradle Template' found under " +
+                        "'Player Settings -> Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
+            }
+
+            const string gradlePath = Utils.launcherGradlePath;
+            if (!File.Exists( gradlePath ))
+            {
+                if (!multidexRequired)
+                    return;
+                Utils.StopBuildWithMessage(
+                    "Build failed because CAS could not enable MultiDEX in Unity 2019.3 without " +
+                    "Custom Launcher Gradle Template. Please enable 'Custom Launcher Gradle Template' found under " +
+                    "'Player Settings -> Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
+            }
+            List<string> gradle = new List<string>( File.ReadAllLines( gradlePath ) );
+#else
+            const string gradlePath = Utils.mainGradlePath;
+            if (!File.Exists( gradlePath ))
+            {
+                Debug.LogWarning( Utils.logTag + "We recommended enable 'Custom Gradle Template' found under " +
+                        "'Player Settings -> Settings for Android -> Publishing Settings' menu to allow CAS update Gradle plugin version." );
+                return;
+            }
+
+            List<string> gradle = new List<string>( File.ReadAllLines( gradlePath ) );
+            gradle = UpdateBaseGradleFile( gradle, gradlePath );
+#endif
+            gradle = UpdateLauncherGradleFile( gradle, multidexRequired, gradlePath );
+
+            File.WriteAllLines( gradlePath, gradle.ToArray() );
+            AssetDatabase.ImportAsset( gradlePath );
+        }
+
+        private static List<string> UpdateLauncherGradleFile( List<string> gradle, bool required, string filePath )
+        {
             const string multidexObsoleted = "implementation 'com.android.support:multidex:1.0.3'";
             const string multidexImplementation = "implementation 'androidx.multidex:multidex:2.0.1'";
 
@@ -213,69 +269,35 @@ namespace CAS.UEditor
 
             const string excludeOption = "exclude 'META-INF/proguard/androidx-annotations.pro'";
 
-#if UNITY_2019_3_OR_NEWER
-            if (File.Exists( Utils.projectGradlePath ))
-            {
-                try
-                {
-                    var projectGradle = new List<string>( File.ReadAllLines( Utils.projectGradlePath ) );
-                    projectGradle = UpdateGradlePluginVersion( projectGradle );
-                    File.WriteAllLines( Utils.projectGradlePath, projectGradle.ToArray() );
-                    AssetDatabase.ImportAsset( Utils.projectGradlePath );
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException( e );
-                }
-            }
-            else if (RequestUpdateGradleVersion( "" ))
-            {
-                Utils.StopBuildWithMessage(
-                        "Build failed because CAS could not update Gradle plugin version in Unity 2019.3 without " +
-                        "Custom Base Gradle Template. Please enable 'Custom Base Gradle Template' found under " +
-                        "'Player Settings -> Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
-            }
-
-            if (!multidexRequired)
-                return;
-
-            const string gradlePath = Utils.launcherGradlePath;
-            if (!File.Exists( gradlePath ))
-                Utils.StopBuildWithMessage(
-                    "Build failed because CAS could not enable MultiDEX in Unity 2019.3 without " +
-                    "Custom Launcher Gradle Template. Please enable 'Custom Launcher Gradle Template' found under " +
-                    "'Player Settings -> Settings for Android -> Publishing Settings' menu.", BuildTarget.NoTarget );
-            List<string> gradle = new List<string>( File.ReadAllLines( gradlePath ) );
-
-#else
-            const string gradlePath = Utils.mainGradlePath;
-            if (!File.Exists( gradlePath ))
-            {
-                Debug.LogWarning( Utils.logTag + "We recommended enable 'Custom Launcher Gradle Template' found under " +
-                        "'Player Settings -> Settings for Android -> Publishing Settings' menu to allow CAS update Gradle plugin version." );
-                return;
-            }
-
-            List<string> gradle = new List<string>( File.ReadAllLines( gradlePath ) );
-            gradle = UpdateGradlePluginVersion( gradle );
-#endif
-
             int line = 0;
-            // Find Dependency
-            while (line < gradle.Count && !gradle[line++].Contains( dependencies )) { }
-
-            if (line >= gradle.Count)
-                Utils.StopBuildWithMessage( "Not found Dependencies scope in Gradle template. " +
-                    "Please try delete and create new mainTemplate.gradle", BuildTarget.NoTarget );
-
-            bool multidexExist = false;
-
-            // chek exist
-            while (line < gradle.Count && !gradle[line].Contains( "}" ))
+            // Find dependencies{} scope
+            do
             {
+                if (line >= gradle.Count)
+                {
+                    if (required)
+                        Debug.LogWarning( Utils.logTag + "Not found defaultConfig{} scope in Gradle template.\n" +
+                            "Please try to remove `" + filePath + "` and enable gradle template in Player Settings." );
+                    return gradle;
+                }
+                ++line;
+            } while (!gradle[line].Contains( dependencies ));
+
+            ++line; // Move in dependencies scope
+            // Find Multidex dependency in scope
+            bool multidexExist = false;
+            do
+            {
+                if (line >= gradle.Count)
+                {
+                    if (required)
+                        Debug.LogWarning( Utils.logTag + "Not found dependencies{} scope in Gradle template.\n" +
+                            "Please try to remove `" + filePath + "` and enable gradle template in Player Settings." );
+                    return gradle;
+                }
                 if (gradle[line].Contains( multidexObsoleted ))
                 {
-                    if (multidexRequired)
+                    if (required)
                     {
                         gradle[line] = "    " + multidexImplementation;
 
@@ -284,45 +306,48 @@ namespace CAS.UEditor
                     }
                     else
                     {
-                        gradle[line] = "";
+                        gradle.RemoveAt( line );
                     }
                     multidexExist = true;
                     break;
                 }
                 if (gradle[line].Contains( multidexImplementation ))
                 {
-                    if (!multidexRequired)
-                        gradle[line] = "";
+                    if (!required)
+                        gradle.RemoveAt( line );
                     multidexExist = true;
                     break;
                 }
 
-                line++;
-            }
-
-            // write dependency
-            if (!multidexExist && multidexRequired)
-            {
-                if (Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
-                        "Including the CAS SDK may cause the 64K limit on methods that can be packaged in an Android dex file to be breached" +
-                        "Do you want to use the MultiDex support library to building your app correctly?",
-                        "Enable MultiDex", "Continue" ))
+                if (gradle[line].Contains( '}' ))
                 {
-                    gradle.Insert( line, "    " + multidexImplementation );
-                    Debug.Log( Utils.logTag + "Append dependency " + multidexImplementation );
-                    line++;
-                    multidexExist = true;
+                    if (required)
+                    {
+                        gradle.Insert( line, "    " + multidexImplementation );
+                        Debug.Log( Utils.logTag + "Append dependency " + multidexImplementation );
+                        ++line;
+                        multidexExist = true;
+                    }
+                    break;
                 }
-            }
+                ++line;
+            } while (true);
 
             var sourceCompatibilityExist = false;
 #if AppendPackagingOptions
             var packagingOptExist = false;
 #endif
 
-            // Find Default Config
-            while (line < gradle.Count && !gradle[line].Contains( defaultConfig ))
+            // Find compileOptions{} while begin defaultConfig{} scope
+            do
             {
+                if (line >= gradle.Count)
+                {
+                    if (required)
+                        Debug.LogWarning( Utils.logTag + "Not found defaultConfig{} scope in Gradle template.\n" +
+                            "Please try to remove `" + filePath + "` and enable gradle template in Player Settings." );
+                    return gradle;
+                }
                 if (!sourceCompatibilityExist && gradle[line].Contains( sourceCompatibility ))
                     sourceCompatibilityExist = true;
                 if (!sourceCompatibilityExist && gradle[line].Contains( targetCompatibility ))
@@ -331,34 +356,27 @@ namespace CAS.UEditor
                 if (!packagingOptExist && gradle[line].Contains( excludeOption ))
                     packagingOptExist = true;
 #endif
-                ++line;
-            }
-
-            if (line >= gradle.Count)
-                Utils.StopBuildWithMessage( "Not found Default Config scope in Gradle template. " +
-                    "Please try delete and create new mainTemplate.gradle", BuildTarget.NoTarget );
-
-            if (!sourceCompatibilityExist)
-            {
-                if (Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
-                        "CAS SDK requires for correct operation to determine the Java version in Gradle." +
-                        "Do you want to use Java 1.8?",
-                        "Set Java version", "Continue" ))
+                if (gradle[line].Contains( defaultConfig ))
                 {
-                    gradle.InsertRange( line, new[] {
-                        "	compileOptions {",
-                        "        " + sourceCompatibility,
-                        "        " + targetCompatibility,
-                        "	}",
-                        ""
-                    } );
-                    Debug.Log( Utils.logTag + "Append Compile options to use Java Version 1.8." );
-                    line += 5;
+                    if (!sourceCompatibilityExist && required)
+                    {
+                        gradle.InsertRange( line, new[] {
+                            "	compileOptions {",
+                            "        " + sourceCompatibility,
+                            "        " + targetCompatibility,
+                            "	}",
+                            ""
+                        } );
+                        Debug.Log( Utils.logTag + "Append Compile options to use Java Version 1.8." );
+                        line += 5;
+                    }
+                    break;
                 }
-            }
+                ++line;
+            } while (true);
 
 #if AppendPackagingOptions
-            if (!packagingOptExist)
+            if (!packagingOptExist && required)
             {
                 gradle.InsertRange( line, new[] {
                     "	packagingOptions {",
@@ -371,89 +389,144 @@ namespace CAS.UEditor
             }
 #endif
 
-            // Find multidexEnable
+            // Find multidexEnable in defaultConfig{} scope
             if (multidexExist)
             {
-                var defaultConfigLine = line;
-                var multidexEnabled = false;
+                var firstLineInDefaultConfigScope = line + 1;
+                multidexExist = false;
                 while (line < gradle.Count)
                 {
                     if (gradle[line].Contains( multidexConfig ))
                     {
-                        if (!multidexRequired)
-                            gradle[line] = "";
-                        multidexEnabled = true;
+                        if (!required)
+                            gradle.RemoveAt( line );
+                        multidexExist = true;
                         break;
                     }
                     line++;
                 }
 
-                if (!multidexEnabled && multidexRequired)
+                if (!multidexExist && required)
                 {
-                    gradle.Insert( defaultConfigLine + 1, "        " + multidexConfig );
+                    gradle.Insert( firstLineInDefaultConfigScope, "        " + multidexConfig );
                     Debug.Log( Utils.logTag + "Enable Multidex in Default Config" );
-                }
-            }
-
-            File.WriteAllLines( gradlePath, gradle.ToArray() );
-            AssetDatabase.ImportAsset( gradlePath );
-        }
-
-        private static List<string> UpdateGradlePluginVersion( List<string> gradle )
-        {
-            const string gradlePluginVersion = "classpath 'com.android.tools.build:gradle:";
-            int line = 0;
-            // Find Gradle Plugin Version
-            while (line < gradle.Count && !gradle[line].Contains( gradlePluginVersion ))
-            {
-                line++;
-            }
-
-            if (line < gradle.Count)
-            {
-                var versionLine = gradle[line];
-                var index = versionLine.IndexOf( gradlePluginVersion );
-                if (index > 0)
-                {
-                    var verStr = versionLine.Substring( index + gradlePluginVersion.Length, 5 );
-                    try
-                    {
-                        var version = new Version( verStr );
-                        if (version.Major == 4)
-                        {
-                            if (version.Minor == 0 & version.Build < 1 && RequestUpdateGradleVersion( version.ToString() ))
-                                gradle[line] = versionLine.Remove( versionLine.Length - 2 ) + "1'";
-                        }
-                        else
-                        {
-                            switch (version.Minor)
-                            {
-                                case 3:
-                                case 4:
-                                    if (version.Build < 3 && RequestUpdateGradleVersion( version.ToString() ))
-                                        gradle[line] = versionLine.Remove( versionLine.Length - 2 ) + "3'";
-                                    break;
-                                case 5:
-                                case 6:
-                                    if (version.Build < 4 && RequestUpdateGradleVersion( version.ToString() ))
-                                        gradle[line] = versionLine.Remove( versionLine.Length - 2 ) + "4'";
-                                    break;
-                            }
-                        }
-                    }
-                    catch { }
                 }
             }
             return gradle;
         }
 
-        private static bool RequestUpdateGradleVersion( string version = "" )
+        private static List<string> UpdateBaseGradleFile( List<string> gradle, string filePath )
         {
-            return Application.isBatchMode || EditorUtility.DisplayDialog( "CAS Preprocess Build",
-                    "Android Gradle Plugin " + version + " are not supports targeting Android 11. " +
-                    "Do you want to upgrade Gradle Plugin Version?",
-                    "Upgrade", "Continue" );
+            // Many SDKs use the new <queries> element in their bundled Android Manifest files.
+            // The Android Gradle plugin version should support new elements,
+            // else this will cause build errors:
+            // Android resource linking failed
+            // error: unexpected element <queries> found in <manifest>.
+
+            const string gradlePluginVersion = "classpath 'com.android.tools.build:gradle:";
+            int line = 0;
+            // Find Gradle Plugin Version
+            do
+            {
+                ++line;
+                if (gradle.Count - 1 < line)
+                {
+                    Debug.LogWarning( Utils.logTag + "Not found com.android.tools.build:gradle dependency in Gradle template.\n" +
+                        "Please try to remove `" + filePath + "` and enable gradle template in Player Settings." );
+                    return gradle;
+                }
+            } while (!gradle[line].Contains( gradlePluginVersion ));
+
+            var versionLine = gradle[line];
+            var index = versionLine.IndexOf( gradlePluginVersion );
+            if (index > 0)
+            {
+                try
+                {
+                    var version = new Version( versionLine.Substring( index + gradlePluginVersion.Length, 5 ) );
+                    if (version.Major == 4)
+                    {
+                        if (version.Minor == 0 && version.Build < 1)
+                            UpdateGradleBuildToolsVersion( gradle, line, '1' );
+                    }
+                    else if (version.Major == 3)
+                    {
+                        switch (version.Minor)
+                        {
+                            case 3:
+                            case 4:
+                                if (version.Build < 3)
+                                    UpdateGradleBuildToolsVersion( gradle, line, '3' );
+                                break;
+                            case 5:
+                            case 6:
+                                if (version.Build < 4)
+                                    UpdateGradleBuildToolsVersion( gradle, line, '4' );
+                                break;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // Known issue with jCenter repository where repository is not responding
+            // and gradle build stops with timeout error.
+
+            const string repositoriesLine = "repositories";
+            const string mavenCentralLine = "mavenCentral()";
+            const string jCenterLine = "jcenter()";
+            // Find allprojects { repositories { } }
+            do
+            {
+                ++line;
+                if (gradle.Count - 1 < line)
+                {
+                    Debug.LogWarning( Utils.logTag + "Not found allprojects { repositories {} } scope in Gradle template.\n" +
+                        "Please try to remove `" + filePath + "` and enable gradle template in Player Settings." );
+                    return gradle;
+                }
+            } while (!gradle[line].Contains( repositoriesLine ));
+
+            ++line; // Move in repositories
+            // Add MavenCentral repo and remove deprecated jcenter repo
+            var mavenCentralExist = false;
+            var beginReposLine = line;
+            while (line < gradle.Count)
+            {
+                if (gradle[line].Contains( jCenterLine ))
+                {
+                    gradle.RemoveAt( line );
+                    Debug.Log( Utils.logTag + "Remove deprecated jCenter repository" );
+                }
+                else if (gradle[line].Contains( mavenCentralLine ))
+                {
+                    mavenCentralExist = true;
+                }
+                else if (gradle[line].Contains( '}' ))
+                {
+                    if (!mavenCentralExist)
+                    {
+                        gradle.Insert( beginReposLine, "        " + mavenCentralLine );
+                        Debug.Log( Utils.logTag + "Append Maven Central repository" );
+                    }
+                    break;
+                }
+                ++line;
+            }
+            return gradle;
         }
+
+        private static void UpdateGradleBuildToolsVersion( List<string> gradle, int inLine, char version )
+        {
+            var versionLine = gradle[inLine];
+            var builder = new StringBuilder( versionLine );
+            builder[builder.Length - 2] = version;
+            var newLine = builder.ToString();
+            Debug.Log( Utils.logTag + "Updated Gradle Build Tools version to support Android 11.\n" +
+                "From: " + gradle[inLine] + "\nTo:" + newLine );
+            gradle[inLine] = newLine;
+        }
+        #endregion
 
         private static void CreateAndroidLibIfNedded()
         {
@@ -462,24 +535,6 @@ namespace CAS.UEditor
                 Directory.CreateDirectory( Utils.androidLibFolderPath );
                 AssetDatabase.ImportAsset( Utils.androidLibFolderPath );
             }
-        }
-
-        private static void UpdateAndroidPluginManifest( string admobAppId, HashSet<string> queries, CASEditorSettings settings, bool firstTry = true )
-        {
-            const string metaAdmobApplicationID = "com.google.android.gms.ads.APPLICATION_ID";
-            const string metaAdmobDelayInit = "com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT";
-
-            XNamespace ns = "http://schemas.android.com/apk/res/android";
-            XNamespace nsTools = "http://schemas.android.com/tools";
-            XName nameAttribute = ns + "name";
-            XName valueAttribute = ns + "value";
-
-            string manifestPath = Path.GetFullPath( Utils.androidLibManifestPath );
-
-            if (string.IsNullOrEmpty( admobAppId ))
-                admobAppId = Utils.androidAdmobSampleAppID;
-
-            CreateAndroidLibIfNedded();
 
             if (!File.Exists( Utils.androidLibPropertiesPath ))
             {
@@ -491,6 +546,24 @@ namespace CAS.UEditor
                 File.WriteAllText( Utils.androidLibPropertiesPath, pluginProperties );
                 AssetDatabase.ImportAsset( Utils.androidLibPropertiesPath );
             }
+        }
+
+        private static void UpdateAndroidPluginManifest( string admobAppId, HashSet<string> queries, CASEditorSettings settings )
+        {
+            const string metaAdmobApplicationID = "com.google.android.gms.ads.APPLICATION_ID";
+            const string metaAdmobDelayInit = "com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT";
+
+            XNamespace ns = "http://schemas.android.com/apk/res/android";
+            XNamespace nsTools = "http://schemas.android.com/tools";
+            XName nameAttribute = ns + "name";
+            XName valueAttribute = ns + "value";
+
+            string manifestPath = Path.GetFullPath( Utils.androidLibManifestPath );
+
+            CreateAndroidLibIfNedded();
+
+            if (string.IsNullOrEmpty( admobAppId ))
+                admobAppId = Utils.androidAdmobSampleAppID;
 
             try
             {
@@ -555,7 +628,7 @@ namespace CAS.UEditor
                     }
                     elemManifest.Add( elemQueries );
                 }
-                
+
                 var exist = File.Exists( Utils.androidLibManifestPath );
                 // XDocument required absolute path
                 document.Save( manifestPath );

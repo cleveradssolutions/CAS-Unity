@@ -4,6 +4,9 @@
 ### Dependencies
 - [Android] Wraps [2.6.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.6.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Features
+- [Android] Automatic deletion of the deprecated `jCenter()` repository to avoid Timeout error when the repository is not responding.
+- [Android] Improved automatic gradle file configuration behavior.
 ## Bug Fixes
 - Fixed saving ads settings for Windows Editor.
 
