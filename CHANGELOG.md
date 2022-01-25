@@ -1,5 +1,15 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.6.3] - 2022-01-25
+### Dependencies
+- [Android] Wraps [2.6.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.6.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+- External Dependency Manager for Unity [1.2.169](https://github.com/googlesamples/unity-jar-resolver/releases/tag/v1.2.169)
+## Features
+- [Android] You no longer need to add a dependency on AppSetId because it is always applied.
+## Bug Fixes
+-  Fixed a bug where the set of the banner position in the Top Center was not applied.
+
 ## [2.6.2] - 2022-01-17
 ### Dependencies
 - [Android] Wraps [2.6.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

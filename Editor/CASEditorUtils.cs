@@ -42,7 +42,7 @@ namespace CAS.UEditor
 
         public static System.Version minEDM4UVersion
         {
-            get { return new System.Version( 1, 2, 164 ); }
+            get { return new System.Version( 1, 2, 169 ); }
         }
         #endregion
 

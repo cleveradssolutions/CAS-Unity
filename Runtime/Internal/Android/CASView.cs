@@ -9,10 +9,10 @@ namespace CAS.Android
         private readonly CASMediationManager _manager;
         private readonly AndroidJavaObject _bridge;
         private AdEventsProxy _callbackProxy;
-        private int _refreshInterval;
-        private AdPosition _position;
-        private int _positionX;
-        private int _positionY;
+        private int _refreshInterval = -1;
+        private AdPosition _position = AdPosition.BottomCenter;
+        private int _positionX = 0;
+        private int _positionY = 0;
         private bool _waitOfHideCallback;
 
         public event CASViewEvent OnLoaded;

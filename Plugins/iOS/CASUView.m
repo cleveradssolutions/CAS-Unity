@@ -27,6 +27,8 @@
         _bannerView.hidden = YES;
         _bannerView.adDelegate = self;
         _bannerView.rootViewController = unityVC;
+        _activePos = 3; // Bottom Center
+        _adPositionOffset = CGPointZero;
     }
     return self;
 }

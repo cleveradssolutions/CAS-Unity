@@ -15,8 +15,8 @@ namespace CAS.Unity
         private bool _callPresentEvent = true;
         private int _positionX = 0;
         private int _positionY = 0;
-        private AdError _lastError;
-        private AdPosition _position;
+        private AdError _lastError = AdError.Internal;
+        private AdPosition _position = AdPosition.BottomCenter;
 
         public event CASViewEvent OnLoaded;
         public event CASViewEventWithError OnFailed;
