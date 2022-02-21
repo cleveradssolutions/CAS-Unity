@@ -117,12 +117,14 @@ namespace CAS.AdObject
                 adView.SetAdPosition( newPos.x, newPos.y );
             }
             EditorGUI.EndDisabledGroup();
-            if (isPlaying)
-            {
-                EditorGUI.BeginDisabledGroup( true );
-                EditorGUILayout.RectField( "Rect in pixels", adView.rectInPixels );
-                EditorGUI.EndDisabledGroup();
-            }
+            // Calling the calculation in the Editor results in incorrect data
+            // because getting the screen size returns the size of the inspector.
+            //if (isPlaying)
+            //{
+            //    EditorGUI.BeginDisabledGroup( true );
+            //    EditorGUILayout.RectField( "Rect in pixels", adView.rectInPixels );
+            //    EditorGUI.EndDisabledGroup();
+            //}
             EditorGUI.indentLevel--;
 
             EditorGUI.BeginChangeCheck();

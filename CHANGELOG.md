@@ -1,5 +1,12 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.6.4] - 2022-02-21
+### Dependencies
+- [Android] Wraps [2.6.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.6.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Bug Fixes
+- [Editor] Fixed Top Left banner position with ussing `BannerAdObject`.
+
 ## [2.6.3] - 2022-01-25
 ### Dependencies
 - [Android] Wraps [2.6.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

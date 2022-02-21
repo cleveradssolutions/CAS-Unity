@@ -8,7 +8,7 @@ namespace CAS
         GoogleAds = 0,
         Vungle,
         Kidoz,
-        [Obsolete( "No longer supported" )] Chartboost,
+        Chartboost,
         UnityAds,
         AppLovin,
         SuperAwesome,
@@ -71,6 +71,8 @@ namespace CAS
                     return "https://www.mintegral.com/en/privacy/";
                 case AdNetwork.Pangle:
                     return "https://www.pangleglobal.com/privacy/enduser-en";
+                case AdNetwork.Chartboost:
+                    return "https://www.cookiebot.com/en/privacy-policy-generator-gdpr/";
                 default: return null;
             }
         }

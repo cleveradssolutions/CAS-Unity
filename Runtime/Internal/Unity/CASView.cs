@@ -96,21 +96,23 @@ namespace CAS.Unity
             }
             set
             {
-                if (value == AdPosition.Undefined || _position == value)
-                    return;
-                _manager.Log( "Banner position changed to: " + value.ToString() );
-                _position = value;
-                _positionX = 0;
-                _positionY = 0;
+                SetPosition( value, 0, 0 );
             }
         }
 
         public void SetPosition( int x, int y )
         {
+            SetPosition( AdPosition.TopLeft, x, y );
+        }
+
+        private void SetPosition( AdPosition position, int x, int y )
+        {
+            if (position == AdPosition.Undefined)
+                return;
             if (position != _position || x != _positionX || y != _positionY)
             {
-                _manager.Log( "Banner position changed to TopLeft with offset: x=" + x + ", y=" + y );
-                _position = AdPosition.TopLeft;
+                _manager.Log( "Banner position changed to " + position.ToString() + " with offset: x=" + x + ", y=" + y );
+                _position = position;
                 _positionX = x;
                 _positionY = y;
             }
@@ -328,7 +330,6 @@ namespace CAS.Unity
 
         public void Load()
         {
-            Debug.Log( "Begin load " + type.ToString() );
             if (manager.IsEnabledAd( type ))
             {
                 if (!loaded)
