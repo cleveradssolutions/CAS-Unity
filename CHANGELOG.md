@@ -1,5 +1,10 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.6.6] - 2022-03-07
+### Dependencies
+- [Android] Wraps [2.6.6 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.6.6 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+
 ## [2.6.5] - 2022-02-22
 ### Dependencies
 - [Android] Wraps [2.6.5 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

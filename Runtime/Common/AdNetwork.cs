@@ -21,7 +21,7 @@ namespace CAS
         CrossPromotion,
         IronSource,
         YandexAds,
-        [Obsolete( "No longer supported" )] OwnVAST,
+        [Obsolete( "No longer supported" )] HyperMX,
         MAX,
         [Obsolete( "No longer supported" )] Smaato,
         [Obsolete( "No longer supported" )] MoPub,
@@ -32,7 +32,7 @@ namespace CAS
         Pangle,
         [Obsolete( "No longer supported" )] Verizon,
         [Obsolete( "No longer supported" )] AmazonAds,
-        [Obsolete( "No longer supported" )] HyperMX
+        [Obsolete( "No longer supported" )] OwnVAST
     }
 
     public static class AdNetworkExtension
