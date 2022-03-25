@@ -531,7 +531,7 @@ namespace CAS.UEditor
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Label( "1. Download latest EDM4U.unitypackage", GUILayout.ExpandWidth( false ) );
                 if (GUILayout.Button( "here", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-                    Application.OpenURL( "https://github.com/googlesamples/unity-jar-resolver/releases" );
+                    Application.OpenURL( "https://github.com/googlesamples/unity-jar-resolver/tags" );
                 EditorGUILayout.EndHorizontal();
                 GUILayout.Label( "2. Import the EDM4U.unitypackage into your project." );
                 HelpStyles.EndBoxScope();
