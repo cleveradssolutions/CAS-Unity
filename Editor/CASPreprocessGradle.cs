@@ -86,6 +86,7 @@ namespace CAS.UEditor
             }
             var dexingExist = false;
             var properties = File.ReadAllLines( propertiesPath );
+            var lineToInsert = properties.Length - 1;
             for (int i = 0; i < properties.Length; i++)
             {
                 var line = properties[i];
@@ -99,11 +100,13 @@ namespace CAS.UEditor
                     dexingExist = true;
                     break;
                 }
+                if (line.Contains( "**ADDITIONAL_PROPERTIES**" ))
+                    lineToInsert = i;
             }
             if (!dexingExist)
             {
                 var propsList = new List<string>( properties );
-                propsList.Add( dexingPropertyName + "=false" );
+                propsList.Insert( lineToInsert, dexingPropertyName + "=false" );
                 File.WriteAllLines( propertiesPath, propsList.ToArray() );
             }
 #endif
@@ -229,15 +232,18 @@ namespace CAS.UEditor
                     multidexExist = true;
                     break;
                 }
-            } while (!gradle[line].Contains( '}' ));
-
-            if (required)
-            {
-                gradle.Insert( line, miltidexAndroidXLine );
-                Debug.Log( Utils.logTag + "Appended " + multidexAndroidX );
-                multidexExist = true;
-                ++line;
-            }
+                if (gradle[line].Contains( '}' ))
+                {
+                    if (required)
+                    {
+                        gradle.Insert( line, miltidexAndroidXLine );
+                        Debug.Log( Utils.logTag + "Appended " + multidexAndroidX );
+                        multidexExist = true;
+                        ++line;
+                    }
+                    break;
+                }
+            } while (true);
 
 #if DeclareJavaVersion
             const string javaVersion = "JavaVersion.VERSION_1_8";
@@ -352,8 +358,8 @@ namespace CAS.UEditor
                     var version = new Version( versionLine.Substring( index + gradlePluginVersion.Length, 5 ) );
                     if (version.Major == 4)
                     {
-                        if (version.Minor == 0 && version.Build < 1)
-                            UpdateGradleBuildToolsVersion( gradle, line, '1' );
+                        if (version.Minor == 0 && version.Build < 2)
+                            UpdateGradleBuildToolsVersion( gradle, line, '2' );
                     }
                     else if (version.Major == 3)
                     {
