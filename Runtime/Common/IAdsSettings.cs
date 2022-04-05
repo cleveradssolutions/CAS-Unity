@@ -46,13 +46,33 @@ namespace CAS
     /// </summary>
     public enum Audience
     {
+        /// <summary>
+        /// The user's age has not been determined.
+        /// 
+        /// <para>If your app's target age groups include both children and older audiences,
+        /// any ads that may be shown to children must comply with Google Play's Families Ads Program.
+        /// A neutral age screen must be implemented so that any ads not suitable for children are only shown to older audiences.
+        /// A neutral age screen is a mechanism to verify a user's age in a way that doesn't encourage them to falsify their age
+        /// and gain access to areas of your app that aren't designed for children, for example, an age gate.</para> 
+        /// </summary>
         Mixed,
         /// <summary>
-        /// Forces sdk to filter ads with violence, drugs, etc
+        /// Audiences under the age of 13 who subject of COPPA.
+        ///
+        /// <para>When using this feature, a Tag For Users under the Age of Consent in Europe (TFUA) parameter
+        /// will be included in the ad request.
+        /// Also the state of GDPR and CCPA will be overridden automatically
+        /// to <see cref="ConsentStatus.Denied"/> and <see cref="CCPAStatus.OptOutSale"/></para>
+        ///
+        /// <para>It also allows application to comply with the Google Play Families Policy requirements:</para>
+        /// <para>- Ads displayed to those users do not involve interest-based advertising or remarketing;</para>
+        /// <para>- Ads displayed to those users present content that is appropriate for children;</para>
+        /// <para>- Ads displayed to those users follow the Families ad format requirements;</para>
+        /// <para>- Compliance with all applicable legal regulations and industry standards relating to advertising to children.</para>
         /// </summary>
         Children,
         /// <summary>
-        /// Disable all filters ads
+        /// Audiences over the age of 13 NOT subject to the restrictions of child protection laws.
         /// </summary>
         NotChildren,
     }

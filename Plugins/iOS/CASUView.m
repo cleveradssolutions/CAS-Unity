@@ -9,6 +9,14 @@
     #import "CASUPluginUtil.h"
     #import <UIKit/UIKit.h>
 
+static const int AD_POSITION_TOP_CENTER = 0;
+static const int AD_POSITION_TOP_LEFT = 1;
+static const int AD_POSITION_TOP_RIGHT = 2;
+static const int AD_POSITION_BOTTOM_CENTER = 3;
+static const int AD_POSITION_BOTTOM_LEFT = 4;
+static const int AD_POSITION_BOTTOM_RIGHT = 5;
+
+
 @interface CASUView () <CASBannerDelegate>
 @property (nonatomic, assign) CGPoint adPositionOffset;
 @property (nonatomic, assign) int activePos;
@@ -27,7 +35,7 @@
         _bannerView.hidden = YES;
         _bannerView.adDelegate = self;
         _bannerView.rootViewController = unityVC;
-        _activePos = 3; // Bottom Center
+        _activePos = AD_POSITION_BOTTOM_CENTER;
         _adPositionOffset = CGPointZero;
     }
     return self;
@@ -139,8 +147,8 @@
 }
 
 - (void)setPositionCode:(int)code withX:(int)x withY:(int)y {
-    if (code < 0 || code > 5) {
-        self.activePos = 3;
+    if (code < AD_POSITION_TOP_CENTER || code > AD_POSITION_BOTTOM_RIGHT) {
+        self.activePos = AD_POSITION_BOTTOM_CENTER;
     } else {
         self.activePos = code;
     }
@@ -177,19 +185,19 @@
 
     CGPoint center;
     switch (self.activePos) {
-        case 0:
+        case AD_POSITION_TOP_CENTER:
             center = CGPointMake(CGRectGetMidX(parentBounds), top);
             break;
-        case 1:
+        case AD_POSITION_TOP_LEFT:
             center = CGPointMake(left, top);
             break;
-        case 2:
+        case AD_POSITION_TOP_RIGHT:
             center = CGPointMake(right, top);
             break;
-        case 4:
+        case AD_POSITION_BOTTOM_LEFT:
             center = CGPointMake(left, bottom);
             break;
-        case 5:
+        case AD_POSITION_BOTTOM_RIGHT:
             center = CGPointMake(right, bottom);
             break;
         default:

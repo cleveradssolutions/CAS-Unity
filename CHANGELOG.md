@@ -1,5 +1,21 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.7.0] - 2022-04-05
+### Dependencies
+- [Android] Wraps [2.7.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.7.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+- External Dependency Manager for Unity [1.2.170](https://github.com/googlesamples/unity-jar-resolver/releases/tag/v1.2.169)
+### Features
+- [Android] Notches on the screen no longer offset the banner position in the center.
+- [Android] Added a dependency on a `com.google.android.exoplayer:exoplayer` to avoid ANR from `android.media.MediaPlayer`. 
+  - Also added `android.enableDexingArtifactTransform=false` property to avoid `java.lang.AbstractMethodError` crash from ExoPlayer interface conflict.
+## Changes
+- Improved error messages while showing ads. Instead of the `No Fill` message, will be `Ad are not ready` or `No internet connection detected`.
+- Before closing fullscreen ad no longer fires `OnFailedToLoadAd`. It should be considered that the shown ad cannot be shown again. Wait for a new ad loading notification to show it.
+- Banner auto refresh no longer fires `OnFailed` when the current ad is still valid.
+- Fixed banner fires `OnLoaded` when Admob auto refresh.
+- For a potential increase revenue, we disabled filtering of ineffective floors from the waterfall, after CAS 2.5.0 update.
+
 ## [2.6.7] - 2022-03-25
 ### Dependencies
 - [Android] Wraps [2.6.7 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

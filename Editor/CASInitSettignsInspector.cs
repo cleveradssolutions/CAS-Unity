@@ -45,6 +45,7 @@ namespace CAS.UEditor
         private bool deprecateDependenciesExist;
         private Version edmVersion;
         private PropertyInfo edmIOSStaticLinkProp = null;
+        private bool edmRequiredNewer = false;
         private string environmentDetails;
 
         private string[] deprecatedAssets = null;
@@ -111,8 +112,8 @@ namespace CAS.UEditor
                 AssetDatabase.MoveAssetToTrash( Utils.androidResSettingsPath + ".json" );
 
             edmVersion = Utils.GetEDM4UVersion( platform );
-            if (edmVersion != null && edmVersion < Utils.minEDM4UVersion)
-                edmVersion = null;
+            if (edmVersion != null)
+                edmRequiredNewer = edmVersion < Utils.minEDM4UVersion;
             try
             {
                 if (platform == BuildTarget.iOS)
@@ -310,14 +311,6 @@ namespace CAS.UEditor
 
         private void OnEditorEnvirementGUI()
         {
-            analyticsCollectionEnabledProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Impression Analytics collection (Firebase)", null,
-                "If your application uses Google Analytics(Firebase) then CAS collects ad impressions and states to analytic.\n" +
-                "Disabling analytics collection may save internet traffic and improve application performance.\n" +
-                "The Analytics collection has no effect on ad revenue." ), analyticsCollectionEnabledProp.boolValue );
-            debugModeProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Verbose Debug logging", null,
-                "The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdk with tag CAS. " +
-                "Disabling the Debug Mode may improve application performance." ), debugModeProp.boolValue );
-
             if (platform == BuildTarget.Android)
             {
                 permissionAdIdRemovedProp.boolValue = EditorGUILayout.ToggleLeft(
@@ -355,6 +348,15 @@ namespace CAS.UEditor
                     EditorGUI.indentLevel--;
                 }
             }
+            debugModeProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Verbose Debug logging", null,
+                   "The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdk with tag CAS. " +
+                   "Disabling the Debug Mode may improve application performance." ), debugModeProp.boolValue );
+
+            analyticsCollectionEnabledProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Impression Analytics collection (Firebase)", null,
+                "If your application uses Google Analytics(Firebase) then CAS collects ad impressions and states to analytic.\n" +
+                "Disabling analytics collection may save internet traffic and improve application performance.\n" +
+                "The Analytics collection has no effect on ad revenue." ), analyticsCollectionEnabledProp.boolValue );
+
             delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
                     "Delay measurement of the Google SDK initialization",
                     delayAppMeasurementGADInitProp.boolValue );
@@ -536,6 +538,12 @@ namespace CAS.UEditor
                 GUILayout.Label( "2. Import the EDM4U.unitypackage into your project." );
                 HelpStyles.EndBoxScope();
                 return;
+            }
+            if (edmRequiredNewer)
+            {
+                EditorGUILayout.HelpBox( "To properly include third-party dependencies in your project, " +
+                    "you need an External Dependency Manager version " + Utils.minEDM4UVersion + " or later.",
+                    MessageType.Warning );
             }
 
             if (platform == BuildTarget.Android)

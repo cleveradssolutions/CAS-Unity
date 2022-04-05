@@ -29,10 +29,11 @@ namespace CAS.UEditor
 
         public const string promoDependency = "CrossPromotion";
 
-        public const string mainGradlePath = "Assets/Plugins/Android/mainTemplate.gradle";
-        public const string launcherGradlePath = "Assets/Plugins/Android/launcherTemplate.gradle";
-        public const string projectGradlePath = "Assets/Plugins/Android/baseProjectTemplate.gradle";
-        public const string propertiesGradlePath = "Assets/Plugins/Android/gradleTemplate.properties";
+        public const string androidPluginsPath = "Assets/Plugins/Android/";
+        public const string mainGradlePath = androidPluginsPath + "mainTemplate.gradle";
+        public const string launcherGradlePath = androidPluginsPath + "launcherTemplate.gradle";
+        public const string projectGradlePath = androidPluginsPath + "baseProjectTemplate.gradle";
+        public const string propertiesGradlePath = androidPluginsPath + "gradleTemplate.properties";
         public const string packageManifestPath = "Packages/manifest.json";
 
         public const string swiftEnableFileInXCode = "Libraries/com.cleversolutions.ads.unity/Plugins/iOS/CASUEnable.swift";
