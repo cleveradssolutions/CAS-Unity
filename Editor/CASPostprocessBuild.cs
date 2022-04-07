@@ -50,36 +50,18 @@ namespace CAS.UEditor
                 project.SetBuildProperty( frameworkTargetGuid, "SWIFT_VERSION", "5.0" );
             project.SetBuildProperty( frameworkTargetGuid, "CLANG_ENABLE_MODULES", "YES" );
 
+            EmbedSwiftStandardLibraries( project, mainTargetGuid );
             CopyRawSettingsFile( buildPath, project, mainTargetGuid, initSettings );
             EnableSwiftForMainTarget( buildPath, project, mainTargetGuid );
-            EmbedSwiftStandardLibraries( project, mainTargetGuid );
             SetExecutablePath( buildPath, project, mainTargetGuid, depManager );
 
             SaveXCode( project, buildPath );
 
-            ApplyCrosspromoDynamicLinks( buildPath, mainTargetGuid, initSettings, depManager );
+            if (editorSettings.generateiOSDeepLinksForPromo)
+                ApplyCrosspromoDynamicLinks( buildPath, mainTargetGuid, initSettings, depManager );
 
-#if UNITY_2019_3_OR_NEWER || CASDeveloper
-            var podPath = buildPath + "/Podfile";
-            if (File.Exists( podPath ))
-            {
-                var content = File.ReadAllText( podPath );
-                if (!content.Contains( "'Unity-iPhone'" ))
-                {
-                    using (StreamWriter sw = File.AppendText( podPath ))
-                    {
-                        sw.WriteLine();
-                        sw.WriteLine( "target 'Unity-iPhone' do" );
-                        sw.WriteLine( "end" );
-                    }
-                }
-            }
-            else
-            {
-                Debug.LogError( CASEditorUtils.logTag + "Podfile not found.\n" +
-                    "Please add `target 'Unity-iPhone' do end` to the Podfile in root folder " +
-                    "of XCode project and call `pod install --no-repo-update`" );
-            }
+#if UNITY_2019_3_OR_NEWER
+            UpdatePodfileForUnity2019( buildPath );
 #endif
             Debug.Log( CASEditorUtils.logTag + "Postrocess Build done." );
         }
@@ -110,6 +92,33 @@ namespace CAS.UEditor
             }
 
             SaveXCode( project, buildPath );
+        }
+
+        private static void UpdatePodfileForUnity2019( string buildPath )
+        {
+            var podPath = buildPath + "/Podfile";
+            if (File.Exists( podPath ))
+            {
+                try
+                {
+                    var content = File.ReadAllText( podPath );
+                    if (!content.Contains( "'Unity-iPhone'" ))
+                    {
+                        content += "\ntarget 'Unity-iPhone' do\nend\n";
+                        File.WriteAllText( podPath, content );
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException( e );
+                }
+            }
+            else
+            {
+                Debug.LogError( CASEditorUtils.logTag + "Podfile not found.\n" +
+                    "Please add `target 'Unity-iPhone' do end` to the Podfile in root folder " +
+                    "of XCode project and call `pod install --no-repo-update`" );
+            }
         }
 
         #region Utils

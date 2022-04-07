@@ -36,10 +36,13 @@ namespace CAS.UEditor
             try
             {
                 ValidateIntegration( target );
+                EditorUtility.DisplayProgressBar( "Hold on", "Prepare components...", 0.95f );
             }
-            finally
+            catch (Exception e)
             {
+                // If no errors are found then there is no need to clear the progress for the user.
                 EditorUtility.ClearProgressBar();
+                throw e;
             }
         }
         #endregion
@@ -55,14 +58,14 @@ namespace CAS.UEditor
                 Utils.StopBuildWithMessage( "Settings not found. Please use menu Assets/CleverAdsSolutions/Settings " +
                     "to create and set settings for build.", target );
 
+            var editorSettings = CASEditorSettings.Load();
             var deps = DependencyManager.Create( target, Audience.Mixed, true );
             if (!isBatchMode)
             {
                 var newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
                 if (newCASVersion != null)
                     DialogOrCancel( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", target );
-
-
+                
                 if (deps != null)
                 {
                     if (!deps.installedAny)
@@ -130,8 +133,6 @@ namespace CAS.UEditor
             {
                 EditorUtility.DisplayProgressBar( casTitle, "Validate CAS Android Build Settings", 0.8f );
 
-                var editorSettings = CASEditorSettings.Load();
-
                 const string deprecatedPluginPath = "Assets/Plugins/CAS";
                 if (AssetDatabase.IsValidFolder( deprecatedPluginPath ))
                 {
@@ -140,9 +141,11 @@ namespace CAS.UEditor
                 }
 
                 HashSet<string> promoAlias = new HashSet<string>();
-                // TODO: Create option to disable CrossPromo Querries generator
-                for (int i = 0; i < settings.managersCount; i++)
-                    Utils.GetCrossPromoAlias( target, settings.GetManagerId( i ), promoAlias );
+                if (editorSettings.generateAndroidQuerriesForPromo)
+                {
+                    for (int i = 0; i < settings.managersCount; i++)
+                        Utils.GetCrossPromoAlias( target, settings.GetManagerId( i ), promoAlias );
+                }
 
                 UpdateAndroidPluginManifest( admobAppId, promoAlias, editorSettings );
 
@@ -183,7 +186,6 @@ namespace CAS.UEditor
                     "\nUse 'Assets/CleverAdsSolutions/Settings' menu to disable Test Ad Mode." );
             else
                 Debug.Log( Utils.logTag + "Preprocess Build done." );
-            EditorUtility.DisplayProgressBar( "Hold on", "Prepare components...", 0.95f );
         }
 
         private static void CreateAndroidLibIfNedded()

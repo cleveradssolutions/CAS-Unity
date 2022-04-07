@@ -53,7 +53,8 @@ namespace CAS
         /// any ads that may be shown to children must comply with Google Play's Families Ads Program.
         /// A neutral age screen must be implemented so that any ads not suitable for children are only shown to older audiences.
         /// A neutral age screen is a mechanism to verify a user's age in a way that doesn't encourage them to falsify their age
-        /// and gain access to areas of your app that aren't designed for children, for example, an age gate.</para> 
+        /// and gain access to areas of your app that aren't designed for children, for example, an age gate.</para>
+        /// <para>You could change the audience at runtime after determining the user's age.</para>
         /// </summary>
         Mixed,
         /// <summary>

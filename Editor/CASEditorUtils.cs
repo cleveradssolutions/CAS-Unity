@@ -68,32 +68,6 @@ namespace CAS.UEditor
         internal const string editorIconNamePrefix = "cas_editoricon_";
         #endregion
 
-        #region Internal structures
-        [Serializable]
-        internal class AdmobAppIdData
-        {
-            public string admob_app_id = null;
-#if false
-            public int[] Banner = null;
-            public int[] Interstitial = null;
-            public int[] Rewarded = null;
-
-            public bool IsDisabled()
-            {
-                return ( Interstitial == null || Interstitial.Length < 5 )
-                    && ( Banner == null || Banner.Length < 5 )
-                    && ( Rewarded == null || Rewarded.Length < 5 );
-            }
-#endif
-        }
-
-        [Serializable]
-        internal class GitVersionInfo
-        {
-            public string tag_name = null;
-        }
-        #endregion
-
         #region Menu items
         [MenuItem( "Assets/CleverAdsSolutions/Android Settings..." )]
         public static void OpenAndroidSettingsWindow()
@@ -317,7 +291,21 @@ namespace CAS.UEditor
         {
             try
             {
-                var newVerStr = GetLatestVersion( repo, force, currVersion );
+                if (!force)
+                {
+                    var editorSettings = CASEditorSettings.Load();
+                    if (!editorSettings.autoCheckForUpdatesEnabled)
+                        return null;
+
+                    if (!HasTimePassed( editorLatestVersionTimestampPrefs + repo, 1, false ))
+                    {
+                        var last = EditorPrefs.GetString( editorLatestVersionPrefs + repo );
+                        if (!string.IsNullOrEmpty( last ))
+                            return last;
+                    }
+                }
+
+                var newVerStr = GetLatestVersion( repo, currVersion );
                 if (newVerStr != null && newVerStr != currVersion && !currVersion.Contains( "-RC" ))
                 {
                     var currVer = new System.Version( currVersion );
@@ -378,24 +366,7 @@ namespace CAS.UEditor
 #if UNITY_2018_4_OR_NEWER
                 if (allowedPackageUpdate && GUILayout.Button( "Update", GUILayout.ExpandHeight( true ), GUILayout.ExpandWidth( false ) ))
                 {
-                    var request = UnityEditor.PackageManager.Client.Add( gitRootURL + gitRepoName + ".git#" + newCASVersion );
-                    try
-                    {
-                        while (!request.IsCompleted)
-                        {
-                            if (EditorUtility.DisplayCancelableProgressBar(
-                                "Update Package Manager dependency", gitRepoName + " " + newCASVersion, 0.5f ))
-                                break;
-                        }
-                        if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
-                            Debug.Log( "Package Manager: Update " + request.Result.displayName );
-                        else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
-                            Debug.LogError( request.Error.message );
-                    }
-                    finally
-                    {
-                        EditorUtility.ClearProgressBar();
-                    }
+                    UpdatePackageManagerRepo( gitRepoName, newCASVersion );
                 }
 #endif
                 EditorGUILayout.EndHorizontal();
@@ -424,24 +395,7 @@ namespace CAS.UEditor
 #if UNITY_2018_4_OR_NEWER
                 if (allowedPackageUpdate && GUILayout.Button( "Update", layoutParams ))
                 {
-                    var request = UnityEditor.PackageManager.Client.Add( gitRootURL + gitRepoName + ".git#" + newCASVersion );
-                    try
-                    {
-                        while (!request.IsCompleted)
-                        {
-                            if (EditorUtility.DisplayCancelableProgressBar(
-                                "Update Package Manager dependency", gitRepoName + " " + newCASVersion, 0.5f ))
-                                break;
-                        }
-                        if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
-                            Debug.Log( "Package Manager: Update " + request.Result.displayName );
-                        else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
-                            Debug.LogError( request.Error.message );
-                    }
-                    finally
-                    {
-                        EditorUtility.ClearProgressBar();
-                    }
+                    UpdatePackageManagerRepo( gitRepoName, newCASVersion );
                 }
 #endif
                 if (GUILayout.Button( "Releases", layoutParams ))
@@ -758,20 +712,8 @@ namespace CAS.UEditor
             return;
         }
 
-        internal static string GetLatestVersion( string repo, bool force, string currVersion )
+        private static string GetLatestVersion( string repo, string currVersion )
         {
-            if (!force)
-            {
-                var editorSettings = CASEditorSettings.Load();
-                if (!editorSettings.autoCheckForUpdatesEnabled
-                    || !HasTimePassed( editorLatestVersionTimestampPrefs + repo, 1, false ))
-                {
-                    var last = EditorPrefs.GetString( editorLatestVersionPrefs + repo );
-                    if (!string.IsNullOrEmpty( last ))
-                        return last;
-                }
-            }
-
             const string title = "Get latest CAS version info";
             string url = "https://api.github.com/repos/cleveradssolutions/" + repo + "/releases/latest";
 
@@ -836,6 +778,28 @@ namespace CAS.UEditor
             return 0;
         }
 
+        private static void UpdatePackageManagerRepo( string gitRepoName, string version )
+        {
+            var request = UnityEditor.PackageManager.Client.Add( gitRootURL + gitRepoName + ".git#" + version );
+            try
+            {
+                while (!request.IsCompleted)
+                {
+                    if (EditorUtility.DisplayCancelableProgressBar(
+                        "Update Package Manager dependency", gitRepoName + " " + version, 0.5f ))
+                        break;
+                }
+                if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
+                    Debug.Log( "Package Manager: Update " + request.Result.displayName );
+                else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
+                    Debug.LogError( request.Error.message );
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
+
         private static void SaveLatestRepoVersion( string repo, string version )
         {
             EditorPrefs.SetString( editorLatestVersionPrefs + repo, version );
@@ -871,6 +835,30 @@ namespace CAS.UEditor
             }
         }
         #endregion
+    }
+
+    [Serializable]
+    internal class AdmobAppIdData
+    {
+        public string admob_app_id = null;
+#if false
+            public int[] Banner = null;
+            public int[] Interstitial = null;
+            public int[] Rewarded = null;
+
+            public bool IsDisabled()
+            {
+                return ( Interstitial == null || Interstitial.Length < 5 )
+                    && ( Banner == null || Banner.Length < 5 )
+                    && ( Rewarded == null || Rewarded.Length < 5 );
+            }
+#endif
+    }
+
+    [Serializable]
+    internal class GitVersionInfo
+    {
+        public string tag_name = null;
     }
 
     [Serializable]

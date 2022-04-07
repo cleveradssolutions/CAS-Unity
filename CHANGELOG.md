@@ -1,5 +1,14 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.7.1] - 2022-04-07
+### Dependencies
+- [Android] Wraps [2.7.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.7.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- [iOS] Added Chartboost support(beta).
+### Bug Fixes
+- [Editor] Disabled warning about new CAS version on build if `Auto check for CAS updates` option is disabled.
+
 ## [2.7.0] - 2022-04-05
 ### Dependencies
 - [Android] Wraps [2.7.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
@@ -9,7 +18,7 @@
 - [Android] Notches on the screen no longer offset the banner position in the center.
 - [Android] Added a dependency on a `com.google.android.exoplayer:exoplayer` to avoid ANR from `android.media.MediaPlayer`. 
   - Also added `android.enableDexingArtifactTransform=false` property to avoid `java.lang.AbstractMethodError` crash from ExoPlayer interface conflict.
-## Changes
+### Changes
 - Improved error messages while showing ads. Instead of the `No Fill` message, will be `Ad are not ready` or `No internet connection detected`.
 - Before closing fullscreen ad no longer fires `OnFailedToLoadAd`. It should be considered that the shown ad cannot be shown again. Wait for a new ad loading notification to show it.
 - Banner auto refresh no longer fires `OnFailed` when the current ad is still valid.
@@ -42,19 +51,19 @@
 - [Android] Wraps [2.6.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.6.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 - External Dependency Manager for Unity [1.2.169](https://github.com/googlesamples/unity-jar-resolver/releases/tag/v1.2.169)
-## Features
+### Features
 - [Android] You no longer need to add a dependency on AppSetId because it is always applied.
-## Bug Fixes
+### Bug Fixes
 -  Fixed a bug where the set of the banner position in the Top Center was not applied.
 
 ## [2.6.2] - 2022-01-17
 ### Dependencies
 - [Android] Wraps [2.6.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.6.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-## Features
+### Features
 - [Android] Automatic deletion of the deprecated `jCenter()` repository to avoid Timeout error when the repository is not responding.
 - [Android] Improved automatic gradle file configuration behavior.
-## Bug Fixes
+### Bug Fixes
 - Fixed saving ads settings for Windows Editor.
 
 ## [2.6.1] - 2022-01-12
@@ -62,7 +71,7 @@
 - [Android] Wraps [2.6.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.6.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 - Unity Consent dialog [2.0.0](https://github.com/cleveradssolutions/CAS-Unity-Consent/releases)
-## Features
+### Features
 - Added support for [Android 12](https://developer.android.com/about/versions/12) devices for apps targeting API 31.
 - Added [CAS.ATTrackingStatus.Request(callback)](https://github.com/cleveradssolutions/CAS-Unity/wiki/Asking-Permissions), which provides a Tracking Authorization request and the Tracking Authorization status of the iOS application.
 - Added [Delay measurement of the Google SDK initialization](https://developers.google.com/admob/ump/android/quick-start#delay_app_measurement_optional) option in `CleverAdsSlutions > Settings` window.
@@ -71,7 +80,7 @@
 - [Android] Improved Proguard compatibility. Reduced the SDK size.
 - [Android] Added option to disable `Multi DEX` in `Android Settings` window when your app does not require splitting into multiple dex.
 - [iOS] Added `Set User Tracking Usage desciption` option in `iOS Settings` to configure localizad description of Tracking Authorization Request.
-## Changes
+### Changes
 - The CAS no longer affects to Facebook Audience network [Data processing options for Users in California](https://developers.facebook.com/docs/marketing-apis/data-processing-options/) and [iOS Advertising Tracking Enabled](https://developers.facebook.com/docs/audience-network/setting-up/platform-setup/ios/advertising-tracking-enabled)
 :warning: You will need to implement the flag irrespective of the use of mediation.  
 ```cs
@@ -85,7 +94,7 @@ CAS.ATTrackingStatus.Request((status) => {
 - [Android] With Android 12 many mediation partners are starting to include the `com.google.android.gms.permission.AD_ID` permission.  
 :warning: Use new `Remove permission to use Advertising ID` option in `Android Settings` window to remove the permission for all manifests.  
 Also, some mediation partners are already working with a new `App set ID` that you can add to your game in the `Android Settings > Advanced Integration` section.
-## Banner Ads update
+### Banner Ads update
 - Improved calculation of the `AdSize.AdaptiveBanner`.
 - We had to rethink the structure of banners and banner sizes to make their work clearer and more efficient.
 - Each a `AdSize` has its own unique ad view. ~~Single `AdSize` instance for `IMediationManager`~~.
@@ -95,17 +104,17 @@ IMediationManager manager = MobileAds.BuildManager().Initialize();
 IAdView adView = manager.GetAdView( AdSize.MediumRectangle );
 ```
 - Separated the `AdSize.MediumRectangle` from `AdFlags.Banner` format to new `AdFlags.MediumRectangle` format to better configuration of the mediation manager.
-## Bug Fixes
+### Bug Fixes
 - Fixed compilation error with Unity 2021.2 and newer.
 - Fixed compilation error with .NET 3.5.
-## Update Cross promotion
+### Update Cross promotion
 - Improved stability and performance.
 - [Android] Improved detection of installed applications that have cross-promo SDK version 2.6+ on Android 11+. 
 - Added load error "Impression cap" when ad creative has reached its daily cap for user.
 - Added option of creative to lock rotation of full-screen ads.
 - Added option of creative to disable background for full-screen ads.
 - Added option of creative to disable banner for full-screen ads.
-## Mediation partners update
+### Mediation partners update
 - The composition of the `Optimal` solution has been changed: + Pangle, + TapJoy, + MyTarget, ~~Kidoz~~, ~~FairBid~~
 - [iOS] Create new a Families solution designed for applications aimed at a children's audience.
 - Removed support for the following networks: FairBid, Start.IO, Smaato, MoPub 
@@ -114,7 +123,7 @@ IAdView adView = manager.GetAdView( AdSize.MediumRectangle );
 ### Dependencies
 - [Android] Wraps [2.5.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.4.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-## Features
+### Features
 - [iOS] Official release for iOS 15 support.
 - [iOS] Improvements in the framework structure to avoid problems with classes implemented in both targets.
 - [iOS] Added overwriting of App Transport Security settings in `Info.plist`.
@@ -122,7 +131,7 @@ IAdView adView = manager.GetAdView( AdSize.MediumRectangle );
 - [iOS] Added warning when Link frameworks statically disabled.
   > We recommend enabling `Add use_frameworks!` and `Link frameworks statically` found under `Assets -> External Dependency Manager -> iOS Resolver -> Settings` menu.
   > Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.
-## Bug Fixes
+### Bug Fixes
 - Fixed a rare error in the name of the cas settings file.
 - Fixed native dependency management when moving `Dependencies.xml` files from `Assets/CleverAdsSolutions` folder. 
 - [iOS] Fixes for iOS build with Unity 2019.3+ and XCode 13.
@@ -131,7 +140,7 @@ IAdView adView = manager.GetAdView( AdSize.MediumRectangle );
 ### Dependencies
 - [Android] Wraps [2.5.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.4.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-## Added new mediation partner
+### Added new mediation partner
 You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
 [Smaato](https://www.smaato.com/) - [Privacy Policy](https://www.smaato.com/privacy/)  
 > Available for Android only. Coming soon for iOS.
@@ -139,19 +148,19 @@ You can integrate any set of networks using the advanced integration in the `Ass
 ## [2.5.1] - 2021-08-28
 ### Dependencies
 - [Android] Wraps [2.5.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
-## Features
+### Features
 - Only Test Ads are used with the Development Build to avoid changing the Test Ads Mode checkbox.
   > Make sure you disable Development build and use real ad manager ID before publishing your app!
 - [Editor] The Test Banner simulation is more similar to real size.
 - [Editor] The Test Banenr size and position can be changed in play mode using the inspector.
 - [Editor] The application is allowed to build when the server is not available. However, still not recommended and may reduce mediation revenue.
 - [Editor] Improved Admob App Id filling.
-## Bug Fixes
+### Bug Fixes
 - [Android] Fixed load the Banner Ads automatically after initialization.
-## Changes
+### Changes
 - Deprecated `CAS.MobileAds.BuildManager().WithManagerId()` in favor of `Assets>CleverAdsSolutions>Settings` menu and `CAS.MobileAds.BuildManager().WithManagerIdAtIndex()`.
   > Defining Manager Id in the builder is not enough to setup the project correctly.
-## Added new mediation partner
+### Added new mediation partner
 You can integrate any set of networks using the advanced integration in the `Assets > CleverAdsSolutions > Settings` window.
 [Pangle](https://www.pangleglobal.com/) - [Privacy Policy](https://www.pangleglobal.com/privacy/enduser-en)  
 > Available for Android only. Coming soon for iOS.
@@ -160,7 +169,7 @@ You can integrate any set of networks using the advanced integration in the `Ass
 ### Dependencies
 - [Android] Wraps [2.5.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.4.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-## Changes
+### Changes
 - Chartboost is no longer supported. At the moment, Chartboost architecture does not allow us to effectively compete with other networks. 
 We will keep an eye on changes in the future and look forward to receiving support back.
 - Deprecated `CAS.MobileAds.BuildManager().WithTestAdMode(false)` in favor of `Assets>CleverAdsSolutions>Settings` menu.
@@ -172,14 +181,14 @@ We will keep an eye on changes in the future and look forward to receiving suppo
 ### Dependencies
 - [Android] Wraps [2.4.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.4.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-## Bug Fixes
+### Bug Fixes
 - [Android] Fixed update gradle version before build.
 
 ## [2.4.0] - 2021-07-05
 ### Dependencies
 - [Android] Wraps [2.4.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.4.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-## Features
+### Features
 - Added alternative events `OnBannerAdOpening, OnInterstitialAdOpening, OnRewardedAdOpening` with ad display metadata.
 ```csharp
 manager.OnInterstitialAdOpening += ( metadata ) =>
@@ -197,7 +206,7 @@ manager.OnInterstitialAdOpening += ( metadata ) =>
 ```
 - The [ReturnToPlayAdObject](https://github.com/cleveradssolutions/CAS-Unity/wiki/Return-To-Play-Ad-Object) component has been added, which allows displaying ads when returning to the game without using scripts.
 - [iOS] Added check for minimum deployment version of iOS 10.0 before build.
-## Bug Fixes
+### Bug Fixes
 - [iOS] Fixed bug with ReturnToPlayAd.
 - [Editor] Fixed bug when building with `-batchmode` and disabled ads for the application.
 
@@ -205,15 +214,15 @@ manager.OnInterstitialAdOpening += ( metadata ) =>
 ### Dependencies
 - [Android] Wraps [2.3.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.3.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-## Features
+### Features
 - Added the ability to enable automatic display of [interstitial ads for users who return to the open application](https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Return-Ads).
-## Changes
+### Changes
 > Ads Solution names have been changed to match terms with native platforms.
 - [Android] The `NotChildrenAds` solution has been renamed to `OptimalAds` solutions.
 - [Android] Removed the `MixedAudience` solution in favor of `OptimalAds` solutions.
 - [iOS] The `Recomended` solution has been renamed to `OptimalAds` solutions.
 - [iOS] Removed the `Main` solution in favor of `OptimalAds` solutions.
-## Bug Fixes
+### Bug Fixes
 - [Android] Fixed an issue due to which sometimes the banner ads was not visible on the screen.
 - [iOS] Fixed duplication of Google Utilities framework using Firebase and Unity 2019.4+.
 
@@ -221,7 +230,7 @@ manager.OnInterstitialAdOpening += ( metadata ) =>
 ### Dependencies
 - [Android] Wraps [2.2.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.2.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-## Changes
+### Changes
 - Yandex Ads removed from the recommended solutions as it supports banner ads only.
 - Mintegral added to the recommended solutions.
 > Recommended solutions for Android is `MixedAudience` and `NotChildrenAds`.

@@ -41,6 +41,7 @@ namespace CAS.UEditor
         private ReorderableList userTrackingList;
         private BuildTarget platform;
         private bool allowedPackageUpdate;
+        private bool otherSettingsFoldout = false;
         private string newCASVersion = null;
         private bool deprecateDependenciesExist;
         private Version edmVersion;
@@ -251,7 +252,6 @@ namespace CAS.UEditor
             IsAdFormatsNotUsed();
             DrawSeparator();
             OnEditroRuntimeActiveAdGUI();
-            OnLoadingModeGUI();
             OnAudienceGUI();
             DeprecatedDependenciesGUI();
 
@@ -266,23 +266,108 @@ namespace CAS.UEditor
                 OnEDMAreaGUI();
             }
 
+            OnUserTrackingDesctiptionGUI();
+            OnOtherSettingsGUI();
+            EditorGUILayout.HelpBox( environmentDetails, MessageType.None );
             OnAppAdsTxtGUI();
-            DrawSeparator();
-
-            OnUserTrackingGUI();
-            OnIOSLocationUsageDescriptionGUI();
-            OnEditorEnvirementGUI();
             editorSettingsObj.ApplyModifiedProperties();
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void OnUserTrackingGUI()
+        private void OnAndroidAdIdGUI()
+        {
+            if (platform != BuildTarget.Android)
+                return;
+            permissionAdIdRemovedProp.boolValue = EditorGUILayout.ToggleLeft(
+                    "Remove permission to use Advertising ID (AD_ID)",
+                    permissionAdIdRemovedProp.boolValue );
+        }
+
+        private void OnOtherSettingsGUI()
+        {
+            HelpStyles.BeginBoxScope();
+            otherSettingsFoldout = GUILayout.Toggle( otherSettingsFoldout, "Other settings", EditorStyles.foldout );
+            if (!otherSettingsFoldout)
+            {
+                HelpStyles.EndBoxScope();
+                return;
+            }
+
+            OnLoadingModeGUI();
+
+            debugModeProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Verbose Debug logging", null,
+                   "The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdk with tag CAS. " +
+                   "Disabling the Debug Mode may improve application performance." ), debugModeProp.boolValue );
+
+            analyticsCollectionEnabledProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Impression Analytics collection (Firebase)", null,
+                "If your application uses Google Analytics(Firebase) then CAS collects ad impressions and states to analytic.\n" +
+                "Disabling analytics collection may save internet traffic and improve application performance.\n" +
+                "The Analytics collection has no effect on ad revenue." ), analyticsCollectionEnabledProp.boolValue );
+            autoCheckForUpdatesEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Auto check for CAS updates enabled",
+                autoCheckForUpdatesEnabledProp.boolValue );
+
+            delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
+                    "Delay measurement of the Google SDK initialization",
+                    delayAppMeasurementGADInitProp.boolValue );
+
+            if (platform == BuildTarget.Android)
+            {
+                EditorGUILayout.BeginHorizontal();
+                multiDexEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                    "Multi DEX enabled",
+                    multiDexEnabledProp.boolValue );
+                HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Include-Android#enable-multidex" );
+                EditorGUILayout.EndHorizontal();
+            }
+            else
+            {
+                EditorGUILayout.BeginHorizontal();
+                var reportEndpointEnabled = attributionReportEndpointProp.stringValue.Length > 0;
+                if (reportEndpointEnabled != EditorGUILayout.ToggleLeft(
+                    "Set Attribution Report endpoint", reportEndpointEnabled ))
+                {
+                    reportEndpointEnabled = !reportEndpointEnabled;
+                    if (reportEndpointEnabled)
+                        attributionReportEndpointProp.stringValue = Utils.attributionReportEndPoint;
+                    else
+                        attributionReportEndpointProp.stringValue = string.Empty;
+                }
+                HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Include-iOS#ios-15-global-skadnetwork-reporting" );
+                EditorGUILayout.EndHorizontal();
+                if (reportEndpointEnabled)
+                {
+                    EditorGUI.indentLevel++;
+                    attributionReportEndpointProp.stringValue = EditorGUILayout.TextField(
+                        attributionReportEndpointProp.stringValue );
+                    EditorGUI.indentLevel--;
+                }
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label( "Most popular country of users (ISO2)", GUILayout.ExpandWidth( false ) );
+            EditorGUI.BeginChangeCheck();
+            var countryCode = mostPopularCountryOfUsersProp.stringValue;
+            countryCode = EditorGUILayout.TextField( countryCode, GUILayout.Width( 25.0f ) );
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (countryCode.Length > 2)
+                    countryCode = countryCode.Substring( 0, 2 );
+                mostPopularCountryOfUsersProp.stringValue = countryCode.ToUpper();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            HelpStyles.EndBoxScope();
+        }
+
+        private void OnUserTrackingDesctiptionGUI()
         {
             if (platform != BuildTarget.iOS)
                 return;
+            HelpStyles.BeginBoxScope();
             var enabled = userTrackingUsageDescriptionProp.arraySize > 0;
             EditorGUILayout.BeginHorizontal();
-            if (enabled != EditorGUILayout.ToggleLeft( "Set User Tracking Usage description", enabled ))
+            if (enabled != EditorGUILayout.ToggleLeft( "Set User Tracking Usage description in Info.plist", enabled ))
             {
                 enabled = !enabled;
                 if (enabled)
@@ -307,76 +392,7 @@ namespace CAS.UEditor
             EditorGUILayout.EndHorizontal();
             if (enabled)
                 userTrackingList.DoLayoutList();
-        }
-
-        private void OnEditorEnvirementGUI()
-        {
-            if (platform == BuildTarget.Android)
-            {
-                permissionAdIdRemovedProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Remove permission to use Advertising ID (AD_ID)",
-                    permissionAdIdRemovedProp.boolValue );
-
-                EditorGUILayout.BeginHorizontal();
-                multiDexEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Multi DEX enabled",
-                    multiDexEnabledProp.boolValue );
-                HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Include-Android#enable-multidex" );
-                EditorGUILayout.EndHorizontal();
-            }
-            else
-            {
-                EditorGUILayout.BeginHorizontal();
-                var reportEndpointEnabled = attributionReportEndpointProp.stringValue.Length > 0;
-                if (reportEndpointEnabled != EditorGUILayout.ToggleLeft(
-                    "Set Attribution Report endpoint", reportEndpointEnabled ))
-                {
-                    reportEndpointEnabled = !reportEndpointEnabled;
-                    if (reportEndpointEnabled)
-                        attributionReportEndpointProp.stringValue = Utils.attributionReportEndPoint;
-                    else
-                        attributionReportEndpointProp.stringValue = string.Empty;
-                }
-                HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Include-iOS#ios-15-global-skadnetwork-reporting" );
-                EditorGUILayout.EndHorizontal();
-
-                if (reportEndpointEnabled)
-                {
-                    EditorGUI.indentLevel++;
-                    attributionReportEndpointProp.stringValue = EditorGUILayout.TextField(
-                        attributionReportEndpointProp.stringValue );
-                    EditorGUI.indentLevel--;
-                }
-            }
-            debugModeProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Verbose Debug logging", null,
-                   "The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdk with tag CAS. " +
-                   "Disabling the Debug Mode may improve application performance." ), debugModeProp.boolValue );
-
-            analyticsCollectionEnabledProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Impression Analytics collection (Firebase)", null,
-                "If your application uses Google Analytics(Firebase) then CAS collects ad impressions and states to analytic.\n" +
-                "Disabling analytics collection may save internet traffic and improve application performance.\n" +
-                "The Analytics collection has no effect on ad revenue." ), analyticsCollectionEnabledProp.boolValue );
-
-            delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Delay measurement of the Google SDK initialization",
-                    delayAppMeasurementGADInitProp.boolValue );
-            autoCheckForUpdatesEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Auto check for CAS updates enabled",
-                autoCheckForUpdatesEnabledProp.boolValue );
-
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label( "Most popular country of users (ISO2)", GUILayout.ExpandWidth( false ) );
-            EditorGUI.BeginChangeCheck();
-            var countryCode = mostPopularCountryOfUsersProp.stringValue;
-            countryCode = EditorGUILayout.TextField( countryCode, GUILayout.Width( 25.0f ) );
-            if (EditorGUI.EndChangeCheck())
-            {
-                if (countryCode.Length > 2)
-                    countryCode = countryCode.Substring( 0, 2 );
-                mostPopularCountryOfUsersProp.stringValue = countryCode.ToUpper();
-            }
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.HelpBox( environmentDetails, MessageType.None );
+            HelpStyles.EndBoxScope();
         }
 
         private bool IsAdFormatsNotUsed()
@@ -517,7 +533,6 @@ namespace CAS.UEditor
 
         private void OnAppAdsTxtGUI()
         {
-            EditorGUILayout.Space();
             var content = HelpStyles.GetContent( " Don’t forget to implement app-ads.txt", HelpStyles.helpIconContent.image );
             if (GUILayout.Button( content, EditorStyles.label, GUILayout.ExpandWidth( false ) ))
                 Application.OpenURL( Utils.gitAppAdsTxtRepoUrl );
@@ -663,11 +678,13 @@ namespace CAS.UEditor
             switch (targetAudience)
             {
                 case Audience.Mixed:
-                    EditorGUILayout.HelpBox( "The app is intended for audiences of all ages and complying with COPPA.",
+                    EditorGUILayout.HelpBox( "Game target age groups include both children and older audiences.\n" +
+                        "A neutral age screen must be implemented so that any ads not suitable for children are only shown to older audiences.\n" +
+                        "You could change the audience at runtime.",
                         MessageType.None );
                     break;
                 case Audience.Children:
-                    EditorGUILayout.HelpBox( "Children restrictions and Google Families Ads Program participation apply to this app. Audience under 12 years old.",
+                    EditorGUILayout.HelpBox( "Audiences under the age of 13 who subject of COPPA.",
                         MessageType.None );
                     if (platform == BuildTarget.Android && !permissionAdIdRemovedProp.boolValue)
                     {
@@ -677,13 +694,15 @@ namespace CAS.UEditor
                     }
                     break;
                 case Audience.NotChildren:
-                    EditorGUILayout.HelpBox( "Audience over 12 years old only. There are no restrictions on ad filling.", MessageType.None );
+                    EditorGUILayout.HelpBox( "Audiences over the age of 13 NOT subject to the restrictions of child protection laws.", MessageType.None );
                     break;
             }
+            OnAndroidAdIdGUI();
+            OnIOSTrackLocationGUI();
             EditorGUI.indentLevel--;
         }
 
-        private void OnIOSLocationUsageDescriptionGUI()
+        private void OnIOSTrackLocationGUI()
         {
             if (platform != BuildTarget.iOS)
                 return;

@@ -11,6 +11,9 @@ namespace CAS.UEditor
         public bool delayAppMeasurementGADInit = true;
         public bool multiDexEnabled = true;
         public bool permissionAdIdRemoved = false;
+        public bool generateAndroidQuerriesForPromo = true;
+        public bool generateiOSDeepLinksForPromo = true;
+
 
         /// <summary>
         /// ISO2 such as US, RU ...

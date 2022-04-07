@@ -16,6 +16,8 @@ MonoBehaviour:
   delayAppMeasurementGADInit: 1
   multiDexEnabled: 1
   permissionAdIdRemoved: 0
+  generateAndroidQuerriesForPromo: 1
+  generateiOSDeepLinksForPromo: 1
   mostPopularCountryOfUsers: BR
   attributionReportEndpoint: https://postbacks-app.com
   userTrackingUsageDescription: []
