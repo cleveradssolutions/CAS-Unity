@@ -763,7 +763,7 @@ namespace CAS.UEditor
             var orientation = Screen.orientation;
             if (orientation == ScreenOrientation.Portrait || orientation == ScreenOrientation.PortraitUpsideDown)
                 return 1;
-            if (orientation == ScreenOrientation.Landscape || orientation == ScreenOrientation.LandscapeRight)
+            if (orientation == ScreenOrientation.LandscapeLeft || orientation == ScreenOrientation.LandscapeRight)
                 return 2;
             var supportPortrait = Screen.autorotateToPortrait || Screen.autorotateToPortraitUpsideDown;
             var supportLandscape = Screen.autorotateToLandscapeLeft || Screen.autorotateToLandscapeRight;
