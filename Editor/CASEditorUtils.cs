@@ -291,6 +291,7 @@ namespace CAS.UEditor
         {
             try
             {
+                string newVerStr = null;
                 if (!force)
                 {
                     var editorSettings = CASEditorSettings.Load();
@@ -298,14 +299,11 @@ namespace CAS.UEditor
                         return null;
 
                     if (!HasTimePassed( editorLatestVersionTimestampPrefs + repo, 1, false ))
-                    {
-                        var last = EditorPrefs.GetString( editorLatestVersionPrefs + repo );
-                        if (!string.IsNullOrEmpty( last ))
-                            return last;
-                    }
+                        newVerStr = EditorPrefs.GetString( editorLatestVersionPrefs + repo );
                 }
 
-                var newVerStr = GetLatestVersion( repo, currVersion );
+                if (string.IsNullOrEmpty( newVerStr ))
+                    newVerStr = GetLatestVersion( repo, currVersion );
                 if (newVerStr != null && newVerStr != currVersion && !currVersion.Contains( "-RC" ))
                 {
                     var currVer = new System.Version( currVersion );
