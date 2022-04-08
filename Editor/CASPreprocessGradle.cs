@@ -143,15 +143,17 @@ namespace CAS.UEditor
 #if DisableDexingArtifactTransform
             const string dexingPropertyName = "android.enableDexingArtifactTransform";
             var dexingPropertyDeclaration = new[] {
+                "// CAS Properties Start",
                 "([rootProject] + (rootProject.subprojects as List)).each {",
                 "    ext {",
                 "        it.setProperty(\"" + dexingPropertyName + "\", false)",
                 "    }",
-                "}"
+                "}",
+                "// CAS Properties End",
             };
 
             bool existDexingArtifact = false;
-#if !UNITY_2019_3_OR_NEWER
+#if UNITY_2019_3_OR_NEWER
             // For Unity 2019+ Gradle properties are written in the template file
             // by UpdateGradlePropertiesFileForUnity2019()
             existDexingArtifact = true;
