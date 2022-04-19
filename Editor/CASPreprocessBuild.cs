@@ -168,7 +168,7 @@ namespace CAS.UEditor
                 try
                 {
                     string newAppId = DownloadRemoteSettings( managerId, platform, settings, deps );
-                    if (!string.IsNullOrEmpty( appId ) || !string.IsNullOrEmpty( newAppId ))
+                    if (!string.IsNullOrEmpty( appId ) || string.IsNullOrEmpty( newAppId ))
                         continue;
                     if (newAppId.Contains( '~' ))
                     {

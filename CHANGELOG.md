@@ -5,8 +5,8 @@
 - [Android] Wraps [2.7.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.7.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 ### Features
-- [Editor] Added `Assets > CleverAdsSolutions > Configure project` to manually invoke the configuration project for successful build.
 - [Editor] Added option to disabled `Build preprocess` in `CleverAdsSlutions > Android Settings`.
+- [Editor] Added `Assets > CleverAdsSolutions > Configure project` menu to manually invoke the configuration project for successful build. The configuration can be called automatically before the build process when option `Build preprocess` enabled.
 - [Editor] Disabled error log for unregistered CAS ID when test mode is active.
 - [Android] Improved automatic activation of MultiDex and AndroidX.
 - [Android] The automatic `Update Gradle Plugin` occurs depending on selected version of the Gradle Wrapper in Unity preferences of External Tools. Added support for Gradle Wrapper 6.5.
