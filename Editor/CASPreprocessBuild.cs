@@ -1,4 +1,10 @@
-﻿#if UNITY_ANDROID || UNITY_IOS || CASDeveloper
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+#if UNITY_ANDROID || UNITY_IOS || CASDeveloper
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -8,6 +14,8 @@ using System.Xml.Linq;
 using System.Linq;
 using System;
 using Utils = CAS.UEditor.CASEditorUtils;
+using System.Text;
+using UnityEngine.Networking;
 
 #if UNITY_2018_1_OR_NEWER
 using UnityEditor.Build.Reporting;
@@ -21,7 +29,7 @@ namespace CAS.UEditor
     public class CASPreprocessBuild : IPreprocessBuild
 #endif
     {
-        private const string casTitle = "CAS Preprocess Build";
+        private const string casTitle = "CAS Configure project";
         #region IPreprocessBuild
         public int callbackOrder { get { return -25000; } }
 
@@ -33,10 +41,16 @@ namespace CAS.UEditor
         public void OnPreprocessBuild( BuildTarget target, string path )
         {
 #endif
+            if (target != BuildTarget.Android && target != BuildTarget.iOS)
+                return;
             try
             {
-                ValidateIntegration( target );
-                EditorUtility.DisplayProgressBar( "Hold on", "Prepare components...", 0.95f );
+                var editorSettings = CASEditorSettings.Load();
+                if (editorSettings.buildPreprocessEnabled)
+                {
+                    ConfigureProject( target, editorSettings );
+                    EditorUtility.DisplayProgressBar( "Hold on", "Prepare components...", 0.95f );
+                }
             }
             catch (Exception e)
             {
@@ -47,153 +61,172 @@ namespace CAS.UEditor
         }
         #endregion
 
-        public static void ValidateIntegration( BuildTarget target )
+        public static void ConfigureProject( BuildTarget target, CASEditorSettings editorSettings )
         {
             if (target != BuildTarget.Android && target != BuildTarget.iOS)
                 return;
 
-            var isBatchMode = Application.isBatchMode;
             var settings = Utils.GetSettingsAsset( target, false );
             if (!settings)
-                Utils.StopBuildWithMessage( "Settings not found. Please use menu Assets/CleverAdsSolutions/Settings " +
+                Utils.StopBuildWithMessage( "Settings asset not found. Please use menu Assets > CleverAdsSolutions > Settings " +
                     "to create and set settings for build.", target );
 
-            var editorSettings = CASEditorSettings.Load();
             var deps = DependencyManager.Create( target, Audience.Mixed, true );
-            if (!isBatchMode)
+            if (!Application.isBatchMode)
             {
                 var newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
                 if (newCASVersion != null)
-                    DialogOrCancel( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", target );
-                
+                    Utils.DialogOrCancelBuild( "There is a new version " + newCASVersion + " of the CAS Unity available for update.", target );
+
                 if (deps != null)
                 {
                     if (!deps.installedAny)
                         Utils.StopBuildWithMessage( "Dependencies of native SDK were not found. " +
-                        "Please use 'Assets/CleverAdsSolutions/Settings' menu to integrate solutions or any SDK separately.", target );
+                        "Please use 'Assets > CleverAdsSolutions > Settings' menu to integrate solutions or any SDK separately.", target );
 
-                    bool isNewerVersionExist = false;
-                    for (int i = 0; i < deps.solutions.Length; i++)
-                    {
-                        if (deps.solutions[i].isNewer)
-                        {
-                            isNewerVersionExist = true;
-                            break;
-                        }
-                    }
-                    if (!isNewerVersionExist)
-                    {
-                        for (int i = 0; i < deps.networks.Length; i++)
-                        {
-                            if (deps.networks[i].isNewer)
-                            {
-                                isNewerVersionExist = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (isNewerVersionExist)
-                        DialogOrCancel( "There is a new versions of the native dependencies available for update." +
-                            "Please use 'Assets/CleverAdsSolutions/Settings' menu to update.", target );
+                    if (deps.IsNewerVersionFound())
+                        Utils.DialogOrCancelBuild( "There is a new versions of the native dependencies available for update." +
+                            "Please use 'Assets > CleverAdsSolutions >Settings' menu to update.", target );
                 }
             }
 
             if (settings.managersCount == 0 || string.IsNullOrEmpty( settings.GetManagerId( 0 ) ))
                 StopBuildIDNotFound( target );
 
-            string admobAppId = null;
+            string admobAppId = UpdateRemoteSettingsAndGetAppId( settings, target, deps );
+
+            if (target == BuildTarget.Android)
+                ConfigureAndroid( settings, editorSettings, admobAppId );
+            else if (target == BuildTarget.iOS)
+                ConfigureIOS();
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            // Use directrly property to avoid Debug build
+            if (settings.testAdMode && !EditorUserBuildSettings.development)
+                Debug.LogWarning( Utils.logTag + "Test Ads Mode enabled! Make sure the build is for testing purposes only!\n" +
+                    "Use 'Assets > CleverAdsSolutions > Settings' menu to disable Test Ad Mode." );
+            else
+                Debug.Log( Utils.logTag + "Build Preprocess done." );
+#pragma warning restore CS0618 // Type or member is obsolete
+        }
+
+        private static void ConfigureIOS()
+        {
+#if (UNITY_IOS || CASDeveloper) && !UNITY_2019_3_OR_NEWER
+            if (!PlayerSettings.iOS.targetOSVersionString.StartsWith( "1" ))
+            {
+                Utils.DialogOrCancelBuild( "CAS required a higher minimum deployment target. Set iOS 10.0 and continue?", BuildTarget.NoTarget );
+                PlayerSettings.iOS.targetOSVersionString = "10.0";
+            }
+#endif
+        }
+
+        private static void ConfigureAndroid( CASInitSettings settings, CASEditorSettings editorSettings, string admobAppId )
+        {
+#if UNITY_ANDROID || CASDeveloper
+            EditorUtility.DisplayProgressBar( casTitle, "Validate CAS Android Build Settings", 0.8f );
+
+            const string deprecatedPluginPath = "Assets/Plugins/CAS";
+            if (AssetDatabase.IsValidFolder( deprecatedPluginPath ))
+            {
+                AssetDatabase.DeleteAsset( deprecatedPluginPath );
+                Debug.Log( "Removed deprecated plugin: " + deprecatedPluginPath );
+            }
+
+            HashSet<string> promoAlias = new HashSet<string>();
+            if (editorSettings.generateAndroidQuerriesForPromo)
+            {
+                for (int i = 0; i < settings.managersCount; i++)
+                    Utils.GetCrossPromoAlias( BuildTarget.Android, settings.GetManagerId( i ), promoAlias );
+            }
+
+            UpdateAndroidPluginManifest( admobAppId, promoAlias, editorSettings );
+
+            CASPreprocessGradle.Configure( editorSettings );
+
+#if !UNITY_2021_2_OR_NEWER
+            // 19 - AndroidSdkVersions.AndroidApiLevel19
+            // Deprecated in Unity 2021.2
+            if (PlayerSettings.Android.minSdkVersion < ( AndroidSdkVersions )19)
+            {
+                Utils.DialogOrCancelBuild( "CAS required a higher minimum SDK API level. Set SDK level 19 (KitKat) and continue?", BuildTarget.NoTarget );
+                PlayerSettings.Android.minSdkVersion = ( AndroidSdkVersions )19;
+            }
+#endif
+#endif
+        }
+
+        private static string UpdateRemoteSettingsAndGetAppId( CASInitSettings settings, BuildTarget platform, DependencyManager deps )
+        {
+            string appId = null;
             string updateSettingsError = "";
             for (int i = 0; i < settings.managersCount; i++)
             {
                 var managerId = settings.GetManagerId( i );
-                if (managerId != null && managerId.Length > 4)
-                {
-                    string newAppId = null;
-                    try
-                    {
-                        newAppId = Utils.DownloadRemoteSettings( managerId, target, settings, deps );
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError( Utils.logTag + e.Message );
-                        updateSettingsError = e.Message;
-                    }
-
-                    if (newAppId != null && string.IsNullOrEmpty( admobAppId ) && newAppId.Contains( '~' ))
-                        admobAppId = newAppId;
-                }
-            }
-
-            if (string.IsNullOrEmpty( admobAppId ) && !settings.IsTestAdMode())
-                admobAppId = Utils.ReadAppIdFromCache( settings.GetManagerId( 0 ), target, updateSettingsError );
-
-#if UNITY_ANDROID || CASDeveloper
-            if (target == BuildTarget.Android)
-            {
-                EditorUtility.DisplayProgressBar( casTitle, "Validate CAS Android Build Settings", 0.8f );
-
-                const string deprecatedPluginPath = "Assets/Plugins/CAS";
-                if (AssetDatabase.IsValidFolder( deprecatedPluginPath ))
-                {
-                    AssetDatabase.DeleteAsset( deprecatedPluginPath );
-                    Debug.Log( "Removed deprecated plugin: " + deprecatedPluginPath );
-                }
-
-                HashSet<string> promoAlias = new HashSet<string>();
-                if (editorSettings.generateAndroidQuerriesForPromo)
-                {
-                    for (int i = 0; i < settings.managersCount; i++)
-                        Utils.GetCrossPromoAlias( target, settings.GetManagerId( i ), promoAlias );
-                }
-
-                UpdateAndroidPluginManifest( admobAppId, promoAlias, editorSettings );
-
-                CASPreprocessGradle.Configurate( editorSettings );
-
-#if !UNITY_2021_2_OR_NEWER
-                // 19 - AndroidSdkVersions.AndroidApiLevel19
-                // Deprecated in Unity 2021.2
-                if (PlayerSettings.Android.minSdkVersion < ( AndroidSdkVersions )19)
-                {
-                    DialogOrCancel( "CAS required a higher minimum SDK API level. Set SDK level 19 (KitKat) and continue?", BuildTarget.NoTarget );
-                    PlayerSettings.Android.minSdkVersion = ( AndroidSdkVersions )19;
-                }
-#endif
-            }
-#endif
-#if UNITY_IOS || CASDeveloper
-            if (target == BuildTarget.iOS)
-            {
+                if (managerId == null || managerId.Length < 5)
+                    continue;
                 try
                 {
-                    if (new Version( PlayerSettings.iOS.targetOSVersionString ) < new Version( 10, 0 ))
+                    string newAppId = DownloadRemoteSettings( managerId, platform, settings, deps );
+                    if (!string.IsNullOrEmpty( appId ) || !string.IsNullOrEmpty( newAppId ))
+                        continue;
+                    if (newAppId.Contains( '~' ))
                     {
-                        DialogOrCancel( "CAS required a higher minimum deployment target. Set iOS 10.0 and continue?", BuildTarget.NoTarget );
-                        PlayerSettings.iOS.targetOSVersionString = "10.0";
+                        appId = newAppId;
+                        continue;
+                    }
+                    if (i == 0)
+                    {
+                        Debug.LogError( Utils.logTag + "CAS id [" + managerId +
+                            "] has an error in server settings. Please contact support!" );
                     }
                 }
                 catch (Exception e)
                 {
-                    Debug.LogException( e );
+                    updateSettingsError = e.Message;
                 }
             }
-#endif
-#pragma warning disable CS0618 // Type or member is obsolete
-            if (settings.testAdMode && !EditorUserBuildSettings.development) // Use directrly property to avoid Debug build
-#pragma warning restore CS0618 // Type or member is obsolete
-                Debug.LogWarning( Utils.logTag + "Test Ads Mode enabled! Make sure the build is for testing purposes only!" +
-                    "\nUse 'Assets/CleverAdsSolutions/Settings' menu to disable Test Ad Mode." );
-            else
-                Debug.Log( Utils.logTag + "Preprocess Build done." );
+            if (!string.IsNullOrEmpty( appId ) || settings.IsTestAdMode())
+                return appId;
+
+            const string title = "Update CAS remote settings";
+            int dialogResponse = 0;
+            var targetId = settings.GetManagerId( 0 );
+
+            var message = updateSettingsError +
+                "\nPlease try using a real identifier in the first place else contact support." +
+                "\n- Warning! -" +
+                "\n1. Continue build the app for release with current settings can reduce monetization revenue." +
+                "\n2. When build to testing your app, make sure you use Test Ads mode rather than live ads. " +
+                "Failure to do so can lead to suspension of your account.";
+
+            Debug.LogError( Utils.logTag + message );
+            if (!Application.isBatchMode)
+                dialogResponse = EditorUtility.DisplayDialogComplex( title, message,
+                    "Continue", "Cancel Build", "Select settings file" );
+
+            if (dialogResponse == 0)
+            {
+                var cachePath = Utils.GetNativeSettingsPath( platform, targetId );
+                if (File.Exists( cachePath ))
+                    return Utils.GetAdmobAppIdFromJson( File.ReadAllText( cachePath ) );
+                return null;
+            }
+            if (dialogResponse == 1)
+            {
+                Utils.StopBuildWithMessage( "Build canceled", BuildTarget.NoTarget );
+                return null;
+            }
+            return Utils.SelectSettingsFileAndGetAppId( targetId, platform );
         }
 
         private static void CreateAndroidLibIfNedded()
         {
-            if (!AssetDatabase.IsValidFolder( Utils.androidLibFolderPath ))
+            const string libResFolder = Utils.androidLibFolderPath + "/res/xml";
+            if (!AssetDatabase.IsValidFolder( libResFolder ))
             {
-                Directory.CreateDirectory( Utils.androidLibFolderPath );
-                AssetDatabase.ImportAsset( Utils.androidLibFolderPath );
+                Directory.CreateDirectory( libResFolder );
+                AssetDatabase.ImportAsset( libResFolder );
             }
 
             if (!File.Exists( Utils.androidLibPropertiesPath ))
@@ -205,6 +238,20 @@ namespace CAS.UEditor
                     "target=android-29\n";
                 File.WriteAllText( Utils.androidLibPropertiesPath, pluginProperties );
                 AssetDatabase.ImportAsset( Utils.androidLibPropertiesPath );
+            }
+
+            if (!File.Exists( Utils.androidLibNetworkConfigPath ))
+            {
+                const string networkSecurity =
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<network-security-config>\n" +
+                    "    <!-- The Meta AN SDK use 127.0.0.1 as a caching proxy to cache media files in the SDK -->\n" +
+                    "    <domain-config cleartextTrafficPermitted=\"true\">\n" +
+                    "        <domain includeSubdomains=\"true\">127.0.0.1</domain>\n" +
+                    "    </domain-config>\n" +
+                    "</network-security-config>";
+                File.WriteAllText( Utils.androidLibNetworkConfigPath, networkSecurity );
+                AssetDatabase.ImportAsset( Utils.androidLibNetworkConfigPath );
             }
         }
 
@@ -302,10 +349,88 @@ namespace CAS.UEditor
             }
         }
 
-        private static void DialogOrCancel( string message, BuildTarget target, string btn = "Continue" )
+        internal static string DownloadRemoteSettings( string managerID, BuildTarget platform, CASInitSettings settings, DependencyManager deps )
         {
-            if (!Application.isBatchMode && !EditorUtility.DisplayDialog( casTitle, message, btn, "Cancel build" ))
-                Utils.StopBuildWithMessage( "Cancel build: " + message, target );
+            const string title = "Update CAS remote settings";
+
+            var editorSettings = CASEditorSettings.Load();
+
+            #region Create request URL
+            #region Hash
+            var managerIdBytes = new UTF8Encoding().GetBytes( managerID );
+            var suffix = new byte[] { 48, 77, 101, 68, 105, 65, 116, 73, 111, 78, 104, 65, 115, 72 };
+            if (platform == BuildTarget.iOS)
+                suffix[0] = 49;
+            var sourceBytes = new byte[managerID.Length + suffix.Length];
+            Array.Copy( managerIdBytes, 0, sourceBytes, 0, managerIdBytes.Length );
+            Array.Copy( suffix, 0, sourceBytes, managerIdBytes.Length, suffix.Length );
+
+            var hashBytes = new System.Security.Cryptography.MD5CryptoServiceProvider().ComputeHash( sourceBytes );
+            StringBuilder hashBuilder = new StringBuilder();
+            for (int i = 0; i < hashBytes.Length; i++)
+                hashBuilder.Append( Convert.ToString( hashBytes[i], 16 ).PadLeft( 2, '0' ) );
+            var hash = hashBuilder.ToString().PadLeft( 32, '0' );
+            #endregion
+
+            var urlBuilder = new StringBuilder( "https://psvpromo.psvgamestudio.com/Scr/cas.php?platform=" )
+                .Append( platform == BuildTarget.Android ? 0 : 1 )
+                .Append( "&bundle=" ).Append( UnityWebRequest.EscapeURL( managerID ) )
+                .Append( "&hash=" ).Append( hash )
+                .Append( "&lang=" ).Append( SystemLanguage.English )
+                .Append( "&appDev=2" )
+                .Append( "&appV=" ).Append( PlayerSettings.bundleVersion )
+                .Append( "&coppa=" ).Append( ( int )settings.defaultAudienceTagged )
+                .Append( "&adTypes=" ).Append( ( int )settings.allowedAdFlags )
+                .Append( "&nets=" ).Append( DependencyManager.GetActiveMediationPattern( deps ) )
+                .Append( "&orient=" ).Append( Utils.GetOrientationId() )
+                .Append( "&framework=Unity_" ).Append( Application.unityVersion );
+            if (deps != null)
+            {
+                var buildCode = deps.GetInstalledBuildCode();
+                if (buildCode > 0)
+                    urlBuilder.Append( "&sdk=" ).Append( buildCode );
+            }
+            if (string.IsNullOrEmpty( editorSettings.mostPopularCountryOfUsers ))
+                urlBuilder.Append( "&country=" ).Append( "US" );
+            else
+                urlBuilder.Append( "&country=" ).Append( editorSettings.mostPopularCountryOfUsers );
+            if (platform == BuildTarget.Android)
+                urlBuilder.Append( "&appVC=" ).Append( PlayerSettings.Android.bundleVersionCode );
+
+            #endregion
+
+            using (var loader = UnityWebRequest.Get( urlBuilder.ToString() ))
+            {
+                try
+                {
+                    loader.SendWebRequest();
+                    while (!loader.isDone)
+                    {
+                        if (EditorUtility.DisplayCancelableProgressBar( title, managerID,
+                            Mathf.Repeat( ( float )EditorApplication.timeSinceStartup * 0.2f, 1.0f ) ))
+                        {
+                            loader.Dispose();
+                            throw new Exception( "Update CAS Settings canceled" );
+                        }
+                    }
+                    if (string.IsNullOrEmpty( loader.error ))
+                    {
+                        var content = loader.downloadHandler.text.Trim();
+                        if (string.IsNullOrEmpty( content ))
+                            throw new Exception( "ManagerID [" + managerID + "] is not registered in CAS." );
+
+                        EditorUtility.DisplayProgressBar( title, "Write CAS settings", 0.7f );
+                        var data = JsonUtility.FromJson<AdmobAppIdData>( content );
+                        Utils.WriteToFile( content, Utils.GetNativeSettingsPath( platform, managerID ) );
+                        return data.admob_app_id;
+                    }
+                    throw new Exception( "Server response " + loader.responseCode + ": " + loader.error );
+                }
+                finally
+                {
+                    EditorUtility.ClearProgressBar();
+                }
+            }
         }
 
         private static void StopBuildIDNotFound( BuildTarget target )

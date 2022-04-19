@@ -1,4 +1,10 @@
-﻿#if UNITY_EDITOR || TARGET_OS_SIMULATOR
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+#if UNITY_EDITOR || TARGET_OS_SIMULATOR
 using System;
 using UnityEngine;
 

@@ -1,4 +1,10 @@
-﻿using System;
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+using System;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Events;
@@ -15,7 +21,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "2.7.1";
+        public const string wrapperVersion = "2.7.2";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.

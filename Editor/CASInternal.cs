@@ -1,4 +1,10 @@
-﻿using System;
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -72,6 +78,57 @@ namespace CAS.UEditor
             }
         }
 
+        internal bool IsNewerVersionFound()
+        {
+            for (int i = 0; i < solutions.Length; i++)
+            {
+                if (solutions[i].isNewer)
+                    return true;
+            }
+            for (int i = 0; i < networks.Length; i++)
+            {
+                if (networks[i].isNewer)
+                    return true;
+            }
+            return false;
+        }
+
+        internal string GetInstalledVersion()
+        {
+            string version = "";
+            var casDep = Find( Dependency.adOptimalName );
+            if (casDep != null)
+                version = casDep.installedVersion;
+            if (!string.IsNullOrEmpty( version ))
+                return version;
+            casDep = Find( Dependency.adFamiliesName );
+            if (casDep != null)
+                version = casDep.installedVersion;
+
+            if (!string.IsNullOrEmpty( version ))
+                return version;
+            casDep = Find( Dependency.adBaseName );
+            if (casDep != null)
+                version = casDep.version;
+
+            return version;
+        }
+
+        internal int GetInstalledBuildCode()
+        {
+            var version = GetInstalledVersion();
+            if (!string.IsNullOrEmpty( version ))
+            {
+                try
+                {
+                    var parsesV = new System.Version( version );
+                    return parsesV.Major * 1000 + parsesV.Minor * 100 + parsesV.Build;
+                }
+                catch { }
+            }
+            return 0;
+        }
+
         private void OnHeaderGUI()
         {
             EditorGUILayout.BeginHorizontal();
@@ -93,9 +150,8 @@ namespace CAS.UEditor
 
             if (updatesFound)
             {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.HelpBox( "Found one or more updates for native dependencies.", MessageType.Info );
-                if (GUILayout.Button( "Update all", GUILayout.ExpandHeight( true ) ))
+                if (HelpStyles.WarningWithButton( "Found one or more updates for native dependencies.",
+                    "Update all", MessageType.Info ))
                 {
                     for (int i = 0; i < simple.Length; i++)
                     {
@@ -113,7 +169,6 @@ namespace CAS.UEditor
                             advanced[i].ActivateDependencies( platform, this );
                     }
                 }
-                EditorGUILayout.EndHorizontal();
             }
         }
 

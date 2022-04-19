@@ -1,4 +1,10 @@
-﻿namespace CAS
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+namespace CAS
 {
     /// <summary>
     /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ads#ad-size

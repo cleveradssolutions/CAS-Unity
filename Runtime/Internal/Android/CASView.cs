@@ -1,4 +1,10 @@
-﻿#if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+#if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
 using System;
 using UnityEngine;
 

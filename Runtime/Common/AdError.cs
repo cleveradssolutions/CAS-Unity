@@ -1,4 +1,9 @@
-﻿
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
 namespace CAS
 {
     public enum AdError

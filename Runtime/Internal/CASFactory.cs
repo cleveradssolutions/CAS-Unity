@@ -1,4 +1,10 @@
-﻿using System;
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;

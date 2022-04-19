@@ -1,6 +1,11 @@
-﻿using System;
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+using System;
 using UnityEngine;
-using UnityEditor;
 
 namespace CAS.UEditor
 {
@@ -9,16 +14,20 @@ namespace CAS.UEditor
     {
         public bool autoCheckForUpdatesEnabled = true;
         public bool delayAppMeasurementGADInit = true;
-        public bool multiDexEnabled = true;
-        public bool permissionAdIdRemoved = false;
-        public bool generateAndroidQuerriesForPromo = true;
-        public bool generateiOSDeepLinksForPromo = true;
-
+        public bool buildPreprocessEnabled = true;
 
         /// <summary>
         /// ISO2 such as US, RU ...
         /// </summary>
         public string mostPopularCountryOfUsers = "BR";
+
+        public bool multiDexEnabled = true;
+        public bool permissionAdIdRemoved = false;
+        public bool exoPlayerIncluded = true;
+        public bool generateAndroidQuerriesForPromo = true;
+        public bool updateGradlePluginVersion = true;
+
+        public bool generateIOSDeepLinksForPromo = true;
         public string attributionReportEndpoint = CASEditorUtils.attributionReportEndPoint;
 
         /// <summary>

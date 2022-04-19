@@ -1,5 +1,8 @@
-﻿using System;
-using UnityEngine;
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
 
 namespace CAS
 {

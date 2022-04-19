@@ -1,5 +1,28 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.7.2] - 2022-04-19
+### Dependencies
+- [Android] Wraps [2.7.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.7.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- [Editor] Added `Assets > CleverAdsSolutions > Configure project` to manually invoke the configuration project for successful build.
+- [Editor] Added option to disabled `Build preprocess` in `CleverAdsSlutions > Android Settings`.
+- [Editor] Disabled error log for unregistered CAS ID when test mode is active.
+- [Android] Improved automatic activation of MultiDex and AndroidX.
+- [Android] The automatic `Update Gradle Plugin` occurs depending on selected version of the Gradle Wrapper in Unity preferences of External Tools. Added support for Gradle Wrapper 6.5.
+- [Android] Added option to disable `Update Gradle Plugin` in `CleverAdsSlutions > Android Settings`.  
+  > Without updating the gradle plugin, the build may not succeed due to known issues.
+- [Android] Added option to disable `ExoPlayer` in `CleverAdsSlutions > Android Settings` if you only want to use MediaPlayer.
+- [Android] Added feature to activate the required Gradle Templates without going to the Player Settings.
+- [Android] Added generation `CASPlugin.androidlib/res/xml/meta_network_security_config.xml` to use `android:networkSecurityConfig` in `AndroidManifest.xml` for Meta Audience Network.
+- [Android] Disabled declare `JavaVersion.VERSION_1_8` in gradle file. Unity already defines JavaVersion by default.
+### Changes
+- The `CAS_Fail` event analytic is no longer collected when the `IAdsSettings.analyticsCollectionEnabled` is disabled.
+- The `PSV_AdEvent` event analytic is no longer collected. 
+  > Contact support if you still want to collect this event.
+### Bug Fixe
+- [Android] Fixed ProGuard rules for native callbacks.
+
 ## [2.7.1] - 2022-04-07
 ### Dependencies
 - [Android] Wraps [2.7.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

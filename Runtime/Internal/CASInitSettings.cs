@@ -1,11 +1,21 @@
-﻿using System;
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace CAS
 {
+    /// <summary>
+    /// Please use <see cref="IManagerBuilder"/> instead.
+    /// CASInitSettings may not be available in future.
+    /// </summary>
     [Serializable]
-    public class CASInitSettings : ScriptableObject
+    public class CASInitSettings : ScriptableObject, IManagerBuilder
     {
         #region Fields
 #pragma warning disable 649 // is never assigned to, and will always have its default value null
@@ -16,7 +26,7 @@ namespace CAS
         public AdFlags allowedAdFlags = AdFlags.None;
         [SerializeField]
         private Audience audienceTagged = Audience.Children;
-        [Obsolete("Used only from obsolete Banner Size API. Better use new IAdView interface instead.")]
+        [Obsolete( "Used only from obsolete Banner Size API. Better use new IAdView interface instead." )]
         public AdSize bannerSize = 0;
 
         [SerializeField]

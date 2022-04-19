@@ -1,4 +1,10 @@
-﻿using System.Collections;
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -46,10 +52,9 @@ namespace CAS
         /// </summary>
         public static void Add( Action action )
         {
-#if UNITY_EDITOR
             if (!instance)
                 Debug.LogError( "Using EventExecutor requires call static Initialize() before adding a new event." );
-#endif
+
             lock (eventsQueue)
             {
                 eventsQueue.Add( action );

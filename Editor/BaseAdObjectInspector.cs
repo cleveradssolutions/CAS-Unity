@@ -1,8 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
 using UnityEngine;
 using UnityEditor;
-using CAS.UEditor;
 
 namespace CAS.AdObject
 {

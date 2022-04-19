@@ -1,4 +1,10 @@
-﻿#pragma warning disable 649
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+#pragma warning disable 649
 using System;
 using UnityEngine;
 using UnityEditor;
@@ -13,6 +19,7 @@ namespace CAS.UEditor
     [CustomEditor( typeof( CASInitSettings ) )]
     internal class CASInitSettignsInspector : Editor
     {
+        #region Init settings properties
         private SerializedProperty testAdModeProp;
         private SerializedProperty managerIdsProp;
         private SerializedProperty allowedAdFlagsProp;
@@ -25,16 +32,23 @@ namespace CAS.UEditor
         private SerializedProperty trackLocationEnabledProp;
         private SerializedProperty analyticsCollectionEnabledProp;
         private SerializedProperty interWhenNoRewardedAdProp;
+        #endregion
 
+        #region Editor settings properties
         private SerializedObject editorSettingsObj;
         private SerializedProperty autoCheckForUpdatesEnabledProp;
+        private SerializedProperty buildPreprocessEnabledProp;
         private SerializedProperty delayAppMeasurementGADInitProp;
         private SerializedProperty multiDexEnabledProp;
+        private SerializedProperty exoPlayerIncludedProp;
+        private SerializedProperty updateGradlePluginVersionProp;
         private SerializedProperty permissionAdIdRemovedProp;
         private SerializedProperty mostPopularCountryOfUsersProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
+        #endregion
 
+        #region Utility fields
         private DependencyManager dependencyManager;
 
         private ReorderableList managerIdsList;
@@ -52,10 +66,32 @@ namespace CAS.UEditor
         private string[] deprecatedAssets = null;
 
         private int editorRuntimeActiveAdFlags;
+        #endregion
 
+        #region Initialize logic
         private void OnEnable()
         {
-            var props = serializedObject;
+            SetSettingsPlatform();
+
+            InitMainProperties( serializedObject );
+            InitEditorSettingsProperties();
+
+            allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
+
+            dependencyManager = DependencyManager.Create( platform, ( Audience )audienceTaggedProp.enumValueIndex, true );
+
+            HandleDeprecatedComponents();
+            InitEDM4U();
+            InitEnvironmentDetails();
+
+            EditorApplication.delayCall += () =>
+            {
+                newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
+            };
+        }
+
+        private void InitMainProperties( SerializedObject props )
+        {
             testAdModeProp = props.FindProperty( "testAdMode" );
             managerIdsProp = props.FindProperty( "managerIds" );
             allowedAdFlagsProp = props.FindProperty( "allowedAdFlags" );
@@ -71,6 +107,41 @@ namespace CAS.UEditor
 
             editorRuntimeActiveAdFlags = PlayerPrefs.GetInt( Utils.editorRuntimeActiveAdPrefs, -1 );
 
+            managerIdsList = new ReorderableList( props, managerIdsProp, true, true, true, true )
+            {
+                drawHeaderCallback = DrawListHeader,
+                drawElementCallback = DrawListElement,
+                onCanRemoveCallback = DisabledRemoveLastItemFromList,
+            };
+            props.ApplyModifiedProperties();
+        }
+
+        private void InitEditorSettingsProperties()
+        {
+            editorSettingsObj = new SerializedObject( CASEditorSettings.Load( true ) );
+            autoCheckForUpdatesEnabledProp = editorSettingsObj.FindProperty( "autoCheckForUpdatesEnabled" );
+            delayAppMeasurementGADInitProp = editorSettingsObj.FindProperty( "delayAppMeasurementGADInit" );
+            buildPreprocessEnabledProp = editorSettingsObj.FindProperty( "buildPreprocessEnabled" );
+            updateGradlePluginVersionProp = editorSettingsObj.FindProperty( "updateGradlePluginVersion" );
+            multiDexEnabledProp = editorSettingsObj.FindProperty( "multiDexEnabled" );
+            exoPlayerIncludedProp = editorSettingsObj.FindProperty( "exoPlayerIncluded" );
+            permissionAdIdRemovedProp = editorSettingsObj.FindProperty( "permissionAdIdRemoved" );
+
+            mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty( "mostPopularCountryOfUsers" );
+            attributionReportEndpointProp = editorSettingsObj.FindProperty( "attributionReportEndpoint" );
+
+            userTrackingUsageDescriptionProp = editorSettingsObj.FindProperty( "userTrackingUsageDescription" );
+
+            userTrackingList = new ReorderableList( editorSettingsObj, userTrackingUsageDescriptionProp, true, true, true, true )
+            {
+                drawHeaderCallback = DrawNSTrackingListHeader,
+                drawElementCallback = DrawNSTrackingListElement,
+                onCanRemoveCallback = DisabledRemoveLastItemFromList,
+            };
+        }
+
+        private void SetSettingsPlatform()
+        {
             string assetName = target.name;
             if (assetName.EndsWith( BuildTarget.Android.ToString() ))
                 platform = BuildTarget.Android;
@@ -78,23 +149,10 @@ namespace CAS.UEditor
                 platform = BuildTarget.iOS;
             else
                 platform = BuildTarget.NoTarget;
+        }
 
-            managerIdsList = new ReorderableList( props, managerIdsProp, true, true, true, true )
-            {
-                drawHeaderCallback = DrawListHeader,
-                drawElementCallback = DrawListElement,
-                onCanRemoveCallback = DisabledRemoveLastItemFromList,
-            };
-
-            allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
-
-            //usingMultidexOnBuild = PlayerPrefs.GetInt( Utils.editorIgnoreMultidexPrefs, 0 ) == 0;
-
-            dependencyManager = DependencyManager.Create( platform, ( Audience )audienceTaggedProp.enumValueIndex, true );
-
-            EditorApplication.delayCall += () => newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
-            props.ApplyModifiedProperties();
-
+        private void HandleDeprecatedComponents()
+        {
             deprecatedAssets = new string[]{
                 Utils.GetDeprecateDependencyName( Utils.generalDeprecateDependency, platform ),
                 Utils.GetDeprecateDependencyName( Utils.teenDeprecateDependency, platform ),
@@ -111,7 +169,10 @@ namespace CAS.UEditor
             // Remove deprecated CAS settings raw data
             if (File.Exists( Utils.androidResSettingsPath + ".json" ))
                 AssetDatabase.MoveAssetToTrash( Utils.androidResSettingsPath + ".json" );
+        }
 
+        private void InitEDM4U()
+        {
             edmVersion = Utils.GetEDM4UVersion( platform );
             if (edmVersion != null)
                 edmRequiredNewer = edmVersion < Utils.minEDM4UVersion;
@@ -125,81 +186,31 @@ namespace CAS.UEditor
             {
                 edmIOSStaticLinkProp = null;
             }
+        }
 
-
+        private void InitEnvironmentDetails()
+        {
             var environmentBuilder = new StringBuilder( "Environment Details: " )
-                .Append( "Unity - " ).Append( Application.unityVersion ).Append( "; " )
-                .Append( "Platform - " ).Append( Application.platform ).Append( "; " );
+                            .Append( "Unity - " ).Append( Application.unityVersion ).Append( "; " )
+                            .Append( "Platform - " ).Append( Application.platform ).Append( "; " );
             if (edmVersion != null)
                 environmentBuilder.Append( "EDM4U - " ).Append( edmVersion ).Append( "; " );
-            environmentDetails = environmentBuilder.ToString();
-
-
-            editorSettingsObj = new SerializedObject( CASEditorSettings.Load( true ) );
-            autoCheckForUpdatesEnabledProp = editorSettingsObj.FindProperty( "autoCheckForUpdatesEnabled" );
-            delayAppMeasurementGADInitProp = editorSettingsObj.FindProperty( "delayAppMeasurementGADInit" );
-            multiDexEnabledProp = editorSettingsObj.FindProperty( "multiDexEnabled" );
-            permissionAdIdRemovedProp = editorSettingsObj.FindProperty( "permissionAdIdRemoved" );
-
-            mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty( "mostPopularCountryOfUsers" );
-            attributionReportEndpointProp = editorSettingsObj.FindProperty( "attributionReportEndpoint" );
-
-            userTrackingUsageDescriptionProp = editorSettingsObj.FindProperty( "userTrackingUsageDescription" );
-
-            userTrackingList = new ReorderableList( editorSettingsObj, userTrackingUsageDescriptionProp, true, true, true, true )
+#if UNITY_ANDROID
+            if (platform == BuildTarget.Android)
             {
-                drawHeaderCallback = DrawNSTrackingListHeader,
-                drawElementCallback = DrawNSTrackingListElement,
-                onCanRemoveCallback = DisabledRemoveLastItemFromList,
-            };
-        }
-
-        private void DrawListHeader( Rect rect )
-        {
-            EditorGUI.LabelField( rect, "Manager ID's " + ( platform == BuildTarget.iOS ? "(iTunes ID)" : "(Bundle ID)" ) );
-        }
-
-        private void DrawListElement( Rect rect, int index, bool isActive, bool isFocused )
-        {
-            var item = managerIdsProp.GetArrayElementAtIndex( index );
-            rect.yMin += 1;
-            rect.yMax -= 1;
-            item.stringValue = EditorGUI.TextField( rect, item.stringValue );
-        }
-
-        private bool DisabledRemoveLastItemFromList( ReorderableList list )
-        {
-            return list.count > 1;
-        }
-
-        private void DrawNSTrackingListHeader( Rect rect )
-        {
-            EditorGUI.LabelField( rect, "(ISO-639) : NSUserTrackingUsageDescription" );
-        }
-
-        private void DrawNSTrackingListElement( Rect rect, int index, bool isActive, bool isFocused )
-        {
-            var item = userTrackingUsageDescriptionProp.GetArrayElementAtIndex( index );
-            rect.yMin += 1;
-            rect.yMax -= 1;
-            var maxX = rect.xMax;
-            rect.xMax = rect.xMin + 40;
-
-            item.Next( true );
-            var langCode = item.stringValue;
-            EditorGUI.BeginChangeCheck();
-            langCode = EditorGUI.TextField( rect, langCode );
-            if (EditorGUI.EndChangeCheck())
-            {
-                if (langCode.Length > 2)
-                    langCode = langCode.Substring( 0, 2 );
-                item.stringValue = langCode.ToLower();
+                var gradleWrapperVersion = CASPreprocessGradle.GetGradleWrapperVersion();
+                if (gradleWrapperVersion != null)
+                    environmentBuilder.Append( "Gradle Wrapper - " ).Append( gradleWrapperVersion ).Append( "; " );
+                var targetSDK = ( int )PlayerSettings.Android.targetSdkVersion;
+                if (targetSDK == 0)
+                    environmentBuilder.Append( "Target SDK - Auto; " );
+                else
+                    environmentBuilder.Append( "Target SDK - " ).Append( targetSDK ).Append( "; " );
             }
-            rect.xMin = rect.xMax + 5;
-            rect.xMax = maxX;
-            item.Next( false );
-            item.stringValue = EditorGUI.TextField( rect, item.stringValue );
+#endif
+            environmentDetails = environmentBuilder.ToString();
         }
+        #endregion
 
         protected override void OnHeaderGUI()
         {
@@ -268,11 +279,65 @@ namespace CAS.UEditor
 
             OnUserTrackingDesctiptionGUI();
             OnOtherSettingsGUI();
-            EditorGUILayout.HelpBox( environmentDetails, MessageType.None );
+
+            HelpStyles.BeginBoxScope();
+            GUILayout.TextField( environmentDetails, EditorStyles.wordWrappedMiniLabel );
+            HelpStyles.EndBoxScope();
+
             OnAppAdsTxtGUI();
             editorSettingsObj.ApplyModifiedProperties();
             serializedObject.ApplyModifiedProperties();
         }
+
+
+        #region Draw list implementation
+        private void DrawListHeader( Rect rect )
+        {
+            EditorGUI.LabelField( rect, "Manager ID's " + ( platform == BuildTarget.iOS ? "(iTunes ID)" : "(Bundle ID)" ) );
+        }
+
+        private void DrawListElement( Rect rect, int index, bool isActive, bool isFocused )
+        {
+            var item = managerIdsProp.GetArrayElementAtIndex( index );
+            rect.yMin += 1;
+            rect.yMax -= 1;
+            item.stringValue = EditorGUI.TextField( rect, item.stringValue );
+        }
+
+        private bool DisabledRemoveLastItemFromList( ReorderableList list )
+        {
+            return list.count > 1;
+        }
+
+        private void DrawNSTrackingListHeader( Rect rect )
+        {
+            EditorGUI.LabelField( rect, "(ISO-639) : NSUserTrackingUsageDescription" );
+        }
+
+        private void DrawNSTrackingListElement( Rect rect, int index, bool isActive, bool isFocused )
+        {
+            var item = userTrackingUsageDescriptionProp.GetArrayElementAtIndex( index );
+            rect.yMin += 1;
+            rect.yMax -= 1;
+            var maxX = rect.xMax;
+            rect.xMax = rect.xMin + 40;
+
+            item.Next( true );
+            var langCode = item.stringValue;
+            EditorGUI.BeginChangeCheck();
+            langCode = EditorGUI.TextField( rect, langCode );
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (langCode.Length > 2)
+                    langCode = langCode.Substring( 0, 2 );
+                item.stringValue = langCode.ToLower();
+            }
+            rect.xMin = rect.xMax + 5;
+            rect.xMax = maxX;
+            item.Next( false );
+            item.stringValue = EditorGUI.TextField( rect, item.stringValue );
+        }
+        #endregion
 
         private void OnAndroidAdIdGUI()
         {
@@ -295,30 +360,50 @@ namespace CAS.UEditor
 
             OnLoadingModeGUI();
 
-            debugModeProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Verbose Debug logging", null,
+            debugModeProp.boolValue = EditorGUILayout.ToggleLeft(
+                HelpStyles.GetContent( "Verbose Debug logging", null,
                    "The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdk with tag CAS. " +
-                   "Disabling the Debug Mode may improve application performance." ), debugModeProp.boolValue );
+                   "Disabling the Debug Mode may improve application performance." ),
+                debugModeProp.boolValue );
 
-            analyticsCollectionEnabledProp.boolValue = EditorGUILayout.ToggleLeft( HelpStyles.GetContent( "Impression Analytics collection (Firebase)", null,
-                "If your application uses Google Analytics(Firebase) then CAS collects ad impressions and states to analytic.\n" +
-                "Disabling analytics collection may save internet traffic and improve application performance.\n" +
-                "The Analytics collection has no effect on ad revenue." ), analyticsCollectionEnabledProp.boolValue );
-            autoCheckForUpdatesEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Auto check for CAS updates enabled",
-                autoCheckForUpdatesEnabledProp.boolValue );
+            analyticsCollectionEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                HelpStyles.GetContent( "Impression Analytics collection (Firebase)", null,
+                    "If your application uses Google Analytics(Firebase) then CAS collects ad impressions and states to analytic.\n" +
+                    "Disabling analytics collection may save internet traffic and improve application performance.\n" +
+                    "The Analytics collection has no effect on ad revenue." ),
+                analyticsCollectionEnabledProp.boolValue );
 
-            delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Delay measurement of the Google SDK initialization",
-                    delayAppMeasurementGADInitProp.boolValue );
+            buildPreprocessEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                    "Build preprocess enabled",
+                    buildPreprocessEnabledProp.boolValue );
+            EditorGUI.indentLevel++;
+            if (!buildPreprocessEnabledProp.boolValue)
+                EditorGUILayout.HelpBox( "Automatic configuration at build time is disabled.\n" +
+                    "You can use `Assets > CleverAdsSolutions > Configure project` to call configuration manually.",
+                    MessageType.None );
 
             if (platform == BuildTarget.Android)
             {
+                updateGradlePluginVersionProp.boolValue = EditorGUILayout.ToggleLeft(
+                   HelpStyles.GetContent( "Update Gradle Plugin enabled", null,
+                       "The Gradle plugin version will be updated during build to be optimal " +
+                       "for the current Gradle Wrapper version." ),
+                    updateGradlePluginVersionProp.boolValue );
+
                 EditorGUILayout.BeginHorizontal();
                 multiDexEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
                     "Multi DEX enabled",
                     multiDexEnabledProp.boolValue );
                 HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Include-Android#enable-multidex" );
                 EditorGUILayout.EndHorizontal();
+
+                exoPlayerIncludedProp.boolValue = EditorGUILayout.ToggleLeft(
+                    HelpStyles.GetContent( "ExoPlayer included", null,
+                        "ExoPlayer can be used instead of MediaPlayer to play videos " +
+                        "with better performance and avoid known ANR errors." ),
+                    exoPlayerIncludedProp.boolValue );
+
+                EditorGUI.indentLevel--;
             }
             else
             {
@@ -343,6 +428,14 @@ namespace CAS.UEditor
                     EditorGUI.indentLevel--;
                 }
             }
+
+            autoCheckForUpdatesEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Auto check for CAS updates enabled",
+                autoCheckForUpdatesEnabledProp.boolValue );
+
+            delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Delay measurement of the Google SDK initialization",
+                delayAppMeasurementGADInitProp.boolValue );
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label( "Most popular country of users (ISO2)", GUILayout.ExpandWidth( false ) );
@@ -548,7 +641,7 @@ namespace CAS.UEditor
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Label( "1. Download latest EDM4U.unitypackage", GUILayout.ExpandWidth( false ) );
                 if (GUILayout.Button( "here", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-                    Application.OpenURL( "https://github.com/googlesamples/unity-jar-resolver/tags" );
+                    Application.OpenURL( Utils.latestEMD4uURL );
                 EditorGUILayout.EndHorizontal();
                 GUILayout.Label( "2. Import the EDM4U.unitypackage into your project." );
                 HelpStyles.EndBoxScope();
@@ -556,55 +649,24 @@ namespace CAS.UEditor
             }
             if (edmRequiredNewer)
             {
-                EditorGUILayout.HelpBox( "To properly include third-party dependencies in your project, " +
+                if (HelpStyles.WarningWithButton( "To properly include third-party dependencies in your project, " +
                     "you need an External Dependency Manager version " + Utils.minEDM4UVersion + " or later.",
-                    MessageType.Warning );
+                    "Download" ))
+                    Application.OpenURL( Utils.latestEMD4uURL );
             }
 
             if (platform == BuildTarget.Android)
             {
 #if UNITY_2019_3_OR_NEWER
-                if (!File.Exists( Utils.projectGradlePath ))
-                {
-                    OnWarningGUI( "Custom Base Gradle Template disabled",
-                        "Please enable 'Custom Base Gradle Template' found under " +
-                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
-                        "to allow CAS update Grdale plugin version.",
-                        MessageType.Error );
-                }
-
-                if (!File.Exists( Utils.launcherGradlePath ))
-                {
-                    OnWarningGUI( "Custom Launcher Gradle Template disabled",
-                        "Please enable 'Custom Launcher Gradle Template' found under " +
-                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
-                        "to allow CAS use MultiDEX.",
-                        MessageType.Error );
-                }
-
-                if (!File.Exists( Utils.propertiesGradlePath ))
-                {
-                    OnWarningGUI( "Custom Gradle Properties Template disabled",
-                        "Please enable 'Custom Gradle Properties Template' found under " +
-                        "'Player Settings > Settings for Android -> Publishing Settings' menu " +
-                        "to allow CAS use Jetifier.",
-                        MessageType.Error );
-                }
+                OnGradleTemplateDisabledGUI( "Base Gradle", Utils.projectGradlePath );
+                OnGradleTemplateDisabledGUI( "Launcher Gradle", Utils.launcherGradlePath );
+                OnGradleTemplateDisabledGUI( "Gradle Properties", Utils.propertiesGradlePath );
 #else
-                if (!File.Exists( Utils.mainGradlePath ))
-                {
-                    OnWarningGUI( "Custom Gradle Template disabled",
-                        "Please enable 'Custom Gradle Template' found under " +
-                        "'Player Settings -> Settings for Android -> Publishing Settings' menu " +
-                        "to allow CAS update Grdale plugin version and enable MultiDEX.",
-                        MessageType.Error );
-                }
+                OnGradleTemplateDisabledGUI( "Gradle", Utils.mainGradlePath );
 #endif
 
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.HelpBox( "Changing dependencies will change the project settings. " +
-                    "Please use Android Resolver after the change complete.", MessageType.Info );
-                if (GUILayout.Button( "Resolve", GUILayout.ExpandWidth( false ), GUILayout.Height( 38 ) ))
+                if (HelpStyles.WarningWithButton( "Changing dependencies will change the project settings. " +
+                    "Please use Android Resolver after the change complete.", "Resolve", MessageType.Info ))
                 {
 #if UNITY_ANDROID
                     var succses = Utils.TryResolveAndroidDependencies();
@@ -617,7 +679,6 @@ namespace CAS.UEditor
                         "OK" );
 #endif
                 }
-                EditorGUILayout.EndHorizontal();
                 return;
             }
             if (platform == BuildTarget.iOS)
@@ -641,6 +702,18 @@ namespace CAS.UEditor
             }
         }
 
+        private void OnGradleTemplateDisabledGUI( string prefix, string path )
+        {
+            if (File.Exists( path ))
+                return;
+#if UNITY_ANDROID || CASDeveloper
+            if (HelpStyles.WarningWithButton( prefix + " template feature is disabled!\n" +
+                "A successful build requires do modifications to " + prefix + " template.",
+                "Enable", MessageType.Error ))
+                CASPreprocessGradle.TryEnableGradleTemplate( path );
+#endif
+        }
+
         private void OnWarningGUI( string title, string message, MessageType type )
         {
             HelpStyles.BeginBoxScope();
@@ -648,7 +721,6 @@ namespace CAS.UEditor
             EditorGUILayout.LabelField( message, EditorStyles.wordWrappedLabel );
             HelpStyles.EndBoxScope();
         }
-
 
         private void OnManagerIDVerificationGUI()
         {
@@ -734,22 +806,19 @@ namespace CAS.UEditor
 
         private void DeprecatedDependenciesGUI()
         {
-            if (deprecateDependenciesExist)
+            if (!deprecateDependenciesExist)
+                return;
+            if (HelpStyles.WarningWithButton( "Deprecated dependencies found. " +
+                "Please remove them and use the new dependencies below.",
+                "Remove", MessageType.Error ))
             {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.HelpBox( "Deprecated dependencies found. " +
-                    "Please remove them and use the new dependencies below.", MessageType.Error );
-                if (GUILayout.Button( "Remove", GUILayout.ExpandWidth( false ), GUILayout.Height( 40 ) ))
+                for (int i = 0; i < deprecatedAssets.Length; i++)
                 {
-                    for (int i = 0; i < deprecatedAssets.Length; i++)
-                    {
-                        var assets = AssetDatabase.FindAssets( deprecatedAssets[i] );
-                        for (int assetI = 0; assetI < assets.Length; assetI++)
-                            AssetDatabase.MoveAssetToTrash( AssetDatabase.GUIDToAssetPath( assets[assetI] ) );
-                    }
-                    deprecateDependenciesExist = false;
+                    var assets = AssetDatabase.FindAssets( deprecatedAssets[i] );
+                    for (int assetI = 0; assetI < assets.Length; assetI++)
+                        AssetDatabase.MoveAssetToTrash( AssetDatabase.GUIDToAssetPath( assets[assetI] ) );
                 }
-                EditorGUILayout.EndHorizontal();
+                deprecateDependenciesExist = false;
             }
         }
     }

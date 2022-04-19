@@ -1,4 +1,10 @@
-﻿using System;
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+using System;
 
 namespace CAS
 {
@@ -21,7 +27,7 @@ namespace CAS
         CrossPromotion,
         IronSource,
         YandexAds,
-        [Obsolete( "No longer supported" )] HyperMX,
+        [Obsolete( "Coming soon" )] HyperMX,
         MAX,
         [Obsolete( "No longer supported" )] Smaato,
         [Obsolete( "No longer supported" )] MoPub,
@@ -37,6 +43,16 @@ namespace CAS
 
     public static class AdNetworkExtension
     {
+        public static string GetExtraKeyGDPR( this AdNetwork network )
+        {
+            return network.GetTag() + "_gdpr";
+        }
+
+        public static string GetExtraKeyCCPA( this AdNetwork network )
+        {
+            return network.GetTag() + "_ccpa";
+        }
+
         public static string GetPrivacyPolicy( this AdNetwork network )
         {
             switch (network)
@@ -74,6 +90,35 @@ namespace CAS
                 case AdNetwork.Chartboost:
                     return "https://www.cookiebot.com/en/privacy-policy-generator-gdpr/";
                 default: return null;
+            }
+        }
+
+        public static string GetTag( this AdNetwork network )
+        {
+            switch (network)
+            {
+                case AdNetwork.GoogleAds: return "AM";
+                case AdNetwork.Vungle: return "V";
+                case AdNetwork.Kidoz: return "K";
+                case AdNetwork.Chartboost: return "CB";
+                case AdNetwork.UnityAds: return "U";
+                case AdNetwork.AppLovin: return "AL";
+                case AdNetwork.SuperAwesome: return "SuA";
+                //case AdNetwork.StartApp: return "StA";
+                case AdNetwork.AdColony: return "AC";
+                case AdNetwork.FacebookAN: return "FB";
+                case AdNetwork.InMobi: return "IM";
+                case AdNetwork.MyTarget: return "MT";
+                case AdNetwork.CrossPromotion: return "P";
+                case AdNetwork.IronSource: return "IS";
+                case AdNetwork.YandexAds: return "Ya";
+                //case AdNetwork.Smaato: return "Sm";
+                case AdNetwork.Tapjoy: return "TJ";
+                //case AdNetwork.Fyber:
+                //case AdNetwork.FairBid: return "Fy";
+                case AdNetwork.Mintegral: return "MB";
+                case AdNetwork.Pangle: return "Pa";
+                default: return string.Empty;
             }
         }
 

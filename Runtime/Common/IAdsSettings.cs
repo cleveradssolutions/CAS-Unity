@@ -1,4 +1,10 @@
-﻿using System;
+﻿//
+//  Clever Ads Solutions Unity Plugin
+//
+//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//
+
+using System;
 using System.Collections.Generic;
 
 namespace CAS
@@ -84,13 +90,22 @@ namespace CAS
     public interface IAdsSettings
     {
         /// <summary>
-        /// If your application uses Google Analytics (Firebase)
-        /// then Clever Ads Solutions collects ad impressions and states analytics.  
-        /// <para>This flag has no effect on ad revenue.</para>
-        /// <para>Disabling analytics collection may save internet traffic and improve application performance.</para>
-        /// Disabled by default.
+        /// GDPR user Consent SDK Implementation for ads on session.
+        /// <para>Default: <see cref="ConsentStatus.Undefined"/></para>
         /// </summary>
-        bool analyticsCollectionEnabled { get; set; }
+        ConsentStatus userConsent { get; set; }
+
+        /// <summary>
+        /// Whether or not user has opted out of the sale of their personal information.
+        /// <para>Default: <see cref="CCPAStatus.Undefined"/></para>
+        /// </summary>
+        CCPAStatus userCCPAStatus { get; set; }
+
+        /// <summary>
+        /// Ad filters by Audience
+        /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
+        /// </summary>
+        Audience taggedAudience { get; set; }
 
         /// <summary>
         /// An ad unit’s automatic refresh rate (in seconds) determines how often a new ad request is generated for that ad unit.  
@@ -119,22 +134,19 @@ namespace CAS
         void RestartInterstitialInterval();
 
         /// <summary>
-        /// GDPR user Consent SDK Implementation for ads on session.
-        /// <para>Default: <see cref="ConsentStatus.Undefined"/></para>
+        /// Sounds in ads mute state
+        /// <para>Disabled by default.</para>
         /// </summary>
-        ConsentStatus userConsent { get; set; }
+        bool isMutedAdSounds { get; set; }
 
         /// <summary>
-        /// Whether or not user has opted out of the sale of their personal information.
-        /// <para>Default: <see cref="CCPAStatus.Undefined"/></para>
-        /// </summary>
-        CCPAStatus userCCPAStatus { get; set; }
-
-        /// <summary>
-        /// Ad filters by Audience
+        /// This option will compare ad cost and serve regular interstitial ads
+        /// when rewarded video ads are expected to generate less revenue.
+        /// <para>Interstitial Ads does not require to watch the video to the end,
+        /// but the <see cref="IMediationManager.OnRewardedAdCompleted"/> callback will be triggered in any case.</para>
         /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
         /// </summary>
-        Audience taggedAudience { get; set; }
+        bool allowInterstitialAdsWhenVideoCostAreLower { get; set; }
 
         /// <summary>
         /// The enabled Debug Mode will display a lot of useful information for debugging about the states of the sdc with tag `CAS`.  
@@ -142,18 +154,6 @@ namespace CAS
         /// Disabled by default.
         /// </summary>
         bool isDebugMode { get; set; }
-
-        /// <summary>
-        /// Sounds in ads mute state
-        /// <para>Disabled by default.</para>
-        /// </summary>
-        bool isMutedAdSounds { get; set; }
-
-        /// <summary>
-        /// CAS mediation processing mode of ad requests.
-        /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
-        /// </summary>
-        LoadingManagerMode loadingMode { get; set; }
 
         /// <summary>
         /// Identifiers corresponding to test devices which will always request test ads.
@@ -168,6 +168,12 @@ namespace CAS
         List<string> GetTestDeviceIds();
 
         /// <summary>
+        /// CAS mediation processing mode of ad requests.
+        /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
+        /// </summary>
+        LoadingManagerMode loadingMode { get; set; }
+
+        /// <summary>
         /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
         /// <para>You can use <see cref="EventExecutor.Add(Action)"/> to schedule each calls on the next Update() loop.
         /// OR enable this property to automatically schedule all calls on the next Update() loop.</para>
@@ -176,13 +182,11 @@ namespace CAS
         bool isExecuteEventsOnUnityThread { get; set; }
 
         /// <summary>
-        /// This option will compare ad cost and serve regular interstitial ads
-        /// when rewarded video ads are expected to generate less revenue.
-        /// <para>Interstitial Ads does not require to watch the video to the end,
-        /// but the <see cref="IMediationManager.OnRewardedAdCompleted"/> callback will be triggered in any case.</para>
-        /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
+        /// Indicates if the Unity app should be paused when a full screen ad (interstitial
+        /// or rewarded video ad) is displayed.
+        /// <para>Enabled by default.</para>
         /// </summary>
-        bool allowInterstitialAdsWhenVideoCostAreLower { get; set; }
+        bool iOSAppPauseOnBackground { get; set; }
 
         /// <summary>
         /// The SDK automatically collects location data if the user allowed the app to track the location.
@@ -192,10 +196,12 @@ namespace CAS
         bool trackLocationEnabled { get; set; }
 
         /// <summary>
-        /// Indicates if the Unity app should be paused when a full screen ad (interstitial
-        /// or rewarded video ad) is displayed.
-        /// <para>Enabled by default.</para>
+        /// If your application uses Google Analytics (Firebase)
+        /// then Clever Ads Solutions collects ad impressions and states analytics.  
+        /// <para>This flag has no effect on ad revenue.</para>
+        /// <para>Disabling analytics collection may save internet traffic and improve application performance.</para>
+        /// Disabled by default.
         /// </summary>
-        bool iOSAppPauseOnBackground { get; set; }
+        bool analyticsCollectionEnabled { get; set; }
     }
 }
