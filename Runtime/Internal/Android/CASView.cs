@@ -14,7 +14,9 @@ namespace CAS.Android
     {
         private readonly CASMediationManager _manager;
         private readonly AndroidJavaObject _bridge;
+#pragma warning disable CS0414
         private AdEventsProxy _callbackProxy;
+#pragma warning restore CS0414
         private int _refreshInterval = -1;
         private AdPosition _position = AdPosition.BottomCenter;
         private int _positionX = 0;
@@ -28,7 +30,7 @@ namespace CAS.Android
         public event CASViewEvent OnHidden;
 
         public IMediationManager manager { get { return _manager; } }
-        public AdSize size { get; }
+        public AdSize size { get; private set; }
 
         public AdPosition position
         {

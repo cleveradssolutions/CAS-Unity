@@ -30,7 +30,7 @@ namespace CAS.Unity
         public event CASViewEvent OnClicked;
         public event CASViewEvent OnHidden;
 
-        public AdSize size { get; }
+        public AdSize size { get; private set; }
         public IMediationManager manager { get { return _manager; } }
         public int refreshInterval { get; set; }
 

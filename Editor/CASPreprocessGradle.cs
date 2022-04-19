@@ -111,7 +111,8 @@ namespace CAS.UEditor
         internal static bool TryEnableGradleTemplate( string assetPath )
         {
             var fileName = Path.GetFileName( assetPath );
-            var gradleFileFromUnity = Path.Combine( GetAndroidToolsPath(), "GradleTemplates", fileName );
+            var gradleFileFromUnity =
+                Path.Combine( Path.Combine( GetAndroidToolsPath(), "GradleTemplates" ), fileName );
             if (!File.Exists( gradleFileFromUnity ))
             {
                 Debug.LogError( Utils.logTag + "Template file not found: " + gradleFileFromUnity );
@@ -136,7 +137,7 @@ namespace CAS.UEditor
             string gradleLibPath;
             var isEmbedded = EditorPrefs.GetBool( "GradleUseEmbedded" );
             if (isEmbedded)
-                gradleLibPath = Path.Combine( GetAndroidToolsPath(), "gradle", "lib" );
+                gradleLibPath = Path.Combine( Path.Combine( GetAndroidToolsPath(), "gradle"), "lib" );
             else
                 gradleLibPath = Path.Combine( EditorPrefs.GetString( "GradlePath" ), "lib" );
 
@@ -679,7 +680,7 @@ namespace CAS.UEditor
             // Macos path: 2020.3.11/PlaybackEngines/AndroidPlayer/Tools/gradle/lib
             if (appPath.EndsWith( ".exe" ))
                 result = Path.Combine( result, "Data" );
-            return Path.Combine( result, "PlaybackEngines", "AndroidPlayer", "Tools" );
+            return Path.Combine( Path.Combine( Path.Combine( result, "PlaybackEngines"), "AndroidPlayer"), "Tools" );
         }
 
 
