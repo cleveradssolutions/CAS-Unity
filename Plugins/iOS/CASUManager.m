@@ -27,7 +27,7 @@
         _appReturnDelegate = [[CASUCallback alloc] initWithComplete:false];
         _appReturnDelegate.client = client;
 
-        [CASAnalytics setHandler:_interCallback]; // Require before create manager
+        [CASAnalytics setDelegate:_interCallback]; // Require before create manager
 
 //        NSMutableDictionary *mediationExtras;
 //        if (extras) {
