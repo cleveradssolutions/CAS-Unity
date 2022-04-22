@@ -81,7 +81,7 @@
     }
 }
 
-- (void)log:(NSString *)eventName:(NSDictionary<NSString *, id> *)map {
+- (void)analyticsEvent:(NSString *)eventName map:(NSDictionary<NSString *, id> *)map {
     #if __has_include(<FirebaseAnalytics/FIRAnalytics.h>)
     [FIRAnalytics logEventWithName:eventName parameters:map];
     #else

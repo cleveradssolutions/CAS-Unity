@@ -376,14 +376,19 @@ namespace CAS.UEditor
             buildPreprocessEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
                     "Build preprocess enabled",
                     buildPreprocessEnabledProp.boolValue );
-            EditorGUI.indentLevel++;
+
             if (!buildPreprocessEnabledProp.boolValue)
+            {
+                EditorGUI.indentLevel++;
                 EditorGUILayout.HelpBox( "Automatic configuration at build time is disabled.\n" +
                     "You can use `Assets > CleverAdsSolutions > Configure project` to call configuration manually.",
                     MessageType.None );
+                EditorGUI.indentLevel--;
+            }
 
             if (platform == BuildTarget.Android)
             {
+                EditorGUI.indentLevel++;
                 updateGradlePluginVersionProp.boolValue = EditorGUILayout.ToggleLeft(
                    HelpStyles.GetContent( "Update Gradle Plugin enabled", null,
                        "The Gradle plugin version will be updated during build to be optimal " +
@@ -668,16 +673,19 @@ namespace CAS.UEditor
                 if (HelpStyles.WarningWithButton( "Changing dependencies will change the project settings. " +
                     "Please use Android Resolver after the change complete.", "Resolve", MessageType.Info ))
                 {
-#if UNITY_ANDROID
-                    var succses = Utils.TryResolveAndroidDependencies();
-                    EditorUtility.DisplayDialog( "Android Dependencies",
-                        succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
-                        "OK" );
-#else
-                    EditorUtility.DisplayDialog( "Android Dependencies",
-                        "Android resolver not enabled. Unity Android platform target must be selected.",
-                        "OK" );
-#endif
+                    if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
+                    {
+                        var succses = Utils.TryResolveAndroidDependencies();
+                        EditorUtility.DisplayDialog( "Android Dependencies",
+                            succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
+                            "OK" );
+                    }
+                    else
+                    {
+                        EditorUtility.DisplayDialog( "Android Dependencies",
+                            "Android resolver not enabled. Unity Android platform target must be selected.",
+                            "OK" );
+                    }
                 }
                 return;
             }
@@ -707,9 +715,9 @@ namespace CAS.UEditor
             if (File.Exists( path ))
                 return;
 #if UNITY_ANDROID || CASDeveloper
-            if (HelpStyles.WarningWithButton( prefix + " template feature is disabled!\n" +
-                "A successful build requires do modifications to " + prefix + " template.",
-                "Enable", MessageType.Error ))
+            var msg = prefix + " template feature is disabled!\n" +
+                "A successful build requires do modifications to " + prefix + " template.";
+            if (HelpStyles.WarningWithButton( msg, "Enable", MessageType.Error ))
                 CASPreprocessGradle.TryEnableGradleTemplate( path );
 #endif
         }
@@ -732,7 +740,9 @@ namespace CAS.UEditor
                 return;
             EditorGUILayout.HelpBox( "If you haven't created an CAS account and registered an manager yet, " +
                 "now's a great time to do so at cleveradssolutions.com. " +
-                "If you're just looking to experiment with the SDK, though, you can use the Test Ad Mode below with any manager ID.", MessageType.Info );
+                "If you're just looking to experiment with the SDK, though, " +
+                "you can use the Test Ad Mode below with any manager ID.",
+                MessageType.Info );
         }
 
         private void OnAudienceGUI()
@@ -751,7 +761,8 @@ namespace CAS.UEditor
             {
                 case Audience.Mixed:
                     EditorGUILayout.HelpBox( "Game target age groups include both children and older audiences.\n" +
-                        "A neutral age screen must be implemented so that any ads not suitable for children are only shown to older audiences.\n" +
+                        "A neutral age screen must be implemented so that any ads not suitable " +
+                        "for children are only shown to older audiences.\n" +
                         "You could change the audience at runtime.",
                         MessageType.None );
                     break;
@@ -766,7 +777,8 @@ namespace CAS.UEditor
                     }
                     break;
                 case Audience.NotChildren:
-                    EditorGUILayout.HelpBox( "Audiences over the age of 13 NOT subject to the restrictions of child protection laws.", MessageType.None );
+                    EditorGUILayout.HelpBox( "Audiences over the age of 13 NOT subject to the restrictions of child protection laws.",
+                        MessageType.None );
                     break;
             }
             OnAndroidAdIdGUI();

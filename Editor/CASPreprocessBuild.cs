@@ -106,7 +106,7 @@ namespace CAS.UEditor
                 Debug.LogWarning( Utils.logTag + "Test Ads Mode enabled! Make sure the build is for testing purposes only!\n" +
                     "Use 'Assets > CleverAdsSolutions > Settings' menu to disable Test Ad Mode." );
             else
-                Debug.Log( Utils.logTag + "Build Preprocess done." );
+                Debug.Log( Utils.logTag + "Project configuration completed" );
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 

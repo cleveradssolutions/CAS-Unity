@@ -104,8 +104,10 @@ namespace CAS.UEditor
         {
             try
             {
-                CASPreprocessBuild.ConfigureProject(
-                    EditorUserBuildSettings.activeBuildTarget, CASEditorSettings.Load() );
+                var target = EditorUserBuildSettings.activeBuildTarget;
+                CASPreprocessBuild.ConfigureProject( target, CASEditorSettings.Load() );
+                if (target == BuildTarget.Android)
+                    TryResolveAndroidDependencies();
                 EditorUtility.ClearProgressBar();
                 EditorUtility.DisplayDialog( "Configure project",
                     "CAS Plugin has successfully applied all required configurations to your project.",
@@ -246,76 +248,6 @@ namespace CAS.UEditor
         }
         #endregion
 
-        public static bool IsAndroidDependenciesResolverExist()
-        {
-            try
-            {
-                var resolverType = Type.GetType( "GooglePlayServices.PlayServicesResolver, Google.JarResolver", false );
-                return resolverType != null;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public static System.Version GetEDM4UVersion( BuildTarget platform )
-        {
-            try
-            {
-                Type resolverType = null;
-                if (platform == BuildTarget.Android)
-                    resolverType = Type.GetType( "Google.AndroidResolverVersionNumber, Google.JarResolver", false );
-                else if (platform == BuildTarget.iOS)
-                    resolverType = Type.GetType( "Google.IOSResolverVersionNumber, Google.IOSResolver", false );
-                if (resolverType == null)
-                    return null;
-                return resolverType.GetProperty( "Value" ).GetValue( null, null ) as System.Version;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public static bool TryResolveAndroidDependencies( bool force = true )
-        {
-            bool success = true;
-            try
-            {
-                var resolverType = Type.GetType( "GooglePlayServices.PlayServicesResolver, Google.JarResolver", false );
-                if (resolverType != null)
-                {
-                    bool autoResolve;
-                    if (force)
-                        autoResolve = false;
-                    else
-                        autoResolve = ( bool )resolverType.GetProperty( "AutomaticResolutionEnabled",
-                            BindingFlags.Public | BindingFlags.Static )
-                            .GetValue( null, null );
-                    if (!autoResolve)
-                    {
-                        try
-                        {
-                            EditorUtility.DisplayProgressBar( "Hold on.", "Resolve Android dependencies", 0.6f );
-                            success = ( bool )resolverType.GetMethod( "ResolveSync", BindingFlags.Public | BindingFlags.Static, null,
-                                new[] { typeof( bool ) }, null )
-                                .Invoke( null, new object[] { true } );
-                        }
-                        finally
-                        {
-                            EditorUtility.ClearProgressBar();
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning( logTag + "GooglePlayServices.PlayServicesResolver error: " + e.Message );
-            }
-            return success;
-        }
-
         public static string GetNewVersionOrNull( string repo, string currVersion, bool force )
         {
             try
@@ -431,6 +363,101 @@ namespace CAS.UEditor
                     Application.OpenURL( gitRootURL + gitRepoName + "/releases" );
                 EditorGUILayout.EndHorizontal();
             }
+        }
+        #endregion
+
+        #region EDM4U Reflection
+        private static void CheckAssemblyForType<T>( string assembly )
+        {
+            var targetType = typeof( T );
+            var targetAssembly = targetType.Assembly.GetName().Name;
+            if (targetAssembly != assembly)
+                Debug.LogError( logTag + targetType.FullName + " in assembly: " + targetAssembly + " Expecting: " + assembly );
+        }
+
+        public static bool IsAndroidDependenciesResolverExist()
+        {
+            return Type.GetType( "GooglePlayServices.PlayServicesResolver, Google.JarResolver", false ) != null;
+        }
+
+        public static System.Version GetEDM4UVersion( BuildTarget platform )
+        {
+#if CASDeveloper
+            CheckAssemblyForType<Google.AndroidResolverVersionNumber>( "Google.JarResolver" );
+            CheckAssemblyForType<Google.IOSResolverVersionNumber>( "Google.IOSResolver" );
+#endif
+            try
+            {
+                Type resolverType = null;
+                if (platform == BuildTarget.Android)
+                    resolverType = Type.GetType( "Google.AndroidResolverVersionNumber, Google.JarResolver", false );
+                else if (platform == BuildTarget.iOS)
+                    resolverType = Type.GetType( "Google.IOSResolverVersionNumber, Google.IOSResolver", false );
+                if (resolverType == null)
+                    return null;
+                return resolverType.GetProperty( "Value" ).GetValue( null, null ) as System.Version;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public static bool TryResolveAndroidDependencies( bool force = true )
+        {
+            const string googleAssembly = "Google.JarResolver";
+            const string resolverTypeName = "GooglePlayServices.PlayServicesResolver, " + googleAssembly;
+#if CASDeveloper
+            CheckAssemblyForType<GooglePlayServices.PlayServicesResolver>( googleAssembly );
+#endif
+            bool success = true;
+            var resolverType = Type.GetType( resolverTypeName, false );
+            if (resolverType == null)
+                return success;
+
+            bool needResolve = force;
+            if (!needResolve)
+                needResolve = ( bool )resolverType
+                    .GetProperty( "AutomaticResolutionEnabled", BindingFlags.Public | BindingFlags.Static )
+                    .GetValue( null, null );
+            if (!needResolve)
+                return success;
+            try
+            {
+                EditorUtility.DisplayProgressBar( "Hold on.", "Resolve Android dependencies", 0.6f );
+                success = ( bool )resolverType
+                    .GetMethod( "ResolveSync", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof( bool ) }, null )
+                    .Invoke( null, new object[] { true } );
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning( logTag + "GooglePlayServices.PlayServicesResolver error: " + e.Message );
+            }
+            EditorUtility.ClearProgressBar();
+            return success;
+        }
+
+        public static T GetAndroidResolverSetting<T>( string property )
+        {
+            const string googleAssembly = "Google.JarResolver";
+            const string settingsTypeName = "GooglePlayServices.SettingsDialog, " + googleAssembly;
+#if CASDeveloper
+            CheckAssemblyForType<GooglePlayServices.SettingsDialog>( googleAssembly );
+#endif
+            try
+            {
+                var settingsType = Type.GetType( settingsTypeName, false );
+                if (settingsType != null)
+                {
+                    return ( T )settingsType.GetProperty( property, BindingFlags.NonPublic | BindingFlags.Static )
+                            .GetValue( null, null );
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning( logTag + settingsTypeName + " error: " + e.Message );
+            }
+            return default( T );
         }
         #endregion
 
@@ -732,18 +759,6 @@ namespace CAS.UEditor
     internal class AdmobAppIdData
     {
         public string admob_app_id = null;
-#if false
-            public int[] Banner = null;
-            public int[] Interstitial = null;
-            public int[] Rewarded = null;
-
-            public bool IsDisabled()
-            {
-                return ( Interstitial == null || Interstitial.Length < 5 )
-                    && ( Banner == null || Banner.Length < 5 )
-                    && ( Rewarded == null || Rewarded.Length < 5 );
-            }
-#endif
     }
 
     [Serializable]
@@ -880,7 +895,13 @@ namespace CAS.UEditor
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.HelpBox( message, type );
-            var action = GUILayout.Button( btnText, GUILayout.ExpandWidth( false ), GUILayout.ExpandHeight( true ) );
+            // Expand height correct work with Unity 2020 or newer
+#if UNITY_2020_1_OR_NEWER
+            var height = GUILayout.ExpandHeight( true );
+#else
+            var height = GUILayout.Height( 38 );
+#endif
+            var action = GUILayout.Button( btnText, GUILayout.ExpandWidth( false ), height );
             EditorGUILayout.EndHorizontal();
             return action;
         }

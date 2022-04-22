@@ -65,15 +65,25 @@ namespace CAS.UEditor
                 baseGradleChanged = true;
 #endif
 
+            // Enabled by default Dexing artifact transform causes issues for ExoPlayer with Gradle plugin 3.5.0+
+            var dexingArtifactProp = new GradleProperty(
+                "android.enableDexingArtifactTransform", "false", !settings.exoPlayerIncluded );
 
-            var gradleProps = new[]
+            GradleProperty[] gradleProps = null;
+            if (Utils.GetAndroidResolverSetting<bool>( "UseJetifier" ))
             {
-                // Enabled by default Dexing artifact transform causes issues for ExoPlayer with Gradle plugin 3.5.0+
-                new GradleProperty("android.enableDexingArtifactTransform", "false",
-                    !settings.exoPlayerIncluded),
-                new GradleProperty("android.useAndroidX", "true"),
-                new GradleProperty("android.enableJetifier", "true")
-            };
+                gradleProps = new[] { dexingArtifactProp };
+            }
+            else
+            {
+                gradleProps = new[]
+                {
+                    dexingArtifactProp,
+                    new GradleProperty("android.useAndroidX", "true"),
+                    new GradleProperty("android.enableJetifier", "true")
+                };
+            }
+
 #if UNITY_2019_3_OR_NEWER
             List<string> propsFile = ReadGradleFile( "Gradle Properties", Utils.propertiesGradlePath );
 
@@ -83,6 +93,10 @@ namespace CAS.UEditor
             // Unity below version 2019.3 does not have a Gradle Properties file
             // and changes are applied to the base Gradle file.
             if (UpdateGradlePropertiesInMainFile( baseGradle, gradleProps, baseGradlePath ))
+                baseGradleChanged = true;
+
+            
+            if (FixGradleCompatibilityUnity2018( baseGradle, baseGradlePath ))
                 baseGradleChanged = true;
 #endif
 
@@ -135,9 +149,8 @@ namespace CAS.UEditor
         internal static Version GetGradleWrapperVersion()
         {
             string gradleLibPath;
-            var isEmbedded = EditorPrefs.GetBool( "GradleUseEmbedded" );
-            if (isEmbedded)
-                gradleLibPath = Path.Combine( Path.Combine( GetAndroidToolsPath(), "gradle"), "lib" );
+            if (IsUsedGradleWrapperEmbeddedInUnity())
+                gradleLibPath = Path.Combine( Path.Combine( GetAndroidToolsPath(), "gradle" ), "lib" );
             else
                 gradleLibPath = Path.Combine( EditorPrefs.GetString( "GradlePath" ), "lib" );
 
@@ -296,21 +309,22 @@ namespace CAS.UEditor
 
                 for (int i = 0; i < props.Length; i++)
                 {
-                    if (gradle[line].Contains( props[i].name ))
+                    if (!gradle[line].Contains( props[i].name ))
+                        continue;
+
+                    if (props[i].remove)
                     {
-                        if (props[i].remove)
-                        {
-                            gradle.RemoveAt( line );
-                            Debug.Log( Utils.logTag + "Remove gradle property: " + props[i].name );
-                            isChanged = true;
-                            --line;
-                        }
-                        else if (beginPropsLine > 0)
-                            props[i].existByCAS = true;
-                        else
-                            props[i].exist = true;
+                        gradle.RemoveAt( line );
+                        Debug.Log( Utils.logTag + "Remove gradle property: " + props[i].name );
+                        isChanged = true;
+                        --line;
                         break;
                     }
+                    if (beginPropsLine < 0)
+                        props[i].existByCAS = true;
+                    else
+                        props[i].exist = true;
+                    break;
                 }
             } while (!gradle[line].Contains( addBeforeLine ));
 
@@ -665,10 +679,79 @@ namespace CAS.UEditor
             return isChanged;
         }
 
+        private static bool FixGradleCompatibilityUnity2018( List<string> gradle, string filePath )
+        {
+            // New Gradle Wrapper 3.6+ generates a `gradleOut-release.aab`,
+            // but Unity 2018 look for a `gradleOut.aab` instead.
+            // So we create new taskto rename AAB file for Unity build system.
+
+            // Emdedded version does not require fix
+            var requireFix = !IsUsedGradleWrapperEmbeddedInUnity();
+
+            const string message = "Fix Gradle version compatibility by CAS";
+            const string beginContentLine = "// " + message + " Start";
+            const string endContentLine = "// " + message + " End";
+            const string findLine = "**BUILT_APK_LOCATION**";
+            var line = gradle.Count;
+            var endContantLine = -1;
+            do
+            {
+                line--;
+                if (line < 0)
+                {
+                    LogWhenGradleLineNotFound( findLine, filePath );
+                    return false;
+                }
+                if (endContantLine < 0)
+                {
+                    if (gradle[line].Contains( endContentLine ))
+                        endContantLine = line;
+                    continue;
+                }
+                if (gradle[line].Contains( beginContentLine ))
+                {
+                    if (!requireFix)
+                    {
+                        gradle.RemoveRange( line, endContantLine - line + 1 );
+                        return true;
+                    }
+                    return false;
+                }
+            } while (!gradle[line].Contains( findLine ));
+
+            if (!requireFix)
+                return false;
+
+            string[] content = {
+                beginContentLine,
+                "tasks.whenTaskAdded { task ->",
+                "    if (task.name.startsWith(\"bundle\")) {",
+                "        def flavor = task.name.substring(\"bundle\".length()).uncapitalize()",
+                "        def newTask = tasks.create(\"fixName\" + task.name.capitalize(), Copy) {",
+                "            from(\"$buildDir/outputs/bundle/$flavor/\")",
+                "            include \"gradleOut-\" + flavor + \".aab\"",
+                "            destinationDir file(\"$buildDir/outputs/bundle/$flavor/\")",
+                "            rename \"gradleOut-\" + flavor + \".aab\", \"gradleOut.aab\"",
+                "        }",
+                "        task.finalizedBy(newTask.name)",
+                "    }",
+                "}",
+                endContentLine
+            };
+            gradle.AddRange( content );
+            Debug.Log( Utils.logTag + message + " in " + filePath );
+            return true;
+        }
+
         private static void LogWhenGradleLineNotFound( string line, string inFile )
         {
             Debug.LogWarning( Utils.logTag + "Not found " + line + " in Gradle template.\n" +
                             "Please try to remove `" + inFile + "` and enable gradle template in Player Settings.\n" );
+        }
+
+        private static bool IsUsedGradleWrapperEmbeddedInUnity()
+        {
+            return EditorPrefs.GetBool( "GradleUseEmbedded" );
         }
 
         private static string GetAndroidToolsPath()
@@ -680,7 +763,7 @@ namespace CAS.UEditor
             // Macos path: 2020.3.11/PlaybackEngines/AndroidPlayer/Tools/gradle/lib
             if (appPath.EndsWith( ".exe" ))
                 result = Path.Combine( result, "Data" );
-            return Path.Combine( Path.Combine( Path.Combine( result, "PlaybackEngines"), "AndroidPlayer"), "Tools" );
+            return Path.Combine( Path.Combine( Path.Combine( result, "PlaybackEngines" ), "AndroidPlayer" ), "Tools" );
         }
 
 

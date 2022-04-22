@@ -1,5 +1,14 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.7.3] - 2022-04-22
+### Dependencies
+- [Android] Wraps [2.7.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.7.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixe
+- [Android] Fixed build error `FileNotFoundException: gradleOut.aab` for Unity 2018 with Gradle Wrapper 6.5+.
+- [iOS] Fixed XCode Parse issue for `eventName` selector.
+- Minor editor logic fixes.
+
 ## [2.7.2] - 2022-04-19
 ### Dependencies
 - [Android] Wraps [2.7.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
