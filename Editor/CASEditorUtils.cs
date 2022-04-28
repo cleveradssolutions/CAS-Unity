@@ -99,6 +99,7 @@ namespace CAS.UEditor
             Application.OpenURL( gitRootURL + gitUnityRepo + "/issues" );
         }
 
+#if UNITY_ANDROID || UNITY_IOS || CASDeveloper
         [MenuItem( "Assets/CleverAdsSolutions/Configure project", priority = 1051 )]
         public static void ConfigureProjectForTargetPlatform()
         {
@@ -118,6 +119,7 @@ namespace CAS.UEditor
                 EditorUtility.ClearProgressBar();
             }
         }
+#endif
 
         #endregion
 

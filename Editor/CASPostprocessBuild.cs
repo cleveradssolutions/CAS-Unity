@@ -22,7 +22,7 @@ namespace CAS.UEditor
     internal class CASPostprocessBuild
     {
         [PostProcessBuild( 47 )]//must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40) and that it's added before "pod install" (50)
-        public static void FixPodFileBug( BuildTarget target, string buildPath )
+        public static void MainPostprocess( BuildTarget target, string buildPath )
         {
             if (target != BuildTarget.iOS)
                 return;
@@ -207,25 +207,23 @@ namespace CAS.UEditor
             if (string.IsNullOrEmpty( templateFile ))
             {
                 Debug.LogError( CASEditorUtils.logTag + "Not found SKAdNetworkItems. Try reimport CAS package." );
+                return;
             }
+            var networksLines = File.ReadAllLines( templateFile );
+
+            PlistElementArray adNetworkItems;
+            var adNetworkItemsField = plist.root["SKAdNetworkItems"];
+            if (adNetworkItemsField == null)
+                adNetworkItems = plist.root.CreateArray( "SKAdNetworkItems" );
             else
+                adNetworkItems = adNetworkItemsField.AsArray();
+
+            for (int i = 0; i < networksLines.Length; i++)
             {
-                var networksLines = File.ReadAllLines( templateFile );
-
-                PlistElementArray adNetworkItems;
-                var adNetworkItemsField = plist.root["SKAdNetworkItems"];
-                if (adNetworkItemsField == null)
-                    adNetworkItems = plist.root.CreateArray( "SKAdNetworkItems" );
-                else
-                    adNetworkItems = adNetworkItemsField.AsArray();
-
-                for (int i = 0; i < networksLines.Length; i++)
+                if (!string.IsNullOrEmpty( networksLines[i] ))
                 {
-                    if (!string.IsNullOrEmpty( networksLines[i] ))
-                    {
-                        var dict = adNetworkItems.AddDict();
-                        dict.SetString( "SKAdNetworkIdentifier", networksLines[i] );
-                    }
+                    var dict = adNetworkItems.AddDict();
+                    dict.SetString( "SKAdNetworkIdentifier", networksLines[i] );
                 }
             }
         }
