@@ -176,7 +176,7 @@ namespace CAS
         /// <summary>
         /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
         /// <para>You can use <see cref="EventExecutor.Add(Action)"/> to schedule each calls on the next Update() loop.
-        /// OR enable this property to automatically schedule all calls on the next Update() loop.</para>
+        /// OR enable this property to automatically execute all calls on the next Update() loop.</para>
         /// <para>Disabled by default.</para>
         /// </summary>
         bool isExecuteEventsOnUnityThread { get; set; }

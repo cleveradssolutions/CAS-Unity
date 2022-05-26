@@ -60,8 +60,7 @@ namespace CAS.Android
 
         public void onInitialization( bool success, string error )
         {
-            if (CASFactory.isDebug)
-                Debug.Log( "[CleverAdsSolutions] onInitialization " + success );
+            CASFactory.UnityLog( "OnInitialization " + success );
             manager.initializationListener = null;
             if (initCompleteAction != null)
             {
@@ -93,15 +92,13 @@ namespace CAS.Android
 
         public void onLoaded()
         {
-            if (CASFactory.isDebug)
-                Debug.Log( "[CleverAdsSolutions] onLoaded " + adType.ToString() );
+            CASFactory.UnityLog( "onLoaded " + adType.ToString() );
             CASFactory.ExecuteEvent( OnAdLoaded );
         }
 
         public void onFailed( int error )
         {
-            if (CASFactory.isDebug)
-                Debug.Log( "[CleverAdsSolutions] onFailed " + adType.ToString() + " error: " + Enum.GetName( typeof( AdError ), error ) );
+            CASFactory.UnityLog( "onFailed " + adType.ToString() + " error: " + Enum.GetName( typeof( AdError ), error ) );
             if (OnAdFailed != null)
             {
                 CASFactory.ExecuteEvent( () =>
@@ -111,17 +108,16 @@ namespace CAS.Android
             }
         }
 
-        public void onOpening( int net, double cpm, int accuracy )
+        public void onOpening( string parameters )
         {
-            if (CASFactory.isDebug)
-                Debug.Log( "[CleverAdsSolutions] onOpening " + adType.ToString() + " net: " + net + " cpm: " + cpm + " accuracy: " + accuracy );
+            CASFactory.UnityLog( "onOpening " + adType.ToString() );
             CASFactory.ExecuteEvent( OnAdShown );
             if (OnAdOpening != null)
             {
                 CASFactory.ExecuteEvent( () =>
                 {
                     if (OnAdOpening != null)
-                        OnAdOpening( new AdMetaData( adType, ( AdNetwork )net, cpm, ( PriceAccuracy )accuracy ) );
+                        OnAdOpening( new AdMetaData( adType, CASFactory.ParseParametersString( parameters ) ) );
                 } );
             }
         }

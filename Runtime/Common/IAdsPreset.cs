@@ -14,6 +14,7 @@ namespace CAS
         bool defaultIOSTrackLocationEnabled { get; }
         bool defaultAnalyticsCollectionEnabled { get; }
         bool defaultInterstitialWhenNoRewardedAd { get; }
+        AdFlags defaultAllowedFormats { get; }
         Audience defaultAudienceTagged { get; }
         LoadingManagerMode defaultLoadingMode { get; }
 

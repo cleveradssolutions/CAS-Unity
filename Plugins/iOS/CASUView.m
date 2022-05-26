@@ -16,7 +16,6 @@ static const int AD_POSITION_BOTTOM_CENTER = 3;
 static const int AD_POSITION_BOTTOM_LEFT = 4;
 static const int AD_POSITION_BOTTOM_RIGHT = 5;
 
-
 @interface CASUView () <CASBannerDelegate>
 @property (nonatomic, assign) CGPoint adPositionOffset;
 @property (nonatomic, assign) int activePos;
@@ -222,10 +221,7 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 
 - (void)bannerAdView:(CASBannerView *)adView willPresent:(id<CASStatusHandler>)impression {
     if (self.adPresentedCallback) {
-        self.adPresentedCallback(self.client,
-                                 [[CASNetwork values] indexOfObject:impression.network],
-                                 impression.cpm,
-                                 impression.priceAccuracy);
+        self.adPresentedCallback(self.client, [CASUPluginUtil adMetaDataToStringPointer:impression]);
     }
 }
 

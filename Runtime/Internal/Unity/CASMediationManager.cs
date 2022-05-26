@@ -18,7 +18,7 @@ namespace CAS.Unity
     {
         public AdFlags enabledTypes;
 
-        internal readonly AdMetaData dummyBannerMeta = new AdMetaData( AdType.Banner, AdNetwork.CrossPromotion, 0.0, PriceAccuracy.Undisclosed );
+        internal readonly AdMetaData bannerMetaData = CreateAdMetaData( AdType.Banner );
 
         internal CASViewFactoryImpl viewFactory;
         [SerializeField]
@@ -184,6 +184,14 @@ namespace CAS.Unity
             manager._interstitial = new CASFullscreenView( manager, AdType.Interstitial );
             manager._rewarded = new CASFullscreenView( manager, AdType.Rewarded );
             return manager;
+        }
+
+        internal static AdMetaData CreateAdMetaData( AdType type )
+        {
+            return new AdMetaData( type, new Dictionary<string, string>()
+            {
+                { "network", ((int)AdNetwork.CrossPromotion).ToString() }
+            } );
         }
 
         #region IMediationManager implementation

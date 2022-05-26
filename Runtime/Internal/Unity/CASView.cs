@@ -168,7 +168,7 @@ namespace CAS.Unity
         private void CallAdPresented()
         {
             if (OnPresented != null)
-                OnPresented( this, _manager.dummyBannerMeta );
+                OnPresented( this, _manager.bannerMetaData );
         }
 
         private void CallAdClicked()
@@ -331,7 +331,7 @@ namespace CAS.Unity
         {
             this.manager = manager;
             this.type = type;
-            metaData = new AdMetaData( type, AdNetwork.CrossPromotion, 0.0, PriceAccuracy.Undisclosed );
+            metaData = CASMediationManager.CreateAdMetaData(type);
         }
 
         public void Load()

@@ -21,7 +21,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "2.7.3";
+        public const string wrapperVersion = "2.8.1";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -62,7 +62,7 @@ namespace CAS
 
         /// <summary>
         /// Create <see cref="IMediationManager"/> builder.
-        /// <para>Don't forget to call the <see cref="CASInitSettings.Initialize"/> method to create manager instance.</para>
+        /// <para>Don't forget to call the <see cref="IManagerBuilder.Initialize"/> method to create manager instance.</para>
         /// </summary>
         public static CASInitSettings BuildManager()
         {
@@ -150,8 +150,8 @@ namespace CAS
             AdFlags enableAd = AdFlags.Everything,
             InitCompleteAction initCompleteAction = null )
         {
-            var builder = BuildManager()
-                .WithInitListener( initCompleteAction );
+            var builder = BuildManager();
+            builder.WithInitListener( initCompleteAction );
             builder.WithEnabledAdTypes( enableAd & builder.allowedAdFlags );
             if (managerIndex > 0)
                 builder.WithManagerIdAtIndex( managerIndex );

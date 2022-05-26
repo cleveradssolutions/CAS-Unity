@@ -201,7 +201,7 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithMetaCallback ) )]
-        private static void AdViewPresentedCallback( IntPtr view, int net, double cpm, int accuracy )
+        private static void AdViewPresentedCallback( IntPtr view, string parameters )
         {
             try
             {
@@ -211,7 +211,7 @@ namespace CAS.iOS
                     instance._waitOfHideCallback = true;
                     if (instance.OnPresented != null)
                         instance.OnPresented( instance,
-                            new AdMetaData( AdType.Banner, ( AdNetwork )net, cpm, ( PriceAccuracy )accuracy ) );
+                            new AdMetaData( AdType.Banner, CASFactory.ParseParametersString( parameters ) ) );
                 }
             }
             catch (Exception e)

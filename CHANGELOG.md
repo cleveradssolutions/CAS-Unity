@@ -1,5 +1,25 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.8.1] - 2022-05-26
+### Dependencies
+- [Android] Wraps [2.8.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.8.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- Added new property `AdMetaData.creativeIdentifier` to get the creative id tied to the ad, if available.
+  > You can report creative issues to our Ad review team using this id.
+- Added new property `AdMetaData.identifier` to get internal demand source name in CAS database.
+- Added feature to link your CAS app to Google Analytics to automatic measurement of ad revenue. Read more on [our wiki page](https://github.com/cleveradssolutions/CAS-Unity/wiki/Impression-Level-Data#measure-ad-revenue).(beta)
+- Added new `AdError.Configuration` when configuration error has been detected in one of the mediation ad networks.
+- Added new `CAS.MobileAds.BuildManager().WithUserID(userID)` to set user id. The userID is a unique identifier supplied by your application and must be static for each user across sessions.
+- Improved initialization performance.
+## Changes
+- ⚠️ Updated minimum supported Xcode version to 13.2.1.
+- Migration from `CASInitSettings` class to `IManagerBuilder` interface.
+### Update Cross promotion
+- Added feature to get the `creativeIdentifier`.
+- Clicking on ad analytics event will be fired once per impression.
+- Clicking on ad skips the video ad.
+
 ## [2.7.3] - 2022-04-22
 ### Dependencies
 - [Android] Wraps [2.7.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

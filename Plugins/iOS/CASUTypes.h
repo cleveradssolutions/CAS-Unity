@@ -7,27 +7,20 @@
 
 typedef const void * CASUTypeManagerClientRef;
 typedef const void * CASUTypeManagerRef;
+typedef const void * CASUTypeManagerBuilderRef;
 
 typedef const void * CASUTypeViewClientRef;
 typedef const void * CASUTypeViewRef;
 
-typedef void (*CASUInitializationCompleteCallback)(CASUTypeManagerClientRef *manager,
-                                                   BOOL                     success,
-                                                   const char               *error);
+typedef void (*CASUInitializationCompleteCallback)(CASUTypeManagerClientRef *manager, const char *error, BOOL withConsent);
 
-#pragma mark - Full Screen ad events
 typedef void (*CASUDidLoadedAdCallback)(CASUTypeManagerClientRef *manager);
 
-typedef void (*CASUDidFailedAdCallback)(CASUTypeManagerClientRef *manager,
-                                        NSInteger                error);
+typedef void (*CASUDidFailedAdCallback)(CASUTypeManagerClientRef *manager, NSInteger error);
 
-typedef void (*CASUWillOpeningWithMetaCallback)(CASUTypeManagerClientRef *manager,
-                                                NSInteger                net,
-                                                double                   cpm,
-                                                NSInteger                accuracy);
+typedef void (*CASUWillOpeningWithMetaCallback)(CASUTypeManagerClientRef *manager, const char *parameters);
 
-typedef void (*CASUDidShowAdFailedWithErrorCallback)(CASUTypeManagerClientRef *manager,
-                                                     const char               *error);
+typedef void (*CASUDidShowAdFailedWithErrorCallback)(CASUTypeManagerClientRef *manager, const char *error);
 
 typedef void (*CASUDidClickedAdCallback)(CASUTypeManagerClientRef *manager);
 

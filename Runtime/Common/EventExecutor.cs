@@ -48,13 +48,10 @@ namespace CAS
 
         /// <summary>
         /// Schedule action on the next Update() loop in Unity Thread.
-        /// Using EventExecutor requires call static <see cref="Initialize"/> before adding a new event.
+        /// <para>Warning! To enable EventExecutor requires call once static <see cref="Initialize"/> method.</para>
         /// </summary>
         public static void Add( Action action )
         {
-            if (!instance)
-                Debug.LogError( "Using EventExecutor requires call static Initialize() before adding a new event." );
-
             lock (eventsQueue)
             {
                 eventsQueue.Add( action );

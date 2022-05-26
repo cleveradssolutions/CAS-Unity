@@ -24,7 +24,7 @@ namespace CAS
         /// <para>Index 0 by default when the method is not called.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
-        CASInitSettings WithManagerIdAtIndex( int index );
+        IManagerBuilder WithManagerIdAtIndex( int index );
 
         /// <summary>
         /// An manager ID is a unique ID number assigned to each of your ad placements when they're created in CAS.
@@ -36,12 +36,12 @@ namespace CAS
         /// <para>Please set all used Manager IDs in `Assets > CleverAdsSolutions > Settings` menu to setup the project correctly.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
-        CASInitSettings WithManagerId( string managerId );
+        IManagerBuilder WithManagerId( string managerId );
 
         /// <summary>
         /// Set listener to initialization complete result callback.
         /// </summary>
-        CASInitSettings WithInitListener( InitCompleteAction listener );
+        IManagerBuilder WithInitListener( InitCompleteAction listener );
 
         /// <summary>
         /// An Enabled Ad types is option to increase application performance by initializing only those ad types that will be used.
@@ -49,18 +49,25 @@ namespace CAS
         /// <para>Changes in current session only.</para>
         /// <para>Ad types can be enabled manually after initialize by <see cref="IMediationManager.SetEnableAd(AdType, bool)"/></para>
         /// </summary>
-        CASInitSettings WithEnabledAdTypes( params AdFlags[] adTypes );
+        IManagerBuilder WithEnabledAdTypes( params AdFlags[] adTypes );
+
+        /// <summary>
+        /// The userID is a unique identifier supplied by your application and must be static for each user across sessions.
+        /// Your userID should not contain any personally identifiable information such as
+        /// an email address, screen name, Android ID(AID), or Google Advertising ID(GAID).
+        /// </summary>
+        IManagerBuilder WithUserID( string userID );
 
         /// <summary>
         /// Additional mediation settings.
         /// Use constant key from <see cref="MediationExtras"/> with values of "1" or "0".
         /// </summary>
-        CASInitSettings WithMediationExtras( string key, string value );
+        IManagerBuilder WithMediationExtras( string key, string value );
 
         /// <summary>
         /// Clear additional mediation settings.
         /// </summary>
-        CASInitSettings ClearMediationExtras();
+        IManagerBuilder ClearMediationExtras();
 
         /// <summary>
         /// Option to enable Test ad mode that will always request test ads.
@@ -69,6 +76,6 @@ namespace CAS
         /// </summary>
         [Obsolete( "Please set Test Ad Mode in `Assets>CleverAdsSolutions>Settings` menu to get true Test Ad, " +
             "also Development build work same." )]
-        CASInitSettings WithTestAdMode( bool test );
+        IManagerBuilder WithTestAdMode( bool test );
     }
 }

@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using UnityEngine;
 
 namespace CAS
@@ -340,6 +341,39 @@ namespace CAS
         {
             if (GetAdsSettings().isDebugMode)
                 Debug.Log( "[CleverAdsSolutions] " + message );
+        }
+
+        internal static string SerializeParametersString( IDictionary<string, string> dict )
+        {
+            // Sample str: "key_1=value1;key_2=value2;key_3=value3;"
+            var result = new StringBuilder();
+            foreach (var item in dict)
+            {
+                result.Append( item.Key ).Append( '=' ).Append( item.Value ).Append( ';' );
+            }
+            return result.ToString();
+        }
+
+        internal static IDictionary<string, string> ParseParametersString( string str )
+        {
+            // Sample str: "key_1=value1;key_2=value2;key_3=value3;"
+            var result = new Dictionary<string, string>();
+            var begin = 0;
+            while (begin < str.Length)
+            {
+                var separator = str.IndexOf( '=', begin );
+                if (separator < 0)
+                    break;
+                var key = str.Substring( begin, separator - begin );
+                begin = separator + 1;
+                separator = str.IndexOf( ';', begin );
+                if (separator < 0) // Is end
+                    separator = str.Length;
+                if (begin != separator) // Is not empty
+                    result[key] = str.Substring( begin, separator - begin );
+                begin = separator + 1;
+            }
+            return result;
         }
     }
 }

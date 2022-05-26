@@ -16,13 +16,13 @@ namespace CAS.iOS
         #region CAS Callback types
         internal delegate void CASUDidLoadedAdCallback( IntPtr manager );
         internal delegate void CASUDidFailedAdCallback( IntPtr manager, int error );
-        internal delegate void CASUWillOpeningWithMetaCallback( IntPtr manager, int net, double cpm, int accuracy );
+        internal delegate void CASUWillOpeningWithMetaCallback( IntPtr manager, string parameters );
         internal delegate void CASUDidShowAdFailedWithErrorCallback( IntPtr manager, string error );
         internal delegate void CASUDidClickedAdCallback( IntPtr manager );
         internal delegate void CASUDidCompletedAdCallback( IntPtr manager );
         internal delegate void CASUDidClosedAdCallback( IntPtr manager );
 
-        internal delegate void CASUInitializationCompleteCallback( IntPtr manager, bool success, string error );
+        internal delegate void CASUInitializationCompleteCallback( IntPtr manager, string error, bool withConsent );
 
         internal delegate void CASUATTCompletion( int status );
         #endregion
@@ -30,9 +30,6 @@ namespace CAS.iOS
         #region CAS Settings
         [DllImport( "__Internal" )]
         internal static extern void CASUSetAnalyticsCollectionWithEnabled( bool enabled );
-
-        [DllImport( "__Internal" )]
-        internal static extern void CASUSetUnityVersion( string version );
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetTestDeviceWithIds( string[] testDeviceIDs, int testDeviceIDLength );
@@ -100,25 +97,46 @@ namespace CAS.iOS
         #endregion
 
         #region CAS Manager
+        /// <summary>
+        /// Create Manager Builder
+        /// </summary>
+        /// <returns>CASUTypeManagerRef</returns>
         [DllImport( "__Internal" )]
-        internal static extern IntPtr CASUCreateManager(
-            IntPtr client, // C# manager client ptr
-            CASUInitializationCompleteCallback onInit,
-            string managerID,
-            int enableAd,
-            bool demoAd
-        );
-
-        [DllImport( "__Internal" )]
-        internal static extern IntPtr CASUCreateManagerWithExtras(
-            IntPtr client, // C# manager client ptr
-            CASUInitializationCompleteCallback onInit,
-            string managerID,
+        internal static extern IntPtr CASUCreateBuilder(
             int enableAd,
             bool demoAd,
+            string unityVersion,
+            string userID
+        );
+
+        /// <summary>
+        /// Set Mediation Extras to manager Builder
+        /// </summary>
+        /// <param name="builderRef">Builder ref from CASUCreateBuilder()</param>
+        /// <param name="extraKeys">Array of extra keys</param>
+        /// <param name="extraValues">Array of extra values</param>
+        /// <param name="extrasCount">Count of extras</param>
+        /// <returns></returns>
+        [DllImport( "__Internal" )]
+        internal static extern void CASUSetMediationExtras(
+            IntPtr builderRef, 
             string[] extraKeys,
             string[] extraValues,
             int extrasCount
+        );
+
+        /// <summary>
+        /// Initialize Manager from builder
+        /// </summary>
+        /// <param name="builderRef">Builder ref from CASUCreateBuilder()</param>
+        /// <param name="client">C# CASMediationManager client ref</param>
+        /// <returns>CASUTypeManagerRef</returns>
+        [DllImport( "__Internal" )]
+        internal static extern IntPtr CASUInitializeManager(
+            IntPtr builderRef,
+            IntPtr client,
+            CASUInitializationCompleteCallback onInit,
+            string identifier
         );
 
         [DllImport( "__Internal" )]

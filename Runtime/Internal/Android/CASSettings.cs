@@ -33,14 +33,6 @@ namespace CAS.Android
         public CASSettings()
         {
             settingsBridge = new AndroidJavaClass( CASJavaProxy.NativeSettingsClassName );
-            try
-            {
-                settingsBridge.CallStatic( "setPluginPlatformName", "Unity", Application.unityVersion );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
         }
 
         public string GetSDKVersion()

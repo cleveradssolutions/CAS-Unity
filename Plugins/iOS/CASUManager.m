@@ -11,14 +11,10 @@
 
 @implementation CASUManager
 
-- (id)initWithAppID:(NSString *)appID
-             enable:(NSUInteger)types
-             demoAd:(BOOL)demoAd
-          forClient:(CASUTypeManagerClientRef *)client
-    mediationExtras:(NSMutableDictionary<NSString *, NSString *> *_Nullable)extras
-             onInit:(CASUInitializationCompleteCallback)onInit {
+- (id)initWithManager:(CASMediationManager *)manager forClient:(CASUTypeManagerClientRef  _Nullable *)client{
     self = [super init];
     if (self) {
+        self.casManager = manager;
         _client = client;
         _interCallback = [[CASUCallback alloc] initWithComplete:false];
         _interCallback.client = client;
@@ -26,32 +22,9 @@
         _rewardCallback.client = client;
         _appReturnDelegate = [[CASUCallback alloc] initWithComplete:false];
         _appReturnDelegate.client = client;
-
-        [CASAnalytics setDelegate:_interCallback]; // Require before create manager
-
-//        NSMutableDictionary *mediationExtras;
-//        if (extras) {
-//            mediationExtras = extras;
-//        } else {
-//            mediationExtras = [[NSMutableDictionary<NSString *, NSString *> alloc] init];
-//        }
-        
-        self.casManager =
-            [CAS createWithManagerID:appID
-                         enableTypes:types
-                          demoAdMode:demoAd
-                     mediationExtras:extras
-                              onInit:^(BOOL succses, NSString *_Nullable error) {
-                                  if (onInit) {
-                                      if (error) {
-                                          onInit(client, succses, [error cStringUsingEncoding:NSUTF8StringEncoding]);
-                                      } else {
-                                          onInit(client, succses, NULL);
-                                      }
-                                  }
-                              }];
     }
     return self;
+    
 }
 
 - (void)presentInter {
@@ -119,6 +92,7 @@
 
     return [error isEqualToString:@"No internet connection detected"] ? CASErrorNoConnection
         : [error isEqualToString:@"No Fill"] ? CASErrorNoFill
+        : [error isEqualToString:@"Invalid configuration"] ? CASErrorConfigurationError
         : [error isEqualToString:@"Ad are not ready. You need to call Load ads or use one of the automatic cache mode."] ? CASErrorNotReady
         : [error isEqualToString:@"Manager is disabled"] ? CASErrorManagerIsDisabled
         : [error isEqualToString:@"Reached cap for user"] ? CASErrorReachedCap

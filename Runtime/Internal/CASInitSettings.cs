@@ -45,6 +45,7 @@ namespace CAS
         private bool interWhenNoRewardedAd;
 
         internal string targetId;
+        internal string userID;
         internal Dictionary<string, string> extras;
         internal InitCompleteAction initListener;
 #pragma warning restore 649
@@ -70,7 +71,7 @@ namespace CAS
         /// <para>Index 0 by default when the method is not called.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
-        public CASInitSettings WithManagerIdAtIndex( int index )
+        public IManagerBuilder WithManagerIdAtIndex( int index )
         {
             if (index < 0 || managerIds == null || managerIds.Length - 1 < index
                 || string.IsNullOrEmpty( managerIds[index] ))
@@ -83,7 +84,7 @@ namespace CAS
         /// <summary>
         /// Set listener to initialization complete result callback.
         /// </summary>
-        public CASInitSettings WithInitListener( InitCompleteAction listener )
+        public IManagerBuilder WithInitListener( InitCompleteAction listener )
         {
             initListener = listener;
             return this;
@@ -95,7 +96,7 @@ namespace CAS
         /// <para>Changes in current session only.</para>
         /// <para>Ad types can be enabled manually after initialize by <see cref="IMediationManager.SetEnableAd(AdType, bool)"/></para>
         /// </summary>
-        public CASInitSettings WithEnabledAdTypes( params AdFlags[] adTypes )
+        public IManagerBuilder WithEnabledAdTypes( params AdFlags[] adTypes )
         {
             allowedAdFlags = AdFlags.None;
             for (int i = 0; i < adTypes.Length; i++)
@@ -103,11 +104,17 @@ namespace CAS
             return this;
         }
 
+        public IManagerBuilder WithUserID(string userID )
+        {
+            this.userID = userID;
+            return this;
+        }
+
         /// <summary>
         /// Additional mediation settings.
         /// Use constant key from <see cref="MediationExtras"/> with values of "1" or "0".
         /// </summary>
-        public CASInitSettings WithMediationExtras( string key, string value )
+        public IManagerBuilder WithMediationExtras( string key, string value )
         {
             if (extras == null)
                 extras = new Dictionary<string, string>();
@@ -118,7 +125,7 @@ namespace CAS
         /// <summary>
         /// Clear additional mediation settings.
         /// </summary>
-        public CASInitSettings ClearMediationExtras()
+        public IManagerBuilder ClearMediationExtras()
         {
             if (extras != null)
                 extras.Clear();
@@ -135,7 +142,7 @@ namespace CAS
         /// <para>Please set all used Manager IDs in `Assets > CleverAdsSolutions > Settings` menu to setup the project correctly.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
-        public CASInitSettings WithManagerId( string managerId )
+        public IManagerBuilder WithManagerId( string managerId )
         {
             if (string.IsNullOrEmpty( managerId ))
                 throw new ArgumentNullException( "managerId", "Manager ID is empty" );
@@ -150,7 +157,7 @@ namespace CAS
         /// </summary>
         [Obsolete( "Please set Test Ad Mode in `Assets>CleverAdsSolutions>Settings` menu to get true Test Ad, " +
             "also Development build work same." )]
-        public CASInitSettings WithTestAdMode( bool test )
+        public IManagerBuilder WithTestAdMode( bool test )
         {
             testAdMode = test;
             return this;
@@ -158,6 +165,7 @@ namespace CAS
         #endregion
 
         #region Settings getters
+        public AdFlags defaultAllowedFormats { get { return allowedAdFlags; } }
         public Audience defaultAudienceTagged { get { return audienceTagged; } }
         public int defaultBannerRefresh { get { return bannerRefresh; } }
         public int defaultInterstitialInterval { get { return interstitialInterval; } }
