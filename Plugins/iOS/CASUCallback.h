@@ -9,7 +9,7 @@
 #import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
 #import "CASUTypes.h"
 
-@interface CASUCallback : NSObject<CASAppReturnDelegate, CASAnalyticsHandler>
+@interface CASUCallback : NSObject<CASAppReturnDelegate>
 
 - (id _Nonnull )initWithComplete:(BOOL)complete;
 

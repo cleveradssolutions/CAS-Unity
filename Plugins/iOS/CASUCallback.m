@@ -7,9 +7,6 @@
 
 #import "CASUCallback.h"
 #import "CASUPluginUtil.h"
-#if __has_include(<FirebaseAnalytics/FIRAnalytics.h>)
-#import <FirebaseAnalytics/FIRAnalytics.h>
-#endif
 
 @implementation CASUCallback
 {
@@ -28,10 +25,7 @@
     [CASUPluginUtil onAdsWillPressent];
     if (self.client) {
         if (self.willOpeningCallback) {
-            self.willOpeningCallback(self.client,
-                                     [[CASNetwork values] indexOfObject:adStatus.network],
-                                     adStatus.cpm,
-                                     adStatus.priceAccuracy);
+            self.willOpeningCallback(self.client, [CASUPluginUtil adMetaDataToStringPointer:adStatus]);
         }
     }
 }
@@ -79,14 +73,6 @@
             self.didClosedCallback(self.client);
         }
     }
-}
-
-- (void)log:(NSString *)eventName:(NSDictionary<NSString *, id> *)map {
-    #if __has_include(<FirebaseAnalytics/FIRAnalytics.h>)
-    [FIRAnalytics logEventWithName:eventName parameters:map];
-    #else
-    NSLog(@"[CAS] Framework bridge cant find Firebase Analytics");
-    #endif
 }
 
 - (UIViewController *)viewControllerForPresentingAppReturnAd {

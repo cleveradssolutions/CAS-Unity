@@ -13,12 +13,8 @@
 
 @interface CASUManager : NSObject<CASLoadDelegate>
 
-- (id _Nonnull)initWithAppID:(NSString *_Nullable)appID
-                      enable:(NSUInteger)types
-                      demoAd:(BOOL)demoAd
-                   forClient:(CASUTypeManagerClientRef _Nullable *_Nullable)client
-             mediationExtras:(NSMutableDictionary<NSString *, NSString *> *_Nullable)extras
-                      onInit:(nullable CASUInitializationCompleteCallback)onInit;
+- (id _Nonnull)initWithManager:(CASMediationManager *_Nonnull)manager
+                     forClient:(CASUTypeManagerClientRef _Nullable *_Nullable)client;
 
 @property (nonatomic, assign) CASUTypeManagerClientRef _Nullable *_Nullable client;
 @property (nonatomic, strong, nonnull) CASMediationManager *casManager;
