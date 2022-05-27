@@ -9,13 +9,6 @@
     #import "CASUPluginUtil.h"
     #import <UIKit/UIKit.h>
 
-static const int AD_POSITION_TOP_CENTER = 0;
-static const int AD_POSITION_TOP_LEFT = 1;
-static const int AD_POSITION_TOP_RIGHT = 2;
-static const int AD_POSITION_BOTTOM_CENTER = 3;
-static const int AD_POSITION_BOTTOM_LEFT = 4;
-static const int AD_POSITION_BOTTOM_RIGHT = 5;
-
 @interface CASUView () <CASBannerDelegate>
 @property (nonatomic, assign) CGPoint adPositionOffset;
 @property (nonatomic, assign) int activePos;
@@ -34,7 +27,7 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
         _bannerView.hidden = YES;
         _bannerView.adDelegate = self;
         _bannerView.rootViewController = unityVC;
-        _activePos = AD_POSITION_BOTTOM_CENTER;
+        _activePos = 3; // Bottom Center
         _adPositionOffset = CGPointZero;
     }
     return self;
@@ -146,8 +139,8 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 }
 
 - (void)setPositionCode:(int)code withX:(int)x withY:(int)y {
-    if (code < AD_POSITION_TOP_CENTER || code > AD_POSITION_BOTTOM_RIGHT) {
-        self.activePos = AD_POSITION_BOTTOM_CENTER;
+    if (code < 0 || code > 5) {
+        self.activePos = 3;
     } else {
         self.activePos = code;
     }
@@ -184,19 +177,19 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 
     CGPoint center;
     switch (self.activePos) {
-        case AD_POSITION_TOP_CENTER:
+        case 0:
             center = CGPointMake(CGRectGetMidX(parentBounds), top);
             break;
-        case AD_POSITION_TOP_LEFT:
+        case 1:
             center = CGPointMake(left, top);
             break;
-        case AD_POSITION_TOP_RIGHT:
+        case 2:
             center = CGPointMake(right, top);
             break;
-        case AD_POSITION_BOTTOM_LEFT:
+        case 4:
             center = CGPointMake(left, bottom);
             break;
-        case AD_POSITION_BOTTOM_RIGHT:
+        case 5:
             center = CGPointMake(right, bottom);
             break;
         default:
@@ -221,7 +214,10 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 
 - (void)bannerAdView:(CASBannerView *)adView willPresent:(id<CASStatusHandler>)impression {
     if (self.adPresentedCallback) {
-        self.adPresentedCallback(self.client, [CASUPluginUtil adMetaDataToStringPointer:impression]);
+        self.adPresentedCallback(self.client,
+                                 [[CASNetwork values] indexOfObject:impression.network],
+                                 impression.cpm,
+                                 impression.priceAccuracy);
     }
 }
 

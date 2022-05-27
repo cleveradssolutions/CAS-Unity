@@ -6,6 +6,7 @@
 //
 
 #import "CASUPluginUtil.h"
+#import <CleverAdsSolutions/CleverAdsSolutions.h>
 
 #if __has_include("UnityAppController.h")
 #import "UnityAppController.h"
@@ -13,32 +14,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-UIViewController * UnityGetGLViewController(void)
-{
-    return nil;
-}
-
-UIWindow * UnityGetMainWindow(void)
-{
-    return nil;
-}
-
-int UnityIsPaused(void)
-{
-    return 0;
-}
-
-void UnityPause(int pause)
-{
-}
-
+UIViewController * UnityGetGLViewController(void);
+UIWindow * UnityGetMainWindow(void);
+int UnityIsPaused();
+void UnityPause(int pause);
 #ifdef __cplusplus
 }
 #endif
-#endif
-
-#if __has_include(<FirebaseAnalytics/FIRAnalytics.h>)
-#import <FirebaseAnalytics/FIRAnalytics.h>
 #endif
 
 @interface CASUPluginUtil ()
@@ -82,14 +64,6 @@ void UnityPause(int pause)
     });
 }
 
-- (void)analyticsEvent:(NSString *)eventName map:(NSDictionary<NSString *, id> *)map {
-#if __has_include(<FirebaseAnalytics/FIRAnalytics.h>)
-    [FIRAnalytics logEventWithName:eventName parameters:map];
-#else
-    NSLog(@"[CAS] Framework bridge cant find Firebase Analytics");
-#endif
-}
-
 static BOOL _pauseOnBackground = YES;
 
 + (BOOL)pauseOnBackground {
@@ -98,54 +72,6 @@ static BOOL _pauseOnBackground = YES;
 
 + (void)setPauseOnBackground:(BOOL)pause {
     _pauseOnBackground = pause;
-}
-
-+ (NSString *)stringFromUnity:(const char *)bytes {
-    return bytes ? @(bytes) : nil;
-}
-
-+ (const char *)stringToUnity:(NSString *)str {
-    if (!str) {
-        return NULL;
-    }
-    const char *string = str.UTF8String;
-    char *res = (char *)malloc(strlen(string) + 1);
-    strcpy(res, string);
-    return res;
-}
-
-+ (const char *)adMetaDataToStringPointer:(id<CASStatusHandler>)ad {
-    NSMutableString *result = [[NSMutableString alloc] initWithCapacity:64];
-    [result appendString:@"cpm="];
-    [result appendString:[@(ad.cpm) stringValue]];
-    [result appendString:@";accuracy="];
-    [result appendString:[@(ad.priceAccuracy) stringValue]];
-    [result appendString:@";"];
-
-    NSString *network = ad.network;
-    if (![network isEqualToString:CASNetwork.lastPageAd]) {
-        NSUInteger netIndex = [[CASNetwork values] indexOfObject:network];
-        if (netIndex != NSNotFound) {
-            [result appendString:@"network="];
-            [result appendString:[@(netIndex) stringValue]];
-            [result appendString:@";"];
-        }
-    }
-
-    NSString *creativeId = ad.creativeIdentifier;
-    if (creativeId.length != 0) {
-        [result appendString:@"creative="];
-        [result appendString:creativeId];
-        [result appendString:@";"];
-    }
-
-    NSString *identifier = ad.identifier;
-    if (creativeId.length != 0) {
-        [result appendString:@"id="];
-        [result appendString:identifier];
-        [result appendString:@";"];
-    }
-    return [CASUPluginUtil stringToUnity:result];
 }
 
 + (UIViewController *)unityGLViewController {

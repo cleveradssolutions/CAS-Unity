@@ -13,6 +13,21 @@
 #import "CASUPluginUtil.h"
 #import "CASUATTManager.h"
 
+static NSString * CASUStringFromUTF8String(const char *bytes)
+{
+    return bytes ? @(bytes) : nil;
+}
+
+static const char * cStringCopy(const char *string)
+{
+    if (!string) {
+        return NULL;
+    }
+    char *res = (char *)malloc(strlen(string) + 1);
+    strcpy(res, string);
+    return res;
+}
+
 #pragma mark - CAS Settings
 
 void CASUSetAnalyticsCollectionWithEnabled(BOOL enabled)
@@ -20,11 +35,16 @@ void CASUSetAnalyticsCollectionWithEnabled(BOOL enabled)
     [[CAS settings] setAnalyticsCollectionWithEnabled:enabled];
 }
 
+void CASUSetUnityVersion(const char *version)
+{
+    [[CAS settings] setPluginPlatformWithName:@"Unity" version:CASUStringFromUTF8String(version)];
+}
+
 void CASUSetTestDeviceWithIds(const char **testDeviceIDs, int testDeviceIDLength)
 {
     NSMutableArray *testDeviceIDsArray = [[NSMutableArray alloc] init];
     for (int i = 0; i < testDeviceIDLength; i++) {
-        [testDeviceIDsArray addObject:[CASUPluginUtil stringFromUnity:testDeviceIDs[i]]];
+        [testDeviceIDsArray addObject:CASUStringFromUTF8String(testDeviceIDs[i])];
     }
     [[CAS settings] setTestDeviceWithIds:testDeviceIDsArray];
 }
@@ -139,7 +159,7 @@ void CASUOpenDebugger(CASUTypeManagerRef manager)
 
 const char * CASUGetActiveMediationPattern(void)
 {
-    return [CASUPluginUtil stringToUnity:[CASNetwork getActiveNetworkPattern]];
+    return cStringCopy([CASNetwork getActiveNetworkPattern].UTF8String);
 }
 
 BOOL CASUIsActiveMediationNetwork(int net)
@@ -153,61 +173,53 @@ BOOL CASUIsActiveMediationNetwork(int net)
 
 const char * CASUGetSDKVersion(void)
 {
-    return [CASUPluginUtil stringToUnity:[CAS getSDKVersion]];
+    return cStringCopy([CAS getSDKVersion].UTF8String);
 }
 
 #pragma mark - CAS Manager
 
-CASUTypeManagerRef CASUCreateBuilder(NSInteger  enableAd,
-                                     BOOL       demoAd,
-                                     const char *unityVersion,
-                                     const char *userID)
+CASUTypeManagerRef CASUCreateManager(CASUTypeManagerClientRef           *client,
+                                     CASUInitializationCompleteCallback onInit,
+                                     const char                         *managerID,
+                                     NSInteger                          enableAd,
+                                     BOOL                               demoAd)
 {
-    CASManagerBuilder *builder = [CAS buildManager];
-    [builder withAdFlags:(CASTypeFlags)enableAd];
-    [builder withTestAdMode:demoAd];
-    [builder withFramework:@"Unity" version:[CASUPluginUtil stringFromUnity:unityVersion]];
-    [builder withUserID:[CASUPluginUtil stringFromUnity:userID]];
-
-    [[CASUPluginUtil sharedInstance] saveObject:builder withKey:@"lastBuilder"];
-
-    return (__bridge CASUTypeManagerRef)builder;
+    CASUManager *manager = [[CASUManager alloc]
+                            initWithAppID:CASUStringFromUTF8String(managerID)
+                                    enable:enableAd
+                                    demoAd:demoAd
+                                 forClient:client
+                           mediationExtras:nil
+                                    onInit:onInit];
+    CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
+    [cache saveObject:manager withKey:manager.casManager.managerID];
+    return (__bridge CASUTypeManagerRef)manager;
 }
 
-void CASUSetMediationExtras(CASUTypeManagerBuilderRef builderRef,
-                            const char                **extraKeys,
-                            const char                **extraValues,
-                            NSInteger                 extrasCount)
+CASUTypeManagerRef CASUCreateManagerWithExtras(CASUTypeManagerClientRef           *client,
+                                               CASUInitializationCompleteCallback onInit,
+                                               const char                         *managerID,
+                                               NSInteger                          enableAd,
+                                               BOOL                               demoAd,
+                                               const char                         **extraKeys,
+                                               const char                         **extraValues,
+                                               NSInteger                          extrasCount)
 {
-    CASManagerBuilder *builder = (__bridge CASManagerBuilder *)builderRef;
+    NSMutableDictionary *mediationExtras = [[NSMutableDictionary<NSString *, NSString *> alloc] init];
     for (int i = 0; i < extrasCount; i++) {
-        [builder withMediationExtras:[CASUPluginUtil stringFromUnity:extraValues[i]]
-                              forKey:[CASUPluginUtil stringFromUnity:extraKeys[i]]];
+        [mediationExtras setObject:CASUStringFromUTF8String(extraKeys[i]) forKey:CASUStringFromUTF8String(extraValues[i])];
     }
-}
-
-CASUTypeManagerRef CASUInitializeManager(CASUTypeManagerBuilderRef          builderRef,
-                                         CASUTypeManagerClientRef           *client,
-                                         CASUInitializationCompleteCallback onInit,
-                                         const char                         *identifier)
-{
-    NSString *nsIdentifier = [CASUPluginUtil stringFromUnity:identifier];
+    CASUManager *manager = [[CASUManager alloc]
+                            initWithAppID:CASUStringFromUTF8String(managerID)
+                                    enable:enableAd
+                                    demoAd:demoAd
+                                 forClient:client
+                           mediationExtras:mediationExtras
+                                    onInit:onInit];
 
     CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
-    [CASAnalytics setDelegate:cache]; // Require before create manager
-
-    CASManagerBuilder *builder = (__bridge CASManagerBuilder *)builderRef;
-    if (onInit) {
-        [builder withCompletionHandler:^(id<CASInitialConfig> _Nonnull config) {
-            onInit(client, [CASUPluginUtil stringToUnity:config.error], config.isShouldBeShownConsentDialog);
-        }];
-    }
-
-    CASMediationManager *manager = [builder createWithCasId:nsIdentifier];
-    CASUManager *wrapper = [[CASUManager alloc] initWithManager:manager forClient:client];
-    [cache removeObjectWithKey:@"lastBuilder"];
-    [cache saveObject:wrapper withKey:nsIdentifier];
-    return (__bridge CASUTypeManagerRef)wrapper;
+    [cache saveObject:manager withKey:manager.casManager.managerID];
+    return (__bridge CASUTypeManagerRef)manager;
 }
 
 void CASUFreeManager(CASUTypeManagerRef managerRef)
@@ -226,13 +238,13 @@ void CASUFreeManager(CASUTypeManagerRef managerRef)
 const char * CASUGetLastActiveMediationWithType(CASUTypeManagerRef managerRef, int adType)
 {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
-    return [CASUPluginUtil stringToUnity:[manager.casManager getLastActiveMediationWithType:(CASType)adType]];
+    return cStringCopy([manager.casManager getLastActiveMediationWithType:(CASType)adType].UTF8String);
 }
 
 BOOL CASUIsAdEnabledType(CASUTypeManagerRef managerRef, int adType)
 {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
-    return [manager.casManager isEnabledWithType:(CASType)adType];
+    return [manager.casManager isAdReadyWithType:(CASType)adType];
 }
 
 void CASUEnableAdType(CASUTypeManagerRef managerRef, int adType, BOOL enable)
@@ -244,7 +256,7 @@ void CASUEnableAdType(CASUTypeManagerRef managerRef, int adType, BOOL enable)
 void CASUSetLastPageAdContent(CASUTypeManagerRef managerRef, const char *contentJson)
 {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
-    [manager setLastPageAdFor:[CASUPluginUtil stringFromUnity:contentJson]];
+    [manager setLastPageAdFor:CASUStringFromUTF8String(contentJson)];
 }
 
 #pragma mark - Interstitial Ads
@@ -275,7 +287,7 @@ void CASULoadInterstitial(CASUTypeManagerRef managerRef)
 BOOL CASUIsInterstitialReady(CASUTypeManagerRef managerRef)
 {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
-    return manager.casManager.isInterstitialReady;
+    return [manager.casManager isAdReadyWithType:CASTypeInterstitial];
 }
 
 void CASUPresentInterstitial(CASUTypeManagerRef managerRef)
@@ -314,7 +326,7 @@ void CASULoadReward(CASUTypeManagerRef managerRef)
 BOOL CASUIsRewardedReady(CASUTypeManagerRef managerRef)
 {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
-    return manager.casManager.isRewardedAdReady;
+    return [manager.casManager isAdReadyWithType:CASTypeRewarded];
 }
 
 void CASUPresentRewarded(CASUTypeManagerRef managerRef)
