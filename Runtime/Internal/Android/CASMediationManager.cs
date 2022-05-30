@@ -168,7 +168,7 @@ namespace CAS.Android
                 if (initData.extras != null && initData.extras.Count != 0)
                 {
                     var extrasParams = CASFactory.SerializeParametersString( initData.extras );
-                    _managerBridge.Call<AndroidJavaObject>( "setMediationExtras", extrasParams );
+                    _managerBridge.Call( "setMediationExtras", extrasParams );
                 }
 
                 _managerBridge.Call( "initialize", _interstitialProxy, _rewardedProxy );
