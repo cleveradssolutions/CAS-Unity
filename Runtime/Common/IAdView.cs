@@ -86,7 +86,7 @@ namespace CAS
         /// at the <paramref name="x"/> and <paramref name="y"/> values passed to the method,
         /// where the origin is the top-left of the screen.</para>
         /// <para>The coordinates on the screen are determined not in pixels, but in Density-independent Pixels(DP)!</para>
-        /// <para>When the ad view is positioned using coordinates, the <see cref="position"/> == <see cref="AdPosition.TopLeft"/></para>
+        /// <para>Screen positioning coordinates are only available for the <see cref="AdPosition.TopLeft"/>.</para>
         /// </summary>
         /// <param name="x">X-coordinate on screen in DP.</param>
         /// <param name="y">Y-coordinate on screen in DP.</param>

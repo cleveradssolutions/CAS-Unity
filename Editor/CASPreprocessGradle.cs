@@ -46,7 +46,7 @@ namespace CAS.UEditor
 
             baseGradle = ReadGradleFile( "Base Gradle", baseGradlePath );
             
-            if (settings.multiDexEnabled || settings.exoPlayerIncluded)
+            if (settings.multiDexEnabled)
                 launcherGradle = ReadGradleFile( "Launcher Gradle", launcherGradlePath );
 #else
             const string baseGradlePath = Utils.mainGradlePath;
@@ -67,7 +67,7 @@ namespace CAS.UEditor
 
             // Enabled by default Dexing artifact transform causes issues for ExoPlayer with Gradle plugin 3.5.0+
             var dexingArtifactProp = new GradleProperty(
-                "android.enableDexingArtifactTransform", "false", !settings.exoPlayerIncluded );
+                "android.enableDexingArtifactTransform", "false" );
 
             GradleProperty[] gradleProps = null;
             if (Utils.GetAndroidResolverSetting<bool>( "UseJetifier" ))
@@ -354,7 +354,7 @@ namespace CAS.UEditor
         {
             bool isChanged = false;
             int line = 0;
-            bool required = settings.multiDexEnabled || settings.exoPlayerIncluded;
+            bool required = settings.multiDexEnabled;
             // Find dependencies{} scope
             do
             {
@@ -374,9 +374,9 @@ namespace CAS.UEditor
             const string multidexAndroidX = "androidx.multidex:multidex:";
             const string miltidexAndroidXLine = depPrefix + multidexAndroidX + "2.0.1' // Added by CAS settings";
 
-            bool exoPlayerExist = false;
+            //bool exoPlayerExist = false;
             const string exoPlayerDep = "com.google.android.exoplayer:exoplayer:";
-            const string exoPlayerLine = depPrefix + exoPlayerDep + "2.13.3' // Added by CAS settings";
+            //const string exoPlayerLine = depPrefix + exoPlayerDep + "2.13.3' // Added by CAS settings";
             do
             {
                 ++line;
@@ -406,8 +406,7 @@ namespace CAS.UEditor
                 }
                 else if (gradle[line].Contains( exoPlayerDep ))
                 {
-                    removeLine = exoPlayerExist || !settings.exoPlayerIncluded;
-                    exoPlayerExist = true;
+                    removeLine = true;
                 }
                 if (removeLine)
                 {
@@ -427,6 +426,7 @@ namespace CAS.UEditor
                 ++line;
             }
 
+#if false
             if (!exoPlayerExist && settings.exoPlayerIncluded)
             {
                 gradle.Insert( line, exoPlayerLine );
@@ -435,6 +435,7 @@ namespace CAS.UEditor
                 isChanged = true;
                 ++line;
             }
+#endif
 
 #if DeclareJavaVersion
             const string javaVersion = "JavaVersion.VERSION_1_8";

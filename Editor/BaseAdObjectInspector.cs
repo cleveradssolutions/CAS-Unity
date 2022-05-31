@@ -120,6 +120,7 @@ namespace CAS.AdObject
                 adView.SetAdPosition( newPos.x, newPos.y );
             }
             EditorGUI.EndDisabledGroup();
+            EditorGUILayout.LabelField( "Screen positioning coordinates are only available for the TopLeft position.", EditorStyles.wordWrappedMiniLabel );
             // Calling the calculation in the Editor results in incorrect data
             // because getting the screen size returns the size of the inspector.
             //if (isPlaying)

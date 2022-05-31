@@ -40,7 +40,6 @@ namespace CAS.UEditor
         private SerializedProperty buildPreprocessEnabledProp;
         private SerializedProperty delayAppMeasurementGADInitProp;
         private SerializedProperty multiDexEnabledProp;
-        private SerializedProperty exoPlayerIncludedProp;
         private SerializedProperty updateGradlePluginVersionProp;
         private SerializedProperty permissionAdIdRemovedProp;
         private SerializedProperty mostPopularCountryOfUsersProp;
@@ -124,7 +123,6 @@ namespace CAS.UEditor
             buildPreprocessEnabledProp = editorSettingsObj.FindProperty( "buildPreprocessEnabled" );
             updateGradlePluginVersionProp = editorSettingsObj.FindProperty( "updateGradlePluginVersion" );
             multiDexEnabledProp = editorSettingsObj.FindProperty( "multiDexEnabled" );
-            exoPlayerIncludedProp = editorSettingsObj.FindProperty( "exoPlayerIncluded" );
             permissionAdIdRemovedProp = editorSettingsObj.FindProperty( "permissionAdIdRemoved" );
 
             mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty( "mostPopularCountryOfUsers" );
@@ -401,13 +399,6 @@ namespace CAS.UEditor
                     multiDexEnabledProp.boolValue );
                 HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Include-Android#enable-multidex" );
                 EditorGUILayout.EndHorizontal();
-
-                exoPlayerIncludedProp.boolValue = EditorGUILayout.ToggleLeft(
-                    HelpStyles.GetContent( "ExoPlayer included", null,
-                        "ExoPlayer can be used instead of MediaPlayer to play videos " +
-                        "with better performance and avoid known ANR errors." ),
-                    exoPlayerIncludedProp.boolValue );
-
                 EditorGUI.indentLevel--;
             }
             else

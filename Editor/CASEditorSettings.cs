@@ -23,6 +23,7 @@ namespace CAS.UEditor
 
         public bool multiDexEnabled = true;
         public bool permissionAdIdRemoved = false;
+        [Obsolete("Exo player used in any case")]
         public bool exoPlayerIncluded = true;
         public bool generateAndroidQuerriesForPromo = true;
         public bool updateGradlePluginVersion = true;

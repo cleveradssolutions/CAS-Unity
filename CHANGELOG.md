@@ -12,8 +12,12 @@
 - Added new `AdError.Configuration` when configuration error has been detected in one of the mediation ad networks.
 - Added new `CAS.MobileAds.BuildManager().WithUserID(userID)` to set user id. The userID is a unique identifier supplied by your application and must be static for each user across sessions.
 - Improved initialization performance.
+- [Android] All events from the native CAS SDK are called on a Background Thread instead of the Android UI Thread to avoid ANRs on unity reflection.  
+Use the `MobileAds.settings.isExecuteEventsOnUnityThread` for all events or `EventExecutor.Add()` for each event to switch to the Unity Thread.
+- [Android] The Banner position inside the container now depends on the selected `AdPosition`, if the actual ad size is different.
 ## Changes
-- ⚠️ Updated minimum supported Xcode version to 13.2.1.
+- ⚠️ [iOS] Updated minimum supported Xcode version to 13.2.1.
+- [Android] Removed option to disable `ExoPlayer`. AppLovin added the dependency on ExoPlayer so that it is always used.
 - Migration from `CASInitSettings` class to `IManagerBuilder` interface.
 ### Update Cross promotion
 - Added feature to get the `creativeIdentifier`.
