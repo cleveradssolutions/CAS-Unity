@@ -49,6 +49,7 @@ namespace CAS.UEditor
         }
 
         // Reflection target
+        [UnityEngine.Scripting.Preserve]
         public static string GetActiveMediationPattern()
         {
             var target = Create( EditorUserBuildSettings.activeBuildTarget, Audience.Mixed, true );

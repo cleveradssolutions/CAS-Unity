@@ -131,8 +131,9 @@ namespace CAS
             {
                 string str;
                 if (field.TryGetValue( key, out str ))
-                    return double.Parse( str,
-                        NumberStyles.Integer | NumberStyles.AllowDecimalPoint, CultureInfo.CurrentCulture );
+                    return double.Parse( str.Replace(',', '.'),
+                        NumberStyles.Integer | NumberStyles.AllowDecimalPoint,
+                        NumberFormatInfo.InvariantInfo );
             }
             catch (Exception e)
             {
