@@ -277,7 +277,7 @@ namespace CAS.Unity
         {
             if (size == AdSize.MediumRectangle
                     && ( manager.enabledTypes & AdFlags.MediumRectangle ) != AdFlags.MediumRectangle)
-                throw new Exception( "[CleverAdsSolutions] Please enable the Medium Rectangle palcement in `Assets/CleverAdsSolution/Settings` to use it.\n" );
+                throw new Exception( "[CleverAdsSolutions] Please enable the Medium Rectangle format in `Assets/CleverAdsSolution/Settings` to use it.\n" );
             return new CASView( manager, size );
         }
 

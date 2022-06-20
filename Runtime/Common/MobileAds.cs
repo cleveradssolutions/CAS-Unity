@@ -21,7 +21,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "2.8.1";
+        public const string wrapperVersion = "2.8.2";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -68,7 +68,11 @@ namespace CAS
         {
             var builder = CASFactory.LoadInitSettingsFromResources();
             if (builder == null)
+            {
+                Debug.LogWarning( "[CleverAdsSolutions] The target platform is not supported." +
+                    "\nChoose the target Android or iOS to use CAS." );
                 return ScriptableObject.CreateInstance<CASInitSettings>();
+            }
             return UnityEngine.Object.Instantiate( builder );
         }
 

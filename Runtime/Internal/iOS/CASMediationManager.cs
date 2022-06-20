@@ -139,7 +139,7 @@ namespace CAS.iOS
 
         public string GetLastActiveMediation( AdType adType )
         {
-            return CASExterns.CASUGetLastActiveMediationWithType( _managerRef, ( int )adType );
+            return string.Empty;
         }
 
         public bool IsEnabledAd( AdType adType )

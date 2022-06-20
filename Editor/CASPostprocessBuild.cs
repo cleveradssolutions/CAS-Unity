@@ -394,7 +394,11 @@ namespace CAS.UEditor
                 Debug.LogException( e );
             }
             project.SetBuildProperty( mainTargetGuid, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", embedStandardLib );
-
+            if (frameworkTargetGuid != mainTargetGuid)
+            {
+                // Force disable for Framework target. Cause build error when enabled in both targets.
+                project.SetBuildProperty( frameworkTargetGuid, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "NO" );
+            }
             //Swift file already included with plugin files
             //AddSwiftFile( buildPath, project, frameworkTargetGuid );
         }

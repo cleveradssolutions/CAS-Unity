@@ -101,12 +101,6 @@ namespace CAS
         LastPageAdContent lastPageAdContent { get; set; }
 
         /// <summary>
-        /// Get last active mediation ad name of selected <see cref="AdType"/>.
-        /// <para>Can return Empty String.</para>
-        /// </summary>
-        string GetLastActiveMediation( AdType adType );
-
-        /// <summary>
         /// Check selected <see cref="AdType"/> is processing.
         /// </summary>
         bool IsEnabledAd( AdType adType );
@@ -188,5 +182,8 @@ namespace CAS
         void SkipNextAppReturnAds();
 
         #endregion
+
+        [Obsolete("No longer supported")]
+        string GetLastActiveMediation( AdType adType );
     }
 }

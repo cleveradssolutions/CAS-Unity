@@ -1,10 +1,26 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.8.2] - 2022-06-20
+### Dependencies
+- [Android] Wraps [2.8.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.8.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+## Features
+- Improved algorithm for processing bids with undisclosed prices.
+- Improved ad serving algorithm to increase the average revenue of Banner Ads.
+- Restored support for Fyber advertising network in closed beta.
+- No longer supported `IMediationManager.GetLastActiveMediation(AdType)` feature.
+- [Android] Fixed `FormatException` from `AdMetaData.GetDouble()`.
+- [iOS] Force disable `ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES` for Framework target. Cause build error when embed for both targets.
+## Android Proguard issue
+If the Proguard is active, then you have `NoSuchMethodError` on device. Fix it by following steps:
+1. Enable Custom Proguard file in Player Settings window.
+2. Add keep line to the file: `-keep interface com.cleversolutions.ads.android.CAS$ManagerBuilder { *; }` 
+
 ## [2.8.1] - 2022-05-26
 ### Dependencies
 - [Android] Wraps [2.8.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.8.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-### Features
+## Features
 - Added new property `AdMetaData.creativeIdentifier` to get the creative id tied to the ad, if available.
   > You can report creative issues to our Ad review team using this id.
 - Added new property `AdMetaData.identifier` to get internal demand source name in CAS database.
@@ -12,17 +28,23 @@
 - Added new `AdError.Configuration` when configuration error has been detected in one of the mediation ad networks.
 - Added new `CAS.MobileAds.BuildManager().WithUserID(userID)` to set user id. The userID is a unique identifier supplied by your application and must be static for each user across sessions.
 - Improved initialization performance.
-- [Android] All events from the native CAS SDK are called on a Background Thread instead of the Android UI Thread to avoid ANRs on unity reflection.  
-Use the `MobileAds.settings.isExecuteEventsOnUnityThread` for all events or `EventExecutor.Add()` for each event to switch to the Unity Thread.
+- [Android] All events from the native CAS SDK are called on a Background Thread instead of the Android UI Thread to avoid ANRs on unity reflection.   
+  > Use the `MobileAds.settings.isExecuteEventsOnUnityThread` for all events or `EventExecutor.Add()` for each event to switch to the Unity Thread.
 - [Android] The Banner position inside the container now depends on the selected `AdPosition`, if the actual ad size is different.
+## Android Proguard issue
+If the Proguard is active, then you have `NoSuchMethodError` on device. Fix it by following steps:
+1. Enable Custom Proguard file in Player Settings window.
+2. Add keep line to the file: `-keep interface com.cleversolutions.ads.android.CAS$ManagerBuilder { *; }` 
 ## Changes
 - ⚠️ [iOS] Updated minimum supported Xcode version to 13.2.1.
 - [Android] Removed option to disable `ExoPlayer`. AppLovin added the dependency on ExoPlayer so that it is always used.
 - Migration from `CASInitSettings` class to `IManagerBuilder` interface.
-### Update Cross promotion
+## Update Cross promotion
 - Added feature to get the `creativeIdentifier`.
 - Clicking on ad analytics event will be fired once per impression.
 - Clicking on ad skips the video ad.
+- Improved banner ads to promote non-app ad.
+- [Android] Fixed video restart feature.
 
 ## [2.7.3] - 2022-04-22
 ### Dependencies

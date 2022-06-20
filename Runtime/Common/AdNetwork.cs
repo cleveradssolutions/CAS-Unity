@@ -32,7 +32,7 @@ namespace CAS
         [Obsolete( "No longer supported" )] Smaato,
         [Obsolete( "No longer supported" )] MoPub,
         Tapjoy,
-        [Obsolete( "No longer supported" )] Fyber,
+        Fyber,
         FairBid,
         Mintegral,
         Pangle,
@@ -89,6 +89,8 @@ namespace CAS
                     return "https://www.pangleglobal.com/privacy/enduser-en";
                 case AdNetwork.Chartboost:
                     return "https://www.cookiebot.com/en/privacy-policy-generator-gdpr/";
+                case AdNetwork.Fyber:
+                    return "https://www.fyber.com/privacy-policy/";
                 default: return null;
             }
         }
@@ -114,8 +116,8 @@ namespace CAS
                 case AdNetwork.YandexAds: return "Ya";
                 //case AdNetwork.Smaato: return "Sm";
                 case AdNetwork.Tapjoy: return "TJ";
-                //case AdNetwork.Fyber:
-                //case AdNetwork.FairBid: return "Fy";
+                case AdNetwork.Fyber:
+                case AdNetwork.FairBid: return "Fy";
                 case AdNetwork.Mintegral: return "MB";
                 case AdNetwork.Pangle: return "Pa";
                 default: return string.Empty;
@@ -147,8 +149,8 @@ namespace CAS
                 "Sm",
                 "MP",
                 "TJ",
-                string.Empty, //Fyber
                 "Fy",
+                String.Empty, //FairBid
                 "MB",
                 "Pa"
             };

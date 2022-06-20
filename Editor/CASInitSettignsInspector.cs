@@ -13,6 +13,7 @@ using Utils = CAS.UEditor.CASEditorUtils;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using UnityEditor.AnimatedValues;
 
 namespace CAS.UEditor
 {
@@ -54,7 +55,6 @@ namespace CAS.UEditor
         private ReorderableList userTrackingList;
         private BuildTarget platform;
         private bool allowedPackageUpdate;
-        private bool otherSettingsFoldout = false;
         private string newCASVersion = null;
         private bool deprecateDependenciesExist;
         private Version edmVersion;
@@ -65,6 +65,9 @@ namespace CAS.UEditor
         private string[] deprecatedAssets = null;
 
         private int editorRuntimeActiveAdFlags;
+
+        private AnimBool iOSLocationDescriptionFoldout = null;
+        private AnimBool otherSettingsFoldout = null;
         #endregion
 
         #region Initialize logic
@@ -75,9 +78,12 @@ namespace CAS.UEditor
             InitMainProperties( serializedObject );
             InitEditorSettingsProperties();
 
+            iOSLocationDescriptionFoldout = new AnimBool( false, Repaint );
+            otherSettingsFoldout = new AnimBool( false, Repaint );
+
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
 
-            dependencyManager = DependencyManager.Create( platform, ( Audience )audienceTaggedProp.enumValueIndex, true );
+            dependencyManager = DependencyManager.Create( platform, (Audience)audienceTaggedProp.enumValueIndex, true );
 
             HandleDeprecatedComponents();
             InitEDM4U();
@@ -189,23 +195,27 @@ namespace CAS.UEditor
         private void InitEnvironmentDetails()
         {
             var environmentBuilder = new StringBuilder( "Environment Details: " )
-                            .Append( "Unity - " ).Append( Application.unityVersion ).Append( "; " )
-                            .Append( "Platform - " ).Append( Application.platform ).Append( "; " );
+                            .Append( "Unity " ).Append( Application.unityVersion ).Append( "; " )
+                            .Append( Application.platform ).Append( "; " );
             if (edmVersion != null)
-                environmentBuilder.Append( "EDM4U - " ).Append( edmVersion ).Append( "; " );
-#if UNITY_ANDROID
+                environmentBuilder.Append( "EDM4U " ).Append( edmVersion ).Append( "; " );
+#if UNITY_ANDROID || CASDeveloper
             if (platform == BuildTarget.Android)
             {
                 var gradleWrapperVersion = CASPreprocessGradle.GetGradleWrapperVersion();
                 if (gradleWrapperVersion != null)
                     environmentBuilder.Append( "Gradle Wrapper - " ).Append( gradleWrapperVersion ).Append( "; " );
-                var targetSDK = ( int )PlayerSettings.Android.targetSdkVersion;
+                var targetSDK = (int)PlayerSettings.Android.targetSdkVersion;
                 if (targetSDK == 0)
-                    environmentBuilder.Append( "Target SDK - Auto; " );
+                    environmentBuilder.Append( "Target ASDK Auto; " );
                 else
-                    environmentBuilder.Append( "Target SDK - " ).Append( targetSDK ).Append( "; " );
+                    environmentBuilder.Append( "Target ASDK " ).Append( targetSDK ).Append( "; " );
             }
 #endif
+            if(platform == BuildTarget.iOS)
+            {
+                environmentBuilder.Append( "Target iOS " ).Append( PlayerSettings.iOS.targetOSVersionString );
+            }
             environmentDetails = environmentBuilder.ToString();
         }
         #endregion
@@ -239,7 +249,7 @@ namespace CAS.UEditor
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            var mediumFlag = ( int )AdFlags.MediumRectangle;
+            var mediumFlag = (int)AdFlags.MediumRectangle;
             EditorGUI.BeginDisabledGroup( ( allowedAdFlagsProp.intValue & mediumFlag ) == mediumFlag );
             var banner = DrawAdFlagToggle( AdFlags.Banner );
             EditorGUI.EndDisabledGroup();
@@ -271,7 +281,7 @@ namespace CAS.UEditor
             }
             else
             {
-                dependencyManager.OnGUI( platform );
+                dependencyManager.OnGUI( platform, this );
                 OnEDMAreaGUI();
             }
 
@@ -349,9 +359,10 @@ namespace CAS.UEditor
         private void OnOtherSettingsGUI()
         {
             HelpStyles.BeginBoxScope();
-            otherSettingsFoldout = GUILayout.Toggle( otherSettingsFoldout, "Other settings", EditorStyles.foldout );
-            if (!otherSettingsFoldout)
+            otherSettingsFoldout.target = GUILayout.Toggle( otherSettingsFoldout.target, "Other settings", EditorStyles.foldout );
+            if (!EditorGUILayout.BeginFadeGroup( otherSettingsFoldout.faded ))
             {
+                EditorGUILayout.EndFadeGroup();
                 HelpStyles.EndBoxScope();
                 return;
             }
@@ -446,6 +457,7 @@ namespace CAS.UEditor
             }
             EditorGUILayout.EndHorizontal();
 
+            EditorGUILayout.EndFadeGroup();
             HelpStyles.EndBoxScope();
         }
 
@@ -455,38 +467,47 @@ namespace CAS.UEditor
                 return;
             HelpStyles.BeginBoxScope();
             var enabled = userTrackingUsageDescriptionProp.arraySize > 0;
-            EditorGUILayout.BeginHorizontal();
-            if (enabled != EditorGUILayout.ToggleLeft( "Set User Tracking Usage description in Info.plist", enabled ))
+            iOSLocationDescriptionFoldout.target = GUILayout.Toggle( iOSLocationDescriptionFoldout.target,
+                "User Tracking Usage description: " + ( enabled ? "Used" : "Not used" ), EditorStyles.foldout );
+
+            if (EditorGUILayout.BeginFadeGroup( iOSLocationDescriptionFoldout.faded ))
             {
-                enabled = !enabled;
-                if (enabled)
+                EditorGUILayout.BeginHorizontal();
+                if (enabled != EditorGUILayout.ToggleLeft( "Set Usage description in Info.plist", enabled ))
                 {
-                    var defDescr = Utils.DefaultUserTrackingUsageDescription();
-                    userTrackingUsageDescriptionProp.arraySize = defDescr.Length;
-                    for (int i = 0; i < defDescr.Length; i++)
+                    enabled = !enabled;
+                    if (enabled)
                     {
-                        var pair = userTrackingUsageDescriptionProp.GetArrayElementAtIndex( i );
-                        pair.Next( true );
-                        pair.stringValue = defDescr[i].key;
-                        pair.Next( false );
-                        pair.stringValue = defDescr[i].value;
+                        var defDescr = Utils.DefaultUserTrackingUsageDescription();
+                        userTrackingUsageDescriptionProp.arraySize = defDescr.Length;
+                        for (int i = 0; i < defDescr.Length; i++)
+                        {
+                            var pair = userTrackingUsageDescriptionProp.GetArrayElementAtIndex( i );
+                            pair.Next( true );
+                            pair.stringValue = defDescr[i].key;
+                            pair.Next( false );
+                            pair.stringValue = defDescr[i].value;
+                        }
                     }
+                    else
+                    {
+                        userTrackingUsageDescriptionProp.ClearArray();
+                    }
+                    iOSLocationDescriptionFoldout = new AnimBool( false, Repaint );
+                    iOSLocationDescriptionFoldout.target = true;
                 }
-                else
-                {
-                    userTrackingUsageDescriptionProp.ClearArray();
-                }
+                HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/App-Tracking-Transparency" );
+                EditorGUILayout.EndHorizontal();
+                if (enabled)
+                    userTrackingList.DoLayoutList();
             }
-            HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/App-Tracking-Transparency" );
-            EditorGUILayout.EndHorizontal();
-            if (enabled)
-                userTrackingList.DoLayoutList();
+            EditorGUILayout.EndFadeGroup();
             HelpStyles.EndBoxScope();
         }
 
         private bool IsAdFormatsNotUsed()
         {
-            if (allowedAdFlagsProp.intValue == 0 || allowedAdFlagsProp.intValue == ( int )AdFlags.Native)
+            if (allowedAdFlagsProp.intValue == 0 || allowedAdFlagsProp.intValue == (int)AdFlags.Native)
             {
                 EditorGUILayout.HelpBox( "Please activate the ad formats that you want to use in your game.", MessageType.Error );
                 return true;
@@ -554,7 +575,7 @@ namespace CAS.UEditor
                 //            "This will allow you to get more expensive advertising.", target );
                 //}
                 EditorGUI.indentLevel++;
-                switch (( AdSize )bannerSizeProp.intValue)
+                switch ((AdSize)bannerSizeProp.intValue)
                 {
                     case AdSize.Banner:
                         EditorGUILayout.HelpBox( "Size in DPI: 320:50", MessageType.None );
@@ -571,7 +592,7 @@ namespace CAS.UEditor
                         break;
                     case AdSize.MediumRectangle:
                         EditorGUILayout.HelpBox( "Size in DPI: 300:250", MessageType.None );
-                        var enableMrec = allowedAdFlagsProp.intValue | ( int )AdFlags.MediumRectangle;
+                        var enableMrec = allowedAdFlagsProp.intValue | (int)AdFlags.MediumRectangle;
                         if (enableMrec != allowedAdFlagsProp.intValue)
                             allowedAdFlagsProp.intValue = enableMrec;
                         break;
@@ -583,7 +604,7 @@ namespace CAS.UEditor
 
         private bool DrawAdFlagToggle( AdFlags flag )
         {
-            var flagInt = ( int )flag;
+            var flagInt = (int)flag;
             var enabled = ( allowedAdFlagsProp.intValue & flagInt ) == flagInt;
             var icon = HelpStyles.GetFormatIcon( flag, enabled );
             var content = HelpStyles.GetContent( "", icon, "Use " + flag.ToString() + " placement" );
@@ -682,7 +703,7 @@ namespace CAS.UEditor
             }
             if (platform == BuildTarget.iOS)
             {
-                if (edmIOSStaticLinkProp != null && !( bool )edmIOSStaticLinkProp.GetValue( null, null ))
+                if (edmIOSStaticLinkProp != null && !(bool)edmIOSStaticLinkProp.GetValue( null, null ))
                 {
                     OnWarningGUI( "Link frameworks statically disabled",
                         "Please enable 'Add use_frameworks!' and 'Link frameworks statically' found under " +
@@ -738,13 +759,13 @@ namespace CAS.UEditor
 
         private void OnAudienceGUI()
         {
-            var targetAudience = ( Audience )EditorGUILayout.EnumPopup( "Audience Tagged",
-                ( Audience )audienceTaggedProp.enumValueIndex );
-            if (audienceTaggedProp.enumValueIndex != ( int )targetAudience)
+            var targetAudience = (Audience)EditorGUILayout.EnumPopup( "Audience Tagged",
+                (Audience)audienceTaggedProp.enumValueIndex );
+            if (audienceTaggedProp.enumValueIndex != (int)targetAudience)
             {
                 if (dependencyManager != null)
                     dependencyManager.SetAudience( targetAudience );
-                audienceTaggedProp.enumValueIndex = ( int )targetAudience;
+                audienceTaggedProp.enumValueIndex = (int)targetAudience;
             }
 
             EditorGUI.indentLevel++;
@@ -801,7 +822,7 @@ namespace CAS.UEditor
                 DrawSeparator();
                 EditorGUI.BeginChangeCheck();
                 editorRuntimeActiveAdFlags = Convert.ToInt32(
-                    EditorGUILayout.EnumFlagsField( "Editor runtime Active ad", ( AdFlags )editorRuntimeActiveAdFlags ) );
+                    EditorGUILayout.EnumFlagsField( "Editor runtime Active ad", (AdFlags)editorRuntimeActiveAdFlags ) );
                 if (EditorGUI.EndChangeCheck())
                     PlayerPrefs.SetInt( Utils.editorRuntimeActiveAdPrefs, editorRuntimeActiveAdFlags );
             }

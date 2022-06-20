@@ -757,6 +757,9 @@ namespace CAS.UEditor
 
         private static string GetAndroidToolsPath()
         {
+            // Alternate of internal unity method
+            // BuildPipeline.GetBuildToolsDirectory( ( BuildTarget )13 );
+
             // App path ends `version/Unity.app` or `version/Editor/Unity.exe`
             var appPath = EditorApplication.applicationPath;
             var result = Path.GetDirectoryName( EditorApplication.applicationPath );
