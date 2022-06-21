@@ -213,6 +213,7 @@ namespace CAS.iOS
             CASExterns.CASUDestroyAdView( ( ( CASView )view )._viewRef, _managerRef, ( int )view.size );
         }
 
+        [UnityEngine.Scripting.Preserve]
         public bool TryOpenDebugger()
         {
             CASExterns.CASUOpenDebugger( _managerRef );

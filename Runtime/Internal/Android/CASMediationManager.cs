@@ -252,6 +252,7 @@ namespace CAS.Android
             }
         }
 
+        [UnityEngine.Scripting.Preserve]
         public bool TryOpenDebugger()
         {
             return _managerBridge.Call<bool>( "tryOpenDebugger" );
