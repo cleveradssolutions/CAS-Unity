@@ -254,7 +254,7 @@ namespace CAS.UEditor
             {
                 HelpStyles.BeginBoxScope();
 
-                solutionsFoldout.target = GUILayout.Toggle( solutionsFoldout.target,
+                otherFoldout.target = GUILayout.Toggle( otherFoldout.target,
                     "Other project dependencies: " + other.Count, EditorStyles.foldout );
 
                 if (EditorGUILayout.BeginFadeGroup( otherFoldout.faded ))
