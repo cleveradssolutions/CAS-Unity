@@ -267,11 +267,10 @@ namespace CAS.UEditor
 
                 if (string.IsNullOrEmpty( newVerStr ))
                     newVerStr = GetLatestVersion( repo, currVersion );
-                if (newVerStr != null && newVerStr != currVersion && !currVersion.Contains( "-RC" ))
+
+                if (newVerStr != null && newVerStr != currVersion)
                 {
-                    var currVer = new System.Version( currVersion );
-                    var newVer = new System.Version( newVerStr );
-                    if (currVer < newVer)
+                    if (ParseVersionToCompare( currVersion ) < ParseVersionToCompare( newVerStr ))
                         return newVerStr;
                 }
             }
@@ -280,6 +279,31 @@ namespace CAS.UEditor
                 Debug.LogException( e );
             }
             return null;
+        }
+
+        private static System.Version ParseVersionToCompare( string versionName )
+        {
+            try
+            {
+                int separator = versionName.IndexOf( '-' );
+                // Append Revision version for pre release
+                // And 9 Revision for release
+                if (separator > 0)
+                    versionName = versionName.Substring( 0, versionName.Length - separator ) +
+                        "." + versionName[versionName.Length - 1];
+                else
+                    versionName += ".9";
+                return new System.Version( versionName );
+            }
+#if CASDeveloper
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+#else
+            catch {}
+#endif
+            return new System.Version( 0, 1 );
         }
 
         public static bool IsPackageExist( string package )

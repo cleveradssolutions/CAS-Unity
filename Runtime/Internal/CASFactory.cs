@@ -343,6 +343,13 @@ namespace CAS
                 Debug.Log( "[CleverAdsSolutions] " + message );
         }
 
+        internal static void UnityLogException( Exception e )
+        {
+#if CASDeveloper
+            Debug.LogException( e );
+#endif
+        }
+
         internal static string SerializeParametersString( IDictionary<string, string> dict )
         {
             // Sample str: "key_1=value1;key_2=value2;key_3=value3;"

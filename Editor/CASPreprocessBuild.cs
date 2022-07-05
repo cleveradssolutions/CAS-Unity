@@ -49,6 +49,15 @@ namespace CAS.UEditor
                 if (editorSettings.buildPreprocessEnabled)
                 {
                     ConfigureProject( target, editorSettings );
+#if UNITY_2019_1_OR_NEWER
+                }
+            }
+            finally
+            {
+                // Unity 2020 does not replace progress bars at the start of a build.
+                EditorUtility.ClearProgressBar();
+            }
+#else
                     EditorUtility.DisplayProgressBar( "Hold on", "Prepare components...", 0.95f );
                 }
             }
@@ -58,6 +67,7 @@ namespace CAS.UEditor
                 EditorUtility.ClearProgressBar();
                 throw e;
             }
+#endif
         }
         #endregion
 
