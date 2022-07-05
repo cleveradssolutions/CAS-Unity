@@ -1,5 +1,13 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.8.3-rc1] - 2022-07-05
+### Dependencies
+- [Android] Wraps [2.8.3-rc1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.8.3-rc1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixes
+- Fixed Ads Settings inspector bug.
+- Fixed internal reflection issue.
+
 ## [2.8.2] - 2022-06-20
 ### Dependencies
 - [Android] Wraps [2.8.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

@@ -289,7 +289,7 @@ namespace CAS.UEditor
                 // Append Revision version for pre release
                 // And 9 Revision for release
                 if (separator > 0)
-                    versionName = versionName.Substring( 0, versionName.Length - separator ) +
+                    versionName = versionName.Substring( 0, versionName.Length - separator + 1 ) +
                         "." + versionName[versionName.Length - 1];
                 else
                     versionName += ".9";
