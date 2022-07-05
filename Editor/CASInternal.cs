@@ -224,21 +224,22 @@ namespace CAS.UEditor
                 else
                 {
                     int installed = 0;
+                    var forceOpen = false;
 
                     for (int i = 0; i < advanced.Length; i++)
                     {
                         if (advanced[i].installedVersion.Length > 0)
                         {
                             installed++;
-                            if (advanced[i].notSupported && Event.current.type == EventType.Repaint)
+                            if (advanced[i].notSupported)
                             {
-                                advancedFoldout.target = true;
+                                forceOpen = true;
                                 Debug.LogError( Utils.logTag + advanced[i].name +
-                                    " Dependencies found that are not valid for the applications of the selected audience." );
+                                    " Dependencies found that are not valid to use." );
                             }
                         }
                     }
-                    advancedFoldout.target = GUILayout.Toggle( false, "Mediation Adapters (" + installed + ")", EditorStyles.foldout );
+                    advancedFoldout.target = GUILayout.Toggle( forceOpen, "Mediation Adapters (" + installed + ")", EditorStyles.foldout ) || forceOpen;
                 }
 
                 if (EditorGUILayout.BeginFadeGroup( advancedFoldout.faded ))
