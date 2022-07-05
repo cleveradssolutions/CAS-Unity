@@ -436,7 +436,7 @@ namespace CAS.UEditor
 
             if (installed || locked)
             {
-                EditorGUI.BeginDisabledGroup( ( !installed && locked ) || ( installed && isRequired && !locked ) );
+                EditorGUI.BeginDisabledGroup( ( !installed && locked ) || ( installed && isRequired && !locked && !isNewer ) );
                 if (!GUILayout.Toggle( true, " " + name + altName, GUILayout.ExpandWidth( false ) ))
                     DisableDependencies( platform, mediation );
                 if (sdkVersion != null)
