@@ -1,28 +1,22 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
-## [2.8.3-rc1] - 2022-07-05
+## [2.8.3] - 2022-07-14
 ### Dependencies
-- [Android] Wraps [2.8.3-rc1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
-- [iOS] Wraps [2.8.3-rc1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-### Bug Fixes
-- Fixed Ads Settings inspector bug.
-- Fixed internal reflection issue.
-
-## [2.8.2] - 2022-06-20
-### Dependencies
-- [Android] Wraps [2.8.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
-- [iOS] Wraps [2.8.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
-## Features
+- [Android] Wraps [2.8.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.8.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
 - Improved algorithm for processing bids with undisclosed prices.
 - Improved ad serving algorithm to increase the average revenue of Banner Ads.
 - Restored support for Fyber advertising network in closed beta.
 - No longer supported `IMediationManager.GetLastActiveMediation(AdType)` feature.
 - [Android] Fixed `FormatException` from `AdMetaData.GetDouble()`.
 - [iOS] Force disable `ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES` for Framework target. Cause build error when embed for both targets.
-## Android Proguard issue
-If the Proguard is active, then you have `NoSuchMethodError` on device. Fix it by following steps:
-1. Enable Custom Proguard file in Player Settings window.
-2. Add keep line to the file: `-keep interface com.cleversolutions.ads.android.CAS$ManagerBuilder { *; }` 
+### Bug Fixes
+- [Android] Fixed Android Proguard issue with `NoSuchMethodError`.
+- [iOS] Fixed simultaneous access crash on `BiddingManager.init(_:_:)`.
+- [iOS] Fixed index out of range crash. 
+- [Editor] Fixed Ads Settings inspector bug.
+- Fixed internal reflection issue.
 
 ## [2.8.1] - 2022-05-26
 ### Dependencies
