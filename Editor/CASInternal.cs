@@ -153,7 +153,7 @@ namespace CAS.UEditor
             if (updatesFound)
             {
                 if (HelpStyles.WarningWithButton( "Found one or more updates for native dependencies.",
-                    "Update all", MessageType.Info ))
+                    "Update all", MessageType.Error ))
                 {
                     UpdateDependencies( platform );
                 }

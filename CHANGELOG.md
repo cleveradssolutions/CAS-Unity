@@ -1,5 +1,13 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.8.4-rc1] - 2022-07-21
+### Dependencies
+- [Android] Wraps [2.8.4-rc1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.8.4-rc1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- Added new `AdSize.AdaptiveFullWidth` to pick the best ad size for full full screen width.  
+  > `AdSize.AdaptiveBanner` can pick the ad size for screen width but not more than 728dp.
+
 ## [2.8.3] - 2022-07-14
 ### Dependencies
 - [Android] Wraps [2.8.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

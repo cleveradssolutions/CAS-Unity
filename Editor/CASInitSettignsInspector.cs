@@ -309,7 +309,7 @@ namespace CAS.UEditor
             var item = managerIdsProp.GetArrayElementAtIndex( index );
             rect.yMin += 1;
             rect.yMax -= 1;
-            item.stringValue = EditorGUI.TextField( rect, item.stringValue );
+            item.stringValue = EditorGUI.TextField( rect, item.stringValue ).Trim();
         }
 
         private bool DisabledRemoveLastItemFromList( ReorderableList list )
@@ -581,6 +581,9 @@ namespace CAS.UEditor
                         EditorGUILayout.HelpBox( "Size in DPI: 320:50", MessageType.None );
                         break;
                     case AdSize.AdaptiveBanner:
+                        EditorGUILayout.HelpBox( "Pick the best ad size in screen width for improved performance but not more than 728dp.", MessageType.None );
+                        break;
+                    case AdSize.AdaptiveFullWidth:
                         EditorGUILayout.HelpBox( "Pick the best ad size in full width screen for improved performance.", MessageType.None );
                         break;
                     case AdSize.SmartBanner:

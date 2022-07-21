@@ -18,12 +18,11 @@ namespace CAS
         /// </summary>
         Banner = 1,
         /// <summary>
-        /// Create Adaptive AdSize placed in container for current screen orientation.
-        /// <para>Container height cannot be less than 50dp.</para>
-        ///
+        /// Pick Adaptive AdSize for screen width but not more than 728dp.
+        /// <para>Use <see cref="AdaptiveFullWidth"/> to select full screen width</para>
         /// <para>Pick the best ad size, adaptive banners use fixed aspect ratios instead of fixed heights.</para>
-        /// <para>This results in banner ads that occupy a more consistent portion of the screen across devices and provide opportunities for improved performance.</para>
-        /// SeeAlso: <a href="https://developers.google.com/admob/ios/banner/adaptive">Google Adaptive Banner</a>
+        /// <para>This results in banner ads that occupy a more consistent portion
+        /// of the screen across devices and provide opportunities for improved performance.</para>
         /// </summary>
         AdaptiveBanner = 2,
         /// <summary>
@@ -38,6 +37,13 @@ namespace CAS
         /// <summary>
         /// Medium Rectangle size 300dp width and 250dp height
         /// </summary>
-        MediumRectangle = 5
+        MediumRectangle = 5,
+        /// <summary>
+        /// Pick Adaptive AdSize for full screen width.
+        /// <para>Pick the best ad size, adaptive banners use fixed aspect ratios instead of fixed heights.</para>
+        /// <para>This results in banner ads that occupy a more consistent portion
+        /// of the screen across devices and provide opportunities for improved performance.</para>
+        /// </summary>
+        AdaptiveFullWidth = 6
     }
 }
