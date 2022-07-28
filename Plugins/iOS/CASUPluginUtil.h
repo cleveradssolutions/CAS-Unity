@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSString *)stringFromUnity:(const char *_Nullable)bytes;
 /// Returns a C string from a C array of UTF8-encoded bytes.
 + (const char *)stringToUnity:(NSString *)str;
-+ (const char *)adMetaDataToStringPointer:(id<CASStatusHandler>)ad;
++ (NSString *)adMetaDataToStringPointer:(id<CASStatusHandler>)ad;
 + (UIViewController *)unityGLViewController;
 + (void)onAdsWillPressent;
 + (void)onAdsDidClosed;

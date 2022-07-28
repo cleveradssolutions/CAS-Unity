@@ -203,7 +203,7 @@ namespace CAS.Unity
             switch (targetSize)
             {
                 case AdSize.AdaptiveBanner:
-                    result.width = screenWidth * ( isPortrait ? 1.0f : 0.8f );
+                    result.width = Mathf.Min( screenWidth, 728.0f * scale );
                     result.height = ( _emulateTabletScreen ? 90.0f : 50.0f ) * scale;
                     break;
                 case AdSize.Leaderboard:
@@ -213,6 +213,10 @@ namespace CAS.Unity
                 case AdSize.MediumRectangle:
                     result.width = 300.0f * scale;
                     result.height = 250.0f * scale;
+                    break;
+                case AdSize.AdaptiveFullWidth:
+                    result.width = screenWidth;
+                    result.height = ( _emulateTabletScreen ? 90.0f : 50.0f ) * scale;
                     break;
                 default:
                     result.width = 320.0f * scale;
@@ -331,7 +335,7 @@ namespace CAS.Unity
         {
             this.manager = manager;
             this.type = type;
-            metaData = CASMediationManager.CreateAdMetaData(type);
+            metaData = CASMediationManager.CreateAdMetaData( type );
         }
 
         public void Load()

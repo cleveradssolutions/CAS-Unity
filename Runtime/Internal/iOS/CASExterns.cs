@@ -145,9 +145,6 @@ namespace CAS.iOS
 
         #region General Ads functions
         [DllImport( "__Internal" )]
-        internal static extern string CASUGetLastActiveMediationWithType( IntPtr managerRef, int adType );
-
-        [DllImport( "__Internal" )]
         internal static extern bool CASUIsAdEnabledType( IntPtr managerRef, int adType );
 
         [DllImport( "__Internal" )]

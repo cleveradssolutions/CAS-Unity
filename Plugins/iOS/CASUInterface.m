@@ -223,12 +223,6 @@ void CASUFreeManager(CASUTypeManagerRef managerRef)
 }
 
 #pragma mark - General Ads functions
-const char * CASUGetLastActiveMediationWithType(CASUTypeManagerRef managerRef, int adType)
-{
-    CASUManager *manager = (__bridge CASUManager *)managerRef;
-    return [CASUPluginUtil stringToUnity:[manager.casManager getLastActiveMediationWithType:(CASType)adType]];
-}
-
 BOOL CASUIsAdEnabledType(CASUTypeManagerRef managerRef, int adType)
 {
     CASUManager *manager = (__bridge CASUManager *)managerRef;

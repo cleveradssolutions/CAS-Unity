@@ -21,7 +21,10 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 @property (nonatomic, assign) int activePos;
 @end
 
-@implementation CASUView
+@implementation CASUView {
+	NSString* _lastImpression;
+}
+
 - (id)initWithManager:(CASMediationManager *)manager
         forClient:(CASUTypeViewClientRef *)adViewClient
         size:(int)size {
@@ -222,7 +225,8 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 
 - (void)bannerAdView:(CASBannerView *)adView willPresent:(id<CASStatusHandler>)impression {
 	if (self.adPresentedCallback) {
-		self.adPresentedCallback(self.client, [CASUPluginUtil adMetaDataToStringPointer:impression]);
+		_lastImpression = [CASUPluginUtil adMetaDataToStringPointer:impression];
+		self.adPresentedCallback(self.client, [_lastImpression cStringUsingEncoding:NSUTF8StringEncoding] );
 	}
 }
 
