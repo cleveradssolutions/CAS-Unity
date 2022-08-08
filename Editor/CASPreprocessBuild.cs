@@ -82,7 +82,7 @@ namespace CAS.UEditor
                     "to create and set settings for build.", target );
 
             var deps = DependencyManager.Create( target, Audience.Mixed, true );
-            if (!Application.isBatchMode)
+            if (!Utils.IsBatchMode())
             {
                 var newCASVersion = Utils.GetNewVersionOrNull( Utils.gitUnityRepo, MobileAds.wrapperVersion, false );
                 if (newCASVersion != null)
@@ -211,7 +211,7 @@ namespace CAS.UEditor
                 "Failure to do so can lead to suspension of your account.";
 
             Debug.LogError( Utils.logTag + message );
-            if (!Application.isBatchMode)
+            if (!Utils.IsBatchMode())
                 dialogResponse = EditorUtility.DisplayDialogComplex( title, message,
                     "Continue", "Cancel Build", "Select settings file" );
 

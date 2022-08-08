@@ -224,6 +224,12 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 }
 
 - (void)bannerAdView:(CASBannerView *)adView willPresent:(id<CASStatusHandler>)impression {
+	extern bool _didResignActive;
+	if (_didResignActive) {
+		// We are in the middle of the shutdown sequence, and at this point unity runtime is already destroyed.
+		// We shall not call unity API, and definitely not script callbacks, so nothing to do here
+		return;
+	}
 	if (self.adPresentedCallback) {
 		_lastImpression = [CASUPluginUtil adMetaDataToStringPointer:impression];
 		self.adPresentedCallback(self.client, [_lastImpression cStringUsingEncoding:NSUTF8StringEncoding] );

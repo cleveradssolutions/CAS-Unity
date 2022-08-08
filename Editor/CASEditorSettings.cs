@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CAS.UEditor
 {
     [Serializable]
-    internal class CASEditorSettings : ScriptableObject
+    public class CASEditorSettings : ScriptableObject
     {
         public bool autoCheckForUpdatesEnabled = true;
         public bool delayAppMeasurementGADInit = true;

@@ -128,7 +128,10 @@ void CASUOpenDebugger(CASUTypeManagerRef manager)
             }
 
             CASUManager *internalManager = (__bridge CASUManager *)manager;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
             [vc performSelector:selector withObject:[internalManager casManager]];
+#pragma clang diagnostic pop
             vc.modalPresentationStyle = UIModalPresentationFullScreen;
             [root presentViewController:vc animated:YES completion:nil];
             return;

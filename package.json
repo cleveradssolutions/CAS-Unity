@@ -1,6 +1,6 @@
 {
     "name": "com.cleversolutions.ads.unity",
-    "version": "2.8.4",
+    "version": "2.8.5",
     "displayName": "CleverAdsSolutions",
     "description": "Clever Ads Solutions Unity wrapper for mobile ads on platforms Android and iOS.",
     "unity": "2017.4",

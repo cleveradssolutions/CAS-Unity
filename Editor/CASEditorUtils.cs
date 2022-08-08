@@ -581,7 +581,7 @@ namespace CAS.UEditor
 
         internal static void DialogOrCancelBuild( string message, BuildTarget target, string btn = "Continue" )
         {
-            if (!Application.isBatchMode && !EditorUtility.DisplayDialog( "CAS Configure project", message, btn, "Cancel build" ))
+            if (!IsBatchMode() && !EditorUtility.DisplayDialog( "CAS Configure project", message, btn, "Cancel build" ))
                 StopBuildWithMessage( "Cancel build: " + message, target );
         }
 
@@ -589,7 +589,7 @@ namespace CAS.UEditor
         {
             EditorUtility.ClearProgressBar();
             if (target != BuildTarget.NoTarget
-                && !Application.isBatchMode
+                && !IsBatchMode()
                 && EditorUtility.DisplayDialog( "CAS Configure project", message, "Open Settings", "Close" ))
             {
                 OpenSettingsWindow( target );
@@ -777,6 +777,15 @@ namespace CAS.UEditor
                 checkTime = checkTime.Add( TimeSpan.FromDays( days ) );
                 return DateTime.Compare( DateTime.Now, checkTime ) > 0; // Now time is later than checkTime
             }
+        }
+
+        internal static bool IsBatchMode()
+        {
+#if UNITY_2018_3_OR_NEWER
+            return Application.isBatchMode;
+#else
+            return false;
+#endif
         }
         #endregion
     }
