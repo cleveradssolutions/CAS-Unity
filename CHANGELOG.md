@@ -1,6 +1,18 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
-## [2.8.4-rc1] - 2022-07-21
+## [2.8.5] - 2022-07-21
+### Dependencies
+- [Android] Wraps [2.8.5 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.8.5 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixes
+- Fixed `AdSize.AdaptiveBanner` in portrait orientation.
+- Fixed refresh `AdSize.AdaptiveFullWidth` on orientation changed.
+- [iOS] Fixed crash from `[CASUView bannerAdView:willPresent:]` after application closed.
+- [Android] Fixed the Banner ad position in center of the screen with cutouts.
+- [Editor] Fixed compilation errors for Unity 2017.
+  > Unity 2017 is not officially supported and is not recommended for use. Please let us know about the issues and we will try to fix them.
+
+## [2.8.4] - 2022-07-21
 ### Dependencies
 - [Android] Wraps [2.8.4-rc1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.8.4-rc1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)

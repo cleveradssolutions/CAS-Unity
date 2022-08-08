@@ -16,6 +16,13 @@ static const int AD_POSITION_BOTTOM_CENTER = 3;
 static const int AD_POSITION_BOTTOM_LEFT = 4;
 static const int AD_POSITION_BOTTOM_RIGHT = 5;
 
+static const int AD_SIZE_BANNER = 1;
+static const int AD_SIZE_ADAPTIVE = 2;
+static const int AD_SIZE_SMART = 3;
+static const int AD_SIZE_LEADER = 4;
+static const int AD_SIZE_MREC = 5;
+static const int AD_SIZE_FULL_WIDTH = 6;
+
 @interface CASUView () <CASBannerDelegate>
 @property (nonatomic, assign) CGPoint adPositionOffset;
 @property (nonatomic, assign) int activePos;
@@ -23,6 +30,7 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 
 @implementation CASUView {
 	NSString* _lastImpression;
+	int _activeSizeId;
 }
 
 - (id)initWithManager:(CASMediationManager *)manager
@@ -32,8 +40,7 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 	if (self) {
 		UIViewController *unityVC = [CASUPluginUtil unityGLViewController];
 		_client = adViewClient;
-		_bannerView = [[CASBannerView alloc] initWithAdSize:[self getBannerSizeFromId:size withViewController:unityVC]
-		               manager:manager];
+		_bannerView = [[CASBannerView alloc] initWithAdSize:[self getSizeByCode:size with:unityVC] manager:manager];
 		_bannerView.hidden = YES;
 		_bannerView.adDelegate = self;
 		_bannerView.rootViewController = unityVC;
@@ -47,16 +54,25 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 	_bannerView.adDelegate = nil;
 }
 
-- (CASSize *)getBannerSizeFromId:(int)sizeId withViewController:(UIViewController *)controller {
+- (CASSize *)getSizeByCode:(int)sizeId with:(UIViewController *)controller {
+	_activeSizeId = sizeId;
 	switch (sizeId) {
-	case 2: return [CASSize getAdaptiveBannerForMaxWidth:CASSize.leaderboard.width];
-	case 3: return [CASSize getSmartBanner];
-	case 4: return CASSize.leaderboard;
-	case 5: return CASSize.mediumRectangle;
-	case 6: return [CASSize getAdaptiveBannerInContainer:controller.view];
+	case AD_SIZE_BANNER: return CASSize.banner;
+	case AD_SIZE_ADAPTIVE: {
+		CGRect screenRect = [controller.view bounds];
+		CGFloat width = MIN(CGRectGetWidth(screenRect), CASSize.leaderboard.width);
+		return [CASSize getAdaptiveBannerForMaxWidth: width];
+	}
+	case AD_SIZE_SMART: return [CASSize getSmartBanner];
+	case AD_SIZE_LEADER: return CASSize.leaderboard;
+	case AD_SIZE_MREC: return CASSize.mediumRectangle;
+	case AD_SIZE_FULL_WIDTH: {
+		return [CASSize getAdaptiveBannerInContainer:controller.view];
+	}
 	default: return CASSize.banner;
 	}
 }
+
 
 - (void)present {
 	if (self.bannerView) {
@@ -90,8 +106,15 @@ static const int AD_POSITION_BOTTOM_RIGHT = 5;
 }
 
 - (void)orientationChangedNotification:(NSNotification *)notification {
+	if(!self.bannerView) {
+		return;
+	}
 	// Ignore changes in device orientation if unknown, face up, or face down.
 	if (UIDeviceOrientationIsValidInterfaceOrientation([[UIDevice currentDevice] orientation])) {
+		if(_activeSizeId == AD_SIZE_ADAPTIVE || _activeSizeId == AD_SIZE_FULL_WIDTH) {
+			UIViewController *unityController = [CASUPluginUtil unityGLViewController];
+			self.bannerView.adSize = [self getSizeByCode:_activeSizeId with:unityController];
+		}
 		[self refreshPosition];
 	}
 }
