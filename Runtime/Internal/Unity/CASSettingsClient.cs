@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace CAS.Unity
 {
-    internal class CASSettings : IAdsSettings, ITargetingOptions
+    internal class CASSettingsClient : IAdsSettings, ITargetingOptions
     {
         public bool analyticsCollectionEnabled { get; set; }
         public int bannerRefreshInterval { get; set; }

@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -136,7 +136,7 @@ namespace CAS
                 globalView.SetActive( false );
         }
 
-        public virtual void CallbackOnDestroy( IAdView view )
+        public void RemoveAdViewFromFactory( IAdView view )
         {
             if (globalView == adViews)
                 globalView = null;

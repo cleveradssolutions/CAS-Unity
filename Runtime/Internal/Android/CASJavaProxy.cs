@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
@@ -18,7 +18,7 @@ namespace CAS.Android
         internal const string NativeSettingsClassName = "com.cleversolutions.ads.unity.CASBridgeSettings";
         //internal const string NativeViewClassName = "com.cleversolutions.ads.unity.CASViewWrapper";
         internal const string AdCallbackClassName = "com.cleversolutions.ads.unity.CASCallback";
-        internal const string OnInitializationListenerClassName = "com.cleversolutions.ads.OnInitializationListener";
+        internal const string OnInitializationListenerClassName = "com.cleversolutions.ads.unity.CASInitCallback";
 
         internal const string UnityActivityClassName = "com.unity3d.player.UnityPlayer";
         internal const string JavaUtilArrayList = "java.util.ArrayList";
@@ -41,32 +41,29 @@ namespace CAS.Android
 
     internal class InitializationListenerProxy : AndroidJavaProxy
     {
-        private readonly CASMediationManager manager;
+        private readonly CASManagerClient manager;
         private InitCompleteAction initCompleteAction;
 
-        public InitializationListenerProxy(
-            CASMediationManager manager,
-            InitCompleteAction initCompleteAction )
+        public InitializationListenerProxy( CASManagerClient manager, InitCompleteAction initCompleteAction )
             : base( CASJavaProxy.OnInitializationListenerClassName )
         {
             this.manager = manager;
             this.initCompleteAction = initCompleteAction;
         }
 
-        public void onInitialization( bool success, AndroidJavaObject error )
+        public void onCASInitialized( string error, bool isTestMode )
         {
-            onInitialization( success, "" );
-        }
-
-        public void onInitialization( bool success, string error )
-        {
-            CASFactory.UnityLog( "OnInitialization " + success );
-            manager.initializationListener = null;
+            CASFactory.UnityLog( "OnInitialization " + error );
+            manager.OnInitializationCallback( isTestMode );
             if (initCompleteAction != null)
             {
                 CASFactory.ExecuteEvent( () =>
                 {
-                    initCompleteAction( success, error );
+                    if (string.IsNullOrEmpty( error ))
+                        initCompleteAction( true, null );
+                    else
+                        initCompleteAction( false, error );
+
                     initCompleteAction = null;
                 } );
             }
@@ -84,6 +81,7 @@ namespace CAS.Android
         public event Action OnAdClicked;
         public event Action OnAdCompleted;
         public event Action OnAdClosed;
+        public event Action<Rect> OnAdRect;
 
         public AdEventsProxy( AdType adType ) : base( CASJavaProxy.AdCallbackClassName )
         {
@@ -117,7 +115,7 @@ namespace CAS.Android
                 CASFactory.ExecuteEvent( () =>
                 {
                     if (OnAdOpening != null)
-                        OnAdOpening( new AdMetaData( adType, CASFactory.ParseParametersString( parameters ) ) );
+                        OnAdOpening( new CASImpressionClient( adType, parameters ) );
                 } );
             }
         }
@@ -155,6 +153,19 @@ namespace CAS.Android
             if (CASFactory.isDebug)
                 Debug.Log( "[CleverAdsSolutions] onClosed " + adType.ToString() );
             CASFactory.ExecuteEvent( OnAdClosed );
+        }
+
+        public void onRect( int x, int y, int width, int height )
+        {
+            if (OnAdRect != null)
+            {
+                var rect = new Rect( x, y, width, height );
+                CASFactory.ExecuteEvent( () =>
+                {
+                    if (OnAdRect != null)
+                        OnAdRect( rect );
+                } );
+            }
         }
     }
 }

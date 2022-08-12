@@ -1,11 +1,12 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 namespace CAS
 {
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Impression-Level-Data" )]
     public enum PriceAccuracy
     {
         /// <summary>

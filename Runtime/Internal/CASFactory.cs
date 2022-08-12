@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -14,7 +14,7 @@ namespace CAS
 {
     internal static class CASFactory
     {
-        private static volatile bool executeEventsOnUnityThread = false;
+        private static volatile bool executeEventsOnUnityThread = true;
 
         private static IAdsSettings settings;
         private static List<IMediationManager> managers;
@@ -62,14 +62,14 @@ namespace CAS
 #if !TARGET_OS_SIMULATOR
 #if UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
-                settings = new CAS.Android.CASSettings();
+                settings = new CAS.Android.CASSettingsClient();
 #elif UNITY_IOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
-                settings = new CAS.iOS.CASSettings();
+                settings = new CAS.iOS.CASSettingsClient();
 #endif
 #endif
             if (settings == null)
-                settings = new CAS.Unity.CASSettings();
+                settings = new CAS.Unity.CASSettingsClient();
 
             if (initSettings)
             {
@@ -101,7 +101,7 @@ namespace CAS
 #if UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {
-                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.GetSDKVersion();
             }
 #elif UNITY_IOS && !TARGET_OS_SIMULATOR
@@ -157,18 +157,18 @@ namespace CAS
 
             IMediationManager manager = null;
 #if UNITY_EDITOR || TARGET_OS_SIMULATOR
-            manager = CAS.Unity.CASMediationManager.CreateManager( initSettings );
+            manager = CAS.Unity.CASManagerClient.CreateManager( initSettings );
 #elif UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {
-                var android = new CAS.Android.CASMediationManager( initSettings );
+                var android = new CAS.Android.CASManagerClient( initSettings );
                 android.CreateManager( initSettings );
                 manager = android;
             }
 #elif UNITY_IOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
-                var ios = new CAS.iOS.CASMediationManager( initSettings );
+                var ios = new CAS.iOS.CASManagerClient( initSettings );
                 ios.CreateManager( initSettings );
                 manager = ios;
             }
@@ -180,6 +180,9 @@ namespace CAS
             if (initSettings.bannerSize != 0) // Before onInitManager callback
                 manager.bannerSize = initSettings.bannerSize;
 #pragma warning restore CS0618 // Type or member is obsolete
+
+            if (executeEventsOnUnityThread)
+                EventExecutor.Initialize();
 
             var managerIndex = initSettings.IndexOfManagerId( initSettings.targetId );
             if (managerIndex < 0)
@@ -247,7 +250,7 @@ namespace CAS
 #elif UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {
-                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 androidSettings.ValidateIntegration();
             }
 #elif UNITY_IOS
@@ -276,7 +279,7 @@ namespace CAS
 #elif UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {
-                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.GetActiveMediationPattern();
             }
 #elif UNITY_IOS
@@ -307,7 +310,7 @@ namespace CAS
 #elif UNITY_ANDROID
             if (Application.platform == RuntimePlatform.Android)
             {
-                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.IsActiveMediationNetwork( network );
             }
 #elif UNITY_IOS

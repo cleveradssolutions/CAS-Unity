@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -9,6 +9,11 @@ using System.Collections.Generic;
 
 namespace CAS
 {
+    internal class WikiPageAttribute : Attribute
+    {
+        internal WikiPageAttribute( string url ) { }
+    }
+
     public class MediationExtras
     {
         /// <summary>
