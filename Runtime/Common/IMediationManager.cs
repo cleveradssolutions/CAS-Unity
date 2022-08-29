@@ -14,6 +14,11 @@ namespace CAS
     public delegate void CASEventWithAdError( AdError error );
     public delegate void CASEventWithMeta( AdMetaData meta );
 
+    internal class WikiPageAttribute : Attribute
+    {
+        internal WikiPageAttribute( string url ) { }
+    }
+
     /// <summary>
     /// Interface for managing CAS mediation.
     /// Get instance using the <see cref="MobileAds.BuildManager"/> builder.

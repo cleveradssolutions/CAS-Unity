@@ -59,11 +59,12 @@ namespace CAS
         internal static IAdsSettings CreateSettigns( CASInitSettings initSettings )
         {
             IAdsSettings settings = null;
-#if !TARGET_OS_SIMULATOR
-#if UNITY_ANDROID
+#if UNITY_ANDROID || CASDeveloper
             if (Application.platform == RuntimePlatform.Android)
                 settings = new CAS.Android.CASSettingsClient();
-#elif UNITY_IOS
+#endif
+#if UNITY_IOS || CASDeveloper
+#if !TARGET_OS_SIMULATOR
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 settings = new CAS.iOS.CASSettingsClient();
 #endif
@@ -98,15 +99,18 @@ namespace CAS
 
         internal static string GetSDKVersion()
         {
-#if UNITY_ANDROID
+#if UNITY_ANDROID || CASDeveloper
             if (Application.platform == RuntimePlatform.Android)
             {
                 var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.GetSDKVersion();
             }
-#elif UNITY_IOS && !TARGET_OS_SIMULATOR
+#endif
+#if UNITY_IOS || CASDeveloper
+#if !TARGET_OS_SIMULATOR
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 return CAS.iOS.CASExterns.CASUGetSDKVersion();
+#endif
 #endif
             return MobileAds.wrapperVersion;
         }
@@ -158,20 +162,14 @@ namespace CAS
             IMediationManager manager = null;
 #if UNITY_EDITOR || TARGET_OS_SIMULATOR
             manager = CAS.Unity.CASManagerClient.CreateManager( initSettings );
-#elif UNITY_ANDROID
+#endif
+#if UNITY_ANDROID || CASDeveloper
             if (Application.platform == RuntimePlatform.Android)
-            {
-                var android = new CAS.Android.CASManagerClient( initSettings );
-                android.CreateManager( initSettings );
-                manager = android;
-            }
-#elif UNITY_IOS
+                manager = new CAS.Android.CASManagerClient().Init( initSettings );
+#endif
+#if UNITY_IOS || CASDeveloper
             if (Application.platform == RuntimePlatform.IPhonePlayer)
-            {
-                var ios = new CAS.iOS.CASManagerClient( initSettings );
-                ios.CreateManager( initSettings );
-                manager = ios;
-            }
+                manager = new CAS.iOS.CASManagerClient().Init( initSettings );
 #endif
             if (manager == null)
                 throw new NotSupportedException( "Current platform: " + Application.platform.ToString() );
@@ -246,14 +244,18 @@ namespace CAS
         internal static void ValidateIntegration()
         {
 #if UNITY_EDITOR
-            // TODO: Implementation editor 
-#elif UNITY_ANDROID
+            // TODO: Implementation editor validation
+            if (Application.isEditor)
+                return;
+#endif
+#if UNITY_ANDROID || CASDeveloper
             if (Application.platform == RuntimePlatform.Android)
             {
                 var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 androidSettings.ValidateIntegration();
             }
-#elif UNITY_IOS
+#endif
+#if UNITY_IOS || CASDeveloper
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
                 CAS.iOS.CASExterns.CASUValidateIntegration();
@@ -276,13 +278,15 @@ namespace CAS
             {
                 Debug.LogException( e );
             }
-#elif UNITY_ANDROID
+#endif
+#if UNITY_ANDROID || CASDeveloper
             if (Application.platform == RuntimePlatform.Android)
             {
                 var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.GetActiveMediationPattern();
             }
-#elif UNITY_IOS
+#endif
+#if UNITY_IOS || CASDeveloper
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 return CAS.iOS.CASExterns.CASUGetActiveMediationPattern();
 #endif
@@ -303,17 +307,19 @@ namespace CAS
 
         internal static bool IsActiveNetwork( AdNetwork network )
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || CASDeveloper
             var pattern = GetActiveMediationPattern();
             if (( int )network < pattern.Length)
                 return pattern[( int )network] != '0';
-#elif UNITY_ANDROID
+#endif
+#if UNITY_ANDROID || CASDeveloper
             if (Application.platform == RuntimePlatform.Android)
             {
                 var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.IsActiveMediationNetwork( network );
             }
-#elif UNITY_IOS
+#endif
+#if UNITY_IOS || CASDeveloper
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 return CAS.iOS.CASExterns.CASUIsActiveMediationNetwork( ( int )network );
 #endif
@@ -351,39 +357,6 @@ namespace CAS
 #if CASDeveloper
             Debug.LogException( e );
 #endif
-        }
-
-        internal static string SerializeParametersString( IDictionary<string, string> dict )
-        {
-            // Sample str: "key_1=value1;key_2=value2;key_3=value3;"
-            var result = new StringBuilder();
-            foreach (var item in dict)
-            {
-                result.Append( item.Key ).Append( '=' ).Append( item.Value ).Append( ';' );
-            }
-            return result.ToString();
-        }
-
-        internal static IDictionary<string, string> ParseParametersString( string str )
-        {
-            // Sample str: "key_1=value1;key_2=value2;key_3=value3;"
-            var result = new Dictionary<string, string>();
-            var begin = 0;
-            while (begin < str.Length)
-            {
-                var separator = str.IndexOf( '=', begin );
-                if (separator < 0)
-                    break;
-                var key = str.Substring( begin, separator - begin );
-                begin = separator + 1;
-                separator = str.IndexOf( ';', begin );
-                if (separator < 0) // Is end
-                    separator = str.Length;
-                if (begin != separator) // Is not empty
-                    result[key] = str.Substring( begin, separator - begin );
-                begin = separator + 1;
-            }
-            return result;
         }
     }
 }

@@ -7,6 +7,7 @@
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace CAS.Android
@@ -27,7 +28,7 @@ namespace CAS.Android
 
         public CASSettingsClient()
         {
-            settingsBridge = new AndroidJavaClass( CASJavaProxy.NativeSettingsClassName );
+            settingsBridge = new AndroidJavaClass( CASJavaBridge.settingsClass );
         }
 
         public string GetSDKVersion()
@@ -37,7 +38,7 @@ namespace CAS.Android
 
         public void ValidateIntegration()
         {
-            settingsBridge.CallStatic( "validateIntegration", CASJavaProxy.GetUnityActivity() );
+            settingsBridge.CallStatic( "validateIntegration" );
         }
 
         public string GetActiveMediationPattern()
@@ -134,9 +135,12 @@ namespace CAS.Android
 
         public void SetTestDeviceIds( List<string> testDeviceIds )
         {
+            settingsBridge.CallStatic( "clearTestDeviceIds" );
             _testDeviceIds = testDeviceIds;
-            var nativeList = CASJavaProxy.GetJavaListObject( testDeviceIds );
-            settingsBridge.CallStatic( "setTestDeviceIds", nativeList );
+            for (int i = 0; i < testDeviceIds.Count; i++)
+            {
+                settingsBridge.CallStatic( "addTestDeviceId", testDeviceIds[i] );
+            }
         }
 
         public List<string> GetTestDeviceIds()

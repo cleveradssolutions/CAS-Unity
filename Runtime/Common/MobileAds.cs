@@ -10,12 +10,13 @@ using UnityEngine;
 
 namespace CAS
 {
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK" )]
     public static class MobileAds
     {
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "2.8.5";
+        public const string wrapperVersion = "2.9.0-rc1";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.

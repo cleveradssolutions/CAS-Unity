@@ -8,6 +8,7 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEditor.PackageManager;
 
 namespace CAS.Android
 {
@@ -19,7 +20,8 @@ namespace CAS.Android
         private AndroidJavaObject _managerBridge;
         private LastPageAdContent _lastPageAdContent = null;
 
-        private InitializationListenerProxy _initListener;
+        private InitCompleteAction _initCompleteAction;
+        private InitCallbackProxy _initListener;
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get; private set; }
@@ -133,11 +135,7 @@ namespace CAS.Android
         }
         #endregion
 
-        public CASManagerClient( CASInitSettings initData )
-        {
-            managerID = initData.targetId;
-            isTestAdMode = initData.IsTestAdMode();
-        }
+        internal CASManagerClient() { }
 
 #if false // Manager store in Static memory and disposed only on application destroed
         ~CASMediationManager()
@@ -153,8 +151,12 @@ namespace CAS.Android
         }
 #endif
 
-        public void CreateManager( CASInitSettings initData )
+        internal CASManagerClient Init( CASInitSettings initData )
         {
+            managerID = initData.targetId;
+            isTestAdMode = initData.IsTestAdMode();
+            _initCompleteAction = initData.initListener;
+            _initListener = new InitCallbackProxy( this );
             _interstitialProxy = new AdEventsProxy( AdType.Interstitial );
             _interstitialProxy.OnAdLoaded += CallbackOnInterLoaded;
             _interstitialProxy.OnAdFailed += CallbackOnInterFailed;
@@ -163,36 +165,42 @@ namespace CAS.Android
             _rewardedProxy.OnAdFailed += CallbackOnRewardFailed;
             _returnAdProxy = new AdEventsProxy( AdType.Interstitial );
 
-            AndroidJavaObject activity = CASJavaProxy.GetUnityActivity();
-            _managerBridge = new AndroidJavaObject( CASJavaProxy.NativeBridgeClassName, activity );
-
-            _managerBridge.Call<AndroidJavaObject>(
-                "createBuilder",
-                managerID,
-                Application.unityVersion,
-                ( int )initData.allowedAdFlags );
-
-            if (isTestAdMode)
-                _managerBridge.Call<AndroidJavaObject>( "initInTestAdMode" );
-
-            if (!string.IsNullOrEmpty( initData.userID ))
-                _managerBridge.Call<AndroidJavaObject>( "initWithUserId", initData.userID );
-
-
-            if (initData.extras != null && initData.extras.Count != 0)
+            using (var builder = new AndroidJavaObject( CASJavaBridge.bridgeBuilderClass ))
             {
-                var extrasParams = CASFactory.SerializeParametersString( initData.extras );
-                _managerBridge.Call( "initWithExtras", extrasParams );
-            }
+                if (initData.IsTestAdMode())
+                    builder.Call( "enableTestMode" );
 
-            _initListener = new InitializationListenerProxy( this, initData.initListener );
-            _managerBridge.Call( "buildManager", _initListener, _interstitialProxy, _rewardedProxy );
+                if (!string.IsNullOrEmpty( initData.userID ))
+                    builder.Call( "setUserId", initData.userID );
+
+                CASJavaBridge.RepeatCall( "addExtras", builder, initData.extras, false );
+
+
+                builder.Call( "setCallbacks", _initListener, _interstitialProxy, _rewardedProxy );
+
+                _managerBridge = builder.Call<AndroidJavaObject>( "build",
+                    initData.targetId, Application.unityVersion, ( int )initData.allowedAdFlags );
+            }
+            return this;
         }
 
-        public void OnInitializationCallback( bool testMode )
+        public void OnInitializationCallback( string error, bool testMode )
         {
-            _initListener = null;
+            CASFactory.UnityLog( "OnInitialization " + error );
             isTestAdMode = testMode;
+            if (_initCompleteAction != null)
+            {
+                CASFactory.ExecuteEvent( () =>
+                {
+                    if (string.IsNullOrEmpty( error ))
+                        _initCompleteAction( true, null );
+                    else
+                        _initCompleteAction( false, error );
+
+                    _initCompleteAction = null;
+                } );
+            }
+            _initListener = null;
         }
 
         public LastPageAdContent lastPageAdContent

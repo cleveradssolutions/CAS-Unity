@@ -21,42 +21,27 @@ namespace CAS.iOS
 
         public override AdNetwork network
         {
-            get
-            {
-                return ( AdNetwork )CASExterns.CASUGetImpressionNetwork( impressionRef );
-            }
+            get { return ( AdNetwork )CASExterns.CASUGetImpressionNetwork( impressionRef ); }
         }
 
         public override double cpm
         {
-            get
-            {
-                return CASExterns.CASUGetImpressionCPM( impressionRef );
-            }
+            get { return CASExterns.CASUGetImpressionCPM( impressionRef ); }
         }
 
         public override PriceAccuracy priceAccuracy
         {
-            get
-            {
-                return ( PriceAccuracy )CASExterns.CASUGetImpressionPrecission( impressionRef );
-            }
+            get { return ( PriceAccuracy )CASExterns.CASUGetImpressionPrecission( impressionRef ); }
         }
 
         public override string creativeIdentifier
         {
-            get
-            {
-                return CASExterns.CASUGetImpressionCreativeId( impressionRef );
-            }
+            get { return CASExterns.CASUGetImpressionCreativeId( impressionRef ); }
         }
 
         public override string identifier
         {
-            get
-            {
-                return CASExterns.CASUGetImpressionIdentifier( impressionRef );
-            }
+            get { return CASExterns.CASUGetImpressionIdentifier( impressionRef ); }
         }
     }
 }

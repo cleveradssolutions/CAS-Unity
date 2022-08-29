@@ -49,12 +49,7 @@ namespace CAS.iOS
         public event Action OnAppReturnAdClosed;
         #endregion
 
-        public CASManagerClient( CASInitSettings initData )
-        {
-            managerID = initData.targetId;
-            isTestAdMode = initData.IsTestAdMode();
-            _managerClient = ( IntPtr )GCHandle.Alloc( this );
-        }
+        internal CASManagerClient() { }
 
         ~CASManagerClient()
         {
@@ -70,8 +65,12 @@ namespace CAS.iOS
             }
         }
 
-        public void CreateManager( CASInitSettings initData )
+        internal CASManagerClient Init( CASInitSettings initData )
         {
+            managerID = initData.targetId;
+            isTestAdMode = initData.IsTestAdMode();
+            _managerClient = ( IntPtr )GCHandle.Alloc( this );
+
             if (initData.userID == null)
                 initData.userID = string.Empty; // Null string not supported
 
@@ -123,6 +122,7 @@ namespace CAS.iOS
                 ReturnAdDidShowAdFailedWithErrorCallback,
                 ReturnAdDidClickedAdCallback,
                 ReturnAdDidClosedAdCallback );
+            return this;
         }
 
         public LastPageAdContent lastPageAdContent

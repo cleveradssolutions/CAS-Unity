@@ -50,8 +50,6 @@ namespace CAS.iOS
         internal delegate void CASUViewDidRectCallback( CASUViewRef view, float x, float y, float width, float height );
         #endregion
 
-        internal delegate void CASUATTCompletion( int status );
-
         #region CAS Settings
         [DllImport( "__Internal" )]
         internal static extern void CASUSetAnalyticsCollectionWithEnabled( bool enabled );
@@ -321,12 +319,6 @@ namespace CAS.iOS
         [DllImport( "__Internal" )]
         internal static extern string CASUGetImpressionIdentifier( CASImpressionRef impression );
         #endregion
-
-        [DllImport( "__Internal" )]
-        internal static extern void CASURequestATT( CASUATTCompletion callback );
-
-        [DllImport( "__Internal" )]
-        internal static extern int CASUGetATTStatus();
     }
 }
 #endif
