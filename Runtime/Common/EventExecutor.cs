@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System.Collections;
@@ -15,6 +15,7 @@ namespace CAS
     /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
     /// You can use EventExecutor to schedule each calls on the next Update() loop
     /// </summary>
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Configuring-SDK#execute-events-on-unity-thread" )]
     public static class EventExecutor
     {
         private static EventExecutorComponent instance = null;

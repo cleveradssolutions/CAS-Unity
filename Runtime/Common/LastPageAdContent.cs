@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -9,10 +9,8 @@ using UnityEngine;
 
 namespace CAS
 {
-    /// <summary>
-    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Configuring-Last-Page-Ad
-    /// </summary>
     [Serializable]
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Configuring-Last-Page-Ad" )]
     public class LastPageAdContent
     {
         [SerializeField]

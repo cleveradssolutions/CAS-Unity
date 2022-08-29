@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_IOS || (CASDeveloper && UNITY_EDITOR)
@@ -10,18 +10,12 @@ using System.Collections.Generic;
 
 namespace CAS.iOS
 {
-    internal class CASSettings : IAdsSettings, ITargetingOptions
+    internal class CASSettingsClient : IAdsSettings, ITargetingOptions
     {
         private bool _analyticsCollectionEnabled = false;
-        private int _bannerRefreshInterval = 30;
-        private int _interstitialInterval = 0;
-        private ConsentStatus _userConsent = ConsentStatus.Undefined;
-        private CCPAStatus _userCCPAStatus = CCPAStatus.Undefined;
-        private Audience _taggedAudience = Audience.Mixed;
         private bool _isDebugMode = false;
         private bool _isMutedAdSounds = false;
         private LoadingManagerMode _loadingMode = LoadingManagerMode.Optimal;
-        private bool _iOSAppPauseOnBackground = true;
         private List<string> _testDeviceIds = new List<string>();
         private bool _allowInterstitialAdsWhenVideoCostAreLower = false;
         private bool _trackLocationEnabled = false;
@@ -44,66 +38,31 @@ namespace CAS.iOS
 
         public int bannerRefreshInterval
         {
-            get { return _bannerRefreshInterval; }
-            set
-            {
-                if (_bannerRefreshInterval != value)
-                {
-                    _bannerRefreshInterval = value;
-                    CASExterns.CASUSetBannerRefreshWithInterval( value );
-                }
-            }
+            get { return CASExterns.CASUGetBannerRefreshRate(); }
+            set { CASExterns.CASUSetBannerRefreshRate( value ); }
         }
 
         public int interstitialInterval
         {
-            get { return _interstitialInterval; }
-            set
-            {
-                if (_interstitialInterval != value)
-                {
-                    _interstitialInterval = value;
-                    CASExterns.CASUSetInterstitialWithInterval( value );
-                }
-            }
+            get { return CASExterns.CASUGetInterstitialInterval(); }
+            set { CASExterns.CASUSetInterstitialInterval( value ); }
         }
 
         public ConsentStatus userConsent
         {
-            get { return _userConsent; }
-            set
-            {
-                if (_userConsent != value)
-                {
-                    _userConsent = value;
-                    CASExterns.CASUUpdateUserConsent( ( int )value );
-                }
-            }
+            get { return ( ConsentStatus )CASExterns.CASUGetUserConsent(); }
+            set { CASExterns.CASUSetUserConsent( ( int )value ); }
         }
 
         public CCPAStatus userCCPAStatus
         {
-            get { return _userCCPAStatus; }
-            set
-            {
-                if (_userCCPAStatus != value)
-                {
-                    _userCCPAStatus = value;
-                    CASExterns.CASUUpdateCCPAWithStatus( ( int )value );
-                }
-            }
+            get { return ( CCPAStatus )CASExterns.CASUGetCCPAStatus(); }
+            set { CASExterns.CASUSetCCPAStatus( ( int )value ); }
         }
         public Audience taggedAudience
         {
-            get { return _taggedAudience; }
-            set
-            {
-                if (_taggedAudience != value)
-                {
-                    _taggedAudience = value;
-                    CASExterns.CASUSetTaggedWithAudience( ( int )value );
-                }
-            }
+            get { return ( Audience )CASExterns.CASUGetAudienceTagged(); }
+            set { CASExterns.CASUSetAudienceTagged( ( int )value ); }
         }
         public bool isDebugMode
         {
@@ -143,15 +102,8 @@ namespace CAS.iOS
         }
         public bool iOSAppPauseOnBackground
         {
-            get { return _iOSAppPauseOnBackground; }
-            set
-            {
-                if (_iOSAppPauseOnBackground != value)
-                {
-                    _iOSAppPauseOnBackground = value;
-                    CASExterns.CASUSetiOSAppPauseOnBackground( value );
-                }
-            }
+            get { return CASExterns.CASUGetiOSAppPauseOnBackground(); }
+            set { CASExterns.CASUSetiOSAppPauseOnBackground( value ); }
         }
 
         public void SetTestDeviceIds( List<string> testDeviceIds )

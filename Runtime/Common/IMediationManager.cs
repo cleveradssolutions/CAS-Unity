@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -17,22 +17,30 @@ namespace CAS
     /// <summary>
     /// Interface for managing CAS mediation.
     /// Get instance using the <see cref="MobileAds.BuildManager"/> builder.
-    /// <para>Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK </para>
     /// </summary>
-    public interface IMediationManager: ISingleBannerManager
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK" )]
+    public interface IMediationManager : ISingleBannerManager
     {
         /// <summary>
         /// Called when <see cref="AdType"/> load ad response
-        /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.OnLoaded instead.</para>
         /// </summary>
+        [Obsolete( "Use OnInterstitialAdLoaded, OnRewardedAdLoaded, IAdView.OnLoaded instead." )]
         event CASTypedEvent OnLoadedAd;
         /// <summary>
         /// Called when <see cref="AdType"/> failed to load ad response with error message
-        /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.OnFailed instead.</para>
         /// </summary>
+        [Obsolete( "Use OnInterstitialAdFailedToLoad, OnRewardedAdFailedToLoad, IAdView.OnFailed instead." )]
         event CASTypedEventWithError OnFailedToLoadAd;
 
         #region Interstitial Ads events
+        /// <summary>
+        /// Called when Rewarded video ad ready to shown.
+        /// </summary>
+        event Action OnInterstitialAdLoaded;
+        /// <summary>
+        /// Called when Rewarded video failed to load ad response with error message
+        /// </summary>
+        event CASEventWithAdError OnInterstitialAdFailedToLoad;
         /// <summary>
         /// Called when the ad is displayed.
         /// </summary>
@@ -56,6 +64,14 @@ namespace CAS
         #endregion
 
         #region Rewarded Ads events
+        /// <summary>
+        /// Called when Rewarded video ad ready to shown.
+        /// </summary>
+        event Action OnRewardedAdLoaded;
+        /// <summary>
+        /// Called when Rewarded video failed to load ad response with error message
+        /// </summary>
+        event CASEventWithAdError OnRewardedAdFailedToLoad;
         /// <summary>
         /// Called when the ad is displayed.
         /// </summary>
@@ -183,7 +199,7 @@ namespace CAS
 
         #endregion
 
-        [Obsolete("No longer supported")]
+        [Obsolete( "No longer supported" )]
         string GetLastActiveMediation( AdType adType );
     }
 }

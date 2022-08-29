@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || CASDeveloper
@@ -24,10 +24,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using System.Reflection;
 using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
@@ -95,7 +95,7 @@ namespace CAS.UEditor
             if (UpdateGradlePropertiesInMainFile( baseGradle, gradleProps, baseGradlePath ))
                 baseGradleChanged = true;
 
-            
+
             if (FixGradleCompatibilityUnity2018( baseGradle, baseGradlePath ))
                 baseGradleChanged = true;
 #endif
@@ -122,19 +122,63 @@ namespace CAS.UEditor
             }
         }
 
+        internal static void UpdateGradleTemplateIfNeed()
+        {
+#if UNITY_2019_3_OR_NEWER
+            var needUpdate = true;
+#else
+            var needUpdate = false;
+#endif
+
+            if (!needUpdate || !File.Exists( Utils.mainGradlePath ))
+                return;
+
+            try
+            {
+                needUpdate = false;
+                using (var reader = new StreamReader( Utils.mainGradlePath ))
+                {
+                    string line = reader.ReadLine();
+                    while (line != null)
+                    {
+                        if (line.Contains( "classpath 'com.android.tools.build:gradle:" ))
+                        {
+                            needUpdate = true;
+                            break;
+                        }
+                        line = reader.ReadLine();
+                    }
+                }
+                if (needUpdate)
+                {
+                    File.Delete( Utils.mainGradlePath );
+                    TryEnableGradleTemplate( Utils.mainGradlePath );
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+        }
+
         internal static bool TryEnableGradleTemplate( string assetPath )
         {
             var fileName = Path.GetFileName( assetPath );
-            var gradleFileFromUnity =
+            var internalTemplate =
                 Path.Combine( Path.Combine( GetAndroidToolsPath(), "GradleTemplates" ), fileName );
-            if (!File.Exists( gradleFileFromUnity ))
+
+            if (!File.Exists( internalTemplate ))
             {
-                Debug.LogError( Utils.logTag + "Template file not found: " + gradleFileFromUnity );
+                Debug.LogError( Utils.logTag + "Template file not found: " + internalTemplate );
                 return false;
             }
             try
             {
-                File.Copy( gradleFileFromUnity, Path.GetFullPath( assetPath ), true );
+                string directoryName = Path.GetDirectoryName( assetPath );
+                if (!Directory.Exists( directoryName ))
+                    Directory.CreateDirectory( directoryName );
+                
+                File.Copy( internalTemplate, Path.GetFullPath( assetPath ), true );
                 AssetDatabase.ImportAsset( assetPath );
                 Debug.Log( Utils.logTag + "Gradle template activated: " + assetPath );
                 return true;
@@ -759,6 +803,13 @@ namespace CAS.UEditor
         {
             // Alternate of internal unity method
             // BuildPipeline.GetBuildToolsDirectory( ( BuildTarget )13 );
+            try
+            {
+                return (string)typeof( BuildPipeline )
+                    .GetMethod( "GetBuildToolsDirectory", BindingFlags.Static | BindingFlags.NonPublic )
+                    .Invoke( null, new object[] { BuildTarget.Android } );
+            }
+            catch { }
 
             // App path ends `version/Unity.app` or `version/Editor/Unity.exe`
             var appPath = EditorApplication.applicationPath;

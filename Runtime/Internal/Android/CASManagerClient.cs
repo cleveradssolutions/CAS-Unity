@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 namespace CAS.Android
 {
-    internal class CASMediationManager : CASViewFactory, IMediationManager
+    internal class CASManagerClient : CASViewFactory, IMediationManager
     {
         private AdEventsProxy _interstitialProxy;
         private AdEventsProxy _rewardedProxy;
@@ -19,7 +19,7 @@ namespace CAS.Android
         private AndroidJavaObject _managerBridge;
         private LastPageAdContent _lastPageAdContent = null;
 
-        public InitializationListenerProxy initializationListener;
+        private InitializationListenerProxy _initListener;
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get; private set; }
@@ -28,6 +28,16 @@ namespace CAS.Android
         public event CASTypedEvent OnLoadedAd;
         public event CASTypedEventWithError OnFailedToLoadAd;
 
+        public event Action OnInterstitialAdLoaded
+        {
+            add { _interstitialProxy.OnAdLoaded += value; }
+            remove { _interstitialProxy.OnAdLoaded -= value; }
+        }
+        public event CASEventWithAdError OnInterstitialAdFailedToLoad
+        {
+            add { _interstitialProxy.OnAdFailed += value; }
+            remove { _interstitialProxy.OnAdFailed -= value; }
+        }
         public event Action OnInterstitialAdShown
         {
             add { _interstitialProxy.OnAdShown += value; }
@@ -54,6 +64,17 @@ namespace CAS.Android
             remove { _interstitialProxy.OnAdClosed -= value; }
         }
 
+
+        public event Action OnRewardedAdLoaded
+        {
+            add { _rewardedProxy.OnAdLoaded += value; }
+            remove { _rewardedProxy.OnAdLoaded -= value; }
+        }
+        public event CASEventWithAdError OnRewardedAdFailedToLoad
+        {
+            add { _rewardedProxy.OnAdFailed += value; }
+            remove { _rewardedProxy.OnAdFailed -= value; }
+        }
         public event Action OnRewardedAdShown
         {
             add { _rewardedProxy.OnAdShown += value; }
@@ -112,7 +133,7 @@ namespace CAS.Android
         }
         #endregion
 
-        public CASMediationManager( CASInitSettings initData )
+        public CASManagerClient( CASInitSettings initData )
         {
             managerID = initData.targetId;
             isTestAdMode = initData.IsTestAdMode();
@@ -145,35 +166,33 @@ namespace CAS.Android
             AndroidJavaObject activity = CASJavaProxy.GetUnityActivity();
             _managerBridge = new AndroidJavaObject( CASJavaProxy.NativeBridgeClassName, activity );
 
-            var builder = _managerBridge.Call<AndroidJavaObject>(
+            _managerBridge.Call<AndroidJavaObject>(
                 "createBuilder",
                 managerID,
                 Application.unityVersion,
                 ( int )initData.allowedAdFlags );
 
-            using (builder)
+            if (isTestAdMode)
+                _managerBridge.Call<AndroidJavaObject>( "initInTestAdMode" );
+
+            if (!string.IsNullOrEmpty( initData.userID ))
+                _managerBridge.Call<AndroidJavaObject>( "initWithUserId", initData.userID );
+
+
+            if (initData.extras != null && initData.extras.Count != 0)
             {
-                if (isTestAdMode)
-                    builder.Call<AndroidJavaObject>( "withTestAdMode", true );
-
-                if (!string.IsNullOrEmpty( initData.userID ))
-                    builder.Call<AndroidJavaObject>( "withUserID", initData.userID );
-
-                if (initData.initListener != null)
-                {
-                    initializationListener = new InitializationListenerProxy( this, initData.initListener );
-                    builder.Call<AndroidJavaObject>( "withInitListener", initializationListener );
-                }
-
-                if (initData.extras != null && initData.extras.Count != 0)
-                {
-                    var extrasParams = CASFactory.SerializeParametersString( initData.extras );
-                    _managerBridge.Call( "setMediationExtras", extrasParams );
-                }
-
-                _managerBridge.Call( "initialize", _interstitialProxy, _rewardedProxy );
+                var extrasParams = CASFactory.SerializeParametersString( initData.extras );
+                _managerBridge.Call( "initWithExtras", extrasParams );
             }
 
+            _initListener = new InitializationListenerProxy( this, initData.initListener );
+            _managerBridge.Call( "buildManager", _initListener, _interstitialProxy, _rewardedProxy );
+        }
+
+        public void OnInitializationCallback( bool testMode )
+        {
+            _initListener = null;
+            isTestAdMode = testMode;
         }
 
         public LastPageAdContent lastPageAdContent
@@ -275,7 +294,7 @@ namespace CAS.Android
         {
             var callback = new AdEventsProxy( AdType.Banner );
             var bridge = _managerBridge.Call<AndroidJavaObject>( "createAdView", callback, ( int )size );
-            return new CASView( this, size, bridge, callback );
+            return new CASViewClient( this, size, bridge, callback );
         }
 
 

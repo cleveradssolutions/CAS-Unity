@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
@@ -10,14 +10,13 @@ using UnityEngine;
 
 namespace CAS.Android
 {
-    internal class CASView : IAdView
+    internal class CASViewClient : IAdView
     {
-        private readonly CASMediationManager _manager;
+        private readonly CASManagerClient _manager;
         private readonly AndroidJavaObject _bridge;
 #pragma warning disable CS0414
         private AdEventsProxy _callbackProxy;
 #pragma warning restore CS0414
-        private int _refreshInterval = -1;
         private AdPosition _position = AdPosition.BottomCenter;
         private int _positionX = 0;
         private int _positionY = 0;
@@ -31,44 +30,26 @@ namespace CAS.Android
 
         public IMediationManager manager { get { return _manager; } }
         public AdSize size { get; private set; }
+        public Rect rectInPixels { get; private set; }
 
         public AdPosition position
         {
             get { return _position; }
-            set {  SetPosition( value, 0, 0 ); }
-        }
-
-        public Rect rectInPixels
-        {
-            get
-            {
-                var nativeRect = _bridge.Call<int[]>( "getRectInPixels" );
-                return new Rect( nativeRect[0], nativeRect[1], nativeRect[2], nativeRect[3] );
-            }
+            set { SetPosition( value, 0, 0 ); }
         }
 
         public bool isReady
         {
-            get
-            {
-                return _bridge.Call<bool>( "isReady" );
-            }
+            get { return _bridge.Call<bool>( "isReady" ); }
         }
 
         public int refreshInterval
         {
-            get { return _refreshInterval; }
-            set
-            {
-                if (_refreshInterval != value)
-                {
-                    _refreshInterval = value;
-                    _bridge.Call( "setRefreshInterval", value );
-                }
-            }
+            get { return _bridge.Call<int>( "getRefreshInterval" ); }
+            set { _bridge.Call( "setRefreshInterval", value ); }
         }
 
-        internal CASView( CASMediationManager manager, AdSize size, AndroidJavaObject bridge, AdEventsProxy callback )
+        internal CASViewClient( CASManagerClient manager, AdSize size, AndroidJavaObject bridge, AdEventsProxy callback )
         {
             _manager = manager;
             this.size = size;
@@ -79,11 +60,12 @@ namespace CAS.Android
             callback.OnAdFailed += CallbackOnFailed;
             callback.OnAdOpening += CallbackOnOpen;
             callback.OnAdClicked += CallbackOnClick;
+            callback.OnAdRect += CallbackOnRect;
         }
 
         public void Dispose()
         {
-            _manager.CallbackOnDestroy( this );
+            _manager.RemoveAdViewFromFactory( this );
             _bridge.Call( "destroy" );
         }
 
@@ -104,6 +86,7 @@ namespace CAS.Android
                 _bridge.Call( "show" );
                 return;
             }
+            rectInPixels = Rect.zero;
             _bridge.Call( "hide" );
             if (_waitOfHideCallback)
             {
@@ -162,6 +145,11 @@ namespace CAS.Android
                 if (OnHidden != null)
                     OnHidden( this );
             }
+        }
+
+        private void CallbackOnRect( Rect rect )
+        {
+            rectInPixels = rect;
         }
         #endregion
     }

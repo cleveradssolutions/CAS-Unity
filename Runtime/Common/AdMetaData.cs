@@ -1,22 +1,15 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
-using UnityEngine;
 
 namespace CAS
 {
-    /// <summary>
-    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Impression-Level-Data
-    /// </summary>
-    public sealed class AdMetaData
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Impression-Level-Data" )]
+    public abstract class AdMetaData
     {
         /// <summary>
         /// The Format Type of the impression.
@@ -26,51 +19,33 @@ namespace CAS
         /// <summary>
         /// The mediated network’s name that purchased the impression.
         /// </summary>
-        public AdNetwork network
-        {
-            get { return ( AdNetwork )GetInt( "network", -1 ); }
-        }
+        public abstract AdNetwork network { get; }
 
         /// <summary>
         /// The Cost Per Mille estimated impressions of the ad in USD.
         /// <para>The value accuracy is returned in the <see cref="priceAccuracy"/> property.</para>
         /// </summary>
-        public double cpm
-        {
-            get { return GetDouble( "cpm", 0.0 ); }
-        }
+        public abstract double cpm { get; }
 
         /// <summary>
         /// Accuracy of the CPM value.
         /// </summary>
-        public PriceAccuracy priceAccuracy
-        {
-            get { return ( PriceAccuracy )GetInt( "accuracy", ( int )PriceAccuracy.Undisclosed ); }
-        }
+        public abstract PriceAccuracy priceAccuracy { get; }
 
         /// <summary>
         /// The creative id tied to the ad, if any. May be null.
         /// You can report creative issues to our Ad review team using this id.
         /// </summary>
-        public string creativeIdentifier
-        {
-            get { return GetValue( "creative", null ); }
-        }
+        public abstract string creativeIdentifier { get; }
 
         /// <summary>
         /// Internal demand source name in CAS database.
         /// </summary>
-        public string identifier
-        {
-            get { return GetValue( "id", string.Empty ); }
-        }
+        public abstract string identifier { get; }
 
-        private readonly IDictionary<string, string> field = null;
-
-        public AdMetaData( AdType type, IDictionary<string, string> field )
+        public AdMetaData( AdType type )
         {
             this.type = type;
-            this.field = field;
         }
 
         public override string ToString()
@@ -102,44 +77,6 @@ namespace CAS
                     .Append( creative );
 
             return result.ToString();
-        }
-
-        public string GetValue( string key, string defVal )
-        {
-            string str;
-            return field.TryGetValue( key, out str ) ? str : defVal;
-        }
-
-        public int GetInt( string key, int defVal )
-        {
-            try
-            {
-                string str;
-                if (field.TryGetValue( key, out str ))
-                    return int.Parse( str, NumberStyles.Integer, CultureInfo.CurrentCulture );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-            return defVal;
-        }
-
-        public double GetDouble( string key, double defVal )
-        {
-            try
-            {
-                string str;
-                if (field.TryGetValue( key, out str ))
-                    return double.Parse( str.Replace(',', '.'),
-                        NumberStyles.Integer | NumberStyles.AllowDecimalPoint,
-                        NumberFormatInfo.InvariantInfo );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-            return defVal;
         }
     }
 }

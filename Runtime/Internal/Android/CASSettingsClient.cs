@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
@@ -11,14 +11,9 @@ using UnityEngine;
 
 namespace CAS.Android
 {
-    internal class CASSettings : IAdsSettings, ITargetingOptions
+    internal class CASSettingsClient : IAdsSettings, ITargetingOptions
     {
         private bool _analyticsCollectionEnabled = false;
-        private int _bannerRefreshInterval = 30;
-        private int _interstitialInterval = 0;
-        private ConsentStatus _userConsent = ConsentStatus.Undefined;
-        private CCPAStatus _userCCPAStatus = CCPAStatus.Undefined;
-        private Audience _taggedAudience = Audience.Mixed;
         private bool _isDebugMode = false;
         private bool _isMutedAdSounds = false;
         private LoadingManagerMode _loadingMode = LoadingManagerMode.Optimal;
@@ -30,7 +25,7 @@ namespace CAS.Android
 
         private AndroidJavaClass settingsBridge;
 
-        public CASSettings()
+        public CASSettingsClient()
         {
             settingsBridge = new AndroidJavaClass( CASJavaProxy.NativeSettingsClassName );
         }
@@ -52,7 +47,7 @@ namespace CAS.Android
 
         public bool IsActiveMediationNetwork( AdNetwork net )
         {
-            return settingsBridge.CallStatic<bool>( "isActiveMediationNetwork", (int)net );
+            return settingsBridge.CallStatic<bool>( "isActiveMediationNetwork", ( int )net );
         }
 
         public bool analyticsCollectionEnabled
@@ -70,67 +65,32 @@ namespace CAS.Android
 
         public int bannerRefreshInterval
         {
-            get { return _bannerRefreshInterval; }
-            set
-            {
-                if (_bannerRefreshInterval != value)
-                {
-                    _bannerRefreshInterval = value;
-                    settingsBridge.CallStatic( "setRefreshBannerDelay", value );
-                }
-            }
+            get { return settingsBridge.CallStatic<int>( "getBannerRefreshDelay" ); }
+            set { settingsBridge.CallStatic( "setRefreshBannerDelay", value ); }
         }
 
         public int interstitialInterval
         {
-            get { return _interstitialInterval; }
-            set
-            {
-                if (_interstitialInterval != value)
-                {
-                    _interstitialInterval = value;
-                    settingsBridge.CallStatic( "setInterstitialInterval", value );
-                }
-            }
+            get { return settingsBridge.CallStatic<int>( "getInterstitialInterval" ); }
+            set { settingsBridge.CallStatic( "setInterstitialInterval", value ); }
         }
 
         public ConsentStatus userConsent
         {
-            get { return _userConsent; }
-            set
-            {
-                if (_userConsent != value)
-                {
-                    _userConsent = value;
-                    settingsBridge.CallStatic( "setUserConsentStatus", ( int )value );
-                }
-            }
+            get { return ( ConsentStatus )settingsBridge.CallStatic<int>( "getUserConsent" ); }
+            set { settingsBridge.CallStatic( "setUserConsent", ( int )value ); }
         }
 
         public CCPAStatus userCCPAStatus
         {
-            get { return _userCCPAStatus; }
-            set
-            {
-                if (_userCCPAStatus != value)
-                {
-                    _userCCPAStatus = value;
-                    settingsBridge.CallStatic( "setDoNotSellStatus", ( int )value );
-                }
-            }
+            get { return ( CCPAStatus )settingsBridge.CallStatic<int>( "getCcpaStatus" ); }
+            set { settingsBridge.CallStatic( "setCcpaStatus", ( int )value ); }
         }
 
         public Audience taggedAudience
         {
-            get { return _taggedAudience; }
-            set
-            {
-                if (_taggedAudience != value)
-                {
-                    _taggedAudience = value;
-                    settingsBridge.CallStatic( "setTaggedAudience", ( int )value );
-                }
-            }
+            get { return ( Audience )settingsBridge.CallStatic<int>( "getTaggedAudience" ); }
+            set { settingsBridge.CallStatic( "setTaggedAudience", ( int )value ); }
         }
 
         public bool isDebugMode

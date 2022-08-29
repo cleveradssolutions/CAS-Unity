@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_IOS || ( CASDeveloper && UNITY_EDITOR )
@@ -16,6 +16,7 @@ namespace CAS
     /// <summary>
     /// A class that provides a tracking authorization request and the tracking authorization status of the app.
     /// </summary>
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Tracking-Transparency" )]
     public static class ATTrackingStatus
     {
         /// <summary>

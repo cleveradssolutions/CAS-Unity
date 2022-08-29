@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -915,7 +915,9 @@ namespace CAS.UEditor
                 case AdFlags.Interstitial: iconIndex = 1; break;
                 case AdFlags.Rewarded: iconIndex = 2; break;
                 case AdFlags.Native: iconIndex = 3; break;
+#pragma warning disable CS0618 // Type or member is obsolete
                 case AdFlags.MediumRectangle: iconIndex = 4; break;
+#pragma warning restore CS0618 // Type or member is obsolete
                 default: return null;
             }
             return formatIcons[active ? iconIndex : iconIndex + 5];

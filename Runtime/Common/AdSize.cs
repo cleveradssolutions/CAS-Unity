@@ -1,14 +1,12 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 namespace CAS
 {
-    /// <summary>
-    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ads#ad-size
-    /// </summary>
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ads#ad-size" )]
     public enum AdSize
     {
         // 0 Index reserved for internal logic

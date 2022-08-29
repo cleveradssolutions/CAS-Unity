@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_IOS || (CASDeveloper && UNITY_EDITOR)
@@ -11,13 +11,12 @@ using UnityEngine;
 
 namespace CAS.iOS
 {
-    internal class CASView : IAdView
+    internal class CASViewClient : IAdView
     {
-        private readonly CASMediationManager _manager;
-        public IntPtr _viewRef;
+        private readonly CASManagerClient _manager;
+        private IntPtr _viewRef;
         private IntPtr _viewClient;
 
-        private int _refreshInterval = -1;
         private AdPosition _position = AdPosition.BottomCenter;
         private int _positionX = 0;
         private int _positionY = 0;
@@ -30,21 +29,8 @@ namespace CAS.iOS
         public event CASViewEvent OnHidden;
 
         public AdSize size { get; private set; }
+        public Rect rectInPixels { get; private set; }
         public IMediationManager manager { get { return _manager; } }
-
-
-        public Rect rectInPixels
-        {
-            get
-            {
-                return new Rect(
-                    CASExterns.CASUGetAdViewXOffsetInPixels( _viewRef ),
-                    CASExterns.CASUGetAdViewYOffsetInPixels( _viewRef ),
-                    CASExterns.CASUGetAdViewWidthInPixels( _viewRef ),
-                    CASExterns.CASUGetAdViewHeightInPixels( _viewRef )
-                    );
-            }
-        }
 
         public bool isReady
         {
@@ -53,15 +39,8 @@ namespace CAS.iOS
 
         public int refreshInterval
         {
-            get { return _refreshInterval; }
-            set
-            {
-                if (_refreshInterval != value)
-                {
-                    _refreshInterval = value;
-                    CASExterns.CASUSetAdViewRefreshInterval( _viewRef, value );
-                }
-            }
+            get { return CASExterns.CASUGetAdViewRefreshInterval( _viewRef ); }
+            set { CASExterns.CASUSetAdViewRefreshInterval( _viewRef, value ); }
         }
 
         public AdPosition position
@@ -70,7 +49,7 @@ namespace CAS.iOS
             set { SetPosition( value, 0, 0 ); }
         }
 
-        internal CASView( CASMediationManager manager, AdSize size )
+        internal CASViewClient( CASManagerClient manager, AdSize size )
         {
             _manager = manager;
             this.size = size;
@@ -84,10 +63,11 @@ namespace CAS.iOS
                 AdViewLoadedCallback,
                 AdViewFailedCallback,
                 AdViewPresentedCallback,
-                AdViewClickedCallback );
+                AdViewClickedCallback,
+                AdViewRectCallback );
         }
 
-        ~CASView()
+        ~CASViewClient()
         {
             Dispose();
         }
@@ -98,7 +78,8 @@ namespace CAS.iOS
             {
                 if (_viewRef != IntPtr.Zero)
                 {
-                    _manager.CallbackOnDestroy( this );
+                    _manager.RemoveAdViewFromFactory( this );
+                    CASExterns.CASUDestroyAdView( _viewRef, _manager.managerID + "_" + ( int )size );
                     _viewRef = IntPtr.Zero;
                     ( ( GCHandle )_viewClient ).Free();
                 }
@@ -127,6 +108,7 @@ namespace CAS.iOS
                 return;
             }
 
+            rectInPixels = Rect.zero;
             CASExterns.CASUHideAdView( _viewRef );
             if (_waitOfHideCallback)
             {
@@ -154,13 +136,13 @@ namespace CAS.iOS
             }
         }
 
-        private static CASView IntPtrToAdViewClient( IntPtr managerClient )
+        private static CASViewClient IntPtrToAdViewClient( IntPtr managerClient )
         {
             GCHandle handle = ( GCHandle )managerClient;
-            return handle.Target as CASView;
+            return handle.Target as CASViewClient;
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidLoadedAdCallback ) )]
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUViewDidLoadCallback ) )]
         private static void AdViewLoadedCallback( IntPtr view )
         {
             try
@@ -175,7 +157,7 @@ namespace CAS.iOS
             }
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidFailedAdCallback ) )]
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUViewDidFailedCallback ) )]
         private static void AdViewFailedCallback( IntPtr view, int error )
         {
             try
@@ -200,8 +182,8 @@ namespace CAS.iOS
             }
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithMetaCallback ) )]
-        private static void AdViewPresentedCallback( IntPtr view, string parameters )
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUViewWillPresentCallback ) )]
+        private static void AdViewPresentedCallback( IntPtr view, IntPtr impression )
         {
             try
             {
@@ -210,8 +192,7 @@ namespace CAS.iOS
                 {
                     instance._waitOfHideCallback = true;
                     if (instance.OnPresented != null)
-                        instance.OnPresented( instance,
-                            new AdMetaData( AdType.Banner, CASFactory.ParseParametersString( parameters ) ) );
+                        instance.OnPresented( instance, new CASImpressionClient( AdType.Banner, impression ) );
                 }
             }
             catch (Exception e)
@@ -220,7 +201,7 @@ namespace CAS.iOS
             }
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUDidClickedAdCallback ) )]
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUViewDidClickedCallback ) )]
         private static void AdViewClickedCallback( IntPtr view )
         {
             try
@@ -228,6 +209,21 @@ namespace CAS.iOS
                 var instance = IntPtrToAdViewClient( view );
                 if (instance != null && instance.OnClicked != null)
                     instance.OnClicked( instance );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+        }
+
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUViewDidRectCallback ) )]
+        private static void AdViewRectCallback( IntPtr view, float x, float y, float width, float heigt )
+        {
+            try
+            {
+                var instance = IntPtrToAdViewClient( view );
+                if (instance != null)
+                    instance.rectInPixels = new Rect( x, y, width, heigt );
             }
             catch (Exception e)
             {

@@ -1,21 +1,15 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace CAS
 {
-    [Serializable]
-    public class CASUEventWithError : UnityEvent<string> { }
-
-    public delegate void InitCompleteAction( bool success, string error );
-
     public static class MobileAds
     {
         /// <summary>
