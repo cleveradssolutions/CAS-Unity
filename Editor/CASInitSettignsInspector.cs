@@ -58,7 +58,6 @@ namespace CAS.UEditor
         private string newCASVersion = null;
         private bool deprecateDependenciesExist;
         private Version edmVersion;
-        private PropertyInfo edmIOSStaticLinkProp = null;
         private bool edmRequiredNewer = false;
         private string environmentDetails;
 
@@ -169,10 +168,6 @@ namespace CAS.UEditor
                 if (deprecateDependenciesExist |= AssetDatabase.FindAssets( deprecatedAssets[i] ).Length > 0)
                     break;
             }
-
-            // Remove deprecated CAS settings raw data
-            if (File.Exists( Utils.androidResSettingsPath + ".json" ))
-                AssetDatabase.MoveAssetToTrash( Utils.androidResSettingsPath + ".json" );
         }
 
         private void InitEDM4U()
@@ -180,16 +175,6 @@ namespace CAS.UEditor
             edmVersion = Utils.GetEDM4UVersion( platform );
             if (edmVersion != null)
                 edmRequiredNewer = edmVersion < Utils.minEDM4UVersion;
-            try
-            {
-                if (platform == BuildTarget.iOS)
-                    edmIOSStaticLinkProp = Type.GetType( "Google.IOSResolver, Google.IOSResolver", true )
-                        .GetProperty( "PodfileStaticLinkFrameworks", BindingFlags.Public | BindingFlags.Static );
-            }
-            catch
-            {
-                edmIOSStaticLinkProp = null;
-            }
         }
 
         private void InitEnvironmentDetails()
@@ -706,15 +691,6 @@ namespace CAS.UEditor
             }
             if (platform == BuildTarget.iOS)
             {
-                if (edmIOSStaticLinkProp != null && !(bool)edmIOSStaticLinkProp.GetValue( null, null ))
-                {
-                    OnWarningGUI( "Link frameworks statically disabled",
-                        "Please enable 'Add use_frameworks!' and 'Link frameworks statically' found under " +
-                        "'Assets -> External Dependency Manager -> iOS Resolver -> Settings' menu.\n" +
-                        "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.",
-                        MessageType.Warning );
-                }
-
                 if (PlayerSettings.muteOtherAudioSources)
                 {
                     OnWarningGUI( "Mute Other AudioSources enabled in PlayerSettings",
