@@ -8,7 +8,6 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEditor.PackageManager;
 
 namespace CAS.Android
 {
@@ -179,7 +178,7 @@ namespace CAS.Android
                 builder.Call( "setCallbacks", _initListener, _interstitialProxy, _rewardedProxy );
 
                 _managerBridge = builder.Call<AndroidJavaObject>( "build",
-                    initData.targetId, Application.unityVersion, ( int )initData.allowedAdFlags );
+                    initData.targetId, Application.unityVersion, (int)initData.allowedAdFlags );
             }
             return this;
         }
@@ -224,7 +223,7 @@ namespace CAS.Android
 
         public bool IsEnabledAd( AdType adType )
         {
-            return _managerBridge.Call<bool>( "isEnabled", ( int )adType );
+            return _managerBridge.Call<bool>( "isEnabled", (int)adType );
         }
 
         public bool IsReadyAd( AdType adType )
@@ -232,7 +231,7 @@ namespace CAS.Android
             switch (adType)
             {
                 case AdType.Banner:
-                    return IsGlobalViewReady();
+                    return globalView != null && globalView.isReady;
                 case AdType.Interstitial:
                     return _managerBridge.Call<bool>( "isInterstitialAdReady" );
                 case AdType.Rewarded:
@@ -247,7 +246,7 @@ namespace CAS.Android
             switch (adType)
             {
                 case AdType.Banner:
-                    GetOrCreateGlobalView().Load();
+                    LoadGlobalBanner();
                     break;
                 case AdType.Interstitial:
                     _managerBridge.Call( "loadInterstitial" );
@@ -260,7 +259,7 @@ namespace CAS.Android
 
         public void SetEnableAd( AdType adType, bool enabled )
         {
-            _managerBridge.Call( "enableAd", ( int )adType, enabled );
+            _managerBridge.Call( "enableAd", (int)adType, enabled );
         }
 
         public void ShowAd( AdType adType )
@@ -268,7 +267,7 @@ namespace CAS.Android
             switch (adType)
             {
                 case AdType.Banner:
-                    ShowBanner();
+                    ShowGlobalBanner();
                     break;
                 case AdType.Interstitial:
                     _managerBridge.Call( "showInterstitial" );
@@ -301,7 +300,7 @@ namespace CAS.Android
         protected override IAdView CreateAdView( AdSize size )
         {
             var callback = new AdEventsProxy( AdType.Banner );
-            var bridge = _managerBridge.Call<AndroidJavaObject>( "createAdView", callback, ( int )size );
+            var bridge = _managerBridge.Call<AndroidJavaObject>( "createAdView", callback, (int)size );
             return new CASViewClient( this, size, bridge, callback );
         }
 

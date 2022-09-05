@@ -3,6 +3,12 @@
 //
 //  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
+#if UNITY_ANDROID || ( CASDeveloper && UNITY_EDITOR )
+#define PlatformAndroid
+#endif
+#if UNITY_IOS || ( CASDeveloper && UNITY_EDITOR )
+#define PlatformIOS
+#endif
 
 using System;
 using System.Collections.Generic;
@@ -59,11 +65,11 @@ namespace CAS
         internal static IAdsSettings CreateSettigns( CASInitSettings initSettings )
         {
             IAdsSettings settings = null;
-#if UNITY_ANDROID || CASDeveloper
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
                 settings = new CAS.Android.CASSettingsClient();
 #endif
-#if UNITY_IOS || CASDeveloper
+#if PlatformIOS
 #if !TARGET_OS_SIMULATOR
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 settings = new CAS.iOS.CASSettingsClient();
@@ -94,19 +100,19 @@ namespace CAS
 
         internal static ITargetingOptions GetTargetingOptions()
         {
-            return ( ITargetingOptions )GetAdsSettings();
+            return (ITargetingOptions)GetAdsSettings();
         }
 
         internal static string GetSDKVersion()
         {
-#if UNITY_ANDROID || CASDeveloper
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
             {
                 var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.GetSDKVersion();
             }
 #endif
-#if UNITY_IOS || CASDeveloper
+#if PlatformIOS
 #if !TARGET_OS_SIMULATOR
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 return CAS.iOS.CASExterns.CASUGetSDKVersion();
@@ -163,11 +169,11 @@ namespace CAS
 #if UNITY_EDITOR || TARGET_OS_SIMULATOR
             manager = CAS.Unity.CASManagerClient.CreateManager( initSettings );
 #endif
-#if UNITY_ANDROID || CASDeveloper
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
                 manager = new CAS.Android.CASManagerClient().Init( initSettings );
 #endif
-#if UNITY_IOS || CASDeveloper
+#if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 manager = new CAS.iOS.CASManagerClient().Init( initSettings );
 #endif
@@ -248,14 +254,14 @@ namespace CAS
             if (Application.isEditor)
                 return;
 #endif
-#if UNITY_ANDROID || CASDeveloper
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
             {
                 var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 androidSettings.ValidateIntegration();
             }
 #endif
-#if UNITY_IOS || CASDeveloper
+#if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
                 CAS.iOS.CASExterns.CASUValidateIntegration();
@@ -269,7 +275,7 @@ namespace CAS
 #if UNITY_EDITOR
             try
             {
-                return ( string )Type.GetType( "CAS.UEditor.DependencyManager, CleverAdsSolutions-Editor", true )
+                return (string)Type.GetType( "CAS.UEditor.DependencyManager, CleverAdsSolutions-Editor", true )
                     .GetMethod( "GetActiveMediationPattern",
                         System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public, null, new Type[0], null )
                     .Invoke( null, null );
@@ -279,14 +285,14 @@ namespace CAS
                 Debug.LogException( e );
             }
 #endif
-#if UNITY_ANDROID || CASDeveloper
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
             {
                 var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.GetActiveMediationPattern();
             }
 #endif
-#if UNITY_IOS || CASDeveloper
+#if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 return CAS.iOS.CASExterns.CASUGetActiveMediationPattern();
 #endif
@@ -300,26 +306,26 @@ namespace CAS
             for (int i = 0; i < pattern.Length; i++)
             {
                 if (pattern[i] != '0')
-                    result.Add( ( AdNetwork )i );
+                    result.Add( (AdNetwork)i );
             }
             return result.ToArray();
         }
 
         internal static bool IsActiveNetwork( AdNetwork network )
         {
-#if UNITY_EDITOR || CASDeveloper
+#if UNITY_EDITOR
             var pattern = GetActiveMediationPattern();
-            if (( int )network < pattern.Length)
-                return pattern[( int )network] != '0';
+            if ((int)network < pattern.Length)
+                return pattern[(int)network] != '0';
 #endif
-#if UNITY_ANDROID || CASDeveloper
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
             {
                 var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.IsActiveMediationNetwork( network );
             }
 #endif
-#if UNITY_IOS || CASDeveloper
+#if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 return CAS.iOS.CASExterns.CASUIsActiveMediationNetwork( ( int )network );
 #endif
@@ -349,7 +355,7 @@ namespace CAS
         internal static void UnityLog( string message )
         {
             if (GetAdsSettings().isDebugMode)
-                Debug.Log( "[CleverAdsSolutions] " + message );
+                Debug.Log( "[CAS:] " + message );
         }
 
         internal static void UnityLogException( Exception e )

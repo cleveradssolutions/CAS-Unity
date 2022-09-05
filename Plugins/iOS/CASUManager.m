@@ -2,7 +2,7 @@
 //  CASUManager.m
 //  CASUnityPlugin
 //
-//  Copyright © 2020 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2022 Clever Ads Solutions. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -11,8 +11,9 @@
 
 @implementation CASUManager
 
-- (id)initWithManager:(CASMediationManager *)manager forClient:(CASUTypeManagerClientRef  _Nullable *)client{
+- (instancetype)initWithManager:(CASMediationManager *)manager forClient:(CASManagerClientRef _Nullable *)client {
     self = [super init];
+
     if (self) {
         self.casManager = manager;
         _client = client;
@@ -23,8 +24,8 @@
         _appReturnDelegate = [[CASUCallback alloc] initWithComplete:false];
         _appReturnDelegate.client = client;
     }
+
     return self;
-    
 }
 
 - (void)presentInter {
@@ -42,34 +43,20 @@
 }
 
 - (void)onAdLoaded:(enum CASType)adType {
+    // Callback called from any thread, so swith to UI thread for Unity.
     if (adType == CASTypeInterstitial) {
-        if (self.interCallback) {
-            if (self.interCallback.didLoadedCallback) {
-                self.interCallback.didLoadedCallback(self.client);
-            }
-        }
+        [self.interCallback callInUITheradLoadedCallback];
     } else if (adType == CASTypeRewarded) {
-        if (self.rewardCallback) {
-            if (self.rewardCallback.didLoadedCallback) {
-                self.rewardCallback.didLoadedCallback(self.client);
-            }
-        }
+        [self.rewardCallback callInUITheradLoadedCallback];
     }
 }
 
 - (void)onAdFailedToLoad:(enum CASType) adType withError:(NSString *)error {
+    // Callback called from any thread, so swith to UI thread for Unity.
     if (adType == CASTypeInterstitial) {
-        if (self.interCallback) {
-            if (self.interCallback.didFailedCallback) {
-                self.interCallback.didFailedCallback(self.client, [self getErrorCodeFromString:error]);
-            }
-        }
+        [self.interCallback callInUITheradFailedToLoadCallbackWithError:error];
     } else if (adType == CASTypeRewarded) {
-        if (self.rewardCallback) {
-            if (self.rewardCallback.didFailedCallback) {
-                self.rewardCallback.didFailedCallback(self.client, [self getErrorCodeFromString:error]);
-            }
-        }
+        [self.rewardCallback callInUITheradFailedToLoadCallbackWithError:error];
     }
 }
 
@@ -83,24 +70,6 @@
 
 - (void)skipNextAppReturnAd {
     [_casManager skipNextAppReturnAds];
-}
-
-- (NSInteger)getErrorCodeFromString:(NSString *)error {
-    if (!error) {
-        return CASErrorInternalError;
-    }
-
-    return [error isEqualToString:@"No internet connection detected"] ? CASErrorNoConnection
-        : [error isEqualToString:@"No Fill"] ? CASErrorNoFill
-        : [error isEqualToString:@"Invalid configuration"] ? CASErrorConfigurationError
-        : [error isEqualToString:@"Ad are not ready. You need to call Load ads or use one of the automatic cache mode."] ? CASErrorNotReady
-        : [error isEqualToString:@"Manager is disabled"] ? CASErrorManagerIsDisabled
-        : [error isEqualToString:@"Reached cap for user"] ? CASErrorReachedCap
-        : [error isEqualToString:@"The interval between impressions Ad has not yet passed."] ? CASErrorIntervalNotYetPassed
-        : [error isEqualToString:@"Ad already displayed"] ? CASErrorAlreadyDisplayed
-        : [error isEqualToString:@"Application is paused"] ? CASErrorAppIsPaused
-        : [error isEqualToString:@"Not enough space to display ads"] ? CASErrorNotEnoughSpace
-        : CASErrorInternalError;
 }
 
 @end

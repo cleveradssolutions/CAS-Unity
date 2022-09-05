@@ -1,5 +1,23 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.9.0] - 2022-08-29
+### Dependencies
+- [Android] Wraps [2.9.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.9.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- Improved stability of the `AdMetaData` class to get information about ad impressions.
+- The option to use the Medium Rectangle size has been removed from the settings window. Just select the Banner format to use the Medium Rectangle size.
+- The `IAdView.rectInPixels` return `Rect.zero` when ad view is not active.
+- Caching the value of `IAdView.rectInPixels` on C# side to reduse number of calls to the native side.
+- [Android] Added update of the `mainTemplate.gradle` version if the file was created by Unity 2019.2 or older.
+- [iOS] For iOS 12.2.0 or earlier builds, added `/usr/lib/swift` to `Build Settings > Runpath Search Paths` to prevent any issues with `libswiftCore.dylib`.
+### Changes
+- `MobileAds.settings.isExecuteEventsOnUnityThread` is now enabled by default.
+- `IMediationManager.OnLoadedAd` event has been deprecated in favor of the new separate `IMediationManager.OnInterstitialAdLoaded` and `IMediationManager.OnRewardedAdLoaded` events. 
+- `IMediationManager.OnFailedToLoadAd` event has been deprecated in favor of the new separate `IMediationManager.OnInterstitialAdFailedToLoad` and `IMediationManager.OnRewardedAdFailedToLoad` events with `AdError` enum.
+  > Use `AdError.GetMessage()` to get the error text. 
+- Mediation will not be used for devices that are defined in `MobileAds.settings.SetTestDeviceIds()`.
+
 ## [2.8.5] - 2022-08-08
 ### Dependencies
 - [Android] Wraps [2.8.5 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

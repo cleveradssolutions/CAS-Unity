@@ -50,8 +50,8 @@ namespace CAS.AdObject
                 return;
 
             this.manager = manager;
-            manager.OnLoadedAd += OnInterstitialAdLoaded;
-            manager.OnFailedToLoadAd += OnInterstitialAdFailedToLoad;
+            manager.OnInterstitialAdLoaded += OnAdLoaded.Invoke;
+            manager.OnInterstitialAdFailedToLoad += OnInterstitialAdFailedToLoad;
             manager.OnInterstitialAdFailedToShow += OnAdFailedToShow.Invoke;
             manager.OnInterstitialAdShown += OnAdShown.Invoke;
             manager.OnInterstitialAdClicked += OnAdClicked.Invoke;
@@ -72,8 +72,8 @@ namespace CAS.AdObject
         {
             if (manager != null)
             {
-                manager.OnLoadedAd -= OnInterstitialAdLoaded;
-                manager.OnFailedToLoadAd -= OnInterstitialAdFailedToLoad;
+                manager.OnInterstitialAdLoaded -= OnAdLoaded.Invoke;
+                manager.OnInterstitialAdFailedToLoad -= OnInterstitialAdFailedToLoad;
                 manager.OnInterstitialAdFailedToShow -= OnAdFailedToShow.Invoke;
                 manager.OnInterstitialAdShown -= OnAdShown.Invoke;
                 manager.OnInterstitialAdClicked -= OnAdClicked.Invoke;
@@ -84,16 +84,9 @@ namespace CAS.AdObject
         #endregion
 
         #region Manager Events wrappers
-        private void OnInterstitialAdFailedToLoad( AdType adType, string error )
+        private void OnInterstitialAdFailedToLoad( AdError error )
         {
-            if (adType == AdType.Interstitial)
-                OnAdFailedToLoad.Invoke( error );
-        }
-
-        private void OnInterstitialAdLoaded( AdType adType )
-        {
-            if (adType == AdType.Interstitial)
-                OnAdLoaded.Invoke();
+            OnAdFailedToLoad.Invoke( error.GetMessage() );
         }
         #endregion
     }

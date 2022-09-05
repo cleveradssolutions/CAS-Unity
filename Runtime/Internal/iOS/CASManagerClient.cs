@@ -57,7 +57,7 @@ namespace CAS.iOS
             {
                 CASExterns.CASUFreeManager( _managerRef );
                 _managerRef = IntPtr.Zero;
-                ( ( GCHandle )_managerClient ).Free();
+                ( (GCHandle)_managerClient ).Free();
             }
             catch (Exception e)
             {
@@ -69,13 +69,13 @@ namespace CAS.iOS
         {
             managerID = initData.targetId;
             isTestAdMode = initData.IsTestAdMode();
-            _managerClient = ( IntPtr )GCHandle.Alloc( this );
+            _managerClient = (IntPtr)GCHandle.Alloc( this );
 
             if (initData.userID == null)
                 initData.userID = string.Empty; // Null string not supported
 
             var builderRef = CASExterns.CASUCreateBuilder(
-                ( int )initData.allowedAdFlags,
+                (int)initData.allowedAdFlags,
                 isTestAdMode,
                 Application.unityVersion,
                 initData.userID
@@ -146,7 +146,7 @@ namespace CAS.iOS
 
         public bool IsEnabledAd( AdType adType )
         {
-            return CASExterns.CASUIsAdEnabledType( _managerRef, ( int )adType );
+            return CASExterns.CASUIsAdEnabledType( _managerRef, (int)adType );
         }
 
         public bool IsReadyAd( AdType adType )
@@ -154,7 +154,7 @@ namespace CAS.iOS
             switch (adType)
             {
                 case AdType.Banner:
-                    return IsGlobalViewReady();
+                    return globalView != null && globalView.isReady;
                 case AdType.Interstitial:
                     return CASExterns.CASUIsInterstitialReady( _managerRef );
                 case AdType.Rewarded:
@@ -169,7 +169,7 @@ namespace CAS.iOS
             switch (adType)
             {
                 case AdType.Banner:
-                    GetOrCreateGlobalView().Load();
+                    LoadGlobalBanner();
                     break;
                 case AdType.Interstitial:
                     CASExterns.CASULoadInterstitial( _managerRef );
@@ -182,7 +182,7 @@ namespace CAS.iOS
 
         public void SetEnableAd( AdType adType, bool enabled )
         {
-            CASExterns.CASUEnableAdType( _managerRef, ( int )adType, enabled );
+            CASExterns.CASUEnableAdType( _managerRef, (int)adType, enabled );
         }
 
         public void ShowAd( AdType adType )
@@ -190,7 +190,7 @@ namespace CAS.iOS
             switch (adType)
             {
                 case AdType.Banner:
-                    ShowBanner();
+                    ShowGlobalBanner();
                     break;
                 case AdType.Interstitial:
                     CASExterns.CASUPresentInterstitial( _managerRef );
@@ -204,8 +204,8 @@ namespace CAS.iOS
         protected override IAdView CreateAdView( AdSize size )
         {
             var view = new CASViewClient( this, size );
-            var viewClient = ( IntPtr )GCHandle.Alloc( view );
-            view.Attach( CASExterns.CASUCreateAdView( _managerRef, viewClient, ( int )size ), viewClient );
+            var viewClient = (IntPtr)GCHandle.Alloc( view );
+            view.Attach( CASExterns.CASUCreateAdView( _managerRef, viewClient, (int)size ), viewClient );
             return view;
         }
 
@@ -244,7 +244,7 @@ namespace CAS.iOS
         #region Callback methods
         private static CASManagerClient IntPtrToManagerClient( IntPtr managerClient )
         {
-            GCHandle handle = ( GCHandle )managerClient;
+            GCHandle handle = (GCHandle)managerClient;
             return handle.Target as CASManagerClient;
         }
 
@@ -296,7 +296,7 @@ namespace CAS.iOS
         {
             try
             {
-                var adError = ( AdError )error;
+                var adError = (AdError)error;
                 CASFactory.UnityLog( "Interstitial Failed with error: " + adError.ToString() );
                 var instance = IntPtrToManagerClient( manager );
                 if (instance == null)
@@ -406,7 +406,7 @@ namespace CAS.iOS
         {
             try
             {
-                var adError = ( AdError )error;
+                var adError = (AdError)error;
                 CASFactory.UnityLog( "Rewarded Failed with error: " + adError.ToString() );
                 var instance = IntPtrToManagerClient( manager );
                 if (instance == null)

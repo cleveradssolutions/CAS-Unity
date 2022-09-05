@@ -54,8 +54,8 @@ namespace CAS.AdObject
                 return;
 
             this.manager = manager;
-            manager.OnLoadedAd += OnRewardedAdLoaded;
-            manager.OnFailedToLoadAd += OnRewardedAdFailedToLoad;
+            manager.OnRewardedAdLoaded += OnAdLoaded.Invoke;
+            manager.OnRewardedAdFailedToLoad += OnRewardedAdFailedToLoad;
             manager.OnRewardedAdFailedToShow += OnAdFailedToShow.Invoke;
             manager.OnRewardedAdShown += OnAdShown.Invoke;
             manager.OnRewardedAdClicked += OnAdClicked.Invoke;
@@ -77,8 +77,8 @@ namespace CAS.AdObject
         {
             if (manager != null)
             {
-                manager.OnLoadedAd -= OnRewardedAdLoaded;
-                manager.OnFailedToLoadAd -= OnRewardedAdFailedToLoad;
+                manager.OnRewardedAdLoaded -= OnAdLoaded.Invoke;
+                manager.OnRewardedAdFailedToLoad -= OnRewardedAdFailedToLoad;
                 manager.OnRewardedAdFailedToShow -= OnAdFailedToShow.Invoke;
                 manager.OnRewardedAdShown -= OnAdShown.Invoke;
                 manager.OnRewardedAdClicked -= OnAdClicked.Invoke;
@@ -90,16 +90,9 @@ namespace CAS.AdObject
         #endregion
 
         #region Manager Events wrappers
-        private void OnRewardedAdFailedToLoad( AdType adType, string error )
+        private void OnRewardedAdFailedToLoad( AdError error )
         {
-            if (adType == AdType.Rewarded)
-                OnAdFailedToLoad.Invoke( error );
-        }
-
-        private void OnRewardedAdLoaded( AdType adType )
-        {
-            if (adType == AdType.Rewarded)
-                OnAdLoaded.Invoke();
+            OnAdFailedToLoad.Invoke( error.GetMessage() );
         }
 
         private void OnRewardedAdClosed()

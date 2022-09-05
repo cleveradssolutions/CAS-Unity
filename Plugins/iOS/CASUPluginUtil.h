@@ -2,16 +2,16 @@
 //  CASUPluginUtil.h
 //  CASUnityPlugin
 //
-//  Copyright © 2020 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2022 Clever Ads Solutions. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import <CleverAdsSolutions/CleverAdsSolutions.h>
+@import CleverAdsSolutions;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CASUPluginUtil : NSObject<CASAnalyticsDelegate>
+@interface CASUPluginUtil : NSObject
 + (nonnull instancetype)sharedInstance;
 
 - (void)saveObject:(nullable id)obj withKey:(nonnull NSString *)key;
@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSString *)stringFromUnity:(const char *_Nullable)bytes;
 /// Returns a C string from a C array of UTF8-encoded bytes.
 + (const char *)stringToUnity:(NSString *)str;
-+ (NSString *)adMetaDataToStringPointer:(id<CASStatusHandler>)ad;
++ (const char *)adMetaDataToStringPointer:(id<CASStatusHandler>)ad;
 + (UIViewController *)unityGLViewController;
 + (void)onAdsWillPressent;
 + (void)onAdsDidClosed;

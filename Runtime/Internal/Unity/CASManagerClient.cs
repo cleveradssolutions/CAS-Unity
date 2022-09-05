@@ -221,7 +221,7 @@ namespace CAS.Unity
             if (!IsEnabledAd( adType ))
                 return false;
             if (adType == AdType.Banner)
-                return viewFactory.IsGlobalViewReady();
+                return viewFactory.globalView != null && viewFactory.globalView.isReady;
             if (adType == AdType.Interstitial)
                 return _interstitial.loaded
                     && _settings.lastInterImpressionTimestamp + MobileAds.settings.interstitialInterval < Time.time;
@@ -233,7 +233,7 @@ namespace CAS.Unity
             switch (adType)
             {
                 case AdType.Banner:
-                    viewFactory.GetOrCreateGlobalView().Load();
+                    viewFactory.LoadGlobalBanner();
                     break;
                 case AdType.Interstitial:
                     _interstitial.Load();
@@ -263,7 +263,7 @@ namespace CAS.Unity
             switch (adType)
             {
                 case AdType.Banner:
-                    viewFactory.ShowBanner();
+                    viewFactory.ShowGlobalBanner();
                     break;
                 case AdType.Interstitial:
                     Post( _interstitial.Show );
@@ -332,7 +332,7 @@ namespace CAS.Unity
         {
             if (_btnStyle == null)
                 _btnStyle = new GUIStyle( "Button" );
-            _btnStyle.fontSize = ( int )( Math.Min( Screen.width, Screen.height ) * 0.035f );
+            _btnStyle.fontSize = (int)( Math.Min( Screen.width, Screen.height ) * 0.035f );
 
             viewFactory.OnGUIAd( _btnStyle );
             _interstitial.OnGUIAd( _btnStyle );

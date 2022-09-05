@@ -26,9 +26,10 @@ namespace CAS.Android
             if (args == null || args.Count == 0)
                 return;
 
+            var tempArgs = new String[] { "String", "String" };
             var methodID = AndroidJNIHelper.GetMethodID( target.GetRawClass(),
-                        "addExtras", new[] { "String", "String" }, staticCall );
-            var tempArgs = new String[2];
+                        "addExtras", tempArgs, staticCall );
+            
             foreach (var item in args)
             {
                 tempArgs[0] = item.Key;
@@ -39,7 +40,7 @@ namespace CAS.Android
                     if (staticCall)
                         AndroidJNI.CallStaticVoidMethod( target.GetRawClass(), methodID, nativeArgs );
                     else
-                        AndroidJNI.CallVoidMethod( target.GetRawClass(), methodID, nativeArgs );
+                        AndroidJNI.CallVoidMethod( target.GetRawObject(), methodID, nativeArgs );
                 }
                 finally
                 {
