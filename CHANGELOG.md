@@ -4,6 +4,9 @@
 ### Dependencies
 - [Android] Wraps [2.8.6 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.8.6 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+[iOS] For iOS 12.2.0 or earlier builds, added `/usr/lib/swift` to `XCode > Build Settings > Runpath Search Paths` to prevent any issues with `libswiftCore.dylib`.
+[Android] Added update of the `mainTemplate.gradle` version if the file was created by Unity 2019.2 or older.
 
 ## [2.8.5] - 2022-07-21
 ### Dependencies

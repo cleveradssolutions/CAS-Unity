@@ -106,18 +106,17 @@ namespace CAS.UEditor
             try
             {
                 var target = EditorUserBuildSettings.activeBuildTarget;
-                CASPreprocessBuild.ConfigureProject( target, CASEditorSettings.Load() );
                 if (target == BuildTarget.Android)
-                    TryResolveAndroidDependencies();
-                EditorUtility.ClearProgressBar();
-                EditorUtility.DisplayDialog( "Configure project",
-                    "CAS Plugin has successfully applied all required configurations to your project.",
-                    "Ok" );
+                    TryResolveAndroidDependencies(); // Resolve before call configure
+                CASPreprocessBuild.ConfigureProject( target, CASEditorSettings.Load() );
             }
             finally
             {
                 EditorUtility.ClearProgressBar();
             }
+            EditorUtility.DisplayDialog( "Configure project",
+                "CAS Plugin has successfully applied all required configurations to your project.",
+                "Ok" );
         }
 #endif
 
@@ -431,6 +430,9 @@ namespace CAS.UEditor
 
         public static bool TryResolveAndroidDependencies( bool force = true )
         {
+#if UNITY_ANDROID
+            CASPreprocessGradle.UpdateGradleTemplateIfNeed();
+#endif
             const string googleAssembly = "Google.JarResolver";
             const string resolverTypeName = "GooglePlayServices.PlayServicesResolver, " + googleAssembly;
 #if CASDeveloper

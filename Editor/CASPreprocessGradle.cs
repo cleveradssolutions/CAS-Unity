@@ -24,6 +24,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using UnityEditor;
@@ -119,6 +120,45 @@ namespace CAS.UEditor
             {
                 File.WriteAllLines( baseGradlePath, baseGradle.ToArray() );
                 AssetDatabase.ImportAsset( baseGradlePath );
+            }
+        }
+
+        internal static void UpdateGradleTemplateIfNeed()
+        {
+#if UNITY_2019_3_OR_NEWER
+            var needUpdate = true;
+#else
+            var needUpdate = false;
+#endif
+
+            if (!needUpdate || !File.Exists( Utils.mainGradlePath ))
+                return;
+
+            try
+            {
+                needUpdate = false;
+                using (var reader = new StreamReader( Utils.mainGradlePath ))
+                {
+                    string line = reader.ReadLine();
+                    while (line != null)
+                    {
+                        if (line.Contains( "classpath 'com.android.tools.build:gradle:" ))
+                        {
+                            needUpdate = true;
+                            break;
+                        }
+                        line = reader.ReadLine();
+                    }
+                }
+                if (needUpdate)
+                {
+                    File.Delete( Utils.mainGradlePath );
+                    TryEnableGradleTemplate( Utils.mainGradlePath );
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
             }
         }
 
@@ -759,6 +799,13 @@ namespace CAS.UEditor
         {
             // Alternate of internal unity method
             // BuildPipeline.GetBuildToolsDirectory( ( BuildTarget )13 );
+            try
+            {
+                return (string)typeof( BuildPipeline )
+                    .GetMethod( "GetBuildToolsDirectory", BindingFlags.Static | BindingFlags.NonPublic )
+                    .Invoke( null, new object[] { BuildTarget.Android } );
+            }
+            catch { }
 
             // App path ends `version/Unity.app` or `version/Editor/Unity.exe`
             var appPath = EditorApplication.applicationPath;
