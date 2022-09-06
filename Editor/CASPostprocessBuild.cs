@@ -440,7 +440,7 @@ namespace CAS.UEditor
             // add /usr/lib/swift to Build Settings > Runpath Search Paths
             // to prevent any issues with libswiftCore.dylib.
             const string pathToSwiftLibs = "/usr/lib/swift";
-            if (IsNeedEmbedSwiftStandardLibraries() && !runpathSearchPaths.Contains( pathToSwiftLibs ));
+            if (IsNeedEmbedSwiftStandardLibraries() && !runpathSearchPaths.Contains( pathToSwiftLibs ))
                 runpathSearchPaths += " " + pathToSwiftLibs;
 
             project.SetBuildProperty( targetGuid, "LD_RUNPATH_SEARCH_PATHS", runpathSearchPaths.Trim( ' ' ) );

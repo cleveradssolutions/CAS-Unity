@@ -355,7 +355,11 @@ namespace CAS
         internal static void UnityLog( string message )
         {
             if (GetAdsSettings().isDebugMode)
+#if UNITY_IOS
+                Debug.Log( "[CAS:Unity] " + message );
+#else
                 Debug.Log( "[CAS:] " + message );
+#endif
         }
 
         internal static void UnityLogException( Exception e )

@@ -189,10 +189,6 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern void CASUSetLastPageAdContent( CASUManagerRef managerRef, string contentJson );
-
-        [DllImport( "__Internal" )]
-        internal static extern bool CASUIsTestAdModeEnabled( CASUManagerRef managerRef );
-
         #endregion
 
         #region Interstitial Ads
