@@ -149,7 +149,7 @@ namespace CAS
 
         /// <summary>
         /// Identifiers corresponding to test devices which will always request test ads.
-        /// Required set list of test devices before initialize first MediationManager.
+        /// List of test devices should be defined before first MediationManager initialized.
         /// <para>1. Run an app configured with the CAS SDK.</para>
         /// <para>2. Check the console or logcat output for a message that looks like this:
         /// "To get test ads on this device, set ... "</para>

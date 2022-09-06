@@ -59,7 +59,7 @@ namespace CAS
         /// Create <see cref="IMediationManager"/> builder.
         /// <para>Don't forget to call the <see cref="IManagerBuilder.Initialize"/> method to create manager instance.</para>
         /// </summary>
-        public static IManagerBuilder BuildManager()
+        public static CASInitSettings BuildManager()
         {
             var builder = CASFactory.LoadInitSettingsFromResources();
             if (builder == null)
