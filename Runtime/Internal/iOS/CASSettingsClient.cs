@@ -28,11 +28,8 @@ namespace CAS.iOS
             get { return _analyticsCollectionEnabled; }
             set
             {
-                if (_analyticsCollectionEnabled != value)
-                {
-                    _analyticsCollectionEnabled = value;
-                    CASExterns.CASUSetAnalyticsCollectionWithEnabled( value );
-                }
+                _analyticsCollectionEnabled = value;
+                CASExterns.CASUSetAnalyticsCollectionWithEnabled( value );
             }
         }
 
@@ -50,30 +47,27 @@ namespace CAS.iOS
 
         public ConsentStatus userConsent
         {
-            get { return ( ConsentStatus )CASExterns.CASUGetUserConsent(); }
-            set { CASExterns.CASUSetUserConsent( ( int )value ); }
+            get { return (ConsentStatus)CASExterns.CASUGetUserConsent(); }
+            set { CASExterns.CASUSetUserConsent( (int)value ); }
         }
 
         public CCPAStatus userCCPAStatus
         {
-            get { return ( CCPAStatus )CASExterns.CASUGetCCPAStatus(); }
-            set { CASExterns.CASUSetCCPAStatus( ( int )value ); }
+            get { return (CCPAStatus)CASExterns.CASUGetCCPAStatus(); }
+            set { CASExterns.CASUSetCCPAStatus( (int)value ); }
         }
         public Audience taggedAudience
         {
-            get { return ( Audience )CASExterns.CASUGetAudienceTagged(); }
-            set { CASExterns.CASUSetAudienceTagged( ( int )value ); }
+            get { return (Audience)CASExterns.CASUGetAudienceTagged(); }
+            set { CASExterns.CASUSetAudienceTagged( (int)value ); }
         }
         public bool isDebugMode
         {
             get { return _isDebugMode; }
             set
             {
-                if (_isDebugMode != value)
-                {
-                    _isDebugMode = value;
-                    CASExterns.CASUSetDebugMode( value );
-                }
+                _isDebugMode = value;
+                CASExterns.CASUSetDebugMode( value );
             }
         }
         public bool isMutedAdSounds
@@ -81,11 +75,8 @@ namespace CAS.iOS
             get { return _isMutedAdSounds; }
             set
             {
-                if (_isMutedAdSounds != value)
-                {
-                    _isMutedAdSounds = value;
-                    CASExterns.CASUSetMuteAdSoundsTo( value );
-                }
+                _isMutedAdSounds = value;
+                CASExterns.CASUSetMuteAdSoundsTo( value );
             }
         }
         public LoadingManagerMode loadingMode
@@ -93,11 +84,8 @@ namespace CAS.iOS
             get { return _loadingMode; }
             set
             {
-                if (_loadingMode != value)
-                {
-                    _loadingMode = value;
-                    CASExterns.CASUSetLoadingWithMode( ( int )value );
-                }
+                _loadingMode = value;
+                CASExterns.CASUSetLoadingWithMode( (int)value );
             }
         }
         public bool iOSAppPauseOnBackground
@@ -135,11 +123,8 @@ namespace CAS.iOS
             get { return _allowInterstitialAdsWhenVideoCostAreLower; }
             set
             {
-                if (_allowInterstitialAdsWhenVideoCostAreLower != value)
-                {
-                    _allowInterstitialAdsWhenVideoCostAreLower = value;
-                    CASExterns.CASUSetInterstitialAdsWhenVideoCostAreLower( value );
-                }
+                _allowInterstitialAdsWhenVideoCostAreLower = value;
+                CASExterns.CASUSetInterstitialAdsWhenVideoCostAreLower( value );
             }
         }
 
@@ -148,11 +133,8 @@ namespace CAS.iOS
             get { return _trackLocationEnabled; }
             set
             {
-                if (_trackLocationEnabled != value)
-                {
-                    _trackLocationEnabled = value;
-                    CASExterns.CASUSetTrackLocationEnabled( value );
-                }
+                _trackLocationEnabled = value;
+                CASExterns.CASUSetTrackLocationEnabled( value );
             }
         }
 
@@ -161,11 +143,8 @@ namespace CAS.iOS
             get { return _gender; }
             set
             {
-                if (_gender != value)
-                {
-                    _gender = value;
-                    CASExterns.CASUSetUserGender( ( int )value );
-                }
+                _gender = value;
+                CASExterns.CASUSetUserGender( (int)value );
             }
         }
 
@@ -174,11 +153,8 @@ namespace CAS.iOS
             get { return _age; }
             set
             {
-                if (_age != value)
-                {
-                    _age = value;
-                    CASExterns.CASUSetUserAge( value );
-                }
+                _age = value;
+                CASExterns.CASUSetUserAge( value );
             }
         }
     }

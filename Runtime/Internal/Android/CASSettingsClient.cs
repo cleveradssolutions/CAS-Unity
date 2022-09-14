@@ -48,7 +48,7 @@ namespace CAS.Android
 
         public bool IsActiveMediationNetwork( AdNetwork net )
         {
-            return settingsBridge.CallStatic<bool>( "isActiveMediationNetwork", ( int )net );
+            return settingsBridge.CallStatic<bool>( "isActiveMediationNetwork", (int)net );
         }
 
         public bool analyticsCollectionEnabled
@@ -56,11 +56,8 @@ namespace CAS.Android
             get { return _analyticsCollectionEnabled; }
             set
             {
-                if (_analyticsCollectionEnabled != value)
-                {
-                    _analyticsCollectionEnabled = value;
-                    settingsBridge.CallStatic( "setAnalyticsCollectionEnabled", value );
-                }
+                _analyticsCollectionEnabled = value;
+                settingsBridge.CallStatic( "setAnalyticsCollectionEnabled", value );
             }
         }
 
@@ -78,20 +75,20 @@ namespace CAS.Android
 
         public ConsentStatus userConsent
         {
-            get { return ( ConsentStatus )settingsBridge.CallStatic<int>( "getUserConsent" ); }
-            set { settingsBridge.CallStatic( "setUserConsent", ( int )value ); }
+            get { return (ConsentStatus)settingsBridge.CallStatic<int>( "getUserConsent" ); }
+            set { settingsBridge.CallStatic( "setUserConsent", (int)value ); }
         }
 
         public CCPAStatus userCCPAStatus
         {
-            get { return ( CCPAStatus )settingsBridge.CallStatic<int>( "getCcpaStatus" ); }
-            set { settingsBridge.CallStatic( "setCcpaStatus", ( int )value ); }
+            get { return (CCPAStatus)settingsBridge.CallStatic<int>( "getCcpaStatus" ); }
+            set { settingsBridge.CallStatic( "setCcpaStatus", (int)value ); }
         }
 
         public Audience taggedAudience
         {
-            get { return ( Audience )settingsBridge.CallStatic<int>( "getTaggedAudience" ); }
-            set { settingsBridge.CallStatic( "setTaggedAudience", ( int )value ); }
+            get { return (Audience)settingsBridge.CallStatic<int>( "getTaggedAudience" ); }
+            set { settingsBridge.CallStatic( "setTaggedAudience", (int)value ); }
         }
 
         public bool isDebugMode
@@ -99,11 +96,8 @@ namespace CAS.Android
             get { return _isDebugMode; }
             set
             {
-                if (_isDebugMode != value)
-                {
-                    _isDebugMode = value;
-                    settingsBridge.CallStatic( "setNativeDebug", value );
-                }
+                _isDebugMode = value;
+                settingsBridge.CallStatic( "setNativeDebug", value );
             }
         }
 
@@ -112,11 +106,8 @@ namespace CAS.Android
             get { return _isMutedAdSounds; }
             set
             {
-                if (_isMutedAdSounds != value)
-                {
-                    _isMutedAdSounds = value;
-                    settingsBridge.CallStatic( "setMutedAdSounds", value );
-                }
+                _isMutedAdSounds = value;
+                settingsBridge.CallStatic( "setMutedAdSounds", value );
             }
         }
 
@@ -125,11 +116,8 @@ namespace CAS.Android
             get { return _loadingMode; }
             set
             {
-                if (_loadingMode != value)
-                {
-                    _loadingMode = value;
-                    settingsBridge.CallStatic( "setLoadingMode", ( int )value );
-                }
+                _loadingMode = value;
+                settingsBridge.CallStatic( "setLoadingMode", (int)value );
             }
         }
 
@@ -176,11 +164,8 @@ namespace CAS.Android
             get { return _allowInterstitialAdsWhenVideoCostAreLower; }
             set
             {
-                if (_allowInterstitialAdsWhenVideoCostAreLower != value)
-                {
-                    _allowInterstitialAdsWhenVideoCostAreLower = value;
-                    settingsBridge.CallStatic( "allowInterInsteadOfRewarded", value );
-                }
+                _allowInterstitialAdsWhenVideoCostAreLower = value;
+                settingsBridge.CallStatic( "allowInterInsteadOfRewarded", value );
             }
         }
 
@@ -189,11 +174,8 @@ namespace CAS.Android
             get { return _gender; }
             set
             {
-                if (_gender != value)
-                {
-                    _gender = value;
-                    settingsBridge.CallStatic( "setUserGender", ( int )value );
-                }
+                _gender = value;
+                settingsBridge.CallStatic( "setUserGender", (int)value );
             }
         }
 
@@ -202,11 +184,8 @@ namespace CAS.Android
             get { return _age; }
             set
             {
-                if (_age != value)
-                {
-                    _age = value;
-                    settingsBridge.CallStatic( "setUserAge", value );
-                }
+                _age = value;
+                settingsBridge.CallStatic( "setUserAge", value );
             }
         }
     }

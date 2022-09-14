@@ -42,6 +42,10 @@ namespace CAS
         /// <para>This results in banner ads that occupy a more consistent portion
         /// of the screen across devices and provide opportunities for improved performance.</para>
         /// </summary>
-        AdaptiveFullWidth = 6
+        AdaptiveFullWidth = 6,
+        /// <summary>
+        /// In beta
+        /// </summary>
+        InlineBanner = 7
     }
 }

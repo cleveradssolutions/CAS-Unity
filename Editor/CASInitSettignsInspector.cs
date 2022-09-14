@@ -579,6 +579,9 @@ namespace CAS.UEditor
                     case AdSize.MediumRectangle:
                         EditorGUILayout.HelpBox( "Size in DPI: 300:250", MessageType.None );
                         break;
+                    case AdSize.InlineBanner:
+                        EditorGUILayout.HelpBox( "In beta", MessageType.None );
+                        break;
                 }
                 EditorGUI.indentLevel--;
             }

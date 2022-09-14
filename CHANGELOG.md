@@ -5,16 +5,18 @@
 - [Android] Wraps [2.9.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [2.9.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 ### Features
+- Now `AdsSettings` are saved between sessions.
 - Improved stability of the `AdMetaData` class to get information about ad impressions.
 - The option to use the Medium Rectangle size has been removed from the settings window. Just select the Banner format to use the Medium Rectangle size.
 - The `IAdView.rectInPixels` return `Rect.zero` when ad view is not active.
 - Caching the value of `IAdView.rectInPixels` on C# side to reduse number of calls to the native side.
+- Mediation is no longer used for devices defined in `MobileAds.settings.SetTestDeviceIds()`. List of test devices should be defined before first MediationManager initialized.
+- The ID of the current device for `MobileAds.settings.SetTestDeviceIds()` will be printed in the logs even if the `CAS.settings.isDebugMode` is disabled.
+- Simultaneous collection of `ad_impression` and `CAS_Impression` analytics events with the same parameters is allowed.
 ### Changes
-- `MobileAds.settings.isExecuteEventsOnUnityThread` is now enabled by default.
-- `IMediationManager.OnLoadedAd` event has been deprecated in favor of the new separate `IMediationManager.OnInterstitialAdLoaded` and `IMediationManager.OnRewardedAdLoaded` events. 
-- `IMediationManager.OnFailedToLoadAd` event has been deprecated in favor of the new separate `IMediationManager.OnInterstitialAdFailedToLoad` and `IMediationManager.OnRewardedAdFailedToLoad` events with `AdError` enum.
-  > Use `AdError.GetMessage()` to get the error text. 
-- Mediation will not be used for devices that are defined in `MobileAds.settings.SetTestDeviceIds()`.
+- Now `MobileAds.settings.isExecuteEventsOnUnityThread` is enabled by default.
+- Deprecated `IMediationManager.OnLoadedAd` event in favor of the new separate `IMediationManager.OnInterstitialAdLoaded` and `IMediationManager.OnRewardedAdLoaded` events. 
+- Deprecated `IMediationManager.OnFailedToLoadAd` event in favor of the new separate `IMediationManager.OnInterstitialAdFailedToLoad` and `IMediationManager.OnRewardedAdFailedToLoad` events with `AdError` enum. Use `AdError.GetMessage()` to get the error text.
 
 ## [2.8.6] - 2022-09-05
 ### Dependencies

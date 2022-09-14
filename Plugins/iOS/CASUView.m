@@ -21,6 +21,7 @@ static const int AD_SIZE_SMART = 3;
 static const int AD_SIZE_LEADER = 4;
 static const int AD_SIZE_MREC = 5;
 static const int AD_SIZE_FULL_WIDTH = 6;
+static const int AD_SIZE_INLINE = 7;
 
 @interface CASUView () <CASBannerDelegate>
 @end
@@ -82,6 +83,8 @@ static const int AD_SIZE_FULL_WIDTH = 6;
         case AD_SIZE_MREC: return CASSize.mediumRectangle;
 
         case AD_SIZE_FULL_WIDTH: return [CASSize getAdaptiveBannerInContainer:controller.view];
+
+        case AD_SIZE_INLINE:return [CASSize getAdaptiveBannerInContainer:controller.view];
 
         default: return CASSize.banner;
     }
