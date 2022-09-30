@@ -567,7 +567,7 @@ namespace CAS.UEditor
                         EditorGUILayout.HelpBox( "Pick the best ad size in screen width for improved performance but not more than 728dp.", MessageType.None );
                         break;
                     case AdSize.AdaptiveFullWidth:
-                        EditorGUILayout.HelpBox( "Pick the best ad size in full width screen for improved performance.", MessageType.None );
+                        EditorGUILayout.HelpBox( "Pick the best ad size in full width of screen for improved performance.", MessageType.None );
                         break;
                     case AdSize.SmartBanner:
                         EditorGUILayout.HelpBox( "Typically, Smart Banners on phones have a Banner size. " +
@@ -579,8 +579,8 @@ namespace CAS.UEditor
                     case AdSize.MediumRectangle:
                         EditorGUILayout.HelpBox( "Size in DPI: 300:250", MessageType.None );
                         break;
-                    case AdSize.InlineBanner:
-                        EditorGUILayout.HelpBox( "In beta", MessageType.None );
+                    case AdSize.ThinBanner:
+                        EditorGUILayout.HelpBox( "Pick the best ad size in full width of screen and height 32-50 for Landscape and 50-90 for Portrait orientations.", MessageType.None );
                         break;
                 }
                 EditorGUI.indentLevel--;

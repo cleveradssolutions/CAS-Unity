@@ -127,11 +127,12 @@ namespace CAS.UEditor
                         "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks." );
             }
 
-#if !UNITY_2019_3_OR_NEWER
-            if (!PlayerSettings.iOS.targetOSVersionString.StartsWith( "1" ))
+#if !UNITY_2020_1_OR_NEWER
+            var iosVersion = PlayerSettings.iOS.targetOSVersionString;
+            if (iosVersion.StartsWith( "9." ) || iosVersion.StartsWith( "10." ))
             {
-                Utils.DialogOrCancelBuild( "CAS required a higher minimum deployment target. Set iOS 10.0 and continue?", BuildTarget.NoTarget );
-                PlayerSettings.iOS.targetOSVersionString = "10.0";
+                Utils.DialogOrCancelBuild( "CAS required a higher minimum deployment target. Set iOS 11.0 and continue?", BuildTarget.NoTarget );
+                PlayerSettings.iOS.targetOSVersionString = "11.0";
             }
 #endif
 #endif

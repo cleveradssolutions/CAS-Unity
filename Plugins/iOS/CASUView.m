@@ -21,7 +21,7 @@ static const int AD_SIZE_SMART = 3;
 static const int AD_SIZE_LEADER = 4;
 static const int AD_SIZE_MREC = 5;
 static const int AD_SIZE_FULL_WIDTH = 6;
-static const int AD_SIZE_INLINE = 7;
+static const int AD_SIZE_LINE = 7;
 
 @interface CASUView () <CASBannerDelegate>
 @end
@@ -82,9 +82,22 @@ static const int AD_SIZE_INLINE = 7;
 
         case AD_SIZE_MREC: return CASSize.mediumRectangle;
 
-        case AD_SIZE_FULL_WIDTH: return [CASSize getAdaptiveBannerInContainer:controller.view];
+        case AD_SIZE_FULL_WIDTH:
+            return [CASSize getAdaptiveBannerInContainer:controller.view];
 
-        case AD_SIZE_INLINE:return [CASSize getAdaptiveBannerInContainer:controller.view];
+        case AD_SIZE_LINE:{
+            CGSize screenSize = [controller.view bounds].size;
+            BOOL inLandscape = screenSize.height < screenSize.width;
+            CGFloat bannerHeight;
+
+            if (screenSize.height > 720 && screenSize.width >= 728) {
+                bannerHeight = inLandscape ? 50 : 90;
+            } else {
+                bannerHeight = inLandscape ? 32 : 50;
+            }
+
+            return [CASSize getInlineBannerWithWidth:screenSize.width maxHeight:bannerHeight];
+        }
 
         default: return CASSize.banner;
     }
@@ -165,7 +178,7 @@ static const int AD_SIZE_INLINE = 7;
 
 - (int)getRefreshInterval {
     if (self.bannerView) {
-        return self.bannerView.refreshInterval;
+        return (int)self.bannerView.refreshInterval;
     }
 
     return 30;

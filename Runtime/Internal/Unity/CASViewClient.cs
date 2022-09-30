@@ -220,6 +220,13 @@ namespace CAS.Unity
                     result.width = screenWidth;
                     result.height = ( _emulateTabletScreen ? 90.0f : 50.0f ) * scale;
                     break;
+                case AdSize.ThinBanner:
+                    result.width = screenWidth;
+                    if (_emulateTabletScreen)
+                        result.height = ( isPortrait ? 90.0f : 50.0f ) * scale;
+                    else
+                        result.height = ( isPortrait ? 50.0f : 32.0f ) * scale;
+                    break;
                 default:
                     result.width = 320.0f * scale;
                     result.height = 50.0f * scale;
