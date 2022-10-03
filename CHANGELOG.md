@@ -1,9 +1,9 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
-## [2.9.1] - 2022-09-06
+## [2.9.2] - 2022-09-06
 ### Dependencies
-- [Android] Wraps [2.9.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
-- [iOS] Wraps [2.9.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+- [Android] Wraps [2.9.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.9.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 ### Features
 - Now `AdsSettings` are saved between sessions.
 - Improved stability of the `AdMetaData` class to get information about ad impressions.
@@ -13,6 +13,7 @@
 - Mediation is no longer used for devices defined in `MobileAds.settings.SetTestDeviceIds()`. List of test devices should be defined before first MediationManager initialized.
 - The ID of the current device for `MobileAds.settings.SetTestDeviceIds()` will be printed in the logs even if the `CAS.settings.isDebugMode` is disabled.
 - Simultaneous collection of `ad_impression` and `CAS_Impression` analytics events with the same parameters is allowed.
+- [iOS] Added option to disable build Bitcode in `Ads Settings > Other`. By default disabled.
 ### Changes
 - The minimum iOS version supports is iOS 11.
 - Now `MobileAds.settings.isExecuteEventsOnUnityThread` is enabled by default.
