@@ -508,6 +508,26 @@ const char * CASUGetImpressionIdentifier(CASImpressionRef impression) {
     return NULL;
 }
 
+int CASUGetImpressionDepth(CASImpressionRef impression) {
+    NSObject<CASStatusHandler> *internalImp = (__bridge NSObject<CASStatusHandler> *)impression;
+
+    if (internalImp) {
+        return (int)internalImp.impressionDepth;
+    }
+
+    return 0;
+}
+
+double CASUGetImpressionLifetimeRevenue(CASImpressionRef impression) {
+    NSObject<CASStatusHandler> *internalImp = (__bridge NSObject<CASStatusHandler> *)impression;
+
+    if (internalImp) {
+        return internalImp.lifetimeRevenue;
+    }
+
+    return 0.0;
+}
+
 #pragma mark - ATT API
 
 void CASURequestATT(CASUATTCompletion completion) {

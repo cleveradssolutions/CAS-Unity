@@ -13,6 +13,8 @@
 - Mediation is no longer used for devices defined in `MobileAds.settings.SetTestDeviceIds()`. List of test devices should be defined before first MediationManager initialized.
 - The ID of the current device for `MobileAds.settings.SetTestDeviceIds()` will be printed in the logs even if the `CAS.settings.isDebugMode` is disabled.
 - Simultaneous collection of `ad_impression` and `CAS_Impression` analytics events with the same parameters is allowed.
+- Added `impressionDepth` property for the `AdMetaData` structure  to get the amount of impressions of all ad formats to the current user.
+- Added `lifetimeRevenue` property for the `AdImAdMetaDatapression` structure  to get the total revenue in USD from impressions of all ad formats to the current user.
 - [iOS] Added option to disable build Bitcode in `Ads Settings > Other`. By default disabled.
 ### Changes
 - The minimum iOS version supports is iOS 11.

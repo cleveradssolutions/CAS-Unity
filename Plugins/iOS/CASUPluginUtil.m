@@ -28,6 +28,8 @@ int UnityIsPaused(void) {
 void UnityPause(int pause) {
 }
 
+BOOL _didResignActive;
+
 #ifdef __cplusplus
 }
 #endif

@@ -10,48 +10,46 @@ namespace CAS.Unity
 {
     public class CASImpressionClient : AdMetaData
     {
+        private static int depth = 0;
+
         public CASImpressionClient( AdType type ) : base( type )
         {
+            depth++;
         }
 
         public override AdNetwork network
         {
-            get
-            {
-                return AdNetwork.CrossPromotion;
-            }
+            get { return AdNetwork.CrossPromotion; }
         }
 
         public override double cpm
         {
-            get
-            {
-                return 0.0;
-            }
+            get { return 1.0; }
         }
 
         public override PriceAccuracy priceAccuracy
         {
-            get
-            {
-                return PriceAccuracy.Floor;
-            }
+            get { return PriceAccuracy.Floor; }
         }
 
         public override string creativeIdentifier
         {
-            get
-            {
-                return null;
-            }
+            get { return null; }
         }
 
         public override string identifier
         {
-            get
-            {
-                return "Test";
-            }
+            get { return "Test"; }
+        }
+
+        public override int impressionDepth
+        {
+            get { return depth; }
+        }
+
+        public override double lifetimeRevenue
+        {
+            get { return depth * 0.001; }
         }
     }
 }

@@ -43,6 +43,16 @@ namespace CAS
         /// </summary>
         public abstract string identifier { get; }
 
+        /// <summary>
+        /// The amount of impressions of all ad formats to the current user for all sessions.
+        /// </summary>
+        public abstract int impressionDepth { get; }
+
+        /// <summary>
+        /// The total revenue in USD from impressions of all ad formats to the current user for all sessions.
+        /// </summary>
+        public abstract double lifetimeRevenue { get; }
+
         public AdMetaData( AdType type )
         {
             this.type = type;

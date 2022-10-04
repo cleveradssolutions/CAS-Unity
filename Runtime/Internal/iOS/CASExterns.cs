@@ -314,6 +314,12 @@ namespace CAS.iOS
 
         [DllImport( "__Internal" )]
         internal static extern string CASUGetImpressionIdentifier( CASImpressionRef impression );
+
+        [DllImport( "__Internal" )]
+        internal static extern int CASUGetImpressionDepth( CASImpressionRef impression );
+
+        [DllImport( "__Internal" )]
+        internal static extern double CASUGetImpressionLifetimeRevenue( CASImpressionRef impression );
         #endregion
     }
 }

@@ -23,17 +23,17 @@ namespace CAS.Android
 
         public override AdNetwork network
         {
-            get { return ( AdNetwork )impression.Call<int>( "getNetwork" ); }
+            get { return (AdNetwork)impression.Call<int>( "getNetwork" ); }
         }
 
         public override double cpm
         {
-            get { return impression.Call<double>( "getCpm" ); }
+            get { return impression.Call<long>( "getCpm" ) / 1000.0; }
         }
 
         public override PriceAccuracy priceAccuracy
         {
-            get { return ( PriceAccuracy )impression.Call<int>( "getPriceAccuracy" ); }
+            get { return (PriceAccuracy)impression.Call<int>( "getPriceAccuracy" ); }
         }
 
         public override string creativeIdentifier
@@ -44,6 +44,16 @@ namespace CAS.Android
         public override string identifier
         {
             get { return impression.Call<string>( "getIdentifier" ); }
+        }
+
+        public override int impressionDepth
+        {
+            get { return impression.Call<int>( "getImpressionDepth" ); }
+        }
+
+        public override double lifetimeRevenue
+        {
+            get { return impression.Call<long>( "getLifetimeRevenue" ) / 1000000.0; }
         }
     }
 }
