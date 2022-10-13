@@ -21,11 +21,13 @@ namespace CAS.iOS
         private int _positionX = 0;
         private int _positionY = 0;
         private bool _waitOfHideCallback;
+        private AdMetaData _lastImpression = null;
 
         public event CASViewEvent OnLoaded;
         public event CASViewEventWithError OnFailed;
-        public event CASViewEventWithMeta OnPresented;
+        public event CASViewEventWithMeta OnImpression;
         public event CASViewEvent OnClicked;
+        public event CASViewEventWithMeta OnPresented;
         public event CASViewEvent OnHidden;
 
         public AdSize size { get; private set; }
@@ -79,9 +81,9 @@ namespace CAS.iOS
                 if (_viewRef != IntPtr.Zero)
                 {
                     _manager.RemoveAdViewFromFactory( this );
-                    CASExterns.CASUDestroyAdView( _viewRef, _manager.managerID + "_" + ( int )size );
+                    CASExterns.CASUDestroyAdView( _viewRef, _manager.managerID + "_" + (int)size );
                     _viewRef = IntPtr.Zero;
-                    ( ( GCHandle )_viewClient ).Free();
+                    ( (GCHandle)_viewClient ).Free();
                 }
             }
             catch (Exception e)
@@ -105,6 +107,12 @@ namespace CAS.iOS
             if (active)
             {
                 CASExterns.CASUPresentAdView( _viewRef );
+                if (!_waitOfHideCallback)
+                {
+                    _waitOfHideCallback = true;
+                    if (_lastImpression != null && OnPresented != null)
+                        OnPresented( this, _lastImpression );
+                }
                 return;
             }
 
@@ -132,13 +140,13 @@ namespace CAS.iOS
                 _position = position;
                 _positionX = x;
                 _positionY = y;
-                CASExterns.CASUSetAdViewPosition( _viewRef, ( int )position, x, y );
+                CASExterns.CASUSetAdViewPosition( _viewRef, (int)position, x, y );
             }
         }
 
         private static CASViewClient IntPtrToAdViewClient( IntPtr managerClient )
         {
-            GCHandle handle = ( GCHandle )managerClient;
+            GCHandle handle = (GCHandle)managerClient;
             return handle.Target as CASViewClient;
         }
 
@@ -166,7 +174,7 @@ namespace CAS.iOS
                 if (instance != null)
                 {
                     if (instance.OnFailed != null)
-                        instance.OnFailed( instance, ( AdError )error );
+                        instance.OnFailed( instance, (AdError)error );
 
                     if (instance._waitOfHideCallback)
                     {
@@ -188,12 +196,14 @@ namespace CAS.iOS
             try
             {
                 var instance = IntPtrToAdViewClient( view );
-                if (instance != null)
-                {
-                    instance._waitOfHideCallback = true;
-                    if (instance.OnPresented != null)
-                        instance.OnPresented( instance, new CASImpressionClient( AdType.Banner, impression ) );
-                }
+                if (instance == null)
+                    return;
+                var metadata = new CASImpressionClient( AdType.Banner, impression );
+                if (instance._lastImpression == null && instance.OnPresented != null)
+                    instance.OnPresented( instance, metadata );
+                instance._lastImpression = metadata;
+                if (instance.OnImpression != null)
+                    instance.OnImpression( instance, metadata );
             }
             catch (Exception e)
             {

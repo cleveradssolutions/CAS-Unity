@@ -25,16 +25,23 @@ namespace CAS
         /// </summary>
         event CASViewEventWithError OnFailed;
         /// <summary>
-        /// Called when the ad view did present for user with <see cref="AdMetaData"/> about the impression. 
+        /// Called when the new ad content did present for user with <see cref="AdMetaData"/> about the impression. 
         /// </summary>
-        event CASViewEventWithMeta OnPresented;
+        event CASViewEventWithMeta OnImpression;
         /// <summary>
         /// Called when the user clicks on the Ad.
         /// </summary>
         event CASViewEvent OnClicked;
+
         /// <summary>
-        /// Called when the ad view did hidden from user.
+        /// Called when the ad view enabled.
         /// </summary>
+        [Obsolete( "Please stop use the event, is called at the same time as the SetActive(true)." )]
+        event CASViewEventWithMeta OnPresented;
+        /// <summary>
+        /// Called when the ad view disabled.
+        /// </summary>
+        [Obsolete( "Please stop use the event, is called at the same time as the SetActive(false)." )]
         event CASViewEvent OnHidden;
 
         /// <summary>

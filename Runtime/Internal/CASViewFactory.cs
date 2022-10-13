@@ -86,8 +86,10 @@ namespace CAS
             if (lastView != null)
             {
                 lastView.OnClicked -= CallbackAdViewClicked;
+#pragma warning disable CS0618 // Type or member is obsolete
                 lastView.OnPresented -= CallbackAdViewPresented;
                 lastView.OnHidden -= CallbackAdViewHidden;
+#pragma warning restore CS0618 // Type or member is obsolete
                 lastView.OnLoaded -= CallbackAdViewLoaded;
                 lastView.OnFailed -= CallbackAdViewFailed;
 
@@ -96,8 +98,10 @@ namespace CAS
             }
 
             newView.OnClicked += CallbackAdViewClicked;
+#pragma warning disable CS0618 // Type or member is obsolete
             newView.OnPresented += CallbackAdViewPresented;
             newView.OnHidden += CallbackAdViewHidden;
+#pragma warning restore CS0618 // Type or member is obsolete
             newView.OnLoaded += CallbackAdViewLoaded;
             newView.OnFailed += CallbackAdViewFailed;
 

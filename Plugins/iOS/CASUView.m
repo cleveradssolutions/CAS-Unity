@@ -142,7 +142,7 @@ static const int AD_SIZE_LINE = 7;
 
     // Ignore changes in device orientation if unknown, face up, or face down.
     if (UIDeviceOrientationIsValidInterfaceOrientation([[UIDevice currentDevice] orientation])) {
-        if (_activeSizeId == AD_SIZE_ADAPTIVE || _activeSizeId == AD_SIZE_FULL_WIDTH) {
+        if (_activeSizeId == AD_SIZE_ADAPTIVE || _activeSizeId == AD_SIZE_FULL_WIDTH || _activeSizeId == AD_SIZE_LINE) {
             UIViewController *unityController = [CASUPluginUtil unityGLViewController];
             self.bannerView.adSize = [self getSizeByCode:_activeSizeId with:unityController];
         }
@@ -289,6 +289,7 @@ static const int AD_SIZE_LINE = 7;
         return;
     }
 
+    [self refreshPosition];
     if (self.adPresentedCallback) {
         _lastImpression = (NSObject<CASStatusHandler> *)impression;
         self.adPresentedCallback(self.client, (__bridge CASImpressionRef)_lastImpression);

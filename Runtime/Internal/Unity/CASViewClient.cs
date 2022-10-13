@@ -16,9 +16,10 @@ namespace CAS.Unity
         private static bool _emulateTabletScreen = false;
 
         private readonly CASManagerClient _manager;
-        private bool _isActive = false;
+        private bool _active = false;
         private bool _loaded = false;
-        private bool _callPresentEvent = true;
+        private bool _waitPresentEvent = true;
+        private bool _waitImpressionEvent = false;
         private int _positionX = 0;
         private int _positionY = 0;
         private AdError _lastError = AdError.Internal;
@@ -26,8 +27,9 @@ namespace CAS.Unity
 
         public event CASViewEvent OnLoaded;
         public event CASViewEventWithError OnFailed;
-        public event CASViewEventWithMeta OnPresented;
+        public event CASViewEventWithMeta OnImpression;
         public event CASViewEvent OnClicked;
+        public event CASViewEventWithMeta OnPresented;
         public event CASViewEvent OnHidden;
 
         public IMediationManager manager { get { return _manager; } }
@@ -82,14 +84,14 @@ namespace CAS.Unity
                     return;
                 }
             }
-            _isActive = active;
+            _active = active;
 
             if (!active)
             {
                 rectInPixels = Rect.zero;
-                if (!_callPresentEvent)
+                if (!_waitPresentEvent)
                 {
-                    _callPresentEvent = true;
+                    _waitPresentEvent = true;
                     _manager.Post( CallAdHidden );
                 }
             }
@@ -127,11 +129,11 @@ namespace CAS.Unity
 
         public void OnGUIAd( GUIStyle style )
         {
-            if (_isActive && isReady)
+            if (_active && isReady)
             {
-                if (_callPresentEvent)
+                if (_waitPresentEvent)
                 {
-                    _callPresentEvent = false;
+                    _waitPresentEvent = false;
                     _manager.Post( CallAdPresented );
                 }
                 rectInPixels = CalculateAdRectOnScreen();
@@ -152,6 +154,7 @@ namespace CAS.Unity
         private void CallAdLoaded()
         {
             _loaded = true;
+            _waitImpressionEvent = true;
             if (OnLoaded != null)
                 OnLoaded( this );
         }
@@ -160,17 +163,23 @@ namespace CAS.Unity
         {
             if (OnFailed != null)
                 OnFailed( this, _lastError );
-            if (!_callPresentEvent)
+            if (!_waitPresentEvent)
             {
-                _callPresentEvent = true;
+                _waitPresentEvent = true;
                 _manager.Post( CallAdHidden );
             }
         }
 
         private void CallAdPresented()
         {
+            var impression = new CASImpressionClient( AdType.Banner );
             if (OnPresented != null)
-                OnPresented( this, new CASImpressionClient( AdType.Banner ) );
+                OnPresented( this, impression );
+            if (_waitImpressionEvent && OnImpression != null)
+            {
+                _waitImpressionEvent = false;
+                OnImpression( this, impression );
+            }
         }
 
         private void CallAdClicked()
@@ -295,7 +304,7 @@ namespace CAS.Unity
         {
             for (int i = 0; i < adViews.Count; i++)
             {
-                ( ( CASViewClient )adViews[i] ).OnGUIAd( style );
+                ( (CASViewClient)adViews[i] ).OnGUIAd( style );
             }
         }
 

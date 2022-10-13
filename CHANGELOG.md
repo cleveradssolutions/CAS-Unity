@@ -2,23 +2,26 @@
 
 ## [2.9.2] - 2022-09-06
 ### Dependencies
-- [Android] Wraps [2.9.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
-- [iOS] Wraps [2.9.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+- [Android] Wraps [2.9.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.9.3 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 ### Features
-- Now `AdsSettings` are saved between sessions.
 - Improved stability of the `AdMetaData` class to get information about ad impressions.
-- The option to use the Medium Rectangle size has been removed from the settings window. Just select the Banner format to use the Medium Rectangle size.
-- The `IAdView.rectInPixels` return `Rect.zero` when ad view is not active.
-- Caching the value of `IAdView.rectInPixels` on C# side to reduse number of calls to the native side.
-- Mediation is no longer used for devices defined in `MobileAds.settings.SetTestDeviceIds()`. List of test devices should be defined before first MediationManager initialized.
-- The ID of the current device for `MobileAds.settings.SetTestDeviceIds()` will be printed in the logs even if the `CAS.settings.isDebugMode` is disabled.
-- Simultaneous collection of `ad_impression` and `CAS_Impression` analytics events with the same parameters is allowed.
+- Added `IAdView.OnImpression` event with `AdMetaData` structure and invoked only once for each new ad impression.
 - Added `impressionDepth` property for the `AdMetaData` structure  to get the amount of impressions of all ad formats to the current user.
-- Added `lifetimeRevenue` property for the `AdImAdMetaDatapression` structure  to get the total revenue in USD from impressions of all ad formats to the current user.
-- [iOS] Added option to disable build Bitcode in `Ads Settings > Other`. By default disabled.
+- Added `lifetimeRevenue` property for the `AdMetaData` structure  to get the total revenue in USD from impressions of all ad formats to the current user.
+- Added new `AdSize.ThinBanner`. Thin banners have a smaller height, taller banners compared to anchored adaptive banners.
+- Allowed simultaneous collection of `ad_impression` and `CAS_Impression` analytics events with the same parameters.
+- [iOS] Added option to enable build Bitcode in `Ads Settings > Other`. By default disabled.
 ### Changes
 - The minimum iOS version supports is iOS 11.
-- Now `MobileAds.settings.isExecuteEventsOnUnityThread` is enabled by default.
+- The `MobileAds.settings` are saved between sessions.
+- The `MobileAds.settings.isExecuteEventsOnUnityThread` is enabled by default.
+- The option to use the Medium Rectangle size has been removed from the settings window. Just select the Banner format to use the Medium Rectangle size.
+- The `IAdView.rectInPixels` return `Rect.zero` when ad view is not active.
+- Plugin caching the value of `IAdView.rectInPixels` on C# side to reduse number of calls to the native side.
+- The ID of the current device for `MobileAds.settings.SetTestDeviceIds()` will be printed in the logs even if the `CAS.settings.isDebugMode` is disabled.
+- Mediation is no longer used for devices defined in `MobileAds.settings.SetTestDeviceIds()`. List of test devices should be defined before first MediationManager initialized.
+- Deprecated `IAdView.OnPresented` and `IAdViwe.OnHidden` events. These events are invoked when the ad view's changes `IAdView.SetActive()`.
 - Deprecated `IMediationManager.OnLoadedAd` event in favor of the new separate `IMediationManager.OnInterstitialAdLoaded` and `IMediationManager.OnRewardedAdLoaded` events. 
 - Deprecated `IMediationManager.OnFailedToLoadAd` event in favor of the new separate `IMediationManager.OnInterstitialAdFailedToLoad` and `IMediationManager.OnRewardedAdFailedToLoad` events with `AdError` enum. Use `AdError.GetMessage()` to get the error text.
 

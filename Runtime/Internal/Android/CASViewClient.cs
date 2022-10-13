@@ -21,11 +21,13 @@ namespace CAS.Android
         private int _positionX = 0;
         private int _positionY = 0;
         private bool _waitOfHideCallback;
+        private AdMetaData _lastImpression = null;
 
         public event CASViewEvent OnLoaded;
         public event CASViewEventWithError OnFailed;
-        public event CASViewEventWithMeta OnPresented;
+        public event CASViewEventWithMeta OnImpression;
         public event CASViewEvent OnClicked;
+        public event CASViewEventWithMeta OnPresented;
         public event CASViewEvent OnHidden;
 
         public IMediationManager manager { get { return _manager; } }
@@ -84,6 +86,12 @@ namespace CAS.Android
             if (active)
             {
                 _bridge.Call( "show" );
+                if (!_waitOfHideCallback)
+                {
+                    _waitOfHideCallback = true;
+                    if (_lastImpression != null && OnPresented != null)
+                        OnPresented( this, _lastImpression );
+                }
                 return;
             }
             rectInPixels = Rect.zero;
@@ -110,7 +118,7 @@ namespace CAS.Android
                 _position = position;
                 _positionX = x;
                 _positionY = y;
-                _bridge.Call( "setPosition", ( int )position, x, y );
+                _bridge.Call( "setPosition", (int)position, x, y );
             }
         }
 
@@ -123,9 +131,11 @@ namespace CAS.Android
 
         private void CallbackOnOpen( AdMetaData meta )
         {
-            _waitOfHideCallback = true;
-            if (OnPresented != null)
+            if (_lastImpression == null && OnPresented != null)
                 OnPresented( this, meta );
+            _lastImpression = meta;
+            if (OnImpression != null)
+                OnImpression( this, meta );
         }
 
         private void CallbackOnLoaded()
