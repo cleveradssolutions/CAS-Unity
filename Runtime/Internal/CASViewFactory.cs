@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -13,7 +13,7 @@ namespace CAS
     internal abstract class CASViewFactory : ISingleBannerManager
     {
         protected List<IAdView> adViews = new List<IAdView>();
-        private IAdView globalView;
+        public IAdView globalView { get; private set; }
         private bool isActiveGlobalView = false;
 
         public event Action OnBannerAdShown;
@@ -21,6 +21,11 @@ namespace CAS
         public event CASEventWithError OnBannerAdFailedToShow;
         public event Action OnBannerAdClicked;
         public event Action OnBannerAdHidden;
+
+        private bool isGlobalViewAllowed
+        {
+            get { return globalView != null; }
+        }
 
         public AdSize bannerSize
         {
@@ -33,9 +38,7 @@ namespace CAS
             set
             {
                 if (value != 0)
-                {
                     OnGlobalViewChanged( GetAdView( value ), globalView );
-                }
             }
         }
 
@@ -49,14 +52,20 @@ namespace CAS
             }
             set
             {
-                GetOrCreateGlobalView().position = value;
+                if (globalView == null)
+                {
+                    Debug.LogError( "Single banner ad size not defined. " +
+                        "Please set IMediationManager.bannerSize before change bannerPosition." );
+                    return;
+                }
+                globalView.position = value;
             }
         }
 
         public IAdView GetAdView( AdSize size )
         {
-            if (size == 0)
-                size = AdSize.Banner;
+            if (size < AdSize.Banner)
+                throw new ArgumentException( "Invalid AdSize " + size.ToString() );
             for (int i = 0; i < adViews.Count; i++)
             {
                 if (adViews[i].size == size)
@@ -77,8 +86,10 @@ namespace CAS
             if (lastView != null)
             {
                 lastView.OnClicked -= CallbackAdViewClicked;
+#pragma warning disable CS0618 // Type or member is obsolete
                 lastView.OnPresented -= CallbackAdViewPresented;
                 lastView.OnHidden -= CallbackAdViewHidden;
+#pragma warning restore CS0618 // Type or member is obsolete
                 lastView.OnLoaded -= CallbackAdViewLoaded;
                 lastView.OnFailed -= CallbackAdViewFailed;
 
@@ -87,26 +98,16 @@ namespace CAS
             }
 
             newView.OnClicked += CallbackAdViewClicked;
+#pragma warning disable CS0618 // Type or member is obsolete
             newView.OnPresented += CallbackAdViewPresented;
             newView.OnHidden += CallbackAdViewHidden;
+#pragma warning restore CS0618 // Type or member is obsolete
             newView.OnLoaded += CallbackAdViewLoaded;
             newView.OnFailed += CallbackAdViewFailed;
 
             newView.SetActive( isActiveGlobalView );
 
             globalView = newView;
-        }
-
-        public IAdView GetOrCreateGlobalView()
-        {
-            if (globalView == null)
-                OnGlobalViewChanged( GetAdView( bannerSize ), globalView );
-            return globalView;
-        }
-
-        public bool IsGlobalViewReady()
-        {
-            return globalView != null && globalView.isReady;
         }
 
         public float GetBannerHeightInPixels()
@@ -123,10 +124,22 @@ namespace CAS
             return globalView.rectInPixels.width;
         }
 
-        public void ShowBanner()
+        internal void LoadGlobalBanner()
+        {
+            if (globalView == null)
+            {
+                Debug.LogError( "Single banner ad size not defined. " +
+                    "Please set IMediationManager.bannerSize before call LoadAd." );
+                return;
+            }
+            globalView.Load();
+        }
+
+        internal void ShowGlobalBanner()
         {
             isActiveGlobalView = true;
-            GetOrCreateGlobalView().SetActive( true );
+            if (globalView != null)
+                globalView.SetActive( true );
         }
 
         public void HideBanner()
@@ -136,7 +149,7 @@ namespace CAS
                 globalView.SetActive( false );
         }
 
-        public virtual void CallbackOnDestroy( IAdView view )
+        public void RemoveAdViewFromFactory( IAdView view )
         {
             if (globalView == adViews)
                 globalView = null;

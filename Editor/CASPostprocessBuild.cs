@@ -19,9 +19,13 @@ using UnityEditor.iOS.Xcode.Extensions;
 
 namespace CAS.UEditor
 {
-    internal class CASPostprocessBuild
+    internal static class CASPostprocessBuild
     {
-        [PostProcessBuild( 47 )]//must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40) and that it's added before "pod install" (50)
+        private const string unityProjectName = "Unity-iPhone";
+
+        // Must be between 40 and 50 to ensure that it's not overriden by Podfile generation (40)
+        // and that it's added before "pod install" (50)
+        [PostProcessBuild( 47 )]
         public static void MainPostprocess( BuildTarget target, string buildPath )
         {
             if (target != BuildTarget.iOS)
@@ -32,33 +36,29 @@ namespace CAS.UEditor
             var editorSettings = CASEditorSettings.Load();
             var depManager = DependencyManager.Create( BuildTarget.iOS, Audience.Mixed, true );
 
-            string plistPath = Path.Combine( buildPath, "Info.plist" );
-            PlistDocument plist = new PlistDocument();
-            plist.ReadFromFile( plistPath );
+            EditPList( buildPath, ( plist ) =>
+            {
+                if (initSettings)
+                    plist.SetGADAppIdForCAS( initSettings, depManager );
+                plist.SetSDKInitializationDelay( editorSettings.delayAppMeasurementGADInit );
+                plist.SetAppTransportSecuritySettings();
+                plist.SetAttributionReportEndpoint( editorSettings.attributionReportEndpoint );
+                plist.SetDefaultUserTrackingDescription( editorSettings.userTrackingUsageDescription );
+                plist.AddSKAdNetworkItemsForCAS();
+                plist.AddApplicationQueriesSchamesForCAS();
+            } );
 
-            UpdateGADDelayMeasurement( plist, editorSettings );
-            UpdateGADAppId( plist, initSettings, depManager );
-            UpdateSKAdNetworksInfo( plist );
-            UpdateLSApplicationQueriesSchames( plist );
-            UpdateAppTransportSecuritySettings( plist );
-            SetAttributionReportEndpoint( plist, editorSettings );
-            SetDefaultUserTrackingDescription( plist, editorSettings );
+            EditXCProject( buildPath, unityProjectName, ( project ) =>
+            {
+                var appTargetGuid = project.GetAppGUID();
+                project.EnableSwiftLibraries( appTargetGuid );
+                project.FixLibrariesExecutablePath( appTargetGuid, depManager );
+                if (initSettings)
+                    project.CopyConfigCacheFileForCAS( buildPath, appTargetGuid, initSettings );
+            } );
 
-            File.WriteAllText( plistPath, plist.WriteToString() );
-
-            var project = OpenXCode( buildPath );
-            string mainTargetGuid;
-            string frameworkTargetGuid;
-            GetTargetsGUID( project, out mainTargetGuid, out frameworkTargetGuid );
-
-            EnableSwiftLibraries( buildPath, project, mainTargetGuid, frameworkTargetGuid );
-            CopyRawSettingsFile( buildPath, project, mainTargetGuid, initSettings );
-            SetExecutablePath( buildPath, project, mainTargetGuid, depManager );
-
-            SaveXCode( project, buildPath );
-
-            if (editorSettings.generateIOSDeepLinksForPromo)
-                ApplyCrosspromoDynamicLinks( buildPath, mainTargetGuid, initSettings, depManager );
+            if (editorSettings.generateIOSDeepLinksForPromo && initSettings)
+                ApplyCrosspromoDynamicLinks( buildPath, initSettings, depManager );
 
 #if UNITY_2019_3_OR_NEWER
             UpdatePodfileForUnity2019( buildPath );
@@ -73,97 +73,74 @@ namespace CAS.UEditor
                 return;
 
             var editorSettings = CASEditorSettings.Load();
-            var needLocalizeUserTracking = IsNeedLocalizeUserTrackingDescription( editorSettings );
-            var needEmbedDynamicLibraries = IsNeedEmbedDynamicLibraries();
-            if (!needEmbedDynamicLibraries && !needLocalizeUserTracking)
-                return;
 
-            var project = OpenXCode( buildPath );
-            string mainTargetGuid;
-            string frameworkTargetGuid;
-            GetTargetsGUID( project, out mainTargetGuid, out frameworkTargetGuid );
-            if (needLocalizeUserTracking)
-                LocalizeUserTrackingDescription( buildPath, project, mainTargetGuid, editorSettings );
-
-            if (needEmbedDynamicLibraries)
+            EditXCProject( buildPath, unityProjectName, ( project ) =>
             {
-                var depManager = DependencyManager.Create( BuildTarget.iOS, Audience.Mixed, true );
-                EmbedDynamicLibrariesIfNeeded( buildPath, project, mainTargetGuid, depManager );
-            }
+                var appTargetGuid = project.GetAppGUID();
+                project.SetBitcodeEnabled( appTargetGuid, editorSettings.bitcodeIOSEnabled );
+                project.LocalizeUserTrackingDescription( buildPath, appTargetGuid, editorSettings.userTrackingUsageDescription );
 
-            SaveXCode( project, buildPath );
+                if (IsNeedEmbedDynamicLibraries())
+                {
+                    var depManager = DependencyManager.Create( BuildTarget.iOS, Audience.Mixed, true );
+                    project.EmbedDynamicLibrariesIfNeeded( buildPath, appTargetGuid, depManager );
+                }
+            } );
+
+            EditXCProject( Path.Combine( buildPath, "Pods" ), "Pods", ( project ) =>
+            {
+                project.SetBitcodeEnabled( project.ProjectGuid(), editorSettings.bitcodeIOSEnabled );
+            } );
         }
 
         private static void UpdatePodfileForUnity2019( string buildPath )
         {
-            var podPath = buildPath + "/Podfile";
-            if (File.Exists( podPath ))
-            {
-                try
-                {
-                    var content = File.ReadAllText( podPath );
-                    if (!content.Contains( "'Unity-iPhone'" ))
-                    {
-                        content += "\ntarget 'Unity-iPhone' do\nend\n";
-                        File.WriteAllText( podPath, content );
-                    }
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException( e );
-                }
-            }
-            else
+            var path = Path.Combine( buildPath, "Podfile" );
+            if (!File.Exists( path ))
             {
                 Debug.LogError( CASEditorUtils.logTag + "Podfile not found.\n" +
-                    "Please add `target 'Unity-iPhone' do end` to the Podfile in root folder " +
-                    "of XCode project and call `pod install --no-repo-update`" );
+                   "Please add `target '" + unityProjectName + "' do end` to the Podfile in root folder " +
+                   "of XCode project and call `pod install --no-repo-update`" );
+                return;
+            }
+            try
+            {
+                var content = File.ReadAllText( path );
+                if (!content.Contains( "'" + unityProjectName + "'" ))
+                {
+                    content += "\ntarget '" + unityProjectName + "' do\nend\n";
+                    File.WriteAllText( path, content );
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
             }
         }
 
-        #region Utils
-        private static string GetXCodeProjectPath( string buildPath )
-        {
-            return Path.Combine( buildPath, "Unity-iPhone.xcodeproj/project.pbxproj" );
-        }
-
-        private static PBXProject OpenXCode( string buildPath )
-        {
-            var project = new PBXProject();
-            project.ReadFromString( File.ReadAllText( GetXCodeProjectPath( buildPath ) ) );
-            return project;
-        }
-
-        private static void SaveXCode( PBXProject project, string buildPath )
-        {
-            File.WriteAllText( GetXCodeProjectPath( buildPath ), project.WriteToString() );
-        }
-
-        private static void GetTargetsGUID( PBXProject project, out string main, out string framework )
-        {
-#if UNITY_2019_3_OR_NEWER
-            main = project.GetUnityMainTargetGuid();
-            framework = project.GetUnityFrameworkTargetGuid();
-#elif UNITY_2018_1_OR_NEWER
-            main = project.TargetGuidByName( PBXProject.GetUnityTargetName() );
-            framework = main;
-#else
-            main = project.TargetGuidByName( "Unity-iPhone" );
-            framework = main;
-#endif
-        }
-        #endregion
-
         #region Info PList
-        private static void UpdateGADDelayMeasurement( PlistDocument plist, CASEditorSettings editorSettings )
+        private static void EditPList( string root, Action<PlistDocument> action )
         {
-            plist.root.SetBoolean( "GADDelayAppMeasurementInit", editorSettings.delayAppMeasurementGADInit );
+            string path = Path.Combine( root, "Info.plist" );
+            if (!File.Exists( path ))
+            {
+                Debug.LogError( CASEditorUtils.logTag + "XCode plist not found: " + path );
+                return;
+            }
+            PlistDocument plist = new PlistDocument();
+            plist.ReadFromFile( path );
+            action( plist );
+            File.WriteAllText( path, plist.WriteToString() );
         }
 
-        private static void UpdateGADAppId( PlistDocument plist, CASInitSettings initSettings, DependencyManager deps )
+        private static void SetSDKInitializationDelay( this PlistDocument plist, bool delayInit )
         {
-            if (!initSettings)
-                return;
+            plist.root.SetBoolean( "GADDelayAppMeasurementInit", delayInit );
+            plist.root.SetBoolean( "MyTargetSDKAutoInitMode", !delayInit );
+        }
+
+        private static void SetGADAppIdForCAS( this PlistDocument plist, CASInitSettings initSettings, DependencyManager deps )
+        {
             #region Read Admob App ID from CAS Settings
             bool admobAppIdRequired = deps == null;
             if (deps != null)
@@ -201,7 +178,7 @@ namespace CAS.UEditor
                 plist.root.SetString( "GADApplicationIdentifier", admobAppId );
         }
 
-        private static void UpdateSKAdNetworksInfo( PlistDocument plist )
+        private static void AddSKAdNetworkItemsForCAS( this PlistDocument plist )
         {
             var templateFile = CASEditorUtils.GetTemplatePath( CASEditorUtils.iosSKAdNetworksTemplateFile );
             if (string.IsNullOrEmpty( templateFile ))
@@ -228,7 +205,7 @@ namespace CAS.UEditor
             }
         }
 
-        private static void UpdateLSApplicationQueriesSchames( PlistDocument plist )
+        private static void AddApplicationQueriesSchamesForCAS( this PlistDocument plist )
         {
             PlistElementArray schemesList;
             var applicationQueriesSchemesField = plist.root["LSApplicationQueriesSchemes"];
@@ -256,7 +233,7 @@ namespace CAS.UEditor
             }
         }
 
-        private static void UpdateAppTransportSecuritySettings( PlistDocument plist )
+        private static void SetAppTransportSecuritySettings( this PlistDocument plist )
         {
             PlistElement atsRoot;
             plist.root.values.TryGetValue( "NSAppTransportSecurity", out atsRoot );
@@ -281,17 +258,17 @@ namespace CAS.UEditor
             }
         }
 
-        private static void SetAttributionReportEndpoint( PlistDocument plist, CASEditorSettings settings )
+        private static void SetAttributionReportEndpoint( this PlistDocument plist, string endpoint )
         {
-            if (!string.IsNullOrEmpty( settings.attributionReportEndpoint ))
-                plist.root.SetString( "NSAdvertisingAttributionReportEndpoint", settings.attributionReportEndpoint );
+            if (!string.IsNullOrEmpty( endpoint ))
+                plist.root.SetString( "NSAdvertisingAttributionReportEndpoint", endpoint );
         }
 
-        private static void SetDefaultUserTrackingDescription( PlistDocument plist, CASEditorSettings settings )
+        private static void SetDefaultUserTrackingDescription( this PlistDocument plist, KeyValuePair[] descriptions )
         {
-            if (settings.userTrackingUsageDescription.Length == 0)
+            if (descriptions.Length == 0)
                 return;
-            var description = settings.userTrackingUsageDescription[0].value;
+            var description = descriptions[0].value;
             if (string.IsNullOrEmpty( description ))
                 return;
             plist.root.SetString( "NSUserTrackingUsageDescription", description );
@@ -299,12 +276,48 @@ namespace CAS.UEditor
         #endregion
 
         #region XCode project
-        private static void CopyRawSettingsFile( string rootPath, PBXProject project, string target, CASInitSettings casSettings )
+        private static string GetXCodeProjectPath( string buildPath )
         {
-            if (!casSettings)
-                return;
+            return Path.Combine( buildPath, "Unity-iPhone.xcodeproj/project.pbxproj" );
+        }
 
-            var resourcesBuildPhase = project.GetResourcesBuildPhaseByTarget( target );
+        private static void EditXCProject( string root, string projectName, Action<PBXProject> action )
+        {
+            var path = Path.Combine( root, projectName + ".xcodeproj" ) + "/project.pbxproj";
+            if (!File.Exists( path ))
+            {
+                Debug.LogError( CASEditorUtils.logTag + "XCode project not found: " + path );
+                return;
+            }
+            var project = new PBXProject();
+            project.ReadFromString( File.ReadAllText( path ) );
+            action( project );
+            File.WriteAllText( path, project.WriteToString() );
+        }
+
+        private static string GetAppGUID( this PBXProject project )
+        {
+#if UNITY_2019_3_OR_NEWER
+            return project.GetUnityMainTargetGuid();
+#elif UNITY_2018_1_OR_NEWER
+            return project.TargetGuidByName( PBXProject.GetUnityTargetName() );
+#else
+            return project.TargetGuidByName( unityProjectName );
+#endif
+        }
+
+        private static string GetFrameworkGUID( this PBXProject project )
+        {
+#if UNITY_2019_3_OR_NEWER
+            return project.GetUnityFrameworkTargetGuid();
+#else
+            return GetAppGUID( project );
+#endif
+        }
+
+        private static void CopyConfigCacheFileForCAS( this PBXProject project, string rootPath, string targetGuid, CASInitSettings casSettings )
+        {
+            var resourcesBuildPhase = project.GetResourcesBuildPhaseByTarget( targetGuid );
             for (int i = 0; i < casSettings.managersCount; i++)
             {
                 string managerId = casSettings.GetManagerId( i );
@@ -318,7 +331,7 @@ namespace CAS.UEditor
                     {
                         File.Copy( pathInAssets, Path.Combine( rootPath, fileName ), true );
                         var fileGuid = project.AddFile( fileName, fileName, PBXSourceTree.Source );
-                        project.AddFileToBuildSection( target, resourcesBuildPhase, fileGuid );
+                        project.AddFileToBuildSection( targetGuid, resourcesBuildPhase, fileGuid );
                     }
                     catch (Exception e)
                     {
@@ -332,9 +345,9 @@ namespace CAS.UEditor
             }
         }
 
-        private static void ApplyCrosspromoDynamicLinks( string buildPath, string targetGuid, CASInitSettings casSettings, DependencyManager deps )
+        private static void ApplyCrosspromoDynamicLinks( string buildPath, CASInitSettings casSettings, DependencyManager deps )
         {
-            if (!casSettings || casSettings.IsTestAdMode() || casSettings.managersCount == 0
+            if (casSettings.IsTestAdMode() || casSettings.managersCount == 0
                 || string.IsNullOrEmpty( casSettings.GetManagerId( 0 ) ))
                 return;
             if (deps != null)
@@ -348,16 +361,13 @@ namespace CAS.UEditor
                 var identifier = Application.identifier;
                 var productName = identifier.Substring( identifier.LastIndexOf( "." ) + 1 );
                 var projectPath = GetXCodeProjectPath( buildPath );
-                var entitlements = new ProjectCapabilityManager( projectPath, productName + ".entitlements",
-#if UNITY_2019_3_OR_NEWER
-                    null, targetGuid );
-#else
-                    PBXProject.GetUnityTargetName() );
-#endif
+                // Attention: Use string name of Unity target for any Unity Editor version to avoid deprecation warnings. 
+                var entitlements = new ProjectCapabilityManager(
+                    projectPath, productName + ".entitlements", unityProjectName );
                 string link = "applinks:psvios" + casSettings.GetManagerId( 0 ) + ".page.link";
                 entitlements.AddAssociatedDomains( new[] { link } );
                 entitlements.WriteToFile();
-                Debug.Log( CASEditorUtils.logTag + "Apply application shame: " + link );
+                Debug.Log( CASEditorUtils.logTag + "Apply application Associated Domain: " + link );
             }
             catch (Exception e)
             {
@@ -365,8 +375,14 @@ namespace CAS.UEditor
             }
         }
 
-        private static void EnableSwiftLibraries( string buildPath, PBXProject project, string mainTargetGuid, string frameworkTargetGuid )
+        private static void SetBitcodeEnabled( this PBXProject project, string targetGuid, bool enabled )
         {
+            project.SetBuildProperty( targetGuid, "ENABLE_BITCODE", enabled ? "YES" : "NO" );
+        }
+
+        private static void EnableSwiftLibraries( this PBXProject project, string mainTargetGuid )
+        {
+            var frameworkTargetGuid = project.GetFrameworkGUID();
             var swiftVersion = project.GetBuildPropertyForAnyConfig( frameworkTargetGuid, "SWIFT_VERSION" );
             if (string.IsNullOrEmpty( swiftVersion ))
                 project.SetBuildProperty( frameworkTargetGuid, "SWIFT_VERSION", "5.0" );
@@ -387,11 +403,9 @@ namespace CAS.UEditor
                 // Force disable for Framework target. Cause build error when enabled in both targets.
                 project.SetBuildProperty( frameworkTargetGuid, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "NO" );
             }
-            //Swift file already included with plugin files
-            //AddSwiftFile( buildPath, project, frameworkTargetGuid );
         }
 
-        private static void AddSwiftFile( string buildPath, PBXProject project, string frameworkTargetGuid )
+        private static void AddSwiftFile( this PBXProject project, string buildPath, string frameworkTargetGuid )
         {
             // Skip when Generated by External Dependency Manager for Unity
             if (File.Exists( Path.Combine( buildPath, "Dummy.swift" ) ))
@@ -419,7 +433,7 @@ namespace CAS.UEditor
             project.AddFileToBuild( frameworkTargetGuid, swiftFileGuid );
         }
 
-        private static void SetExecutablePath( string buildPath, PBXProject project, string targetGuid, DependencyManager deps )
+        private static void FixLibrariesExecutablePath( this PBXProject project, string targetGuid, DependencyManager deps )
         {
 #if UNITY_2018_2_OR_NEWER
             string runpathSearchPaths = project.GetBuildPropertyForAnyConfig( targetGuid, "LD_RUNPATH_SEARCH_PATHS" );
@@ -441,8 +455,7 @@ namespace CAS.UEditor
             // to prevent any issues with libswiftCore.dylib.
             const string pathToSwiftLibs = "/usr/lib/swift";
             if (IsNeedEmbedSwiftStandardLibraries() && !runpathSearchPaths.Contains( pathToSwiftLibs ))
-                ;
-            runpathSearchPaths += " " + pathToSwiftLibs;
+                runpathSearchPaths += " " + pathToSwiftLibs;
 
             project.SetBuildProperty( targetGuid, "LD_RUNPATH_SEARCH_PATHS", runpathSearchPaths.Trim( ' ' ) );
 
@@ -464,44 +477,12 @@ namespace CAS.UEditor
             return false;
         }
 
-        private static bool IsNeedEmbedDynamicLibraries()
-        {
-#if UNITY_2019_3_OR_NEWER
-            return true;
-#else
-            return false;
-#endif
-        }
-
-        private static void EmbedDynamicLibrariesIfNeeded( string buildPath, PBXProject project, string targetGuid, DependencyManager deps )
-        {
-            for (int i = 0; i < deps.networks.Length; i++)
-            {
-                var dynamicLibraryPath = deps.networks[i].embedFramework;
-                if (string.IsNullOrEmpty( dynamicLibraryPath ))
-                    continue;
-                dynamicLibraryPath = Path.Combine( "Pods", dynamicLibraryPath );
-                if (!Directory.Exists( Path.Combine( buildPath, dynamicLibraryPath ) ))
-                    continue;
-
-#if UNITY_2019_3_OR_NEWER
-                var fileGuid = project.AddFile( dynamicLibraryPath, dynamicLibraryPath );
-                project.AddFileToEmbedFrameworks( targetGuid, fileGuid );
-#endif
-            }
-        }
-
-        private static bool IsNeedLocalizeUserTrackingDescription( CASEditorSettings settings )
-        {
-            return settings.userTrackingUsageDescription.Length > 1;
-        }
-
-        private static void LocalizeUserTrackingDescription( string buildPath, PBXProject project, string targetGuid, CASEditorSettings settings )
+        private static void LocalizeUserTrackingDescription( this PBXProject project, string buildPath, string targetGuid, KeyValuePair[] descriptions )
         {
             const string LegacyResourcesDirectoryName = "Resources";
             const string CASResourcesDirectoryName = "CASUResources";
 
-            if (settings.userTrackingUsageDescription.Length < 2)
+            if (descriptions.Length < 2)
                 return;
 
             // Use the legacy resources directory name if the build is being appended (the "Resources" directory already exists if it is an incremental build).
@@ -509,9 +490,9 @@ namespace CAS.UEditor
                 ? LegacyResourcesDirectoryName : CASResourcesDirectoryName;
             var resourcesDirectoryPath = Path.Combine( buildPath, resourcesDirectoryName );
 
-            for (int i = 0; i < settings.userTrackingUsageDescription.Length; i++)
+            for (int i = 0; i < descriptions.Length; i++)
             {
-                var keyValue = settings.userTrackingUsageDescription[i];
+                var keyValue = descriptions[i];
                 var description = keyValue.value;
                 var localeCode = keyValue.key;
                 if (string.IsNullOrEmpty( localeCode ))
@@ -568,6 +549,33 @@ namespace CAS.UEditor
 
                 var guid = project.AddFolderReference( localeSpecificDirectoryPath, Path.Combine( resourcesDirectoryName, localeSpecificDirectoryName ) );
                 project.AddFileToBuild( targetGuid, guid );
+            }
+        }
+
+        private static bool IsNeedEmbedDynamicLibraries()
+        {
+#if UNITY_2019_3_OR_NEWER
+            return true;
+#else
+            return false;
+#endif
+        }
+
+        private static void EmbedDynamicLibrariesIfNeeded( this PBXProject project, string buildPath, string targetGuid, DependencyManager deps )
+        {
+            for (int i = 0; i < deps.networks.Length; i++)
+            {
+                var dynamicLibraryPath = deps.networks[i].embedFramework;
+                if (string.IsNullOrEmpty( dynamicLibraryPath ))
+                    continue;
+                dynamicLibraryPath = Path.Combine( "Pods", dynamicLibraryPath );
+                if (!Directory.Exists( Path.Combine( buildPath, dynamicLibraryPath ) ))
+                    continue;
+
+#if UNITY_2019_3_OR_NEWER
+                var fileGuid = project.AddFile( dynamicLibraryPath, dynamicLibraryPath );
+                project.AddFileToEmbedFrameworks( targetGuid, fileGuid );
+#endif
             }
         }
         #endregion

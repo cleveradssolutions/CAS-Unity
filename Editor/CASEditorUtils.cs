@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -392,7 +392,7 @@ namespace CAS.UEditor
         #endregion
 
         #region EDM4U Reflection
-        private static void CheckAssemblyForType<T>( string assembly )
+        internal static void CheckAssemblyForType<T>( string assembly )
         {
             var targetType = typeof( T );
             var targetAssembly = targetType.Assembly.GetName().Name;
@@ -400,9 +400,18 @@ namespace CAS.UEditor
                 Debug.LogError( logTag + targetType.FullName + " in assembly: " + targetAssembly + " Expecting: " + assembly );
         }
 
+        internal static Type GetAndroidDependenciesResolverType()
+        {
+            const string assemblyName = "Google.JarResolver";
+#if CASDeveloper
+            CheckAssemblyForType<GooglePlayServices.PlayServicesResolver>( assemblyName );
+#endif
+            return Type.GetType( "GooglePlayServices.PlayServicesResolver, " + assemblyName, false );
+        }
+
         public static bool IsAndroidDependenciesResolverExist()
         {
-            return Type.GetType( "GooglePlayServices.PlayServicesResolver, Google.JarResolver", false ) != null;
+            return GetAndroidDependenciesResolverType() != null;
         }
 
         public static System.Version GetEDM4UVersion( BuildTarget platform )
@@ -433,13 +442,8 @@ namespace CAS.UEditor
 #if UNITY_ANDROID
             CASPreprocessGradle.UpdateGradleTemplateIfNeed();
 #endif
-            const string googleAssembly = "Google.JarResolver";
-            const string resolverTypeName = "GooglePlayServices.PlayServicesResolver, " + googleAssembly;
-#if CASDeveloper
-            CheckAssemblyForType<GooglePlayServices.PlayServicesResolver>( googleAssembly );
-#endif
-            bool success = true;
-            var resolverType = Type.GetType( resolverTypeName, false );
+            bool success = false;
+            var resolverType = GetAndroidDependenciesResolverType();
             if (resolverType == null)
                 return success;
 
@@ -459,7 +463,7 @@ namespace CAS.UEditor
             }
             catch (Exception e)
             {
-                Debug.LogWarning( logTag + "GooglePlayServices.PlayServicesResolver error: " + e.Message );
+                Debug.LogException( e );
             }
             EditorUtility.ClearProgressBar();
             return success;
@@ -467,10 +471,10 @@ namespace CAS.UEditor
 
         public static T GetAndroidResolverSetting<T>( string property )
         {
-            const string googleAssembly = "Google.JarResolver";
-            const string settingsTypeName = "GooglePlayServices.SettingsDialog, " + googleAssembly;
+            const string assemblyName = "Google.JarResolver";
+            const string settingsTypeName = "GooglePlayServices.SettingsDialog, " + assemblyName;
 #if CASDeveloper
-            CheckAssemblyForType<GooglePlayServices.SettingsDialog>( googleAssembly );
+            CheckAssemblyForType<GooglePlayServices.SettingsDialog>( assemblyName );
 #endif
             try
             {
@@ -480,6 +484,27 @@ namespace CAS.UEditor
                     return ( T )settingsType.GetProperty( property, BindingFlags.NonPublic | BindingFlags.Static )
                             .GetValue( null, null );
                 }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning( logTag + settingsTypeName + " error: " + e.Message );
+            }
+            return default( T );
+        }
+
+        public static T GetIOSResolverSetting<T>( string property )
+        {
+            const string assemblyName = "Google.IOSResolver";
+            const string settingsTypeName = "Google.IOSResolver, " + assemblyName;
+#if CASDeveloper
+            CheckAssemblyForType<Google.IOSResolver>( assemblyName );
+#endif
+            try
+            {
+                var settingsType = Type.GetType( settingsTypeName, false );
+                if (settingsType != null)
+                    return ( T )settingsType.GetProperty( property, BindingFlags.Public | BindingFlags.Static )
+                            .GetValue( null, null );
             }
             catch (Exception e)
             {
@@ -581,7 +606,7 @@ namespace CAS.UEditor
             return false;
         }
 
-        internal static void DialogOrCancelBuild( string message, BuildTarget target, string btn = "Continue" )
+        internal static void DialogOrCancelBuild( string message, BuildTarget target = BuildTarget.NoTarget, string btn = "Continue" )
         {
             if (!IsBatchMode() && !EditorUtility.DisplayDialog( "CAS Configure project", message, btn, "Cancel build" ))
                 StopBuildWithMessage( "Cancel build: " + message, target );
@@ -890,7 +915,9 @@ namespace CAS.UEditor
                 case AdFlags.Interstitial: iconIndex = 1; break;
                 case AdFlags.Rewarded: iconIndex = 2; break;
                 case AdFlags.Native: iconIndex = 3; break;
+#pragma warning disable CS0618 // Type or member is obsolete
                 case AdFlags.MediumRectangle: iconIndex = 4; break;
+#pragma warning restore CS0618 // Type or member is obsolete
                 default: return null;
             }
             return formatIcons[active ? iconIndex : iconIndex + 5];

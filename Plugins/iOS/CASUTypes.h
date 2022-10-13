@@ -2,30 +2,42 @@
 //  CSAUTypes.h
 //  CASUnityPlugin
 //
-//  Copyright © 2020 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2022 Clever Ads Solutions. All rights reserved.
 //
 
-typedef const void * CASUTypeManagerClientRef;
-typedef const void * CASUTypeManagerRef;
-typedef const void * CASUTypeManagerBuilderRef;
 
-typedef const void * CASUTypeViewClientRef;
-typedef const void * CASUTypeViewRef;
+/// Type representing a Unity MediationManager ad client.
+typedef const void * CASManagerClientRef;
+/// Type representing a CASMediationManager type
+typedef const void * CASUManagerRef;
+/// Type representing a CASManagerBuilder type
+typedef const void * CASManagerBuilderRef;
 
-typedef void (*CASUInitializationCompleteCallback)(CASUTypeManagerClientRef *manager, const char *error, BOOL withConsent);
+/// Type representing a Unity AdView ad client.
+typedef const void * CASViewClientRef;
+/// Type representing a CASUView type
+typedef const void * CASUViewRef;
 
-typedef void (*CASUDidLoadedAdCallback)(CASUTypeManagerClientRef *manager);
+/// Type representing a NSObject<CASStatusHandler> type
+typedef const void * CASImpressionRef;
 
-typedef void (*CASUDidFailedAdCallback)(CASUTypeManagerClientRef *manager, NSInteger error);
+// MARK: - CAS Mediation Manager callbacks
+typedef void (*CASUInitializationCompleteCallback)(CASManagerClientRef *manager, const char *error, BOOL withConsent, BOOL isTestMode);
 
-typedef void (*CASUWillOpeningWithMetaCallback)(CASUTypeManagerClientRef *manager, const char *parameters);
+typedef void (*CASUDidLoadedAdCallback)(CASManagerClientRef *manager);
+typedef void (*CASUDidFailedAdCallback)(CASManagerClientRef *manager, NSInteger error);
 
-typedef void (*CASUDidShowAdFailedWithErrorCallback)(CASUTypeManagerClientRef *manager, const char *error);
+typedef void (*CASUWillPresentAdCallback)(CASManagerClientRef *manager, CASImpressionRef impression);
+typedef void (*CASUDidShowAdFailedWithErrorCallback)(CASManagerClientRef *manager, const char *error);
+typedef void (*CASUDidClickedAdCallback)(CASManagerClientRef *manager);
+typedef void (*CASUDidCompletedAdCallback)(CASManagerClientRef *manager);
+typedef void (*CASUDidClosedAdCallback)(CASManagerClientRef *manager);
 
-typedef void (*CASUDidClickedAdCallback)(CASUTypeManagerClientRef *manager);
-
-typedef void (*CASUDidCompletedAdCallback)(CASUTypeManagerClientRef *manager);
-
-typedef void (*CASUDidClosedAdCallback)(CASUTypeManagerClientRef *manager);
+// MARK: - CAS AdView callbacks
+typedef void (*CASUViewDidLoadCallback)(CASViewClientRef *view);
+typedef void (*CASUViewDidFailedCallback)(CASViewClientRef *view, NSInteger error);
+typedef void (*CASUViewWillPresentCallback)(CASViewClientRef *view, CASImpressionRef impression);
+typedef void (*CASUViewDidClickedCallback)(CASViewClientRef *view);
+typedef void (*CASUViewDidRectCallback)(CASViewClientRef *view, float x, float y, float width, float height);
 
 typedef void (*CASUATTCompletion)(NSUInteger status);

@@ -1,27 +1,22 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace CAS
 {
-    [Serializable]
-    public class CASUEventWithError : UnityEvent<string> { }
-
-    public delegate void InitCompleteAction( bool success, string error );
-
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK" )]
     public static class MobileAds
     {
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "2.8.6";
+        public const string wrapperVersion = "2.9.3";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -156,7 +151,7 @@ namespace CAS
         {
             var builder = BuildManager();
             builder.WithInitListener( initCompleteAction );
-            builder.WithEnabledAdTypes( enableAd & builder.allowedAdFlags );
+            builder.WithEnabledAdTypes( enableAd & builder.defaultAllowedFormats );
             if (managerIndex > 0)
                 builder.WithManagerIdAtIndex( managerIndex );
             return builder.Initialize();

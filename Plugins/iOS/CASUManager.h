@@ -2,21 +2,21 @@
 //  CASUManager.h
 //  CASUnityPlugin
 //
-//  Copyright © 2020 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2022 Clever Ads Solutions. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
-#import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
-#import "CASUCallback.h"
+#import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import "CASUCallback.h"
+@import CleverAdsSolutions;
 
 @interface CASUManager : NSObject<CASLoadDelegate>
 
-- (id _Nonnull)initWithManager:(CASMediationManager *_Nonnull)manager
-                     forClient:(CASUTypeManagerClientRef _Nullable *_Nullable)client;
+- (nonnull instancetype)initWithManager:(CASMediationManager *_Nonnull)manager
+                              forClient:(CASManagerClientRef _Nullable *_Nullable)client;
 
-@property (nonatomic, assign) CASUTypeManagerClientRef _Nullable *_Nullable client;
+@property (nonatomic, assign) CASManagerClientRef _Nullable *_Nullable client;
 @property (nonatomic, strong, nonnull) CASMediationManager *casManager;
 @property (nonatomic, strong, nullable) CASUCallback *interCallback;
 @property (nonatomic, strong, nullable) CASUCallback *rewardCallback;

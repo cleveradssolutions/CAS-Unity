@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_EDITOR || TARGET_OS_SIMULATOR
@@ -11,14 +11,15 @@ using UnityEngine;
 namespace CAS.Unity
 {
 
-    internal class CASView : IAdView
+    internal class CASViewClient : IAdView
     {
         private static bool _emulateTabletScreen = false;
 
-        private readonly CASMediationManager _manager;
-        private bool _isActive = false;
+        private readonly CASManagerClient _manager;
+        private bool _active = false;
         private bool _loaded = false;
-        private bool _callPresentEvent = true;
+        private bool _waitPresentEvent = true;
+        private bool _waitImpressionEvent = false;
         private int _positionX = 0;
         private int _positionY = 0;
         private AdError _lastError = AdError.Internal;
@@ -26,35 +27,33 @@ namespace CAS.Unity
 
         public event CASViewEvent OnLoaded;
         public event CASViewEventWithError OnFailed;
-        public event CASViewEventWithMeta OnPresented;
+        public event CASViewEventWithMeta OnImpression;
         public event CASViewEvent OnClicked;
+        public event CASViewEventWithMeta OnPresented;
         public event CASViewEvent OnHidden;
 
-        public AdSize size { get; private set; }
         public IMediationManager manager { get { return _manager; } }
+        public AdSize size { get; private set; }
+        public Rect rectInPixels { get; private set; }
         public int refreshInterval { get; set; }
 
         public bool isReady
         {
-            get
-            {
-                return _loaded && _manager.IsEnabledAd( AdType.Banner );
-            }
+            get { return _loaded && _manager.IsEnabledAd( AdType.Banner ); }
         }
 
-        public Rect rectInPixels { get { return CalculateAdRectOnScreen(); } }
-
-        internal CASView( CASMediationManager manager, AdSize size )
+        internal CASViewClient( CASManagerClient manager, AdSize size )
         {
             _manager = manager;
             this.size = size;
             if (_manager.isAutolod)
                 Load();
+            refreshInterval = MobileAds.settings.bannerRefreshInterval;
         }
 
         public void Dispose()
         {
-            _manager.viewFactory.CallbackOnDestroy( this );
+            _manager.viewFactory.RemoveAdViewFromFactory( this );
         }
 
         public void DisableRefresh()
@@ -85,12 +84,16 @@ namespace CAS.Unity
                     return;
                 }
             }
-            _isActive = active;
+            _active = active;
 
-            if (!active && !_callPresentEvent)
+            if (!active)
             {
-                _callPresentEvent = true;
-                _manager.Post( CallAdHidden );
+                rectInPixels = Rect.zero;
+                if (!_waitPresentEvent)
+                {
+                    _waitPresentEvent = true;
+                    _manager.Post( CallAdHidden );
+                }
             }
         }
 
@@ -126,14 +129,15 @@ namespace CAS.Unity
 
         public void OnGUIAd( GUIStyle style )
         {
-            if (_isActive && isReady)
+            if (_active && isReady)
             {
-                if (_callPresentEvent)
+                if (_waitPresentEvent)
                 {
-                    _callPresentEvent = false;
+                    _waitPresentEvent = false;
                     _manager.Post( CallAdPresented );
                 }
-                var rect = CalculateAdRectOnScreen();
+                rectInPixels = CalculateAdRectOnScreen();
+                var rect = new Rect( rectInPixels );
                 var totalHeight = rect.height;
                 rect.height = totalHeight * 0.65f;
                 if (GUI.Button( rect, "CAS " + size.ToString() + " Ad", style ))
@@ -150,6 +154,7 @@ namespace CAS.Unity
         private void CallAdLoaded()
         {
             _loaded = true;
+            _waitImpressionEvent = true;
             if (OnLoaded != null)
                 OnLoaded( this );
         }
@@ -158,17 +163,23 @@ namespace CAS.Unity
         {
             if (OnFailed != null)
                 OnFailed( this, _lastError );
-            if (!_callPresentEvent)
+            if (!_waitPresentEvent)
             {
-                _callPresentEvent = true;
+                _waitPresentEvent = true;
                 _manager.Post( CallAdHidden );
             }
         }
 
         private void CallAdPresented()
         {
+            var impression = new CASImpressionClient( AdType.Banner );
             if (OnPresented != null)
-                OnPresented( this, _manager.bannerMetaData );
+                OnPresented( this, impression );
+            if (_waitImpressionEvent && OnImpression != null)
+            {
+                _waitImpressionEvent = false;
+                OnImpression( this, impression );
+            }
         }
 
         private void CallAdClicked()
@@ -217,6 +228,13 @@ namespace CAS.Unity
                 case AdSize.AdaptiveFullWidth:
                     result.width = screenWidth;
                     result.height = ( _emulateTabletScreen ? 90.0f : 50.0f ) * scale;
+                    break;
+                case AdSize.ThinBanner:
+                    result.width = screenWidth;
+                    if (_emulateTabletScreen)
+                        result.height = ( isPortrait ? 90.0f : 50.0f ) * scale;
+                    else
+                        result.height = ( isPortrait ? 50.0f : 32.0f ) * scale;
                     break;
                 default:
                     result.width = 320.0f * scale;
@@ -267,29 +285,26 @@ namespace CAS.Unity
 
     internal class CASViewFactoryImpl : CASViewFactory
     {
-        private CASMediationManager manager;
+        private CASManagerClient manager;
 
         public event CASTypedEvent OnLoadedAd;
         public event CASTypedEventWithError OnFailedToLoadAd;
 
-        internal CASViewFactoryImpl( CASMediationManager manager )
+        internal CASViewFactoryImpl( CASManagerClient manager )
         {
             this.manager = manager;
         }
 
         protected override IAdView CreateAdView( AdSize size )
         {
-            if (size == AdSize.MediumRectangle
-                    && ( manager.enabledTypes & AdFlags.MediumRectangle ) != AdFlags.MediumRectangle)
-                throw new Exception( "[CleverAdsSolutions] Please enable the Medium Rectangle format in `Assets/CleverAdsSolution/Settings` to use it.\n" );
-            return new CASView( manager, size );
+            return new CASViewClient( manager, size );
         }
 
         public void OnGUIAd( GUIStyle style )
         {
             for (int i = 0; i < adViews.Count; i++)
             {
-                ( ( CASView )adViews[i] ).OnGUIAd( style );
+                ( (CASViewClient)adViews[i] ).OnGUIAd( style );
             }
         }
 
@@ -315,6 +330,8 @@ namespace CAS.Unity
     [Serializable]
     internal class CASFullscreenView
     {
+        public event Action OnAdLoaded;
+        public event CASEventWithAdError OnAdFailedToLoad;
         public event Action OnAdShown;
         public event CASEventWithMeta OnAdOpening;
         public event CASEventWithError OnAdFailedToShow;
@@ -327,15 +344,13 @@ namespace CAS.Unity
 
         [SerializeField]
         private AdError lastError;
-        private CASMediationManager manager;
+        private CASManagerClient manager;
         private AdType type;
-        private AdMetaData metaData;
 
-        internal CASFullscreenView( CASMediationManager manager, AdType type )
+        internal CASFullscreenView( CASManagerClient manager, AdType type )
         {
             this.manager = manager;
             this.type = type;
-            metaData = CASMediationManager.CreateAdMetaData( type );
         }
 
         public void Load()
@@ -438,11 +453,15 @@ namespace CAS.Unity
         private void CallAdLoaded()
         {
             loaded = true;
+            if (OnAdLoaded != null)
+                OnAdLoaded();
             manager.viewFactory.OnLoadedCallback( type );
         }
 
         private void CallAdLoadFail()
         {
+            if (OnAdFailedToLoad != null)
+                OnAdFailedToLoad( lastError );
             manager.viewFactory.OnFailedCallback( type, lastError );
         }
 
@@ -457,7 +476,7 @@ namespace CAS.Unity
             if (OnAdShown != null)
                 OnAdShown();
             if (OnAdOpening != null)
-                OnAdOpening( metaData );
+                OnAdOpening( new CASImpressionClient( type ) );
         }
 
         private void CallAdClosed()

@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -9,9 +9,7 @@ using System.Collections.Generic;
 
 namespace CAS
 {
-    /// <summary>
-    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws
-    /// </summary>
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws" )]
     public enum ConsentStatus
     {
         /// <summary>
@@ -28,9 +26,7 @@ namespace CAS
         Denied,
     }
 
-    /// <summary>
-    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws
-    /// </summary>
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws" )]
     public enum CCPAStatus
     {
         /// <summary>
@@ -47,9 +43,7 @@ namespace CAS
         OptInSale,
     }
 
-    /// <summary>
-    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws
-    /// </summary>
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws" )]
     public enum Audience
     {
         /// <summary>
@@ -84,9 +78,7 @@ namespace CAS
         NotChildren,
     }
 
-    /// <summary>
-    /// Wiki page: https://github.com/cleveradssolutions/CAS-Unity/wiki/Configuring-SDK
-    /// </summary>
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Configuring-SDK" )]
     public interface IAdsSettings
     {
         /// <summary>
@@ -157,8 +149,12 @@ namespace CAS
 
         /// <summary>
         /// Identifiers corresponding to test devices which will always request test ads.
-        /// <para>The test device identifier for the current device is logged to the console when the first
-        /// ad request is made.</para>
+        /// List of test devices should be defined before first MediationManager initialized.
+        /// <para>1. Run an app configured with the CAS SDK.</para>
+        /// <para>2. Check the console or logcat output for a message that looks like this:
+        /// "To get test ads on this device, set ... "</para>
+        /// <para>3. Copy your alphanumeric test device ID to your clipboard.</para>
+        /// <para>4. Add the test device ID to the list.</para>
         /// </summary>
         void SetTestDeviceIds( List<string> testDeviceIds );
 
@@ -177,7 +173,7 @@ namespace CAS
         /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
         /// <para>You can use <see cref="EventExecutor.Add(Action)"/> to schedule each calls on the next Update() loop.
         /// OR enable this property to automatically execute all calls on the next Update() loop.</para>
-        /// <para>Disabled by default.</para>
+        /// <para>Enabled by default.</para>
         /// </summary>
         bool isExecuteEventsOnUnityThread { get; set; }
 

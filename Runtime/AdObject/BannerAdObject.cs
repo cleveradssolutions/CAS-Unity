@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -98,12 +98,12 @@ namespace CAS.AdObject
 
         public void SetAdPositionEnumIndex( int enumIndex )
         {
-            SetAdPosition( ( AdPosition )enumIndex );
+            SetAdPosition( (AdPosition)enumIndex );
         }
 
         public void SetAdSizeEnumIndex( int enumIndex )
         {
-            SetAdSize( ( AdSize )enumIndex );
+            SetAdSize( (AdSize)enumIndex );
         }
 
         #region MonoBehaviour
@@ -128,13 +128,18 @@ namespace CAS.AdObject
                 else
                     adView.position = adPosition;
                 adView.SetActive( true );
+                if (adView.isReady)
+                    OnAdShown.Invoke();
             }
         }
 
         private void OnDisable()
         {
             if (adView != null)
+            {
                 adView.SetActive( false );
+                OnAdHidden.Invoke();
+            }
         }
 
         private void OnDestroy()
@@ -164,8 +169,6 @@ namespace CAS.AdObject
                 adView.OnLoaded -= OnBannerLoaded;
                 adView.OnFailed -= OnBannerLoadFailed;
                 adView.OnClicked -= OnBannerClicked;
-                adView.OnPresented -= OnBannerPresenting;
-                adView.OnHidden -= OnBannerHidden;
                 adView.SetActive( false );
                 adView = null;
             }
@@ -183,8 +186,6 @@ namespace CAS.AdObject
             newView.OnLoaded += OnBannerLoaded;
             newView.OnFailed += OnBannerLoadFailed;
             newView.OnClicked += OnBannerClicked;
-            newView.OnPresented += OnBannerPresenting;
-            newView.OnHidden += OnBannerHidden;
 
             adView = newView;
 
@@ -217,7 +218,11 @@ namespace CAS.AdObject
         private void OnBannerLoaded( IAdView ad )
         {
             if (ad == adView)
+            {
                 OnAdLoaded.Invoke();
+                if (isActiveAndEnabled)
+                    OnAdShown.Invoke();
+            }
         }
 
         private void OnBannerLoadFailed( IAdView ad, AdError error )
@@ -225,24 +230,14 @@ namespace CAS.AdObject
             if (ad != adView)
                 return;
             OnAdFailedToLoad.Invoke( error.GetMessage() );
-        }
-
-        private void OnBannerPresenting( IAdView view, AdMetaData data )
-        {
-            if (view == adView)
-                OnAdShown.Invoke();
+            if (isActiveAndEnabled)
+                OnAdHidden.Invoke();
         }
 
         private void OnBannerClicked( IAdView view )
         {
             if (view == adView)
                 OnAdClicked.Invoke();
-        }
-
-        private void OnBannerHidden( IAdView view )
-        {
-            if (view == adView)
-                OnAdHidden.Invoke();
         }
         #endregion
 

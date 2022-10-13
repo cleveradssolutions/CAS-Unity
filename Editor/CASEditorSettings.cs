@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -29,6 +29,7 @@ namespace CAS.UEditor
         public bool updateGradlePluginVersion = true;
 
         public bool generateIOSDeepLinksForPromo = true;
+        public bool bitcodeIOSEnabled = false;
         public string attributionReportEndpoint = CASEditorUtils.attributionReportEndPoint;
 
         /// <summary>

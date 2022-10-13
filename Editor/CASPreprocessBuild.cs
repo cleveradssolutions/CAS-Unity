@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || UNITY_IOS || CASDeveloper
@@ -110,24 +110,31 @@ namespace CAS.UEditor
             else if (target == BuildTarget.iOS)
                 ConfigureIOS();
 
-#pragma warning disable CS0618 // Type or member is obsolete
-            // Use directrly property to avoid Debug build
-            if (settings.testAdMode && !EditorUserBuildSettings.development)
+            if (settings.IsTestAdMode() && !EditorUserBuildSettings.development)
                 Debug.LogWarning( Utils.logTag + "Test Ads Mode enabled! Make sure the build is for testing purposes only!\n" +
                     "Use 'Assets > CleverAdsSolutions > Settings' menu to disable Test Ad Mode." );
             else
                 Debug.Log( Utils.logTag + "Project configuration completed" );
-#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         private static void ConfigureIOS()
         {
-#if (UNITY_IOS || CASDeveloper) && !UNITY_2019_3_OR_NEWER
-            if (!PlayerSettings.iOS.targetOSVersionString.StartsWith( "1" ))
+#if UNITY_IOS || CASDeveloper
+            if (!Utils.GetIOSResolverSetting<bool>( "PodfileStaticLinkFrameworks" ))
             {
-                Utils.DialogOrCancelBuild( "CAS required a higher minimum deployment target. Set iOS 10.0 and continue?", BuildTarget.NoTarget );
-                PlayerSettings.iOS.targetOSVersionString = "10.0";
+                Utils.DialogOrCancelBuild( "Please enable 'Add use_frameworks!' and 'Link frameworks statically' found under " +
+                        "'Assets -> External Dependency Manager -> iOS Resolver -> Settings' menu.\n" +
+                        "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks." );
             }
+
+#if !UNITY_2020_1_OR_NEWER
+            var iosVersion = PlayerSettings.iOS.targetOSVersionString;
+            if (iosVersion.StartsWith( "9." ) || iosVersion.StartsWith( "10." ))
+            {
+                Utils.DialogOrCancelBuild( "CAS required a higher minimum deployment target. Set iOS 11.0 and continue?", BuildTarget.NoTarget );
+                PlayerSettings.iOS.targetOSVersionString = "11.0";
+            }
+#endif
 #endif
         }
 
@@ -137,11 +144,32 @@ namespace CAS.UEditor
             EditorUtility.DisplayProgressBar( casTitle, "Validate CAS Android Build Settings", 0.8f );
 
             const string deprecatedPluginPath = "Assets/Plugins/CAS";
-            if (AssetDatabase.IsValidFolder( deprecatedPluginPath ))
+            if (Directory.Exists( deprecatedPluginPath ))
+                AssetDatabase.MoveAssetToTrash( deprecatedPluginPath );
+
+            const string deprecatedConfigFileInRes = Utils.androidResSettingsPath + ".json";
+            if (File.Exists( deprecatedConfigFileInRes ))
+                AssetDatabase.MoveAssetToTrash( deprecatedConfigFileInRes );
+
+#if !UNITY_2021_2_OR_NEWER
+            // 19 - AndroidSdkVersions.AndroidApiLevel19
+            // Deprecated in Unity 2021.2
+            if (PlayerSettings.Android.minSdkVersion < ( AndroidSdkVersions )19)
             {
-                AssetDatabase.DeleteAsset( deprecatedPluginPath );
-                Debug.Log( "Removed deprecated plugin: " + deprecatedPluginPath );
+                Utils.DialogOrCancelBuild( "CAS required a higher minimum SDK API level. Set SDK level 19 (KitKat) and continue?", BuildTarget.NoTarget );
+                PlayerSettings.Android.minSdkVersion = ( AndroidSdkVersions )19;
             }
+#endif
+
+#if !UNITY_2019_1_OR_NEWER
+            // 0 = AndroidBuildSystem.Internal
+            // Deprecated in Unity 2019
+            if (EditorUserBuildSettings.androidBuildSystem == 0)
+            {
+                Utils.DialogOrCancelBuild( "Unity Internal build system no longer supported. Set Gradle build system and continue?", BuildTarget.NoTarget );
+                EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
+            }
+#endif
 
             HashSet<string> promoAlias = new HashSet<string>();
             if (editorSettings.generateAndroidQuerriesForPromo)
@@ -153,16 +181,6 @@ namespace CAS.UEditor
             UpdateAndroidPluginManifest( admobAppId, promoAlias, editorSettings );
 
             CASPreprocessGradle.Configure( editorSettings );
-
-#if !UNITY_2021_2_OR_NEWER
-            // 19 - AndroidSdkVersions.AndroidApiLevel19
-            // Deprecated in Unity 2021.2
-            if (PlayerSettings.Android.minSdkVersion < ( AndroidSdkVersions )19)
-            {
-                Utils.DialogOrCancelBuild( "CAS required a higher minimum SDK API level. Set SDK level 19 (KitKat) and continue?", BuildTarget.NoTarget );
-                PlayerSettings.Android.minSdkVersion = ( AndroidSdkVersions )19;
-            }
-#endif
 #endif
         }
 
@@ -228,41 +246,6 @@ namespace CAS.UEditor
                 return null;
             }
             return Utils.SelectSettingsFileAndGetAppId( targetId, platform );
-        }
-
-        private static void CreateAndroidLibIfNedded()
-        {
-            const string libResFolder = Utils.androidLibFolderPath + "/res/xml";
-            if (!AssetDatabase.IsValidFolder( libResFolder ))
-            {
-                Directory.CreateDirectory( libResFolder );
-                AssetDatabase.ImportAsset( libResFolder );
-            }
-
-            if (!File.Exists( Utils.androidLibPropertiesPath ))
-            {
-                const string pluginProperties =
-                    "# This file is automatically generated by CAS Unity plugin.\n" +
-                    "# Do not modify this file -- YOUR CHANGES WILL BE ERASED!\n" +
-                    "android.library=true\n" +
-                    "target=android-29\n";
-                File.WriteAllText( Utils.androidLibPropertiesPath, pluginProperties );
-                AssetDatabase.ImportAsset( Utils.androidLibPropertiesPath );
-            }
-
-            if (!File.Exists( Utils.androidLibNetworkConfigPath ))
-            {
-                const string networkSecurity =
-                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                    "<network-security-config>\n" +
-                    "    <!-- The Meta AN SDK use 127.0.0.1 as a caching proxy to cache media files in the SDK -->\n" +
-                    "    <domain-config cleartextTrafficPermitted=\"true\">\n" +
-                    "        <domain includeSubdomains=\"true\">127.0.0.1</domain>\n" +
-                    "    </domain-config>\n" +
-                    "</network-security-config>";
-                File.WriteAllText( Utils.androidLibNetworkConfigPath, networkSecurity );
-                AssetDatabase.ImportAsset( Utils.androidLibNetworkConfigPath );
-            }
         }
 
         private static void UpdateAndroidPluginManifest( string admobAppId, HashSet<string> queries, CASEditorSettings settings )
@@ -359,7 +342,42 @@ namespace CAS.UEditor
             }
         }
 
-        internal static string DownloadRemoteSettings( string managerID, BuildTarget platform, CASInitSettings settings, DependencyManager deps )
+        private static void CreateAndroidLibIfNedded()
+        {
+            const string libResFolder = Utils.androidLibFolderPath + "/res/xml";
+            if (!AssetDatabase.IsValidFolder( libResFolder ))
+            {
+                Directory.CreateDirectory( libResFolder );
+                AssetDatabase.ImportAsset( libResFolder );
+            }
+
+            if (!File.Exists( Utils.androidLibPropertiesPath ))
+            {
+                const string pluginProperties =
+                    "# This file is automatically generated by CAS Unity plugin.\n" +
+                    "# Do not modify this file -- YOUR CHANGES WILL BE ERASED!\n" +
+                    "android.library=true\n" +
+                    "target=android-29\n";
+                File.WriteAllText( Utils.androidLibPropertiesPath, pluginProperties );
+                AssetDatabase.ImportAsset( Utils.androidLibPropertiesPath );
+            }
+
+            if (!File.Exists( Utils.androidLibNetworkConfigPath ))
+            {
+                const string networkSecurity =
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<network-security-config>\n" +
+                    "    <!-- The Meta AN SDK use 127.0.0.1 as a caching proxy to cache media files in the SDK -->\n" +
+                    "    <domain-config cleartextTrafficPermitted=\"true\">\n" +
+                    "        <domain includeSubdomains=\"true\">127.0.0.1</domain>\n" +
+                    "    </domain-config>\n" +
+                    "</network-security-config>";
+                File.WriteAllText( Utils.androidLibNetworkConfigPath, networkSecurity );
+                AssetDatabase.ImportAsset( Utils.androidLibNetworkConfigPath );
+            }
+        }
+
+        private static string DownloadRemoteSettings( string managerID, BuildTarget platform, CASInitSettings settings, DependencyManager deps )
         {
             const string title = "Update CAS remote settings";
 

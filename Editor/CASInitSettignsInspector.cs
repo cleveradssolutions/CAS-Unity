@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #pragma warning disable 649
@@ -46,6 +46,7 @@ namespace CAS.UEditor
         private SerializedProperty mostPopularCountryOfUsersProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
+        private SerializedProperty bitcodeIOSEnabledProp;
         #endregion
 
         #region Utility fields
@@ -58,7 +59,6 @@ namespace CAS.UEditor
         private string newCASVersion = null;
         private bool deprecateDependenciesExist;
         private Version edmVersion;
-        private PropertyInfo edmIOSStaticLinkProp = null;
         private bool edmRequiredNewer = false;
         private string environmentDetails;
 
@@ -83,7 +83,7 @@ namespace CAS.UEditor
 
             allowedPackageUpdate = Utils.IsPackageExist( Utils.packageName );
 
-            dependencyManager = DependencyManager.Create( platform, (Audience)audienceTaggedProp.enumValueIndex, true );
+            dependencyManager = DependencyManager.Create( platform, ( Audience )audienceTaggedProp.enumValueIndex, true );
 
             HandleDeprecatedComponents();
             InitEDM4U();
@@ -133,6 +133,7 @@ namespace CAS.UEditor
 
             mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty( "mostPopularCountryOfUsers" );
             attributionReportEndpointProp = editorSettingsObj.FindProperty( "attributionReportEndpoint" );
+            bitcodeIOSEnabledProp = editorSettingsObj.FindProperty( "bitcodeIOSEnabled" );
 
             userTrackingUsageDescriptionProp = editorSettingsObj.FindProperty( "userTrackingUsageDescription" );
 
@@ -169,10 +170,6 @@ namespace CAS.UEditor
                 if (deprecateDependenciesExist |= AssetDatabase.FindAssets( deprecatedAssets[i] ).Length > 0)
                     break;
             }
-
-            // Remove deprecated CAS settings raw data
-            if (File.Exists( Utils.androidResSettingsPath + ".json" ))
-                AssetDatabase.MoveAssetToTrash( Utils.androidResSettingsPath + ".json" );
         }
 
         private void InitEDM4U()
@@ -180,16 +177,6 @@ namespace CAS.UEditor
             edmVersion = Utils.GetEDM4UVersion( platform );
             if (edmVersion != null)
                 edmRequiredNewer = edmVersion < Utils.minEDM4UVersion;
-            try
-            {
-                if (platform == BuildTarget.iOS)
-                    edmIOSStaticLinkProp = Type.GetType( "Google.IOSResolver, Google.IOSResolver", true )
-                        .GetProperty( "PodfileStaticLinkFrameworks", BindingFlags.Public | BindingFlags.Static );
-            }
-            catch
-            {
-                edmIOSStaticLinkProp = null;
-            }
         }
 
         private void InitEnvironmentDetails()
@@ -205,14 +192,14 @@ namespace CAS.UEditor
                 var gradleWrapperVersion = CASPreprocessGradle.GetGradleWrapperVersion();
                 if (gradleWrapperVersion != null)
                     environmentBuilder.Append( "Gradle Wrapper - " ).Append( gradleWrapperVersion ).Append( "; " );
-                var targetSDK = (int)PlayerSettings.Android.targetSdkVersion;
+                var targetSDK = ( int )PlayerSettings.Android.targetSdkVersion;
                 if (targetSDK == 0)
                     environmentBuilder.Append( "Target ASDK Auto; " );
                 else
                     environmentBuilder.Append( "Target ASDK " ).Append( targetSDK ).Append( "; " );
             }
 #endif
-            if(platform == BuildTarget.iOS)
+            if (platform == BuildTarget.iOS)
             {
                 environmentBuilder.Append( "Target iOS " ).Append( PlayerSettings.iOS.targetOSVersionString );
             }
@@ -245,20 +232,13 @@ namespace CAS.UEditor
             managerIdsList.DoLayoutList();
             OnManagerIDVerificationGUI();
             DrawTestAdMode();
-            DrawSeparator();
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            var mediumFlag = (int)AdFlags.MediumRectangle;
-            EditorGUI.BeginDisabledGroup( ( allowedAdFlagsProp.intValue & mediumFlag ) == mediumFlag );
             var banner = DrawAdFlagToggle( AdFlags.Banner );
-            EditorGUI.EndDisabledGroup();
-            EditorGUI.BeginDisabledGroup( !banner );
-            DrawAdFlagToggle( AdFlags.MediumRectangle );
-            EditorGUI.EndDisabledGroup();
             var inter = DrawAdFlagToggle( AdFlags.Interstitial );
             var reward = DrawAdFlagToggle( AdFlags.Rewarded );
-            DrawAdFlagToggle( AdFlags.Native );
+            //DrawAdFlagToggle( AdFlags.Native );
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
             if (banner)
@@ -414,6 +394,10 @@ namespace CAS.UEditor
             }
             else
             {
+                bitcodeIOSEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                    "Bitcode enabled",
+                    bitcodeIOSEnabledProp.boolValue );
+
                 EditorGUILayout.BeginHorizontal();
                 var reportEndpointEnabled = attributionReportEndpointProp.stringValue.Length > 0;
                 if (reportEndpointEnabled != EditorGUILayout.ToggleLeft(
@@ -507,7 +491,7 @@ namespace CAS.UEditor
 
         private bool IsAdFormatsNotUsed()
         {
-            if (allowedAdFlagsProp.intValue == 0 || allowedAdFlagsProp.intValue == (int)AdFlags.Native)
+            if (allowedAdFlagsProp.intValue == 0 || allowedAdFlagsProp.intValue == ( int )AdFlags.Native)
             {
                 EditorGUILayout.HelpBox( "Please activate the ad formats that you want to use in your game.", MessageType.Error );
                 return true;
@@ -517,8 +501,8 @@ namespace CAS.UEditor
 
         private void DrawTestAdMode()
         {
-            EditorGUILayout.PropertyField( testAdModeProp );
             EditorGUI.indentLevel++;
+            testAdModeProp.boolValue = EditorGUILayout.ToggleLeft( "Test ad mode", testAdModeProp.boolValue );
             if (testAdModeProp.boolValue)
                 EditorGUILayout.HelpBox( "Make sure you disable test ad mode and replace test manager ID with your own ad manager ID before publishing your app!", MessageType.Warning );
             else if (EditorUserBuildSettings.development)
@@ -532,10 +516,11 @@ namespace CAS.UEditor
 
         private void DrawInterstitialScope()
         {
-            EditorGUILayout.LabelField( "Interstitial ads:" );
+            EditorGUILayout.LabelField( "Interstitial ads impression interval(sec):" );
             EditorGUI.indentLevel++;
-            interstitialIntervalProp.intValue = Math.Max( 0,
-            EditorGUILayout.IntField( "Impression interval(sec)", interstitialIntervalProp.intValue ) );
+            interstitialIntervalProp.intValue = EditorGUILayout.IntSlider( interstitialIntervalProp.intValue, 0, 120 );
+            if (interstitialIntervalProp.intValue > 0)
+                EditorGUILayout.HelpBox( "For some time after the ad is closed, new ad impressions will fail.", MessageType.None );
             EditorGUI.indentLevel--;
         }
 
@@ -555,13 +540,17 @@ namespace CAS.UEditor
 
         private void DrawBannerScope()
         {
-            EditorGUILayout.LabelField( "Ad View:" );
+            EditorGUILayout.LabelField( "Ad View refresh rate(sec):" );
             EditorGUI.indentLevel++;
-            bannerRefreshProp.intValue = Mathf.Clamp(
-                  EditorGUILayout.IntField( "Refresh rate(sec)", bannerRefreshProp.intValue ), 0, short.MaxValue );
+            int refresh = EditorGUILayout.IntSlider( bannerRefreshProp.intValue, 0, 120 );
+            if (refresh < 10)
+                refresh = 0;
+            if (refresh == 0)
+                EditorGUILayout.HelpBox( "Refresh ad view content is disabled. Invoke IAdView.Load() to refresh ad.", MessageType.None );
+            bannerRefreshProp.intValue = refresh;
 
             var obsoleteAPI = bannerSizeProp.intValue > 0;
-            if (obsoleteAPI != EditorGUILayout.Toggle( "Use Single Banner(Obsolete)", obsoleteAPI ))
+            if (obsoleteAPI != EditorGUILayout.ToggleLeft( "Use Single Banner (Obsolete)", obsoleteAPI ))
             {
                 obsoleteAPI = !obsoleteAPI;
                 bannerSizeProp.intValue = obsoleteAPI ? 1 : 0;
@@ -575,7 +564,7 @@ namespace CAS.UEditor
                 //            "This will allow you to get more expensive advertising.", target );
                 //}
                 EditorGUI.indentLevel++;
-                switch ((AdSize)bannerSizeProp.intValue)
+                switch (( AdSize )bannerSizeProp.intValue)
                 {
                     case AdSize.Banner:
                         EditorGUILayout.HelpBox( "Size in DPI: 320:50", MessageType.None );
@@ -584,7 +573,7 @@ namespace CAS.UEditor
                         EditorGUILayout.HelpBox( "Pick the best ad size in screen width for improved performance but not more than 728dp.", MessageType.None );
                         break;
                     case AdSize.AdaptiveFullWidth:
-                        EditorGUILayout.HelpBox( "Pick the best ad size in full width screen for improved performance.", MessageType.None );
+                        EditorGUILayout.HelpBox( "Pick the best ad size in full width of screen for improved performance.", MessageType.None );
                         break;
                     case AdSize.SmartBanner:
                         EditorGUILayout.HelpBox( "Typically, Smart Banners on phones have a Banner size. " +
@@ -595,9 +584,9 @@ namespace CAS.UEditor
                         break;
                     case AdSize.MediumRectangle:
                         EditorGUILayout.HelpBox( "Size in DPI: 300:250", MessageType.None );
-                        var enableMrec = allowedAdFlagsProp.intValue | (int)AdFlags.MediumRectangle;
-                        if (enableMrec != allowedAdFlagsProp.intValue)
-                            allowedAdFlagsProp.intValue = enableMrec;
+                        break;
+                    case AdSize.ThinBanner:
+                        EditorGUILayout.HelpBox( "Pick the best ad size in full width of screen and height 32-50 for Landscape and 50-90 for Portrait orientations.", MessageType.None );
                         break;
                 }
                 EditorGUI.indentLevel--;
@@ -607,7 +596,7 @@ namespace CAS.UEditor
 
         private bool DrawAdFlagToggle( AdFlags flag )
         {
-            var flagInt = (int)flag;
+            var flagInt = ( int )flag;
             var enabled = ( allowedAdFlagsProp.intValue & flagInt ) == flagInt;
             var icon = HelpStyles.GetFormatIcon( flag, enabled );
             var content = HelpStyles.GetContent( "", icon, "Use " + flag.ToString() + " placement" );
@@ -706,15 +695,6 @@ namespace CAS.UEditor
             }
             if (platform == BuildTarget.iOS)
             {
-                if (edmIOSStaticLinkProp != null && !(bool)edmIOSStaticLinkProp.GetValue( null, null ))
-                {
-                    OnWarningGUI( "Link frameworks statically disabled",
-                        "Please enable 'Add use_frameworks!' and 'Link frameworks statically' found under " +
-                        "'Assets -> External Dependency Manager -> iOS Resolver -> Settings' menu.\n" +
-                        "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.",
-                        MessageType.Warning );
-                }
-
                 if (PlayerSettings.muteOtherAudioSources)
                 {
                     OnWarningGUI( "Mute Other AudioSources enabled in PlayerSettings",
@@ -762,13 +742,13 @@ namespace CAS.UEditor
 
         private void OnAudienceGUI()
         {
-            var targetAudience = (Audience)EditorGUILayout.EnumPopup( "Audience Tagged",
-                (Audience)audienceTaggedProp.enumValueIndex );
-            if (audienceTaggedProp.enumValueIndex != (int)targetAudience)
+            var targetAudience = ( Audience )EditorGUILayout.EnumPopup( "Audience Tagged",
+                ( Audience )audienceTaggedProp.enumValueIndex );
+            if (audienceTaggedProp.enumValueIndex != ( int )targetAudience)
             {
                 if (dependencyManager != null)
                     dependencyManager.SetAudience( targetAudience );
-                audienceTaggedProp.enumValueIndex = (int)targetAudience;
+                audienceTaggedProp.enumValueIndex = ( int )targetAudience;
             }
 
             EditorGUI.indentLevel++;
@@ -825,7 +805,7 @@ namespace CAS.UEditor
                 DrawSeparator();
                 EditorGUI.BeginChangeCheck();
                 editorRuntimeActiveAdFlags = Convert.ToInt32(
-                    EditorGUILayout.EnumFlagsField( "Editor runtime Active ad", (AdFlags)editorRuntimeActiveAdFlags ) );
+                    EditorGUILayout.EnumFlagsField( "Editor runtime Active ad", ( AdFlags )editorRuntimeActiveAdFlags ) );
                 if (EditorGUI.EndChangeCheck())
                     PlayerPrefs.SetInt( Utils.editorRuntimeActiveAdPrefs, editorRuntimeActiveAdFlags );
             }

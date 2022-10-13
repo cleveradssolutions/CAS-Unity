@@ -1,12 +1,11 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || CASDeveloper
 
-//#define ExcludeAndroidxAnnotations
 //#define DeclareJavaVersion
 
 // Many SDKs use the new <queries> element for Android 11 in their bundled Android Manifest files.
@@ -19,16 +18,21 @@
 // and gradle build stops with timeout error.
 #define ReplaceJCenterToMavenCentral
 
+// Exclude `com.google.android.gms:play-services-ads-identifier` from build.
+// Issue: The Advertising ID cannot be used in applications Designed for family.
+// At the same time, many SDKs have the play-services-ads-identifier dependency. 
+// Error: Not every network's SDK supports play-services-ads-identifier dependency exclude from build.
+//#define ExcludeGoogleAdIdDependency
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using System.Reflection;
 using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
@@ -96,7 +100,7 @@ namespace CAS.UEditor
             if (UpdateGradlePropertiesInMainFile( baseGradle, gradleProps, baseGradlePath ))
                 baseGradleChanged = true;
 
-            
+
             if (FixGradleCompatibilityUnity2018( baseGradle, baseGradlePath ))
                 baseGradleChanged = true;
 #endif
@@ -165,16 +169,21 @@ namespace CAS.UEditor
         internal static bool TryEnableGradleTemplate( string assetPath )
         {
             var fileName = Path.GetFileName( assetPath );
-            var gradleFileFromUnity =
-                Path.Combine( Path.Combine( GetAndroidToolsPath(), "GradleTemplates" ), fileName );
-            if (!File.Exists( gradleFileFromUnity ))
+            var internalTemplate =
+                Path.Combine( Path.Combine( GetUnityAndroidToolsPath(), "GradleTemplates" ), fileName );
+
+            if (!File.Exists( internalTemplate ))
             {
-                Debug.LogError( Utils.logTag + "Template file not found: " + gradleFileFromUnity );
+                Debug.LogError( Utils.logTag + "Template file not found: " + internalTemplate );
                 return false;
             }
             try
             {
-                File.Copy( gradleFileFromUnity, Path.GetFullPath( assetPath ), true );
+                string directoryName = Path.GetDirectoryName( assetPath );
+                if (!Directory.Exists( directoryName ))
+                    Directory.CreateDirectory( directoryName );
+
+                File.Copy( internalTemplate, Path.GetFullPath( assetPath ), true );
                 AssetDatabase.ImportAsset( assetPath );
                 Debug.Log( Utils.logTag + "Gradle template activated: " + assetPath );
                 return true;
@@ -190,7 +199,7 @@ namespace CAS.UEditor
         {
             string gradleLibPath;
             if (IsUsedGradleWrapperEmbeddedInUnity())
-                gradleLibPath = Path.Combine( Path.Combine( GetAndroidToolsPath(), "gradle" ), "lib" );
+                gradleLibPath = Path.Combine( Path.Combine( GetUnityAndroidToolsPath(), "gradle" ), "lib" );
             else
                 gradleLibPath = Path.Combine( EditorPrefs.GetString( "GradlePath" ), "lib" );
 
@@ -216,34 +225,7 @@ namespace CAS.UEditor
             return null;
         }
 
-        private static List<string> ReadGradleFile( string prefix, string path )
-        {
-            try
-            {
-                if (File.Exists( path ))
-                    return new List<string>( File.ReadAllLines( path ) );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-
-            var message = "A successful build requires do modifications to " + prefix + " template. " +
-                "But the template is not activated now.";
-            Utils.DialogOrCancelBuild( message + "\nClick Сontinue to activate.", BuildTarget.NoTarget );
-            try
-            {
-                if (TryEnableGradleTemplate( path ) && File.Exists( path ))
-                    return new List<string>( File.ReadAllLines( path ) );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-            Utils.StopBuildWithMessage( message, BuildTarget.NoTarget );
-            return null;
-        }
-
+        #region Configure gradle
         private static bool UpdateGradlePropertiesFile( List<string> propFile, GradleProperty[] props )
         {
             var isChanged = false;
@@ -392,9 +374,15 @@ namespace CAS.UEditor
 
         private static bool UpdateLauncherGradleFile( List<string> gradle, CASEditorSettings settings, string filePath )
         {
-            bool isChanged = false;
             int line = 0;
+            bool isChanged = false;
             bool required = settings.multiDexEnabled;
+
+#if ExcludeGoogleAdIdDependency
+            bool appendExcludeAdId = settings.permissionAdIdRemoved;
+            const string excludeAdID = "exclude group: 'com.google.android.gms', module: 'play-services-ads-identifier'";
+            const string excludeAdIDLine = "configurations.implementation{ " + excludeAdID + " } // Added by CAS settings";
+#endif
             // Find dependencies{} scope
             do
             {
@@ -405,18 +393,55 @@ namespace CAS.UEditor
                         LogWhenGradleLineNotFound( "dependencies{} scope", filePath );
                     return isChanged;
                 }
-            } while (!gradle[line].Contains( "implementation" ));
+#if ExcludeGoogleAdIdDependency
+                if (gradle[line].Contains( excludeAdID ))
+                {
+                    if (appendExcludeAdId)
+                    {
+                        appendExcludeAdId = false;
+                    }
+                    else
+                    {
+                        Debug.Log( Utils.logTag + "Removed: '" + excludeAdID + "' from: " + filePath );
+                        gradle.RemoveAt( line );
+                        --line;
+                        isChanged = true;
+                    }
+                }
+#endif
+            } while (!gradle[line].Contains( " implementation" ));
+
+#if ExcludeGoogleAdIdDependency
+            if (appendExcludeAdId)
+            {
+                var lineForExclude = line - 1;
+                while (lineForExclude > 0 && !gradle[lineForExclude].Contains( "dependencies" ))
+                {
+                    --lineForExclude;
+                }
+                if (lineForExclude > 0)
+                {
+                    gradle.Insert( lineForExclude, excludeAdIDLine );
+                    Debug.Log( Utils.logTag + "Appended " + excludeAdID + " to " + filePath );
+                    appendExcludeAdId = false;
+                    isChanged = true;
+                    ++line;
+                }
+                else
+                {
+                    Debug.LogWarning( Utils.logTag + "Dependencies scope not found in " + filePath );
+                }
+            }
+#endif
 
             // Find Multidex dependency in scope
-            const string depPrefix = "    implementation '";
             bool multidexExist = false;
+            const string depPrefix = "    implementation '";
             const string multidexAndroidSupport = "com.android.support:multidex:";
             const string multidexAndroidX = "androidx.multidex:multidex:";
             const string miltidexAndroidXLine = depPrefix + multidexAndroidX + "2.0.1' // Added by CAS settings";
 
-            //bool exoPlayerExist = false;
             const string exoPlayerDep = "com.google.android.exoplayer:exoplayer:";
-            //const string exoPlayerLine = depPrefix + exoPlayerDep + "2.13.3' // Added by CAS settings";
             do
             {
                 ++line;
@@ -466,25 +491,9 @@ namespace CAS.UEditor
                 ++line;
             }
 
-#if false
-            if (!exoPlayerExist && settings.exoPlayerIncluded)
-            {
-                gradle.Insert( line, exoPlayerLine );
-                Debug.Log( Utils.logTag + "Appended " + exoPlayerDep + " to " + filePath + Utils.logAutoFeature );
-                exoPlayerExist = true;
-                isChanged = true;
-                ++line;
-            }
-#endif
-
 #if DeclareJavaVersion
             const string javaVersion = "JavaVersion.VERSION_1_8";
             var existJavaDeclaration = false;
-#endif
-
-#if ExcludeAndroidxAnnotations
-            const string excludeOption = "exclude 'META-INF/proguard/androidx-annotations.pro'";
-            var packagingOptExist = false;
 #endif
 
             required = settings.multiDexEnabled;
@@ -500,10 +509,6 @@ namespace CAS.UEditor
 #if DeclareJavaVersion
                 if (!existJavaDeclaration && gradle[line].Contains( javaVersion ))
                     existJavaDeclaration = true;
-#endif
-#if ExcludeAndroidxAnnotations
-                if (!packagingOptExist && gradle[line].Contains( excludeOption ))
-                    packagingOptExist = true;
 #endif
             } while (!gradle[line].Contains( "defaultConfig" ));
 
@@ -523,23 +528,6 @@ namespace CAS.UEditor
                 Debug.Log( Utils.logTag + "Appended Compile options to use Java Version 1.8 in " + filePath + Utils.logAutoFeature );
             }
 #endif
-
-#if ExcludeAndroidxAnnotations
-            if (!packagingOptExist)
-            {
-                var packagingOptions = new[] {
-                    "	packagingOptions {",
-                    "        " + excludeOption,
-                    "	}",
-                    ""
-                };
-                gradle.InsertRange( line, packagingOptions );
-                line += packagingOptions.Length;
-                isChanged = true;
-                Debug.Log( Utils.logTag + "Appended Packaging options to exclude duplicate androidx-annotations. " + filePath + Utils.logAutoFeature );
-            }
-#endif
-
             // Find multidexEnable in defaultConfig{} scope
             const string multidexConfig = "multiDexEnabled";
             if (multidexExist)
@@ -783,6 +771,36 @@ namespace CAS.UEditor
             Debug.Log( Utils.logTag + message + " in " + filePath );
             return true;
         }
+        #endregion
+
+        #region Utils
+        private static List<string> ReadGradleFile( string prefix, string path )
+        {
+            try
+            {
+                if (File.Exists( path ))
+                    return new List<string>( File.ReadAllLines( path ) );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+
+            var message = "A successful build requires do modifications to " + prefix + " template. " +
+                "But the template is not activated now.";
+            Utils.DialogOrCancelBuild( message + "\nClick Сontinue to activate.", BuildTarget.NoTarget );
+            try
+            {
+                if (TryEnableGradleTemplate( path ) && File.Exists( path ))
+                    return new List<string>( File.ReadAllLines( path ) );
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
+            }
+            Utils.StopBuildWithMessage( message, BuildTarget.NoTarget );
+            return null;
+        }
 
         private static void LogWhenGradleLineNotFound( string line, string inFile )
         {
@@ -795,13 +813,13 @@ namespace CAS.UEditor
             return EditorPrefs.GetBool( "GradleUseEmbedded" );
         }
 
-        private static string GetAndroidToolsPath()
+        private static string GetUnityAndroidToolsPath()
         {
             // Alternate of internal unity method
             // BuildPipeline.GetBuildToolsDirectory( ( BuildTarget )13 );
             try
             {
-                return (string)typeof( BuildPipeline )
+                return ( string )typeof( BuildPipeline )
                     .GetMethod( "GetBuildToolsDirectory", BindingFlags.Static | BindingFlags.NonPublic )
                     .Invoke( null, new object[] { BuildTarget.Android } );
             }
@@ -816,7 +834,7 @@ namespace CAS.UEditor
                 result = Path.Combine( result, "Data" );
             return Path.Combine( Path.Combine( Path.Combine( result, "PlaybackEngines" ), "AndroidPlayer" ), "Tools" );
         }
-
+        #endregion
 
         private class GradleProperty
         {

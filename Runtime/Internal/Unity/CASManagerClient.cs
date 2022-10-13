@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_EDITOR || TARGET_OS_SIMULATOR
@@ -13,11 +13,9 @@ using UnityEngine;
 namespace CAS.Unity
 {
     [AddComponentMenu( "" )]
-    internal class CASMediationManager : MonoBehaviour, IMediationManager
+    internal class CASManagerClient : MonoBehaviour, IMediationManager
     {
         public AdFlags enabledTypes;
-
-        internal readonly AdMetaData bannerMetaData = CreateAdMetaData( AdType.Banner );
 
         internal CASViewFactoryImpl viewFactory;
         [SerializeField]
@@ -31,7 +29,7 @@ namespace CAS.Unity
 
 
         private GUIStyle _btnStyle = null;
-        internal CASSettings _settings;
+        internal CASSettingsClient _settings;
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get { return true; } }
@@ -97,6 +95,16 @@ namespace CAS.Unity
         #endregion
 
         #region Interstitial ad Events
+        public event Action OnInterstitialAdLoaded
+        {
+            add { _interstitial.OnAdLoaded += value; }
+            remove { _interstitial.OnAdLoaded -= value; }
+        }
+        public event CASEventWithAdError OnInterstitialAdFailedToLoad
+        {
+            add { _interstitial.OnAdFailedToLoad += value; }
+            remove { _interstitial.OnAdFailedToLoad -= value; }
+        }
         public event Action OnInterstitialAdShown
         {
             add { _interstitial.OnAdShown += value; }
@@ -125,6 +133,16 @@ namespace CAS.Unity
         #endregion
 
         #region Rewarded Ad Events
+        public event Action OnRewardedAdLoaded
+        {
+            add { _rewarded.OnAdLoaded += value; }
+            remove { _rewarded.OnAdLoaded -= value; }
+        }
+        public event CASEventWithAdError OnRewardedAdFailedToLoad
+        {
+            add { _rewarded.OnAdFailedToLoad += value; }
+            remove { _rewarded.OnAdFailedToLoad -= value; }
+        }
         public event Action OnRewardedAdShown
         {
             add { _rewarded.OnAdShown += value; }
@@ -171,9 +189,9 @@ namespace CAS.Unity
             var obj = new GameObject( "CASMediationManager" );
             //obj.hideFlags = HideFlags.HideInHierarchy;
             DontDestroyOnLoad( obj );
-            var manager = obj.AddComponent<CASMediationManager>();
+            var manager = obj.AddComponent<CASManagerClient>();
             // Set Settings before any other calls.
-            manager._settings = CAS.MobileAds.settings as CASSettings;
+            manager._settings = CAS.MobileAds.settings as CASSettingsClient;
 
             manager.Log( "Initialized manager with id: " + initSettings.targetId );
             manager.managerID = initSettings.targetId;
@@ -183,14 +201,6 @@ namespace CAS.Unity
             manager._interstitial = new CASFullscreenView( manager, AdType.Interstitial );
             manager._rewarded = new CASFullscreenView( manager, AdType.Rewarded );
             return manager;
-        }
-
-        internal static AdMetaData CreateAdMetaData( AdType type )
-        {
-            return new AdMetaData( type, new Dictionary<string, string>()
-            {
-                { "network", ((int)AdNetwork.CrossPromotion).ToString() }
-            } );
         }
 
         #region IMediationManager implementation
@@ -211,7 +221,7 @@ namespace CAS.Unity
             if (!IsEnabledAd( adType ))
                 return false;
             if (adType == AdType.Banner)
-                return viewFactory.IsGlobalViewReady();
+                return viewFactory.globalView != null && viewFactory.globalView.isReady;
             if (adType == AdType.Interstitial)
                 return _interstitial.loaded
                     && _settings.lastInterImpressionTimestamp + MobileAds.settings.interstitialInterval < Time.time;
@@ -223,7 +233,7 @@ namespace CAS.Unity
             switch (adType)
             {
                 case AdType.Banner:
-                    viewFactory.GetOrCreateGlobalView().Load();
+                    viewFactory.LoadGlobalBanner();
                     break;
                 case AdType.Interstitial:
                     _interstitial.Load();
@@ -253,7 +263,7 @@ namespace CAS.Unity
             switch (adType)
             {
                 case AdType.Banner:
-                    viewFactory.ShowBanner();
+                    viewFactory.ShowGlobalBanner();
                     break;
                 case AdType.Interstitial:
                     Post( _interstitial.Show );
@@ -322,7 +332,7 @@ namespace CAS.Unity
         {
             if (_btnStyle == null)
                 _btnStyle = new GUIStyle( "Button" );
-            _btnStyle.fontSize = ( int )( Math.Min( Screen.width, Screen.height ) * 0.035f );
+            _btnStyle.fontSize = (int)( Math.Min( Screen.width, Screen.height ) * 0.035f );
 
             viewFactory.OnGUIAd( _btnStyle );
             _interstitial.OnGUIAd( _btnStyle );

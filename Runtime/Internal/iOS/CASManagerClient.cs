@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_IOS || (CASDeveloper && UNITY_EDITOR)
@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace CAS.iOS
 {
-    internal class CASMediationManager : CASViewFactory, IMediationManager
+    internal class CASManagerClient : CASViewFactory, IMediationManager
     {
         private IntPtr _managerRef;
         private IntPtr _managerClient;
@@ -25,17 +25,23 @@ namespace CAS.iOS
         public event CASTypedEvent OnLoadedAd;
         public event CASTypedEventWithError OnFailedToLoadAd;
 
+        public event Action OnInterstitialAdLoaded;
+        public event CASEventWithAdError OnInterstitialAdFailedToLoad;
         public event Action OnInterstitialAdShown;
         public event CASEventWithMeta OnInterstitialAdOpening;
         public event CASEventWithError OnInterstitialAdFailedToShow;
         public event Action OnInterstitialAdClicked;
         public event Action OnInterstitialAdClosed;
+
+        public event Action OnRewardedAdLoaded;
+        public event CASEventWithAdError OnRewardedAdFailedToLoad;
         public event Action OnRewardedAdShown;
         public event CASEventWithMeta OnRewardedAdOpening;
         public event CASEventWithError OnRewardedAdFailedToShow;
         public event Action OnRewardedAdClicked;
         public event Action OnRewardedAdCompleted;
         public event Action OnRewardedAdClosed;
+
         public event Action OnAppReturnAdShown;
         public event CASEventWithMeta OnAppReturnAdOpening;
         public event CASEventWithError OnAppReturnAdFailedToShow;
@@ -43,20 +49,15 @@ namespace CAS.iOS
         public event Action OnAppReturnAdClosed;
         #endregion
 
-        public CASMediationManager( CASInitSettings initData )
-        {
-            managerID = initData.targetId;
-            isTestAdMode = initData.IsTestAdMode();
-            _managerClient = ( IntPtr )GCHandle.Alloc( this );
-        }
+        internal CASManagerClient() { }
 
-        ~CASMediationManager()
+        ~CASManagerClient()
         {
             try
             {
                 CASExterns.CASUFreeManager( _managerRef );
                 _managerRef = IntPtr.Zero;
-                ( ( GCHandle )_managerClient ).Free();
+                ( (GCHandle)_managerClient ).Free();
             }
             catch (Exception e)
             {
@@ -64,13 +65,17 @@ namespace CAS.iOS
             }
         }
 
-        public void CreateManager( CASInitSettings initData )
+        internal CASManagerClient Init( CASInitSettings initData )
         {
+            managerID = initData.targetId;
+            isTestAdMode = initData.IsTestAdMode();
+            _managerClient = (IntPtr)GCHandle.Alloc( this );
+
             if (initData.userID == null)
                 initData.userID = string.Empty; // Null string not supported
 
             var builderRef = CASExterns.CASUCreateBuilder(
-                ( int )initData.allowedAdFlags,
+                (int)initData.allowedAdFlags,
                 isTestAdMode,
                 Application.unityVersion,
                 initData.userID
@@ -90,14 +95,10 @@ namespace CAS.iOS
                 CASExterns.CASUSetMediationExtras( builderRef, extrasKeys, extrasValues, extrasKeys.Length );
             }
 
-            CASExterns.CASUInitializationCompleteCallback onInit = null;
             if (initData.initListener != null)
-            {
                 _initCompleteAction = initData.initListener;
-                onInit = InitializationCompleteCallback;
-            }
 
-            _managerRef = CASExterns.CASUInitializeManager( builderRef, _managerClient, onInit, managerID );
+            _managerRef = CASExterns.CASUInitializeManager( builderRef, _managerClient, InitializationCompleteCallback, managerID );
 
             CASExterns.CASUSetInterstitialDelegate( _managerRef,
                 InterstitialLoadedAdCallback,
@@ -121,6 +122,7 @@ namespace CAS.iOS
                 ReturnAdDidShowAdFailedWithErrorCallback,
                 ReturnAdDidClickedAdCallback,
                 ReturnAdDidClosedAdCallback );
+            return this;
         }
 
         public LastPageAdContent lastPageAdContent
@@ -144,7 +146,7 @@ namespace CAS.iOS
 
         public bool IsEnabledAd( AdType adType )
         {
-            return CASExterns.CASUIsAdEnabledType( _managerRef, ( int )adType );
+            return CASExterns.CASUIsAdEnabledType( _managerRef, (int)adType );
         }
 
         public bool IsReadyAd( AdType adType )
@@ -152,7 +154,7 @@ namespace CAS.iOS
             switch (adType)
             {
                 case AdType.Banner:
-                    return IsGlobalViewReady();
+                    return globalView != null && globalView.isReady;
                 case AdType.Interstitial:
                     return CASExterns.CASUIsInterstitialReady( _managerRef );
                 case AdType.Rewarded:
@@ -167,7 +169,7 @@ namespace CAS.iOS
             switch (adType)
             {
                 case AdType.Banner:
-                    GetOrCreateGlobalView().Load();
+                    LoadGlobalBanner();
                     break;
                 case AdType.Interstitial:
                     CASExterns.CASULoadInterstitial( _managerRef );
@@ -180,7 +182,7 @@ namespace CAS.iOS
 
         public void SetEnableAd( AdType adType, bool enabled )
         {
-            CASExterns.CASUEnableAdType( _managerRef, ( int )adType, enabled );
+            CASExterns.CASUEnableAdType( _managerRef, (int)adType, enabled );
         }
 
         public void ShowAd( AdType adType )
@@ -188,7 +190,7 @@ namespace CAS.iOS
             switch (adType)
             {
                 case AdType.Banner:
-                    ShowBanner();
+                    ShowGlobalBanner();
                     break;
                 case AdType.Interstitial:
                     CASExterns.CASUPresentInterstitial( _managerRef );
@@ -201,16 +203,10 @@ namespace CAS.iOS
 
         protected override IAdView CreateAdView( AdSize size )
         {
-            var view = new CASView( this, size );
-            var viewClient = ( IntPtr )GCHandle.Alloc( view );
-            view.Attach( CASExterns.CASUCreateAdView( _managerRef, viewClient, ( int )size ), viewClient );
+            var view = new CASViewClient( this, size );
+            var viewClient = (IntPtr)GCHandle.Alloc( view );
+            view.Attach( CASExterns.CASUCreateAdView( _managerRef, viewClient, (int)size ), viewClient );
             return view;
-        }
-
-        public override void CallbackOnDestroy( IAdView view )
-        {
-            base.CallbackOnDestroy( view );
-            CASExterns.CASUDestroyAdView( ( ( CASView )view )._viewRef, _managerRef, ( int )view.size );
         }
 
         [UnityEngine.Scripting.Preserve]
@@ -245,35 +241,33 @@ namespace CAS.iOS
                 OnFailedToLoadAd( type, error.GetMessage() );
         }
 
-        private void OnInterstitialLoadedCallback()
-        {
-            OnLoadedCallback( AdType.Interstitial );
-        }
-
-        private void OnRewardedLoadedCallback()
-        {
-            OnLoadedCallback( AdType.Rewarded );
-        }
-
         #region Callback methods
-        private static CASMediationManager IntPtrToManagerClient( IntPtr managerClient )
+        private static CASManagerClient IntPtrToManagerClient( IntPtr managerClient )
         {
-            GCHandle handle = ( GCHandle )managerClient;
-            return handle.Target as CASMediationManager;
+            GCHandle handle = (GCHandle)managerClient;
+            return handle.Target as CASManagerClient;
         }
 
         [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUInitializationCompleteCallback ) )]
-        private static void InitializationCompleteCallback( IntPtr client, string error, bool withConsent )
+        private static void InitializationCompleteCallback( IntPtr client, string error, bool withConsent, bool isTestMode )
         {
-            CASFactory.UnityLog( "InitializationComplete " + error );
-            var instance = IntPtrToManagerClient( client );
-            if (instance != null && instance._initCompleteAction != null)
+            try
             {
-                CASFactory.ExecuteEvent( () =>
+                CASFactory.UnityLog( "InitializationComplete " + error );
+                var instance = IntPtrToManagerClient( client );
+                if (instance != null)
                 {
+                    instance.isTestAdMode = isTestMode;
                     if (instance._initCompleteAction != null)
+                    {
                         instance._initCompleteAction( error == null, error );
-                } );
+                        instance._initCompleteAction = null;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException( e );
             }
         }
 
@@ -285,8 +279,11 @@ namespace CAS.iOS
             {
                 CASFactory.UnityLog( "Interstitial Loaded" );
                 var instance = IntPtrToManagerClient( manager );
-                if (instance != null)
-                    CASFactory.ExecuteEvent( instance.OnInterstitialLoadedCallback );
+                if (instance == null)
+                    return;
+                if (instance.OnInterstitialAdLoaded != null)
+                    instance.OnInterstitialAdLoaded();
+                instance.OnLoadedCallback( AdType.Interstitial );
             }
             catch (Exception e)
             {
@@ -299,11 +296,14 @@ namespace CAS.iOS
         {
             try
             {
-                var adError = ( AdError )error;
+                var adError = (AdError)error;
                 CASFactory.UnityLog( "Interstitial Failed with error: " + adError.ToString() );
                 var instance = IntPtrToManagerClient( manager );
-                if (instance != null)
-                    CASFactory.ExecuteEvent( () => instance.OnFailedCallback( AdType.Interstitial, adError ) );
+                if (instance == null)
+                    return;
+                if (instance.OnInterstitialAdFailedToLoad != null)
+                    instance.OnInterstitialAdFailedToLoad( adError );
+                instance.OnFailedCallback( AdType.Interstitial, adError );
             }
             catch (Exception e)
             {
@@ -311,12 +311,12 @@ namespace CAS.iOS
             }
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithMetaCallback ) )]
-        private static void InterstitialOpeningWithMetaCallback( IntPtr manager, string parameters )
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillPresentAdCallback ) )]
+        private static void InterstitialOpeningWithMetaCallback( IntPtr manager, IntPtr impression )
         {
             try
             {
-                CASFactory.UnityLog( "Interstitial Opening: " + parameters );
+                CASFactory.UnityLog( "Interstitial Will present" );
                 var instance = IntPtrToManagerClient( manager );
                 if (instance == null)
                     return;
@@ -324,8 +324,7 @@ namespace CAS.iOS
                     instance.OnInterstitialAdShown();
 
                 if (instance.OnInterstitialAdOpening != null)
-                    instance.OnInterstitialAdOpening(
-                        new AdMetaData( AdType.Interstitial, CASFactory.ParseParametersString( parameters ) ) );
+                    instance.OnInterstitialAdOpening( new CASImpressionClient( AdType.Interstitial, impression ) );
             }
             catch (Exception e)
             {
@@ -390,8 +389,11 @@ namespace CAS.iOS
             {
                 CASFactory.UnityLog( "Rewarded Loaded" );
                 var instance = IntPtrToManagerClient( manager );
-                if (instance != null)
-                    CASFactory.ExecuteEvent( instance.OnRewardedLoadedCallback );
+                if (instance == null)
+                    return;
+                if (instance.OnRewardedAdLoaded != null)
+                    instance.OnRewardedAdLoaded();
+                instance.OnLoadedCallback( AdType.Rewarded );
             }
             catch (Exception e)
             {
@@ -404,11 +406,14 @@ namespace CAS.iOS
         {
             try
             {
-                var adError = ( AdError )error;
+                var adError = (AdError)error;
                 CASFactory.UnityLog( "Rewarded Failed with error: " + adError.ToString() );
                 var instance = IntPtrToManagerClient( manager );
-                if (instance != null)
-                    CASFactory.ExecuteEvent( () => instance.OnFailedCallback( AdType.Rewarded, adError ) );
+                if (instance == null)
+                    return;
+                if (instance.OnRewardedAdFailedToLoad != null)
+                    instance.OnRewardedAdFailedToLoad( adError );
+                instance.OnFailedCallback( AdType.Rewarded, adError );
             }
             catch (Exception e)
             {
@@ -416,20 +421,19 @@ namespace CAS.iOS
             }
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithMetaCallback ) )]
-        private static void RewardedOpeningWithAdCallbackAndMeta( IntPtr manager, string parameters )
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillPresentAdCallback ) )]
+        private static void RewardedOpeningWithAdCallbackAndMeta( IntPtr manager, IntPtr impression )
         {
             try
             {
-                CASFactory.UnityLog( "Rewarded Opening " + parameters );
+                CASFactory.UnityLog( "Rewarded will present" );
                 var instance = IntPtrToManagerClient( manager );
                 if (instance == null)
                     return;
                 if (instance.OnRewardedAdShown != null)
                     instance.OnRewardedAdShown();
                 if (instance.OnRewardedAdOpening != null)
-                    instance.OnRewardedAdOpening(
-                        new AdMetaData( AdType.Rewarded, CASFactory.ParseParametersString( parameters ) ) );
+                    instance.OnRewardedAdOpening( new CASImpressionClient( AdType.Rewarded, impression ) );
             }
             catch (Exception e)
             {
@@ -503,20 +507,19 @@ namespace CAS.iOS
         #endregion
 
         #region App Return Ads Callback
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillOpeningWithMetaCallback ) )]
-        private static void ReturnAdOpeningWithAdCallback( IntPtr manager, string parameters )
+        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUWillPresentAdCallback ) )]
+        private static void ReturnAdOpeningWithAdCallback( IntPtr manager, IntPtr impression )
         {
             try
             {
-                CASFactory.UnityLog( "Return Ad Opening " + parameters );
+                CASFactory.UnityLog( "Return Ad will present" );
                 var instance = IntPtrToManagerClient( manager );
                 if (instance == null)
                     return;
                 if (instance.OnAppReturnAdShown != null)
                     instance.OnAppReturnAdShown();
                 if (instance.OnAppReturnAdOpening != null)
-                    instance.OnAppReturnAdOpening(
-                        new AdMetaData( AdType.Interstitial, CASFactory.ParseParametersString( parameters ) ) );
+                    instance.OnAppReturnAdOpening( new CASImpressionClient( AdType.Interstitial, impression ) );
             }
             catch (Exception e)
             {

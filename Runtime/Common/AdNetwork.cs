@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -116,8 +116,7 @@ namespace CAS
                 case AdNetwork.YandexAds: return "Ya";
                 //case AdNetwork.Smaato: return "Sm";
                 case AdNetwork.Tapjoy: return "TJ";
-                case AdNetwork.Fyber:
-                case AdNetwork.FairBid: return "Fy";
+                case AdNetwork.Fyber: return "Fy";
                 case AdNetwork.Mintegral: return "MB";
                 case AdNetwork.Pangle: return "Pa";
                 default: return string.Empty;
@@ -150,7 +149,7 @@ namespace CAS
                 "MP",
                 "TJ",
                 "Fy",
-                String.Empty, //FairBid
+                string.Empty, //FairBid
                 "MB",
                 "Pa"
             };

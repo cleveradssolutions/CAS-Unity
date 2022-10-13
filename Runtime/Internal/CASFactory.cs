@@ -1,8 +1,14 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2021 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
+#if UNITY_ANDROID || ( CASDeveloper && UNITY_EDITOR )
+#define PlatformAndroid
+#endif
+#if UNITY_IOS || ( CASDeveloper && UNITY_EDITOR )
+#define PlatformIOS
+#endif
 
 using System;
 using System.Collections.Generic;
@@ -14,7 +20,7 @@ namespace CAS
 {
     internal static class CASFactory
     {
-        private static volatile bool executeEventsOnUnityThread = false;
+        private static volatile bool executeEventsOnUnityThread = true;
 
         private static IAdsSettings settings;
         private static List<IMediationManager> managers;
@@ -59,17 +65,18 @@ namespace CAS
         internal static IAdsSettings CreateSettigns( CASInitSettings initSettings )
         {
             IAdsSettings settings = null;
-#if !TARGET_OS_SIMULATOR
-#if UNITY_ANDROID
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
-                settings = new CAS.Android.CASSettings();
-#elif UNITY_IOS
+                settings = new CAS.Android.CASSettingsClient();
+#endif
+#if PlatformIOS
+#if !TARGET_OS_SIMULATOR
             if (Application.platform == RuntimePlatform.IPhonePlayer)
-                settings = new CAS.iOS.CASSettings();
+                settings = new CAS.iOS.CASSettingsClient();
 #endif
 #endif
             if (settings == null)
-                settings = new CAS.Unity.CASSettings();
+                settings = new CAS.Unity.CASSettingsClient();
 
             if (initSettings)
             {
@@ -93,20 +100,23 @@ namespace CAS
 
         internal static ITargetingOptions GetTargetingOptions()
         {
-            return ( ITargetingOptions )GetAdsSettings();
+            return (ITargetingOptions)GetAdsSettings();
         }
 
         internal static string GetSDKVersion()
         {
-#if UNITY_ANDROID
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
             {
-                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.GetSDKVersion();
             }
-#elif UNITY_IOS && !TARGET_OS_SIMULATOR
+#endif
+#if PlatformIOS
+#if !TARGET_OS_SIMULATOR
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 return CAS.iOS.CASExterns.CASUGetSDKVersion();
+#endif
 #endif
             return MobileAds.wrapperVersion;
         }
@@ -157,21 +167,15 @@ namespace CAS
 
             IMediationManager manager = null;
 #if UNITY_EDITOR || TARGET_OS_SIMULATOR
-            manager = CAS.Unity.CASMediationManager.CreateManager( initSettings );
-#elif UNITY_ANDROID
+            manager = CAS.Unity.CASManagerClient.CreateManager( initSettings );
+#endif
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
-            {
-                var android = new CAS.Android.CASMediationManager( initSettings );
-                android.CreateManager( initSettings );
-                manager = android;
-            }
-#elif UNITY_IOS
+                manager = new CAS.Android.CASManagerClient().Init( initSettings );
+#endif
+#if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
-            {
-                var ios = new CAS.iOS.CASMediationManager( initSettings );
-                ios.CreateManager( initSettings );
-                manager = ios;
-            }
+                manager = new CAS.iOS.CASManagerClient().Init( initSettings );
 #endif
             if (manager == null)
                 throw new NotSupportedException( "Current platform: " + Application.platform.ToString() );
@@ -180,6 +184,9 @@ namespace CAS
             if (initSettings.bannerSize != 0) // Before onInitManager callback
                 manager.bannerSize = initSettings.bannerSize;
 #pragma warning restore CS0618 // Type or member is obsolete
+
+            if (executeEventsOnUnityThread)
+                EventExecutor.Initialize();
 
             var managerIndex = initSettings.IndexOfManagerId( initSettings.targetId );
             if (managerIndex < 0)
@@ -243,14 +250,18 @@ namespace CAS
         internal static void ValidateIntegration()
         {
 #if UNITY_EDITOR
-            // TODO: Implementation editor 
-#elif UNITY_ANDROID
+            // TODO: Implementation editor validation
+            if (Application.isEditor)
+                return;
+#endif
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
             {
-                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 androidSettings.ValidateIntegration();
             }
-#elif UNITY_IOS
+#endif
+#if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
                 CAS.iOS.CASExterns.CASUValidateIntegration();
@@ -264,7 +275,7 @@ namespace CAS
 #if UNITY_EDITOR
             try
             {
-                return ( string )Type.GetType( "CAS.UEditor.DependencyManager, CleverAdsSolutions-Editor", true )
+                return (string)Type.GetType( "CAS.UEditor.DependencyManager, CleverAdsSolutions-Editor", true )
                     .GetMethod( "GetActiveMediationPattern",
                         System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public, null, new Type[0], null )
                     .Invoke( null, null );
@@ -273,13 +284,15 @@ namespace CAS
             {
                 Debug.LogException( e );
             }
-#elif UNITY_ANDROID
+#endif
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
             {
-                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.GetActiveMediationPattern();
             }
-#elif UNITY_IOS
+#endif
+#if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 return CAS.iOS.CASExterns.CASUGetActiveMediationPattern();
 #endif
@@ -293,7 +306,7 @@ namespace CAS
             for (int i = 0; i < pattern.Length; i++)
             {
                 if (pattern[i] != '0')
-                    result.Add( ( AdNetwork )i );
+                    result.Add( (AdNetwork)i );
             }
             return result.ToArray();
         }
@@ -302,15 +315,17 @@ namespace CAS
         {
 #if UNITY_EDITOR
             var pattern = GetActiveMediationPattern();
-            if (( int )network < pattern.Length)
-                return pattern[( int )network] != '0';
-#elif UNITY_ANDROID
+            if ((int)network < pattern.Length)
+                return pattern[(int)network] != '0';
+#endif
+#if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
             {
-                var androidSettings = GetAdsSettings() as CAS.Android.CASSettings;
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
                 return androidSettings.IsActiveMediationNetwork( network );
             }
-#elif UNITY_IOS
+#endif
+#if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 return CAS.iOS.CASExterns.CASUIsActiveMediationNetwork( ( int )network );
 #endif
@@ -340,7 +355,11 @@ namespace CAS
         internal static void UnityLog( string message )
         {
             if (GetAdsSettings().isDebugMode)
-                Debug.Log( "[CleverAdsSolutions] " + message );
+#if UNITY_IOS
+                Debug.Log( "[CAS:Unity] " + message );
+#else
+                Debug.Log( "[CAS:] " + message );
+#endif
         }
 
         internal static void UnityLogException( Exception e )
@@ -348,39 +367,6 @@ namespace CAS
 #if CASDeveloper
             Debug.LogException( e );
 #endif
-        }
-
-        internal static string SerializeParametersString( IDictionary<string, string> dict )
-        {
-            // Sample str: "key_1=value1;key_2=value2;key_3=value3;"
-            var result = new StringBuilder();
-            foreach (var item in dict)
-            {
-                result.Append( item.Key ).Append( '=' ).Append( item.Value ).Append( ';' );
-            }
-            return result.ToString();
-        }
-
-        internal static IDictionary<string, string> ParseParametersString( string str )
-        {
-            // Sample str: "key_1=value1;key_2=value2;key_3=value3;"
-            var result = new Dictionary<string, string>();
-            var begin = 0;
-            while (begin < str.Length)
-            {
-                var separator = str.IndexOf( '=', begin );
-                if (separator < 0)
-                    break;
-                var key = str.Substring( begin, separator - begin );
-                begin = separator + 1;
-                separator = str.IndexOf( ';', begin );
-                if (separator < 0) // Is end
-                    separator = str.Length;
-                if (begin != separator) // Is not empty
-                    result[key] = str.Substring( begin, separator - begin );
-                begin = separator + 1;
-            }
-            return result;
         }
     }
 }
