@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: b7af48cd55a4744ea9f9688cbfed01dd
+labels:
+- CleverAdsSolutions
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
