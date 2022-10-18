@@ -39,11 +39,11 @@ namespace CAS
 
         #region Interstitial Ads events
         /// <summary>
-        /// Called when Rewarded video ad ready to shown.
+        /// Called when Interstitial ad ready to shown.
         /// </summary>
         event Action OnInterstitialAdLoaded;
         /// <summary>
-        /// Called when Rewarded video failed to load ad response with error message
+        /// Called when Interstitial failed to load ad response with error message
         /// </summary>
         event CASEventWithAdError OnInterstitialAdFailedToLoad;
         /// <summary>

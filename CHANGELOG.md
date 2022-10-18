@@ -1,5 +1,14 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.9.4] - 2022-10-18
+### Dependencies
+- [Android] Wraps [2.9.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.9.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixes
+- [iOS] Fixed the position of banner ad on the screen.
+- [iOS] Fixed `WithInitListener()` call.
+- [iOS] Fixed disabling Bitcode for UnityFramework.
+
 ## [2.9.3] - 2022-10-13
 ### Dependencies
 - [Android] Wraps [2.9.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

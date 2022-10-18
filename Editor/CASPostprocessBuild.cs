@@ -78,6 +78,9 @@ namespace CAS.UEditor
             {
                 var appTargetGuid = project.GetAppGUID();
                 project.SetBitcodeEnabled( appTargetGuid, editorSettings.bitcodeIOSEnabled );
+                var frameworkGuid = project.GetFrameworkGUID();
+                if (appTargetGuid != frameworkGuid)
+                    project.SetBitcodeEnabled( frameworkGuid, editorSettings.bitcodeIOSEnabled );
                 project.LocalizeUserTrackingDescription( buildPath, appTargetGuid, editorSettings.userTrackingUsageDescription );
 
                 if (IsNeedEmbedDynamicLibraries())

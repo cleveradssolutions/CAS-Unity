@@ -219,50 +219,50 @@ static const int AD_SIZE_LINE = 7;
         }
     }
 
-    CGFloat bottom = CGRectGetMaxY(parentBounds) - CGRectGetMidY(view.bounds);
-    CGFloat right = CGRectGetMaxX(parentBounds) - CGRectGetMidX(view.bounds);
+    CGSize adSize = view.intrinsicContentSize;
+    CGFloat bottom = CGRectGetMaxY(parentBounds) - adSize.height;
+    CGFloat right = CGRectGetMaxX(parentBounds) - adSize.width;
 
     // Clamp with Maximum Bottom Right position
-    CGFloat top = MIN(CGRectGetMinY(parentBounds) + _verticalOffset + CGRectGetMidY(view.bounds), bottom);
-    CGFloat left = MIN(CGRectGetMinX(parentBounds) + _horizontalOffset + CGRectGetMidX(view.bounds), right);
-
-    CGPoint center;
+    CGFloat top = MIN(CGRectGetMinY(parentBounds) + _verticalOffset, bottom);
+    CGFloat left = MIN(CGRectGetMinX(parentBounds) + _horizontalOffset, right);
+    CGFloat center = CGRectGetMidX(parentView.bounds) - adSize.width * 0.5;
+    
+    CGPoint coords;
     switch (_activePos) {
         case AD_POSITION_TOP_CENTER:
-            center = CGPointMake(CGRectGetMidX(parentView.bounds), top);
+            coords = CGPointMake(center, top);
             break;
 
         case AD_POSITION_TOP_LEFT:
-            center = CGPointMake(left, top);
+            coords = CGPointMake(left, top);
             break;
 
         case AD_POSITION_TOP_RIGHT:
-            center = CGPointMake(right, top);
+            coords = CGPointMake(right, top);
             break;
 
         case AD_POSITION_BOTTOM_LEFT:
-            center = CGPointMake(left, bottom);
+            coords = CGPointMake(left, bottom);
             break;
 
         case AD_POSITION_BOTTOM_RIGHT:
-            center = CGPointMake(right, bottom);
+            coords = CGPointMake(right, bottom);
             break;
 
         default:
-            center = CGPointMake(CGRectGetMidX(parentView.bounds), bottom);
+            coords = CGPointMake(center, bottom);
             break;
     }
-    view.center = center;
+    view.frame = CGRectMake(coords.x, coords.y, adSize.width, adSize.height);
 
     if (_adRectCallback) {
         CGFloat scale = [UIScreen mainScreen].scale;
-        CGRect bounds = self.bannerView.bounds;
-        CGRect frame = CGRectStandardize(self.bannerView.frame);
         _adRectCallback(self.client,
-                        CGRectGetMinX(bounds) * scale,
-                        CGRectGetMinY(bounds) * scale,
-                        CGRectGetWidth(frame),
-                        CGRectGetHeight(frame));
+                        coords.x * scale,
+                        coords.y * scale,
+                        adSize.width * scale,
+                        adSize.height * scale);
     }
 }
 
@@ -290,6 +290,7 @@ static const int AD_SIZE_LINE = 7;
     }
 
     [self refreshPosition];
+
     if (self.adPresentedCallback) {
         _lastImpression = (NSObject<CASStatusHandler> *)impression;
         self.adPresentedCallback(self.client, (__bridge CASImpressionRef)_lastImpression);
