@@ -795,7 +795,7 @@ namespace CAS.UEditor
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField( loadingModeProp, HelpStyles.GetContent( "Loading mode", null ) );
-            HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Configuring-SDK#loading-mode" );
+            HelpStyles.HelpButton( Utils.gitUnityRepoURL + "/wiki/Other-Options#loading-mode" );
             EditorGUILayout.EndHorizontal();
         }
 

@@ -6,7 +6,7 @@
 
 namespace CAS
 {
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Configuring-SDK#loading-mode" )]
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Other-Options#loading-mode" )]
     public enum LoadingManagerMode
     {
         /// <summary>

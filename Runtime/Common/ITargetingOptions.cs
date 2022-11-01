@@ -11,7 +11,7 @@ namespace CAS
         Unknown, Male, Female
     }
 
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Targeting-Options" )]
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-CAS#targeting-options" )]
     public interface ITargetingOptions
     {
         /// <summary>

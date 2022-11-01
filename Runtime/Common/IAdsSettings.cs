@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace CAS
 {
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws" )]
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Regulations" )]
     public enum ConsentStatus
     {
         /// <summary>
@@ -26,7 +26,7 @@ namespace CAS
         Denied,
     }
 
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws" )]
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Regulations" )]
     public enum CCPAStatus
     {
         /// <summary>
@@ -43,7 +43,7 @@ namespace CAS
         OptInSale,
     }
 
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Laws" )]
+    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Regulations" )]
     public enum Audience
     {
         /// <summary>
