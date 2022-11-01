@@ -667,6 +667,7 @@ namespace CAS.UEditor
             if (platform == BuildTarget.Android)
             {
 #if UNITY_2019_3_OR_NEWER
+                OnGradleTemplateDisabledGUI( "Main Gradle", Utils.mainGradlePath );
                 OnGradleTemplateDisabledGUI( "Base Gradle", Utils.projectGradlePath );
                 OnGradleTemplateDisabledGUI( "Launcher Gradle", Utils.launcherGradlePath );
                 OnGradleTemplateDisabledGUI( "Gradle Properties", Utils.propertiesGradlePath );

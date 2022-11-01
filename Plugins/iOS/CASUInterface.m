@@ -117,6 +117,25 @@ void CASUValidateIntegration(void) {
 }
 
 void CASUOpenDebugger(CASUManagerRef manager) {
+    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    UIViewController *root = [CASUPluginUtil unityGLViewController];
+
+    Class testSuit = NSClassFromString(@"CASTestSuit");
+
+    if (testSuit) {
+        SEL presentSelector = NSSelectorFromString(@"presentFromController:manager:");
+
+        if ([testSuit respondsToSelector:presentSelector]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            [testSuit performSelector:presentSelector
+                           withObject:root
+                           withObject:[internalManager casManager]];
+#pragma clang diagnostic pop
+            return;
+        }
+    }
+
     UIStoryboard *storyboard =
         [UIStoryboard storyboardWithName:@"CASTestSuit"
                                   bundle:[NSBundle bundleForClass:[CASUManager class]]];
@@ -130,7 +149,6 @@ void CASUOpenDebugger(CASUManagerRef manager) {
         UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"DebuggerController"];
 
         if (vc) {
-            UIViewController *root = [CASUPluginUtil unityGLViewController];
             SEL selector = NSSelectorFromString(@"setTargetManager:");
 
             if (![vc respondsToSelector:selector]) {
@@ -138,7 +156,6 @@ void CASUOpenDebugger(CASUManagerRef manager) {
                 return;
             }
 
-            CASUManager *internalManager = (__bridge CASUManager *)manager;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
             [vc performSelector:selector withObject:[internalManager casManager]];

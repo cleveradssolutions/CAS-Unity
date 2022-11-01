@@ -16,7 +16,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "2.9.4";
+        public const string wrapperVersion = "2.9.5";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.

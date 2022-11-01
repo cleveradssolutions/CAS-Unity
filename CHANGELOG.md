@@ -1,5 +1,13 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.9.5] - 2022-11-1
+### Dependencies
+- [Android] Wraps [2.9.5 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.9.5 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Bug Fixes
+- [Android] Fixed build issue with `jcenter()` repository.
+- [iOS] Fixed Main Thread Checker issue when app using Firebase Dynamic Links.
+
 ## [2.9.4] - 2022-10-18
 ### Dependencies
 - [Android] Wraps [2.9.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

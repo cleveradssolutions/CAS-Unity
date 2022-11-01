@@ -647,26 +647,26 @@ namespace CAS.UEditor
             if (platform == BuildTarget.Android)
                 builder.Append( sdk.version );
             builder.Append( "\" version=\"" ).Append( sdk.version ).Append( "\"" );
-            if (sdk.addToAllTargets)
+            if (sdk.addToAllTargets && platform == BuildTarget.iOS)
                 builder.Append( " addToAllTargets=\"true\"" );
 
-            if (source.Length > 0)
+            var sourcesBuilder = new StringBuilder();
+            AppendSources( platform, sourcesBuilder );
+
+            for (int i = 0; i < contains.Length; i++)
+            {
+                var item = mediation.Find( contains[i] );
+                if (item != null && item.depsSDK.Count == 0)
+                {
+                    item.AppendSources( platform, sourcesBuilder );
+                }
+            }
+
+            if (sourcesBuilder.Length > 0)
             {
                 builder.Append( ">" ).AppendLine();
                 builder.Append( "      <" ).Append( sourcesTagName ).Append( '>' ).AppendLine();
-
-                AppendSources( platform, builder );
-
-                //for (int i = 0; i < contains.Length; i++)
-                //{
-                //    var item = mediation.Find( contains[i] );
-                //    if (item != null)
-                //    {
-                //        item.locked = true;
-                //        item.AppendSources( platform, builder );
-                //    }
-                //}
-
+                builder.Append( sourcesBuilder );
                 builder.Append( "      </" ).Append( sourcesTagName ).Append( '>' ).AppendLine();
                 builder.Append( "    </" ).Append( depTagName ).Append( '>' ).AppendLine();
             }

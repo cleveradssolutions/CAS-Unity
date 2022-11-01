@@ -42,23 +42,19 @@ namespace CAS.UEditor
         internal static void Configure( CASEditorSettings settings )
         {
             bool baseGradleChanged = false;
-            List<string> baseGradle = null;
-            List<string> launcherGradle = null;
 
 #if UNITY_2019_3_OR_NEWER
             const string baseGradlePath = Utils.projectGradlePath;
             const string launcherGradlePath = Utils.launcherGradlePath;
 
-            baseGradle = ReadGradleFile( "Base Gradle", baseGradlePath );
-            
-            if (settings.multiDexEnabled)
-                launcherGradle = ReadGradleFile( "Launcher Gradle", launcherGradlePath );
+            var baseGradle = ReadGradleFile( "Base Gradle", baseGradlePath );
+            var launcherGradle = ReadGradleFile( "Launcher Gradle", launcherGradlePath );
 #else
             const string baseGradlePath = Utils.mainGradlePath;
             const string launcherGradlePath = Utils.mainGradlePath;
 
-            baseGradle = ReadGradleFile( "Gradle", baseGradlePath );
-            launcherGradle = baseGradle;
+            var baseGradle = ReadGradleFile( "Gradle", baseGradlePath );
+            var launcherGradle = baseGradle;
 #endif
 
             if (settings.updateGradlePluginVersion
@@ -663,48 +659,50 @@ namespace CAS.UEditor
 
         private static bool UpdateBaseGradleRepositories( List<string> gradle, string filePath )
         {
-            // Find allprojects { repositories { } }
-            int line = 0;
-            do
-            {
-                ++line;
-                if (gradle.Count - 1 < line)
-                {
-                    LogWhenGradleLineNotFound( "repositories{}", filePath );
-                    return false;
-                }
-            } while (!gradle[line].Contains( "repositories" ));
-
-            ++line; // Move in repositories
-            // Add MavenCentral repo and remove deprecated jcenter repo
             const string mavenCentralLine = "mavenCentral()";
-            var mavenCentralExist = false;
-            var beginReposLine = line;
+
             var isChanged = false;
-            while (line < gradle.Count)
+            var isFoundCentralRepo = false;
+            for (int line = 0; line < gradle.Count; line++)
             {
-                if (gradle[line].Contains( "jcenter()" ))
+                // Find repositories scope
+                if (!gradle[line].Contains( "repositories" ))
+                    continue;
+                line++; // Move in repositories
+                isFoundCentralRepo = false;
+                var beginReposLine = line;
+                var scopeLevel = 1;
+                while (line < gradle.Count && scopeLevel > 0)
                 {
-                    gradle.RemoveAt( line );
-                    Debug.Log( Utils.logTag + "Deprecated jCenter repository removed from " + filePath );
-                    isChanged = true;
-                }
-                else if (gradle[line].Contains( mavenCentralLine ))
-                {
-                    mavenCentralExist = true;
-                }
-                else if (gradle[line].Contains( '}' ))
-                {
-                    if (!mavenCentralExist)
+                    if (gradle[line].Contains( mavenCentralLine ))
                     {
-                        gradle.Insert( beginReposLine, "        " + mavenCentralLine );
-                        Debug.Log( Utils.logTag + "Maven Central repository appended to " + filePath );
+                        isFoundCentralRepo = true;
+                    }
+                    else if (gradle[line].Contains( "jcenter()" ))
+                    {
+                        gradle.RemoveAt( line-- );
+                        Debug.Log( Utils.logTag + "Deprecated jCenter repository removed from " + filePath );
                         isChanged = true;
                     }
-                    break;
+
+                    if (gradle[line].Contains( '{' ))
+                        scopeLevel++;
+                    if (gradle[line].Contains( '}' ))
+                        scopeLevel--;
+                    line++;
                 }
-                ++line;
+
+                if (!isFoundCentralRepo)
+                {
+                    gradle.Insert( beginReposLine, "        " + mavenCentralLine );
+                    Debug.Log( Utils.logTag + "Maven Central repository appended to " + filePath );
+                    isChanged = true;
+                }
             }
+
+            if (!isChanged && !isFoundCentralRepo)
+                LogWhenGradleLineNotFound( "repositories{}", filePath );
+
             return isChanged;
         }
 
@@ -819,7 +817,7 @@ namespace CAS.UEditor
             // BuildPipeline.GetBuildToolsDirectory( ( BuildTarget )13 );
             try
             {
-                return ( string )typeof( BuildPipeline )
+                return (string)typeof( BuildPipeline )
                     .GetMethod( "GetBuildToolsDirectory", BindingFlags.Static | BindingFlags.NonPublic )
                     .Invoke( null, new object[] { BuildTarget.Android } );
             }
