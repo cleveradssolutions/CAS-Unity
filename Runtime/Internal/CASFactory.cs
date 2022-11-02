@@ -62,6 +62,25 @@ namespace CAS
 #endif
         }
 
+        internal static CASInitSettings LoadDefaultBuiderFromResources()
+        {
+            var builder = LoadInitSettingsFromResources();
+            if (!builder)
+            {
+#if UNITY_ANDROID || UNITY_IOS
+                Debug.LogWarning( "[CAS] No settings asset have been created for the target platform yet." +
+                    "\nUse 'Assets > CleverAdsSolutions > Settings' menu to create and modify default settings for each native platform." );
+#else
+                Debug.LogError( "[CAS] The target platform is not supported." +
+                    "\nChoose the target Android or iOS to use CAS." );
+#endif
+                builder = ScriptableObject.CreateInstance<CASInitSettings>();
+                builder.allowedAdFlags = AdFlags.Everything;
+                return builder;
+            }
+            return UnityEngine.Object.Instantiate( builder );
+        }
+
         internal static IAdsSettings CreateSettigns( CASInitSettings initSettings )
         {
             IAdsSettings settings = null;
@@ -70,10 +89,8 @@ namespace CAS
                 settings = new CAS.Android.CASSettingsClient();
 #endif
 #if PlatformIOS
-#if !TARGET_OS_SIMULATOR
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 settings = new CAS.iOS.CASSettingsClient();
-#endif
 #endif
             if (settings == null)
                 settings = new CAS.Unity.CASSettingsClient();
@@ -113,10 +130,8 @@ namespace CAS
             }
 #endif
 #if PlatformIOS
-#if !TARGET_OS_SIMULATOR
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 return CAS.iOS.CASExterns.CASUGetSDKVersion();
-#endif
 #endif
             return MobileAds.wrapperVersion;
         }
@@ -166,9 +181,6 @@ namespace CAS
             }
 
             IMediationManager manager = null;
-#if UNITY_EDITOR || TARGET_OS_SIMULATOR
-            manager = CAS.Unity.CASManagerClient.CreateManager( initSettings );
-#endif
 #if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
                 manager = new CAS.Android.CASManagerClient().Init( initSettings );
@@ -177,8 +189,11 @@ namespace CAS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
                 manager = new CAS.iOS.CASManagerClient().Init( initSettings );
 #endif
+#if UNITY_EDITOR
+            manager = CAS.Unity.CASManagerClient.CreateManager( initSettings );
+#endif
             if (manager == null)
-                throw new NotSupportedException( "Current platform: " + Application.platform.ToString() );
+                throw new NotSupportedException( "Platform: " + Application.platform.ToString() );
 
 #pragma warning disable CS0618 // Type or member is obsolete
             if (initSettings.bannerSize != 0) // Before onInitManager callback
@@ -233,7 +248,8 @@ namespace CAS
                 var initSettings = LoadInitSettingsFromResources();
                 if (initSettings && initSettings.managersCount > 0 && initSettings.managersCount - 1 < index)
                     throw new ArgumentOutOfRangeException( "index",
-                        "Manager with index " + index + " not found in settings." );
+                        "Manager with index " + index + " not found in settings." +
+                        "\nUse 'Assets > CleverAdsSolutions > Settings' menu to set all used Manager Ids." );
             }
             for (int i = initCallback.Count; i <= index; i++)
                 initCallback.Add( null );
@@ -327,7 +343,7 @@ namespace CAS
 #endif
 #if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
-                return CAS.iOS.CASExterns.CASUIsActiveMediationNetwork( ( int )network );
+                return CAS.iOS.CASExterns.CASUIsActiveMediationNetwork( (int)network );
 #endif
             return false;
         }

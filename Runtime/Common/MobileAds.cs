@@ -61,14 +61,7 @@ namespace CAS
         /// </summary>
         public static CASInitSettings BuildManager()
         {
-            var builder = CASFactory.LoadInitSettingsFromResources();
-            if (builder == null)
-            {
-                Debug.LogWarning( "[CleverAdsSolutions] The target platform is not supported." +
-                    "\nChoose the target Android or iOS to use CAS." );
-                return ScriptableObject.CreateInstance<CASInitSettings>();
-            }
-            return UnityEngine.Object.Instantiate( builder );
+            return CASFactory.LoadDefaultBuiderFromResources();
         }
 
         /// <summary>

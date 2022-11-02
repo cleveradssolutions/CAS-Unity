@@ -4,7 +4,7 @@
 //  Copyright © 2022 CleverAdsSolutions. All rights reserved.
 //
 
-#if UNITY_EDITOR || TARGET_OS_SIMULATOR
+#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
