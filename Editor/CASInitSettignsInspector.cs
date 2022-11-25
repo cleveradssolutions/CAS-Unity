@@ -395,7 +395,7 @@ namespace CAS.UEditor
             else
             {
                 bitcodeIOSEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Bitcode enabled",
+                    "Bitcode enabled (Deprecated)",
                     bitcodeIOSEnabledProp.boolValue );
 
                 EditorGUILayout.BeginHorizontal();
