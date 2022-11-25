@@ -65,7 +65,7 @@ namespace CAS
         /// This method allows you to request the user permission dialogue.
         /// </summary>
         [WikiPage( "https://developer.apple.com/documentation/apptrackingtransparency/attrackingmanager/3547037-requesttrackingauthorization" )]
-        public static void Request( CompleteHandler callback = null )
+        public static void Request( CompleteHandler callback )
         {
             if (_completeCallback != null)
             {
