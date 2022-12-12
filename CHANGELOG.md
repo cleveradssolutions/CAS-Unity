@@ -1,5 +1,12 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [2.9.8] - 2022-12-12
+### Dependencies
+- [Android] Wraps [2.9.8 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.9.8 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Changes
+- [iOS] Disable bitcode, as Apple deprecated it in Xcode 14.
+
 ## [2.9.7] - 2022-11-25
 ### Dependencies
 - [Android] Wraps [2.9.7 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

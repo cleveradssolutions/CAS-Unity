@@ -29,7 +29,7 @@ namespace CAS.UEditor
         public bool updateGradlePluginVersion = true;
 
         public bool generateIOSDeepLinksForPromo = true;
-        public bool bitcodeIOSEnabled = false;
+        public bool bitcodeIOSDisabled = true;
         public string attributionReportEndpoint = CASEditorUtils.attributionReportEndPoint;
 
         /// <summary>

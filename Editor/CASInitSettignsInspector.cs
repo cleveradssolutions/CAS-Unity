@@ -46,7 +46,6 @@ namespace CAS.UEditor
         private SerializedProperty mostPopularCountryOfUsersProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
-        private SerializedProperty bitcodeIOSEnabledProp;
         #endregion
 
         #region Utility fields
@@ -133,7 +132,6 @@ namespace CAS.UEditor
 
             mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty( "mostPopularCountryOfUsers" );
             attributionReportEndpointProp = editorSettingsObj.FindProperty( "attributionReportEndpoint" );
-            bitcodeIOSEnabledProp = editorSettingsObj.FindProperty( "bitcodeIOSEnabled" );
 
             userTrackingUsageDescriptionProp = editorSettingsObj.FindProperty( "userTrackingUsageDescription" );
 
@@ -394,10 +392,6 @@ namespace CAS.UEditor
             }
             else
             {
-                bitcodeIOSEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Bitcode enabled (Deprecated)",
-                    bitcodeIOSEnabledProp.boolValue );
-
                 EditorGUILayout.BeginHorizontal();
                 var reportEndpointEnabled = attributionReportEndpointProp.stringValue.Length > 0;
                 if (reportEndpointEnabled != EditorGUILayout.ToggleLeft(
