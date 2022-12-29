@@ -498,8 +498,8 @@ namespace CAS.UEditor
 
         private void DrawInterstitialScope()
         {
-            EditorGUILayout.LabelField("Impression interval(sec):");
             EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField("Impression interval(sec):");
             interstitialIntervalProp.intValue = EditorGUILayout.IntSlider(interstitialIntervalProp.intValue, 0, 120);
             if (interstitialIntervalProp.intValue > 0)
                 EditorGUILayout.HelpBox("For some time after the ad is closed, new ad impressions will fail.", MessageType.None);
@@ -521,8 +521,8 @@ namespace CAS.UEditor
 
         private void DrawBannerScope()
         {
-            EditorGUILayout.LabelField("Refresh rate(sec):");
             EditorGUI.indentLevel++;
+            EditorGUILayout.LabelField("Refresh rate(sec):");
             int refresh = EditorGUILayout.IntSlider(bannerRefreshProp.intValue, 0, 180);
             if (refresh < 10)
                 refresh = 0;
@@ -546,9 +546,9 @@ namespace CAS.UEditor
             var toggleStyle = EditorStyles.toggle;
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            var changed = GUILayout.Toggle(enabled, "", GUILayout.ExpandWidth(false));
+            changed = GUILayout.Toggle(changed, flag.ToString() + " placement included", EditorStyles.toolbarButton);
             GUILayout.Label(content, EditorStyles.toolbar, GUILayout.ExpandWidth(false));
-            var changed = GUILayout.Toggle(enabled, flag.ToString() + " placement included", EditorStyles.toolbarButton);
-            changed = GUILayout.Toggle(changed, "", GUILayout.ExpandWidth(false));
             if (enabled != changed)
             {
                 enabled = !enabled;

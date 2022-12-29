@@ -5,7 +5,27 @@
 - [Android] Wraps [3.0.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
 - [iOS] Wraps [3.0.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 ### Features
-- Added a built-in consent flow to automatically present users with GDPR and Apple ATT dialogue.
+- Added a built-in consent flow to automatically present users with GDPR and Apple ATT dialogue.  
+The dialog will not be shown if at least one of the following conditions is true:
+  - If `CAS.MobileAds.settings.taggedAudience` equals `Audience.Children`.
+  - If `CAS.MobileAds.settings.userConsent`equals `ConsentStatus.Undefined`.
+  - If the user is located in countries that do not require information protection.
+  - If ConsentFlow is disabled:
+ ```csharp
+CAS.MobileAds.BuildManager().WithConsentFlow(
+      new ConsentFlow(isEnabled: false)
+).Build()
+```
+We recommend that you provide a link to your Privacy Policy for CAS initialization, otherwise CAS Privacy Policy will be provided to the user.
+```csharp
+CAS.MobileAds.BuildManager().WithConsentFlow(
+      new ConsentFlow().withPrivacyPolicy("https://url_to_privacy_policy")
+).Build()
+```
+- Added alternative names for `IManagerBuilder CAS.MobileAds.BuildManager()` methods:
+  - `Initialize()` -> `Build()`
+  - `WithManagerIdAtIndex(int)` -> `WithCASId(int)`
+  - `WithManagerId(string)` -> `WithCASId(int)`
 ## Changes
 - The list of networks that are included in the Clever solutions has been changed.: 
   - Optimal solution: Added Yandex Ads.
@@ -14,6 +34,7 @@
 - Removed deprecated functions from CAS version 2.x. See [Migrate from 2.x to 3.0](https://github.com/cleveradssolutions/CAS-Unity/wiki/SDK-Migration) page.
 - [Android] The minimum Android API level supports is 21.
 - [iOS] The minimum iOS version supports is 12.0.
+- Enabled by default `CAS.MobileAds.settings.allowInterstitialAdsWhenVideoCostAreLower`.
 
 ## [2.9.8] - 2022-12-12
 ### Dependencies
