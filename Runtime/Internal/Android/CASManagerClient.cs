@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 namespace CAS.Android
 {
-    internal class CASManagerClient : CASViewFactory, IMediationManager
+    internal sealed class CASManagerClient : IMediationManager
     {
         private AdEventsProxy _interstitialProxy;
         private AdEventsProxy _rewardedProxy;
@@ -21,14 +21,26 @@ namespace CAS.Android
 
         private InitCompleteAction _initCompleteAction;
         private InitCallbackProxy _initListener;
+        private readonly List<IAdView> _adViews = new List<IAdView>();
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get; private set; }
 
-        #region Ad Events
-        public event CASTypedEvent OnLoadedAd;
-        public event CASTypedEventWithError OnFailedToLoadAd;
+        public LastPageAdContent lastPageAdContent
+        {
+            get { return _lastPageAdContent; }
+            set
+            {
+                if (value != _lastPageAdContent)
+                {
+                    _lastPageAdContent = value;
+                    string json = value == null ? null : JsonUtility.ToJson(value);
+                    _managerBridge.Call("setLastPageAdContent", json);
+                }
+            }
+        }
 
+        #region Ad Events
         public event Action OnInterstitialAdLoaded
         {
             add { _interstitialProxy.OnAdLoaded += value; }
@@ -134,6 +146,7 @@ namespace CAS.Android
         }
         #endregion
 
+        #region Initialization
         internal CASManagerClient() { }
 
 #if false // Manager store in Static memory and disposed only on application destroed
@@ -150,130 +163,108 @@ namespace CAS.Android
         }
 #endif
 
-        internal CASManagerClient Init( CASInitSettings initData )
+        internal CASManagerClient Init(CASInitSettings initData)
         {
             managerID = initData.targetId;
             isTestAdMode = initData.IsTestAdMode();
             _initCompleteAction = initData.initListener;
-            _initListener = new InitCallbackProxy( this );
-            _interstitialProxy = new AdEventsProxy( AdType.Interstitial );
-            _interstitialProxy.OnAdLoaded += CallbackOnInterLoaded;
-            _interstitialProxy.OnAdFailed += CallbackOnInterFailed;
-            _rewardedProxy = new AdEventsProxy( AdType.Rewarded );
-            _rewardedProxy.OnAdLoaded += CallbackOnRewardLoaded;
-            _rewardedProxy.OnAdFailed += CallbackOnRewardFailed;
-            _returnAdProxy = new AdEventsProxy( AdType.Interstitial );
+            _initListener = new InitCallbackProxy(this);
+            _interstitialProxy = new AdEventsProxy(AdType.Interstitial);
+            _rewardedProxy = new AdEventsProxy(AdType.Rewarded);
+            _returnAdProxy = new AdEventsProxy(AdType.Interstitial);
 
-            using (var builder = new AndroidJavaObject( CASJavaBridge.bridgeBuilderClass ))
+            using (var builder = new AndroidJavaObject(CASJavaBridge.bridgeBuilderClass))
             {
                 if (initData.IsTestAdMode())
-                    builder.Call( "enableTestMode" );
+                    builder.Call("enableTestMode");
 
-                if (!string.IsNullOrEmpty( initData.userID ))
-                    builder.Call( "setUserId", initData.userID );
+                if (!string.IsNullOrEmpty(initData.userID))
+                    builder.Call("setUserId", initData.userID);
 
-                CASJavaBridge.RepeatCall( "addExtras", builder, initData.extras, false );
+                if (initData.consentFlow != null)
+                {
+                    if (initData.consentFlow.isEnabled)
+                        builder.Call("enableConsentFlow", initData.consentFlow.privacyPolicyUrl);
+                    else
+                        builder.Call("disableConsentFlow");
+                }
+
+                CASJavaBridge.RepeatCall("addExtras", builder, initData.extras, false);
 
 
-                builder.Call( "setCallbacks", _initListener, _interstitialProxy, _rewardedProxy );
+                builder.Call("setCallbacks", _initListener, _interstitialProxy, _rewardedProxy);
 
-                _managerBridge = builder.Call<AndroidJavaObject>( "build",
-                    initData.targetId, Application.unityVersion, (int)initData.allowedAdFlags );
+                _managerBridge = builder.Call<AndroidJavaObject>("build",
+                    initData.targetId, Application.unityVersion, (int)initData.allowedAdFlags);
             }
             return this;
         }
 
-        public void OnInitializationCallback( string error, bool testMode )
+        public void OnInitializationCallback(string error, bool testMode)
         {
-            CASFactory.UnityLog( "OnInitialization " + error );
+            CASFactory.UnityLog("OnInitialization " + error);
             isTestAdMode = testMode;
             if (_initCompleteAction != null)
             {
-                CASFactory.ExecuteEvent( () =>
+                CASFactory.ExecuteEvent(() =>
                 {
-                    if (string.IsNullOrEmpty( error ))
-                        _initCompleteAction( true, null );
+                    if (string.IsNullOrEmpty(error))
+                        _initCompleteAction(true, null);
                     else
-                        _initCompleteAction( false, error );
+                        _initCompleteAction(false, error);
 
                     _initCompleteAction = null;
-                } );
+                });
             }
             _initListener = null;
         }
+        #endregion
 
-        public LastPageAdContent lastPageAdContent
+        public bool IsEnabledAd(AdType adType)
         {
-            get { return _lastPageAdContent; }
-            set
-            {
-                if (value != _lastPageAdContent)
-                {
-                    _lastPageAdContent = value;
-                    string json = value == null ? null : JsonUtility.ToJson( value );
-                    _managerBridge.Call( "setLastPageAdContent", json );
-                }
-            }
+            return _managerBridge.Call<bool>("isEnabled", (int)adType);
         }
 
-        public string GetLastActiveMediation( AdType adType )
+        public void SetEnableAd(AdType adType, bool enabled)
         {
-            return string.Empty;
+            _managerBridge.Call("enableAd", (int)adType, enabled);
         }
 
-        public bool IsEnabledAd( AdType adType )
-        {
-            return _managerBridge.Call<bool>( "isEnabled", (int)adType );
-        }
-
-        public bool IsReadyAd( AdType adType )
+        public bool IsReadyAd(AdType adType)
         {
             switch (adType)
             {
-                case AdType.Banner:
-                    return globalView != null && globalView.isReady;
                 case AdType.Interstitial:
-                    return _managerBridge.Call<bool>( "isInterstitialAdReady" );
+                    return _managerBridge.Call<bool>("isInterstitialAdReady");
                 case AdType.Rewarded:
-                    return _managerBridge.Call<bool>( "isRewardedAdReady" );
+                    return _managerBridge.Call<bool>("isRewardedAdReady");
                 default:
                     return false;
             }
         }
 
-        public void LoadAd( AdType adType )
+        public void LoadAd(AdType adType)
         {
             switch (adType)
             {
-                case AdType.Banner:
-                    LoadGlobalBanner();
-                    break;
                 case AdType.Interstitial:
-                    _managerBridge.Call( "loadInterstitial" );
+                    _managerBridge.Call("loadInterstitial");
                     break;
                 case AdType.Rewarded:
-                    _managerBridge.Call( "loadRewarded" );
+                    _managerBridge.Call("loadRewarded");
                     break;
             }
         }
 
-        public void SetEnableAd( AdType adType, bool enabled )
-        {
-            _managerBridge.Call( "enableAd", (int)adType, enabled );
-        }
-
-        public void ShowAd( AdType adType )
+        public void ShowAd(AdType adType)
         {
             switch (adType)
             {
-                case AdType.Banner:
-                    ShowGlobalBanner();
-                    break;
                 case AdType.Interstitial:
-                    _managerBridge.Call( "showInterstitial" );
+                    _managerBridge.Call("showInterstitial");
                     break;
                 case AdType.Rewarded:
-                    _managerBridge.Call( "showRewarded" );
+                    _managerBridge.Call("showRewarded");
                     break;
             }
         }
@@ -281,63 +272,42 @@ namespace CAS.Android
         [UnityEngine.Scripting.Preserve]
         public bool TryOpenDebugger()
         {
-            return _managerBridge.Call<bool>( "tryOpenDebugger" );
+            return _managerBridge.Call<bool>("tryOpenDebugger");
         }
 
-        public void SetAppReturnAdsEnabled( bool enable )
+        public void SetAppReturnAdsEnabled(bool enable)
         {
             if (enable)
-                _managerBridge.Call( "enableReturnAds", _returnAdProxy );
+                _managerBridge.Call("enableReturnAds", _returnAdProxy);
             else
-                _managerBridge.Call( "disableReturnAds" );
+                _managerBridge.Call("disableReturnAds");
         }
 
         public void SkipNextAppReturnAds()
         {
-            _managerBridge.Call( "skipNextReturnAds" );
+            _managerBridge.Call("skipNextReturnAds");
         }
 
-        protected override IAdView CreateAdView( AdSize size )
+        public IAdView GetAdView(AdSize size)
         {
-            var callback = new AdEventsProxy( AdType.Banner );
-            var bridge = _managerBridge.Call<AndroidJavaObject>( "createAdView", callback, (int)size );
-            return new CASViewClient( this, size, bridge, callback );
+            if (size < AdSize.Banner)
+                throw new ArgumentException("Invalid AdSize " + size.ToString());
+            for (int i = 0; i < _adViews.Count; i++)
+            {
+                if (_adViews[i].size == size)
+                    return _adViews[i];
+            }
+            var callback = new AdEventsProxy(AdType.Banner);
+            var bridge = _managerBridge.Call<AndroidJavaObject>("createAdView", callback, (int)size);
+            var view = new CASViewClient(this, size, bridge, callback);
+            _adViews.Add(view);
+            return view;
         }
 
-
-        #region Ad load callback wrapping
-        public override void OnLoadedCallback( AdType type )
+        public void RemoveAdViewFromFactory(IAdView view)
         {
-            if (OnLoadedAd != null)
-                OnLoadedAd( type );
+            _adViews.Remove(view);
         }
-
-        public override void OnFailedCallback( AdType type, AdError error )
-        {
-            if (OnFailedToLoadAd != null)
-                OnFailedToLoadAd( type, error.GetMessage() );
-        }
-
-        private void CallbackOnRewardFailed( AdError error )
-        {
-            OnFailedCallback( AdType.Rewarded, error );
-        }
-
-        private void CallbackOnRewardLoaded()
-        {
-            OnLoadedCallback( AdType.Rewarded );
-        }
-
-        private void CallbackOnInterFailed( AdError error )
-        {
-            OnFailedCallback( AdType.Interstitial, error );
-        }
-
-        private void CallbackOnInterLoaded()
-        {
-            OnLoadedCallback( AdType.Interstitial );
-        }
-        #endregion
     }
 }
 #endif

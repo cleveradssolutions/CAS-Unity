@@ -30,11 +30,10 @@ namespace CAS.Unity
 
         public float lastInterImpressionTimestamp = float.MinValue;
 
-        private List<string> _testDeviceIds = new List<string>();
-
-        public List<string> GetTestDeviceIds()
+        internal CASSettingsClient()
         {
-            return _testDeviceIds;
+            iOSAppPauseOnBackground = true;
+            allowInterstitialAdsWhenVideoCostAreLower = true;
         }
 
         public void RestartInterstitialInterval()
@@ -42,15 +41,14 @@ namespace CAS.Unity
             lastInterImpressionTimestamp = Time.time;
         }
 
-        public void SetTestDeviceIds( List<string> testDeviceIds )
+        public void SetTestDeviceIds(IList<string> testDeviceIds)
         {
-            _testDeviceIds = testDeviceIds;
         }
 
         public bool isExecuteEventsOnUnityThread
         {
             get { return CASFactory.IsExecuteEventsOnUnityThread(); }
-            set { CASFactory.SetExecuteEventsOnUnityThread( value ); }
+            set { CASFactory.SetExecuteEventsOnUnityThread(value); }
         }
 
     }

@@ -56,17 +56,16 @@ namespace CAS.UEditor
             return GetActiveMediationPattern( target );
         }
 
-        public static string GetActiveMediationPattern( DependencyManager manager )
+        public static string GetActiveMediationPattern( DependencyManager manager, int size = 25 )
         {
             if (manager == null)
                 return "";
 
-            var networks = Enum.GetValues( typeof( AdNetwork ) );
-            var result = new char[networks.Length];
-            for (int i = 0; i < networks.Length; i++)
+            var result = new char[size];
+            for (int i = 0; i < size; i++)
             {
-                var dependency = manager.Find( ( AdNetwork )networks.GetValue( i ) );
-                result[i] = ( dependency != null && dependency.IsInstalled() ) ? dependency.mediation : '0';
+                var dependency = manager.Find( ( AdNetwork )i );
+                result[i] = ( dependency != null && dependency.IsInstalled() ) ? '1' : '0';
             }
             return new string( result );
         }
@@ -75,8 +74,6 @@ namespace CAS.UEditor
         {
             if (network == Dependency.noNetwork)
                 return null;
-            if (network == AdNetwork.MAX)
-                network = AdNetwork.AppLovin;
             return Find( network.GetName() );
         }
 
@@ -127,13 +124,13 @@ namespace CAS.UEditor
         {
             public string name;
             public string version;
-            public bool addToAllTargets;
+            public bool forAll;
 
             public SDK( string name, string version, bool addToAllTargets = false )
             {
                 this.name = name;
                 this.version = version;
-                this.addToAllTargets = addToAllTargets;
+                this.forAll = addToAllTargets;
             }
         }
 
@@ -150,7 +147,6 @@ namespace CAS.UEditor
         public string comment;
         public Label labels = Label.Banner | Label.Inter | Label.Reward;
         public string embedFramework;
-        public char mediation = '1';
 
         public string installedVersion { get; set; }
         public bool isNewer { get; set; }
@@ -166,9 +162,6 @@ namespace CAS.UEditor
         /// Not supported for current configuration
         /// </summary>
         public bool notSupported { get; set; }
-
-        [Obsolete( "Renamed to `notSupported`" )]
-        public bool inBan { get; set; }
 
         public Dependency() { }
 
@@ -200,12 +193,6 @@ namespace CAS.UEditor
         public bool IsInstalled()
         {
             return locked || !string.IsNullOrEmpty( installedVersion );
-        }
-
-        [Obsolete( "Renamed to IsInstalled()" )]
-        public bool isInstalled()
-        {
-            return IsInstalled();
         }
     }
 }

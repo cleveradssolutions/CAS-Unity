@@ -34,17 +34,6 @@ namespace CAS
         event CASViewEvent OnClicked;
 
         /// <summary>
-        /// Called when the ad view enabled.
-        /// </summary>
-        [Obsolete( "Please stop use the event, is called at the same time as the SetActive(true)." )]
-        event CASViewEventWithMeta OnPresented;
-        /// <summary>
-        /// Called when the ad view disabled.
-        /// </summary>
-        [Obsolete( "Please stop use the event, is called at the same time as the SetActive(false)." )]
-        event CASViewEvent OnHidden;
-
-        /// <summary>
         /// Get the manager of the AdView.
         /// </summary>
         IMediationManager manager { get; }

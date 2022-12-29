@@ -20,15 +20,11 @@ namespace CAS.Android
         private AdPosition _position = AdPosition.BottomCenter;
         private int _positionX = 0;
         private int _positionY = 0;
-        private bool _waitOfHideCallback;
-        private AdMetaData _lastImpression = null;
 
         public event CASViewEvent OnLoaded;
         public event CASViewEventWithError OnFailed;
         public event CASViewEventWithMeta OnImpression;
         public event CASViewEvent OnClicked;
-        public event CASViewEventWithMeta OnPresented;
-        public event CASViewEvent OnHidden;
 
         public IMediationManager manager { get { return _manager; } }
         public AdSize size { get; private set; }
@@ -86,22 +82,10 @@ namespace CAS.Android
             if (active)
             {
                 _bridge.Call( "show" );
-                if (!_waitOfHideCallback)
-                {
-                    _waitOfHideCallback = true;
-                    if (_lastImpression != null && OnPresented != null)
-                        OnPresented( this, _lastImpression );
-                }
                 return;
             }
             rectInPixels = Rect.zero;
             _bridge.Call( "hide" );
-            if (_waitOfHideCallback)
-            {
-                _waitOfHideCallback = false;
-                if (OnHidden != null)
-                    OnHidden( this );
-            }
         }
 
         public void SetPosition( int x, int y )
@@ -131,9 +115,6 @@ namespace CAS.Android
 
         private void CallbackOnOpen( AdMetaData meta )
         {
-            if (_lastImpression == null && OnPresented != null)
-                OnPresented( this, meta );
-            _lastImpression = meta;
             if (OnImpression != null)
                 OnImpression( this, meta );
         }
@@ -148,13 +129,6 @@ namespace CAS.Android
         {
             if (OnFailed != null)
                 OnFailed( this, error );
-
-            if (_waitOfHideCallback)
-            {
-                _waitOfHideCallback = false;
-                if (OnHidden != null)
-                    OnHidden( this );
-            }
         }
 
         private void CallbackOnRect( Rect rect )

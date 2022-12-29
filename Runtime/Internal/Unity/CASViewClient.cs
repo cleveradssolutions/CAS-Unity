@@ -10,27 +10,31 @@ using UnityEngine;
 
 namespace CAS.Unity
 {
-
+    [Serializable]
     internal class CASViewClient : IAdView
     {
         private static bool _emulateTabletScreen = false;
 
         private readonly CASManagerClient _manager;
+
+        [SerializeField]
         private bool _active = false;
+        [SerializeField]
         private bool _loaded = false;
-        private bool _waitPresentEvent = true;
         private bool _waitImpressionEvent = false;
-        private int _positionX = 0;
-        private int _positionY = 0;
+        [SerializeField]
         private AdError _lastError = AdError.Internal;
+        [SerializeField]
         private AdPosition _position = AdPosition.BottomCenter;
+        [SerializeField]
+        private int _positionX = 0;
+        [SerializeField]
+        private int _positionY = 0;
 
         public event CASViewEvent OnLoaded;
         public event CASViewEventWithError OnFailed;
         public event CASViewEventWithMeta OnImpression;
         public event CASViewEvent OnClicked;
-        public event CASViewEventWithMeta OnPresented;
-        public event CASViewEvent OnHidden;
 
         public IMediationManager manager { get { return _manager; } }
         public AdSize size { get; private set; }
@@ -39,10 +43,10 @@ namespace CAS.Unity
 
         public bool isReady
         {
-            get { return _loaded && _manager.IsEnabledAd( AdType.Banner ); }
+            get { return _loaded && _manager.IsEnabledAd(AdType.Banner); }
         }
 
-        internal CASViewClient( CASManagerClient manager, AdSize size )
+        internal CASViewClient(CASManagerClient manager, AdSize size)
         {
             _manager = manager;
             this.size = size;
@@ -53,7 +57,7 @@ namespace CAS.Unity
 
         public void Dispose()
         {
-            _manager.viewFactory.RemoveAdViewFromFactory( this );
+            _manager.RemoveAdViewFromFactory(this);
         }
 
         public void DisableRefresh()
@@ -63,38 +67,32 @@ namespace CAS.Unity
 
         public void Load()
         {
-            if (_manager.IsEnabledAd( AdType.Banner ))
+            if (_manager.IsEnabledAd(AdType.Banner))
             {
                 if (!_loaded)
-                    _manager.Post( CallAdLoaded, 0.5f );
+                    _manager.Post(CallAdLoaded, 0.5f);
                 return;
             }
             _lastError = AdError.ManagerIsDisabled;
-            _manager.Post( CallAdFailed );
+            _manager.Post(CallAdFailed);
         }
 
-        public void SetActive( bool active )
+        public void SetActive(bool active)
         {
             if (active)
             {
-                if (!_manager.IsEnabledAd( AdType.Banner ))
+                if (!_manager.IsEnabledAd(AdType.Banner))
                 {
                     _lastError = AdError.ManagerIsDisabled;
-                    _manager.Post( CallAdFailed );
+                    _manager.Post(CallAdFailed);
                     return;
                 }
             }
-            _active = active;
-
-            if (!active)
+            else
             {
                 rectInPixels = Rect.zero;
-                if (!_waitPresentEvent)
-                {
-                    _waitPresentEvent = true;
-                    _manager.Post( CallAdHidden );
-                }
             }
+            _active = active;
         }
 
         public AdPosition position
@@ -105,49 +103,49 @@ namespace CAS.Unity
             }
             set
             {
-                SetPosition( value, 0, 0 );
+                SetPosition(value, 0, 0);
             }
         }
 
-        public void SetPosition( int x, int y )
+        public void SetPosition(int x, int y)
         {
-            SetPosition( AdPosition.TopLeft, x, y );
+            SetPosition(AdPosition.TopLeft, x, y);
         }
 
-        private void SetPosition( AdPosition position, int x, int y )
+        private void SetPosition(AdPosition position, int x, int y)
         {
             if (position == AdPosition.Undefined)
                 return;
             if (position != _position || x != _positionX || y != _positionY)
             {
-                _manager.Log( "Banner position changed to " + position.ToString() + " with offset: x=" + x + ", y=" + y );
+                _manager.Log("Banner position changed to " + position.ToString() + " with offset: x=" + x + ", y=" + y);
                 _position = position;
                 _positionX = x;
                 _positionY = y;
             }
         }
 
-        public void OnGUIAd( GUIStyle style )
+        public void OnGUIAd(GUIStyle style)
         {
             if (_active && isReady)
             {
-                if (_waitPresentEvent)
+                if (_waitImpressionEvent)
                 {
-                    _waitPresentEvent = false;
-                    _manager.Post( CallAdPresented );
+                    _waitImpressionEvent = false;
+                    _manager.Post(CallAdImpression);
                 }
                 rectInPixels = CalculateAdRectOnScreen();
-                var rect = new Rect( rectInPixels );
+                var rect = new Rect(rectInPixels);
                 var totalHeight = rect.height;
                 rect.height = totalHeight * 0.65f;
-                if (GUI.Button( rect, "CAS " + size.ToString() + " Ad", style ))
-                    _manager.Post( CallAdClicked );
+                if (GUI.Button(rect, "CAS " + size.ToString() + " Ad", style))
+                    _manager.Post(CallAdClicked);
 
                 rect.y += rect.height;
                 rect.height = totalHeight * 0.35f;
 
-                _emulateTabletScreen = GUI.Toggle( rect, _emulateTabletScreen,
-                    _emulateTabletScreen ? "Switch to phone" : "Switch to tablet", style );
+                _emulateTabletScreen = GUI.Toggle(rect, _emulateTabletScreen,
+                    _emulateTabletScreen ? "Switch to phone" : "Switch to tablet", style);
             }
         }
 
@@ -156,42 +154,28 @@ namespace CAS.Unity
             _loaded = true;
             _waitImpressionEvent = true;
             if (OnLoaded != null)
-                OnLoaded( this );
+                OnLoaded(this);
         }
 
         private void CallAdFailed()
         {
             if (OnFailed != null)
-                OnFailed( this, _lastError );
-            if (!_waitPresentEvent)
-            {
-                _waitPresentEvent = true;
-                _manager.Post( CallAdHidden );
-            }
+                OnFailed(this, _lastError);
         }
 
-        private void CallAdPresented()
+        private void CallAdImpression()
         {
-            var impression = new CASImpressionClient( AdType.Banner );
-            if (OnPresented != null)
-                OnPresented( this, impression );
-            if (_waitImpressionEvent && OnImpression != null)
+            var impression = new CASImpressionClient(AdType.Banner);
+            if (OnImpression != null)
             {
-                _waitImpressionEvent = false;
-                OnImpression( this, impression );
+                OnImpression(this, impression);
             }
         }
 
         private void CallAdClicked()
         {
             if (OnClicked != null)
-                OnClicked( this );
-        }
-
-        private void CallAdHidden()
-        {
-            if (OnHidden != null)
-                OnHidden( this );
+                OnClicked(this);
         }
 
         private Rect CalculateAdRectOnScreen()
@@ -201,7 +185,7 @@ namespace CAS.Unity
             var safeArea = Screen.safeArea;
             const float phoneScale = 640;
             const float tabletScale = 1024;
-            float scale = Mathf.Max( screenWidth, screenHeight ) / ( _emulateTabletScreen ? tabletScale : phoneScale );
+            float scale = Mathf.Max(screenWidth, screenHeight) / (_emulateTabletScreen ? tabletScale : phoneScale);
             bool isPortrait = screenWidth < screenHeight;
 
             AdSize targetSize;
@@ -214,8 +198,8 @@ namespace CAS.Unity
             switch (targetSize)
             {
                 case AdSize.AdaptiveBanner:
-                    result.width = Mathf.Min( screenWidth, 728.0f * scale );
-                    result.height = ( _emulateTabletScreen ? 90.0f : 50.0f ) * scale;
+                    result.width = Mathf.Min(screenWidth, 728.0f * scale);
+                    result.height = (_emulateTabletScreen ? 90.0f : 50.0f) * scale;
                     break;
                 case AdSize.Leaderboard:
                     result.width = 728.0f * scale;
@@ -227,14 +211,14 @@ namespace CAS.Unity
                     break;
                 case AdSize.AdaptiveFullWidth:
                     result.width = screenWidth;
-                    result.height = ( _emulateTabletScreen ? 90.0f : 50.0f ) * scale;
+                    result.height = (_emulateTabletScreen ? 90.0f : 50.0f) * scale;
                     break;
                 case AdSize.ThinBanner:
                     result.width = screenWidth;
                     if (_emulateTabletScreen)
-                        result.height = ( isPortrait ? 90.0f : 50.0f ) * scale;
+                        result.height = (isPortrait ? 90.0f : 50.0f) * scale;
                     else
-                        result.height = ( isPortrait ? 50.0f : 32.0f ) * scale;
+                        result.height = (isPortrait ? 50.0f : 32.0f) * scale;
                     break;
                 default:
                     result.width = 320.0f * scale;
@@ -242,8 +226,8 @@ namespace CAS.Unity
                     break;
             }
 
-            var maxYPos = screenHeight - result.height - ( screenHeight - safeArea.yMax );
-            var maxXPos = screenWidth - result.width - ( screenWidth - safeArea.xMax );
+            var maxYPos = screenHeight - result.height - (screenHeight - safeArea.yMax);
+            var maxXPos = screenWidth - result.width - (screenWidth - safeArea.xMax);
             switch (_position)
             {
                 case AdPosition.TopCenter:
@@ -255,7 +239,7 @@ namespace CAS.Unity
                     if (result.y < safeArea.y)
                         result.y = safeArea.y;
                     else if (isPortrait) // For Portrait orientation add offset to simulate Safe area
-                        result.y = Math.Max( result.y, scale * 20.0f );
+                        result.y = Math.Max(result.y, scale * 20.0f);
                     break;
                 default:
                     result.y = maxYPos;
@@ -283,50 +267,6 @@ namespace CAS.Unity
         }
     }
 
-    internal class CASViewFactoryImpl : CASViewFactory
-    {
-        private CASManagerClient manager;
-
-        public event CASTypedEvent OnLoadedAd;
-        public event CASTypedEventWithError OnFailedToLoadAd;
-
-        internal CASViewFactoryImpl( CASManagerClient manager )
-        {
-            this.manager = manager;
-        }
-
-        protected override IAdView CreateAdView( AdSize size )
-        {
-            return new CASViewClient( manager, size );
-        }
-
-        public void OnGUIAd( GUIStyle style )
-        {
-            for (int i = 0; i < adViews.Count; i++)
-            {
-                ( (CASViewClient)adViews[i] ).OnGUIAd( style );
-            }
-        }
-
-        public void LoadCreatedViews()
-        {
-            for (int i = 0; i < adViews.Count; i++)
-                adViews[i].Load();
-        }
-
-        public override void OnLoadedCallback( AdType type )
-        {
-            if (OnLoadedAd != null)
-                OnLoadedAd( type );
-        }
-
-        public override void OnFailedCallback( AdType type, AdError error )
-        {
-            if (OnFailedToLoadAd != null)
-                OnFailedToLoadAd( type, error.GetMessage() );
-        }
-    }
-
     [Serializable]
     internal class CASFullscreenView
     {
@@ -347,7 +287,7 @@ namespace CAS.Unity
         private CASManagerClient manager;
         private AdType type;
 
-        internal CASFullscreenView( CASManagerClient manager, AdType type )
+        internal CASFullscreenView(CASManagerClient manager, AdType type)
         {
             this.manager = manager;
             this.type = type;
@@ -355,59 +295,56 @@ namespace CAS.Unity
 
         public void Load()
         {
-            if (manager.IsEnabledAd( type ))
+            if (manager.IsEnabledAd(type))
             {
                 if (!loaded)
-                    manager.Post( CallAdLoaded, 1.0f );
+                    manager.Post(CallAdLoaded, 1.0f);
                 return;
             }
             lastError = AdError.ManagerIsDisabled;
-            manager.Post( CallAdLoadFail );
+            manager.Post(CallAdLoadFail);
+        }
+
+        public AdError? GetReadyError()
+        {
+            if (manager.isFullscreenAdVisible)
+                return AdError.AlreadyDisplayed;
+            if (!manager.IsEnabledAd(type))
+                return AdError.ManagerIsDisabled;
+            if (type == AdType.Interstitial
+               && manager._settings.lastInterImpressionTimestamp + manager._settings.interstitialInterval > Time.time)
+                return AdError.IntervalNotYetPassed;
+            if (!loaded)
+                return AdError.NotReady;
+            return null;
         }
 
         public void Show()
         {
-            if (manager.isFullscreenAdVisible)
+            var error = GetReadyError();
+            if (error.HasValue)
             {
-                lastError = AdError.AlreadyDisplayed;
-                manager.Post( CallAdShowFail );
+                lastError = error.Value;
+                manager.Post(CallAdShowFail);
+                return;
             }
-            else if (!manager.IsEnabledAd( type ))
-            {
-                lastError = AdError.ManagerIsDisabled;
-                manager.Post( CallAdShowFail );
-            }
-            else if (type == AdType.Interstitial
-                && manager._settings.lastInterImpressionTimestamp + manager._settings.interstitialInterval > Time.time)
-            {
-                lastError = AdError.IntervalNotYetPassed;
-                manager.Post( CallAdShowFail );
-            }
-            else if (!loaded)
-            {
-                lastError = AdError.NoFill;
-                manager.Post( CallAdShowFail );
-            }
-            else
-            {
-                active = true;
-                manager.Post( CallAdPresent );
-            }
+            active = true;
+            manager.Post(CallAdPresent);
         }
 
-        public virtual void OnGUIAd( GUIStyle style )
+        public virtual void OnGUIAd(GUIStyle style)
         {
             if (!active)
                 return;
 
             if (type == AdType.Interstitial
-                && GUI.Button( new Rect( 0, 0, Screen.width, Screen.height ), "Close\n\nCAS Interstitial Ad", style ))
+                && GUI.Button(new Rect(0, 0, Screen.width, Screen.height), "Close\n\nCAS Interstitial Ad", style))
             {
-                manager.Post( OnAdClicked );
+                manager.Post(OnAdClicked);
                 manager._settings.lastInterImpressionTimestamp = Time.time;
                 active = false;
                 ReloadAdAfterImpression();
-                manager.Post( CallAdClosed );
+                manager.Post(CallAdClosed);
             }
 
             if (type == AdType.Rewarded)
@@ -415,23 +352,23 @@ namespace CAS.Unity
                 float width = Screen.width;
                 float halfHeight = Screen.height * 0.5f;
                 GUI.enabled = loaded;
-                bool isClosed = GUI.Button( new Rect( 0, 0, width, halfHeight ),
-                    "Close\nCAS Rewarded Video Ad", style );
-                bool isCompleted = GUI.Button( new Rect( 0, halfHeight, width, halfHeight ),
-                    "Complete\nCAS Rewarded Video Ad", style );
+                bool isClosed = GUI.Button(new Rect(0, 0, width, halfHeight),
+                    "Close\nCAS Rewarded Video Ad", style);
+                bool isCompleted = GUI.Button(new Rect(0, halfHeight, width, halfHeight),
+                    "Complete\nCAS Rewarded Video Ad", style);
                 if (isClosed || isCompleted)
                 {
                     ReloadAdAfterImpression();
                     if (isCompleted)
                     {
-                        manager.Post( OnAdClicked );
-                        manager.Post( OnAdCompleted );
+                        manager.Post(OnAdClicked);
+                        manager.Post(OnAdCompleted);
                         // Delayed OnAdClosed after OnAdComplete to simulate real behaviour.
-                        manager.Post( CallAdClosed, UnityEngine.Random.Range( 0.3f, 1.0f ) );
+                        manager.Post(CallAdClosed, UnityEngine.Random.Range(0.3f, 1.0f));
                     }
                     else
                     {
-                        manager.Post( CallAdClosed );
+                        manager.Post(CallAdClosed);
                     }
                 }
                 GUI.enabled = true;
@@ -447,7 +384,7 @@ namespace CAS.Unity
                 return;
             }
             lastError = AdError.NotReady;
-            manager.Post( CallAdLoadFail );
+            manager.Post(CallAdLoadFail);
         }
 
         private void CallAdLoaded()
@@ -455,20 +392,18 @@ namespace CAS.Unity
             loaded = true;
             if (OnAdLoaded != null)
                 OnAdLoaded();
-            manager.viewFactory.OnLoadedCallback( type );
         }
 
         private void CallAdLoadFail()
         {
             if (OnAdFailedToLoad != null)
-                OnAdFailedToLoad( lastError );
-            manager.viewFactory.OnFailedCallback( type, lastError );
+                OnAdFailedToLoad(lastError);
         }
 
         private void CallAdShowFail()
         {
             if (OnAdFailedToShow != null)
-                OnAdFailedToShow( lastError.GetMessage() );
+                OnAdFailedToShow(lastError.GetMessage());
         }
 
         private void CallAdPresent()
@@ -476,7 +411,7 @@ namespace CAS.Unity
             if (OnAdShown != null)
                 OnAdShown();
             if (OnAdOpening != null)
-                OnAdOpening( new CASImpressionClient( type ) );
+                OnAdOpening(new CASImpressionClient(type));
         }
 
         private void CallAdClosed()

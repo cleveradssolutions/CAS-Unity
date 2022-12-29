@@ -1,5 +1,20 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [3.0.0] - 2023-01-??
+### Dependencies
+- [Android] Wraps [3.0.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [3.0.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- Added a built-in consent flow to automatically present users with GDPR and Apple ATT dialogue.
+## Changes
+- The list of networks that are included in the Clever solutions has been changed.: 
+  - Optimal solution: Added Yandex Ads.
+  - Families solution: Removed AppLovin.
+  - [iOS] Families solution: Added Yandex Ads.
+- Removed deprecated functions from CAS version 2.x. See [Migrate from 2.x to 3.0](https://github.com/cleveradssolutions/CAS-Unity/wiki/SDK-Migration) page.
+- [Android] The minimum Android API level supports is 21.
+- [iOS] The minimum iOS version supports is 12.0.
+
 ## [2.9.8] - 2022-12-12
 ### Dependencies
 - [Android] Wraps [2.9.8 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)

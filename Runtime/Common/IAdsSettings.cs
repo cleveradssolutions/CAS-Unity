@@ -156,12 +156,7 @@ namespace CAS
         /// <para>3. Copy your alphanumeric test device ID to your clipboard.</para>
         /// <para>4. Add the test device ID to the list.</para>
         /// </summary>
-        void SetTestDeviceIds( List<string> testDeviceIds );
-
-        /// <summary>
-        /// Identifiers corresponding to test devices which will always request test ads.
-        /// </summary>
-        List<string> GetTestDeviceIds();
+        void SetTestDeviceIds( IList<string> testDeviceIds );
 
         /// <summary>
         /// CAS mediation processing mode of ad requests.

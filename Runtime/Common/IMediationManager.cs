@@ -24,19 +24,8 @@ namespace CAS
     /// Get instance using the <see cref="MobileAds.BuildManager"/> builder.
     /// </summary>
     [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK" )]
-    public interface IMediationManager : ISingleBannerManager
+    public interface IMediationManager
     {
-        /// <summary>
-        /// Called when <see cref="AdType"/> load ad response
-        /// </summary>
-        [Obsolete( "Use OnInterstitialAdLoaded, OnRewardedAdLoaded, IAdView.OnLoaded instead." )]
-        event CASTypedEvent OnLoadedAd;
-        /// <summary>
-        /// Called when <see cref="AdType"/> failed to load ad response with error message
-        /// </summary>
-        [Obsolete( "Use OnInterstitialAdFailedToLoad, OnRewardedAdFailedToLoad, IAdView.OnFailed instead." )]
-        event CASTypedEventWithError OnFailedToLoadAd;
-
         #region Interstitial Ads events
         /// <summary>
         /// Called when Interstitial ad ready to shown.
@@ -203,8 +192,5 @@ namespace CAS
         void SkipNextAppReturnAds();
 
         #endregion
-
-        [Obsolete( "No longer supported" )]
-        string GetLastActiveMediation( AdType adType );
     }
 }

@@ -16,7 +16,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "2.9.8";
+        public const string wrapperVersion = "3.0.0-rc1";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -59,7 +59,7 @@ namespace CAS
         /// Create <see cref="IMediationManager"/> builder.
         /// <para>Don't forget to call the <see cref="IManagerBuilder.Initialize"/> method to create manager instance.</para>
         /// </summary>
-        public static CASInitSettings BuildManager()
+        public static IManagerBuilder BuildManager()
         {
             return CASFactory.LoadDefaultBuiderFromResources();
         }
@@ -92,73 +92,5 @@ namespace CAS
         {
             return CASFactory.IsActiveNetwork( network );
         }
-
-        #region Obsolete API
-        /// <summary>
-        /// Initialize new <see cref="IMediationManager"/> and save to <see cref="manager"/> field.
-        /// Can be called for different identifiers to create different managers.
-        /// After initialization, advertising content of <paramref name="enableAd"/> is loading automatically.
-        /// </summary>
-        /// <param name="managerID">CAS manager (Placement) identifier</param>
-        /// <param name="enableAd">Enabled Ad types processing.
-        /// Ad types can be enabled manually after initialize by IMediationManager.SetEnableAd method.</param>
-        /// <param name="testAdMode">Enable demo mode that will always request test ads</param>
-        /// <param name="initCompleteAction">Initialization complete action</param>
-        /// <exception cref="ArgumentNullException">Manager ID is empty.</exception>
-        /// <exception cref="NotSupportedException">Not supported runtime platform</exception>
-        [Obsolete( "We recommend using the builder for initialization new manager." )]
-        public static IMediationManager Initialize(
-            string managerID,
-            AdFlags enableAd = AdFlags.Everything,
-            bool testAdMode = false,
-            InitCompleteAction initCompleteAction = null )
-        {
-            return BuildManager()
-                .WithManagerId( managerID )
-                .WithEnabledAdTypes( enableAd )
-                .WithTestAdMode( testAdMode )
-                .WithInitListener( initCompleteAction )
-                .Initialize();
-        }
-
-        /// <summary>
-        /// Initialize new <see cref="IMediationManager"/> and save to <see cref="manager"/> field.
-        /// Initialize settings will be used from Resources asset.
-        /// Use menu Assets/CleverAdsSolutions/Settings for change settings.
-        /// Initialize can be called for different identifiers to create different managers.
-        /// After initialization, advertising content of <paramref name="enableAd"/> is loading automatically.
-        /// </summary>
-        /// <param name="managerIndex">CAS manager (Placement) index in Initialize settings array.</param>
-        /// <param name="enableAd">Enabled Ad types processing.
-        /// The selected flags will be limited to the settings of the allowedAdFlags from the resources.
-        /// Ad types can be enabled manually after initialize by IMediationManager.SetEnableAd method.</param>
-        /// <param name="initCompleteAction">Initialization complete action</param>
-        /// <exception cref="ArgumentNullException">Manager ID is empty</exception>
-        /// <exception cref="NotSupportedException">Not supported runtime platform</exception>
-        /// <exception cref="FileNotFoundException">No settings found in resources</exception>
-        [Obsolete( "Use the new extended parameters of BuildManager() instead" )]
-        public static IMediationManager InitializeFromResources(
-            int managerIndex = 0,
-            AdFlags enableAd = AdFlags.Everything,
-            InitCompleteAction initCompleteAction = null )
-        {
-            var builder = BuildManager();
-            builder.WithInitListener( initCompleteAction );
-            builder.WithEnabledAdTypes( enableAd & builder.defaultAllowedFormats );
-            if (managerIndex > 0)
-                builder.WithManagerIdAtIndex( managerIndex );
-            return builder.Initialize();
-        }
-
-        /// <summary>
-        /// Mediation pattern string with format '1' - active and '0' - not active.
-        /// Char index of string pattern equals enum index of <see cref="AdNetwork"/>
-        /// </summary>
-        [Obsolete( "Use GetActiveNetworks() instead." )]
-        public static string GetActiveMediationPattern()
-        {
-            return CASFactory.GetActiveMediationPattern();
-        }
-        #endregion
     }
 }

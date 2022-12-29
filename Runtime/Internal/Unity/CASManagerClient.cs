@@ -8,30 +8,36 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace CAS.Unity
 {
-    [AddComponentMenu( "" )]
+    [AddComponentMenu("")]
     internal class CASManagerClient : MonoBehaviour, IMediationManager
     {
-        public AdFlags enabledTypes;
+        private List<Action> _eventsQueue = new List<Action>();
+        private GUIStyle _btnStyle = null;
 
-        internal CASViewFactoryImpl viewFactory;
+        [SerializeField]
+        private string casId;
+
+        private bool[] enabledTypes;
+
+        [SerializeField]
+        private List<CASViewClient> adViews = new List<CASViewClient>();
         [SerializeField]
         private CASFullscreenView _interstitial;
         [SerializeField]
         private CASFullscreenView _rewarded;
 
-        private List<Action> _eventsQueue = new List<Action>();
         private InitCompleteAction _initCompleteAction;
         private LastPageAdContent _lastPageAdContent;
 
-
-        private GUIStyle _btnStyle = null;
         internal CASSettingsClient _settings;
 
-        public string managerID { get; private set; }
+        public string managerID { get { return casId; } }
         public bool isTestAdMode { get { return true; } }
 
         public LastPageAdContent lastPageAdContent
@@ -41,59 +47,19 @@ namespace CAS.Unity
             {
                 _lastPageAdContent = value;
                 if (value == null)
-                    Log( "CAS Last Page Ad content cleared" );
+                    Log("CAS Last Page Ad content cleared");
                 else
-                    Log( "CAS Last Page Ad apply content:" +
-                        "\n- Headline:" + value.Headline +
-                        "\n- DestinationURL:" + value.DestinationURL +
-                        "\n- ImageURL:" + value.ImageURL +
-                        "\n- IconURL:" + value.IconURL +
-                        "\n- AdText:" + value.AdText );
+                    Log(new StringBuilder("CAS Last Page Ad apply content:")
+                        .Append("\n- Headline:").Append(value.Headline)
+                        .Append("\n- DestinationURL:").Append(value.DestinationURL)
+                        .Append("\n- ImageURL:").Append(value.ImageURL)
+                        .Append("\n- IconURL:").Append(value.IconURL)
+                        .Append("\n- AdText:").Append(value.AdText)
+                        .ToString());
             }
         }
 
 #pragma warning disable 67
-        #region Ad load Events
-        public event CASTypedEvent OnLoadedAd
-        {
-            add { viewFactory.OnLoadedAd += value; }
-            remove { viewFactory.OnLoadedAd -= value; }
-        }
-        public event CASTypedEventWithError OnFailedToLoadAd
-        {
-            add { viewFactory.OnFailedToLoadAd += value; }
-            remove { viewFactory.OnFailedToLoadAd -= value; }
-        }
-        #endregion
-
-        #region Banner ad Events
-        public event Action OnBannerAdShown
-        {
-            add { viewFactory.OnBannerAdShown += value; }
-            remove { viewFactory.OnBannerAdShown -= value; }
-        }
-        public event CASEventWithMeta OnBannerAdOpening
-        {
-            add { viewFactory.OnBannerAdOpening += value; }
-            remove { viewFactory.OnBannerAdOpening -= value; }
-        }
-        public event CASEventWithError OnBannerAdFailedToShow
-        {
-            add { viewFactory.OnBannerAdFailedToShow += value; }
-            remove { viewFactory.OnBannerAdFailedToShow -= value; }
-        }
-        public event Action OnBannerAdClicked
-        {
-            add { viewFactory.OnBannerAdClicked += value; }
-            remove { viewFactory.OnBannerAdClicked -= value; }
-        }
-        public event Action OnBannerAdHidden
-        {
-            add { viewFactory.OnBannerAdHidden += value; }
-            remove { viewFactory.OnBannerAdHidden -= value; }
-        }
-        #endregion
-
         #region Interstitial ad Events
         public event Action OnInterstitialAdLoaded
         {
@@ -184,57 +150,74 @@ namespace CAS.Unity
         #endregion
 #pragma warning restore 67
 
-        public static IMediationManager CreateManager( CASInitSettings initSettings )
+        internal static IMediationManager Create(CASInitSettings initSettings)
         {
-            var obj = new GameObject( "CASMediationManager" );
+            var obj = new GameObject("[CAS] Mediation Manager");
             //obj.hideFlags = HideFlags.HideInHierarchy;
-            DontDestroyOnLoad( obj );
-            var manager = obj.AddComponent<CASManagerClient>();
-            // Set Settings before any other calls.
-            manager._settings = CAS.MobileAds.settings as CASSettingsClient;
+            MonoBehaviour.DontDestroyOnLoad(obj);
+            var behaviour = obj.AddComponent<CASManagerClient>();
+            behaviour.Init(initSettings);
+            return behaviour;
+        }
 
-            manager.Log( "Initialized manager with id: " + initSettings.targetId );
-            manager.managerID = initSettings.targetId;
-            manager.enabledTypes = initSettings.allowedAdFlags;
-            manager._initCompleteAction = initSettings.initListener;
-            manager.viewFactory = new CASViewFactoryImpl( manager );
-            manager._interstitial = new CASFullscreenView( manager, AdType.Interstitial );
-            manager._rewarded = new CASFullscreenView( manager, AdType.Rewarded );
-            return manager;
+        private void Init(CASInitSettings initSettings)
+        {
+            // Set Settings before any other calls.
+            _settings = CAS.MobileAds.settings as CASSettingsClient;
+
+            Log("Initialized manager with id: " + initSettings.targetId);
+            casId = initSettings.targetId;
+            enabledTypes = new bool[(int)AdType.None];
+            for (int i = 0; i < enabledTypes.Length; i++)
+                enabledTypes[i] = ((int)initSettings.defaultAllowedFormats & (1 << i)) != 0;
+            
+            _initCompleteAction = initSettings.initListener;
+            _interstitial = new CASFullscreenView(this, AdType.Interstitial);
+            _rewarded = new CASFullscreenView(this, AdType.Rewarded);
         }
 
         #region IMediationManager implementation
 
-        public string GetLastActiveMediation( AdType adType )
+        public bool IsEnabledAd(AdType adType)
         {
-            return string.Empty;
+            return enabledTypes[(int)adType];
         }
 
-        public bool IsEnabledAd( AdType adType )
+        public void SetEnableAd(AdType adType, bool enabled)
         {
-            var flag = GetFlag( adType );
-            return ( enabledTypes & flag ) == flag;
+            enabledTypes[(int)adType] = enabled;
+            if (enabled)
+            {
+                if (adType == AdType.Banner)
+                {
+                    for (int i = 0; i < adViews.Count; i++)
+                        adViews[i].Load();
+                    return;
+                }
+                LoadAd(adType);
+            }
         }
 
-        public bool IsReadyAd( AdType adType )
+        public bool IsReadyAd(AdType adType)
         {
-            if (!IsEnabledAd( adType ))
-                return false;
             if (adType == AdType.Banner)
-                return viewFactory.globalView != null && viewFactory.globalView.isReady;
-            if (adType == AdType.Interstitial)
-                return _interstitial.loaded
-                    && _settings.lastInterImpressionTimestamp + MobileAds.settings.interstitialInterval < Time.time;
-            return _rewarded.loaded;
+                return false;
+            switch (adType)
+            {
+                case AdType.Interstitial:
+                    return _interstitial.GetReadyError().HasValue == false;
+                case AdType.Rewarded:
+                    return _rewarded.GetReadyError().HasValue == false;
+            }
+            return false;
         }
 
-        public void LoadAd( AdType adType )
+        public void LoadAd(AdType adType)
         {
             switch (adType)
             {
                 case AdType.Banner:
-                    viewFactory.LoadGlobalBanner();
-                    break;
+                    throw new NotSupportedException("Use GetAdView(AdSize).Load() instead");
                 case AdType.Interstitial:
                     _interstitial.Load();
                     break;
@@ -244,32 +227,17 @@ namespace CAS.Unity
             }
         }
 
-        public void SetEnableAd( AdType adType, bool enabled )
-        {
-            if (enabled)
-            {
-                enabledTypes |= GetFlag( adType );
-                if (adType == AdType.Banner)
-                    viewFactory.LoadCreatedViews();
-                else
-                    LoadAd( adType );
-                return;
-            }
-            enabledTypes &= ~GetFlag( adType );
-        }
-
-        public void ShowAd( AdType adType )
+        public void ShowAd(AdType adType)
         {
             switch (adType)
             {
                 case AdType.Banner:
-                    viewFactory.ShowGlobalBanner();
-                    break;
+                    throw new NotSupportedException("Use GetAdView(AdSize).SetActive(true) instead");
                 case AdType.Interstitial:
-                    Post( _interstitial.Show );
+                    Post(_interstitial.Show);
                     break;
                 case AdType.Rewarded:
-                    Post( _rewarded.Show );
+                    Post(_rewarded.Show);
                     break;
             }
         }
@@ -280,32 +248,51 @@ namespace CAS.Unity
             return false;
         }
 
-        public void SetAppReturnAdsEnabled( bool enable )
+        public void SetAppReturnAdsEnabled(bool enable)
         {
-            Log( "App return ads " + ( enable ? "enabled" : "disabled" ) );
+            Log("App return ads " + (enable ? "enabled" : "disabled"));
         }
 
         public void SkipNextAppReturnAds()
         {
-            Log( "The next time user return to the app, no ads will appear." );
+            Log("The next time user return to the app, no ads will appear.");
+        }
+
+        public IAdView GetAdView(AdSize size)
+        {
+            if (size < AdSize.Banner)
+                throw new ArgumentException("Invalid AdSize " + size.ToString());
+            for (int i = 0; i < adViews.Count; i++)
+            {
+                if (adViews[i].size == size)
+                    return adViews[i];
+            }
+            var view = new CASViewClient(this, size);
+            adViews.Add(view);
+            return view;
+        }
+
+        public void RemoveAdViewFromFactory(CASViewClient view)
+        {
+            adViews.Remove(view);
         }
         #endregion
 
-
-        #region MonoBehaviour implementation
+        #region MonoBehaviour
         private void Start()
         {
             if (isAutolod)
             {
-                LoadAd( AdType.Interstitial );
-                LoadAd( AdType.Rewarded );
+                LoadAd(AdType.Interstitial);
+                LoadAd(AdType.Rewarded);
             }
-            Post( CallInitComplete );
+            Post(CallInitComplete);
         }
+
         private void CallInitComplete()
         {
             if (_initCompleteAction != null)
-                _initCompleteAction( true, null );
+                _initCompleteAction(true, null);
         }
 
         public void Update()
@@ -322,7 +309,7 @@ namespace CAS.Unity
                 }
                 catch (Exception e)
                 {
-                    Debug.LogException( e );
+                    Debug.LogException(e);
                 }
             }
             _eventsQueue.Clear();
@@ -331,37 +318,39 @@ namespace CAS.Unity
         public void OnGUI()
         {
             if (_btnStyle == null)
-                _btnStyle = new GUIStyle( "Button" );
-            _btnStyle.fontSize = (int)( Math.Min( Screen.width, Screen.height ) * 0.035f );
+                _btnStyle = new GUIStyle("Button");
+            _btnStyle.fontSize = (int)(Math.Min(Screen.width, Screen.height) * 0.035f);
 
-            viewFactory.OnGUIAd( _btnStyle );
-            _interstitial.OnGUIAd( _btnStyle );
-            _rewarded.OnGUIAd( _btnStyle );
+            for (int i = 0; i < adViews.Count; i++)
+            {
+                adViews[i].OnGUIAd(_btnStyle);
+            }
+            _interstitial.OnGUIAd(_btnStyle);
+            _rewarded.OnGUIAd(_btnStyle);
         }
-
         #endregion
 
         #region Utils
-        public void Post( Action action )
+        public void Post(Action action)
         {
             if (action == null)
                 return;
             //Log( "Event " + action.Target.GetType().FullName + "." + action.Method.Name );
-            _eventsQueue.Add( action );
+            _eventsQueue.Add(action);
         }
 
-        public void Post( Action action, float delay )
+        public void Post(Action action, float delay)
         {
             if (action == null)
                 return;
             //Log( "Event " + action.Target.GetType().FullName + "." + action.Method.Name );
-            StartCoroutine( DelayAction( action, delay ) );
+            StartCoroutine(DelayAction(action, delay));
         }
 
-        internal void Log( string message )
+        internal void Log(string message)
         {
             if (_settings.isDebugMode)
-                Debug.Log( "[CleverAdsSolutions] " + message );
+                Debug.Log("[CleverAdsSolutions] " + message);
         }
 
         public bool isFullscreenAdVisible
@@ -373,67 +362,11 @@ namespace CAS.Unity
             get { return _settings.loadingMode != LoadingManagerMode.Manual; }
         }
 
-        private AdFlags GetFlag( AdType adType )
+        private IEnumerator DelayAction(Action action, float delay)
         {
-            switch (adType)
-            {
-                case AdType.Banner:
-                    return AdFlags.Banner;
-                case AdType.Interstitial:
-                    return AdFlags.Interstitial;
-                case AdType.Rewarded:
-                    return AdFlags.Rewarded;
-#pragma warning disable CS0618 // Type or member is obsolete
-                case AdType.Native:
-                    return AdFlags.Native;
-#pragma warning restore CS0618 // Type or member is obsolete
-                case AdType.None:
-                    return AdFlags.None;
-                default:
-                    throw new NotImplementedException( "Unknown adType " + adType.ToString() );
-            }
-        }
-
-        private IEnumerator DelayAction( Action action, float delay )
-        {
-            yield return new WaitForSecondsRealtime( delay );
+            yield return new WaitForSecondsRealtime(delay);
             action();
         }
-        #endregion
-
-        #region Obsolete banner API support
-        public float GetBannerHeightInPixels()
-        {
-            return viewFactory.GetBannerHeightInPixels();
-        }
-
-        public float GetBannerWidthInPixels()
-        {
-            return viewFactory.GetBannerWidthInPixels();
-        }
-
-        public void HideBanner()
-        {
-            viewFactory.HideBanner();
-        }
-
-        public AdSize bannerSize
-        {
-            get { return viewFactory.bannerSize; }
-            set { viewFactory.bannerSize = value; }
-        }
-
-        public AdPosition bannerPosition
-        {
-            get { return viewFactory.bannerPosition; }
-            set { viewFactory.bannerPosition = value; }
-        }
-
-        public IAdView GetAdView( AdSize size )
-        {
-            return viewFactory.GetAdView( size );
-        }
-
         #endregion
     }
 }

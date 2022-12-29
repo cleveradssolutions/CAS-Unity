@@ -49,7 +49,7 @@ namespace CAS.UEditor
 
         public static System.Version minEDM4UVersion
         {
-            get { return new System.Version( 1, 2, 169 ); }
+            get { return new System.Version(1, 2, 169); }
         }
         #endregion
 
@@ -75,32 +75,32 @@ namespace CAS.UEditor
         #endregion
 
         #region Menu items
-        [MenuItem( "Assets/CleverAdsSolutions/Android Settings...", priority = 1010 )]
+        [MenuItem("Assets/CleverAdsSolutions/Android Settings...", priority = 1010)]
         public static void OpenAndroidSettingsWindow()
         {
-            OpenSettingsWindow( BuildTarget.Android );
+            OpenSettingsWindow(BuildTarget.Android);
         }
 
-        [MenuItem( "Assets/CleverAdsSolutions/iOS Settings...", priority = 1011 )]
+        [MenuItem("Assets/CleverAdsSolutions/iOS Settings...", priority = 1011)]
         public static void OpenIOSSettingsWindow()
         {
-            OpenSettingsWindow( BuildTarget.iOS );
+            OpenSettingsWindow(BuildTarget.iOS);
         }
 
-        [MenuItem( "Assets/CleverAdsSolutions/Documentation...", priority = 1031 )]
+        [MenuItem("Assets/CleverAdsSolutions/Documentation...", priority = 1031)]
         public static void OpenDocumentationMenu()
         {
-            OpenDocumentation( gitUnityRepo );
+            OpenDocumentation(gitUnityRepo);
         }
 
-        [MenuItem( "Assets/CleverAdsSolutions/Report Issue...", priority = 1032 )]
+        [MenuItem("Assets/CleverAdsSolutions/Report Issue...", priority = 1032)]
         public static void ReportIssueMenu()
         {
-            Application.OpenURL( gitRootURL + gitUnityRepo + "/issues" );
+            Application.OpenURL(gitRootURL + gitUnityRepo + "/issues");
         }
 
 #if UNITY_ANDROID || UNITY_IOS || CASDeveloper
-        [MenuItem( "Assets/CleverAdsSolutions/Configure project", priority = 1051 )]
+        [MenuItem("Assets/CleverAdsSolutions/Configure project", priority = 1051)]
         public static void ConfigureProjectForTargetPlatform()
         {
             try
@@ -108,60 +108,62 @@ namespace CAS.UEditor
                 var target = EditorUserBuildSettings.activeBuildTarget;
                 if (target == BuildTarget.Android)
                     TryResolveAndroidDependencies(); // Resolve before call configure
-                CASPreprocessBuild.ConfigureProject( target, CASEditorSettings.Load() );
+                CASPreprocessBuild.ConfigureProject(target, CASEditorSettings.Load());
             }
             finally
             {
                 EditorUtility.ClearProgressBar();
             }
-            EditorUtility.DisplayDialog( "Configure project",
+            EditorUtility.DisplayDialog("Configure project",
                 "CAS Plugin has successfully applied all required configurations to your project.",
-                "Ok" );
+                "Ok");
         }
 #endif
 
         #endregion
 
         #region Public API
-        public static string GetName( this AdNetwork network )
+        public static string GetName(this AdNetwork network)
         {
             if (network == Dependency.adBase)
                 return Dependency.adBaseName;
+            if ((int)network == 17)
+                return AdNetwork.AppLovin.ToString();
             return network.ToString();
         }
 
-        public static string GetNativeSettingsPath( BuildTarget platform, string managerId )
+        public static string GetNativeSettingsPath(BuildTarget platform, string managerId)
         {
-            if (string.IsNullOrEmpty( managerId ))
+            if (string.IsNullOrEmpty(managerId))
                 return "";
 
             string root = platform == BuildTarget.Android ? androidResSettingsPath : iosResSettingsPath;
-            string suffixChar = char.ToLower( managerId[managerId.Length - 1] ).ToString();
+            string suffixChar = char.ToLower(managerId[managerId.Length - 1]).ToString();
             return root + managerId.Length.ToString() + suffixChar + ".json";
         }
 
-        public static CASInitSettings GetSettingsAsset( BuildTarget platform, bool create = true )
+        public static CASInitSettings GetSettingsAsset(BuildTarget platform, bool create = true)
         {
-            return ( CASInitSettings )GetSettingsAsset(
-                "CASSettings" + platform.ToString(), "Assets/Resources", typeof( CASInitSettings ), create, "Resources" );
+            return (CASInitSettings)GetSettingsAsset(
+                "CASSettings" + platform.ToString(), "Assets/Resources", typeof(CASInitSettings), create, "Resources");
         }
 
-        public static UnityEngine.Object GetSettingsAsset( string name, string location, Type type, bool create, string requireDir )
+        public static UnityEngine.Object GetSettingsAsset(string name, string location, Type type, bool create, string requireDir)
         {
-            var found = AssetDatabase.FindAssets( name, new string[] { "Assets" } );
+            var found = AssetDatabase.FindAssets(name, new string[] { "Assets" });
             for (int i = 0; i < found.Length; i++)
             {
-                var assetPath = AssetDatabase.GUIDToAssetPath( found[i] );
-                if (assetPath.StartsWith( "Assets/" ) && assetPath.EndsWith( ".asset" ))
+                var assetPath = AssetDatabase.GUIDToAssetPath(found[i]);
+                if (assetPath.StartsWith("Assets/") && assetPath.EndsWith(".asset"))
                 {
-                    if (string.IsNullOrEmpty( requireDir ) || Path.GetDirectoryName( assetPath ).EndsWith( requireDir ))
+                    if (string.IsNullOrEmpty(requireDir) || Path.GetDirectoryName(assetPath).EndsWith(requireDir))
                     {
                         try
                         {
-                            var asset = AssetDatabase.LoadAssetAtPath( assetPath, type );
+                            var asset = AssetDatabase.LoadAssetAtPath(assetPath, type);
                             if (asset)
                                 return asset;
-                            AssetDatabase.DeleteAsset( assetPath );
+                            AssetDatabase.DeleteAsset(assetPath);
                         }
                         catch { }
                     }
@@ -169,46 +171,46 @@ namespace CAS.UEditor
             }
             if (!create)
                 return null;
-            var result = ScriptableObject.CreateInstance( type );
-            if (!AssetDatabase.IsValidFolder( location ))
+            var result = ScriptableObject.CreateInstance(type);
+            if (!AssetDatabase.IsValidFolder(location))
             {
-                Directory.CreateDirectory( location );
-                AssetDatabase.ImportAsset( location );
+                Directory.CreateDirectory(location);
+                AssetDatabase.ImportAsset(location);
             }
-            AssetDatabase.CreateAsset( result, location + "/" + name + ".asset" );
+            AssetDatabase.CreateAsset(result, location + "/" + name + ".asset");
             return result;
         }
 
-        public static bool IsDependencyExists( string name, BuildTarget platform )
+        public static bool IsDependencyExists(string name, BuildTarget platform)
         {
-            return AssetDatabase.FindAssets( GetDependencyName( name, platform ) ).Length > 0;
+            return AssetDatabase.FindAssets(GetDependencyName(name, platform)).Length > 0;
         }
 
-        public static string GetDependencyName( string name, BuildTarget platform )
+        public static string GetDependencyName(string name, BuildTarget platform)
         {
             return "CAS" + platform.ToString() + name + "Dependencies";
         }
 
-        public static string GetDependencyPath( string name, BuildTarget platform )
+        public static string GetDependencyPath(string name, BuildTarget platform)
         {
-            var depFileName = GetDependencyName( name, platform );
-            var foundDepFiles = AssetDatabase.FindAssets( depFileName );
+            var depFileName = GetDependencyName(name, platform);
+            var foundDepFiles = AssetDatabase.FindAssets(depFileName);
             for (int i = 0; i < foundDepFiles.Length; i++)
             {
-                var pathToFile = AssetDatabase.GUIDToAssetPath( foundDepFiles[i] );
-                if (pathToFile.EndsWith( ".xml" ))
+                var pathToFile = AssetDatabase.GUIDToAssetPath(foundDepFiles[i]);
+                if (pathToFile.EndsWith(".xml"))
                     return pathToFile;
             }
             return null;
         }
 
-        public static string GetDependencyPathOrDefault( string name, BuildTarget platform )
+        public static string GetDependencyPathOrDefault(string name, BuildTarget platform)
         {
-            var foundPath = GetDependencyPath( name, platform );
+            var foundPath = GetDependencyPath(name, platform);
             if (foundPath != null)
                 return foundPath;
 
-            return editorFolderPath + "/" + GetDependencyName( name, platform ) + ".xml";
+            return editorFolderPath + "/" + GetDependencyName(name, platform) + ".xml";
         }
 
         public static KeyValuePair[] DefaultUserTrackingUsageDescription()
@@ -233,23 +235,23 @@ namespace CAS.UEditor
 
         #region Deprecated Dependencies paths
 
-        internal static bool IsDeprecateDependencyExists( string dependency, BuildTarget target )
+        internal static bool IsDeprecateDependencyExists(string dependency, BuildTarget target)
         {
-            return AssetDatabase.FindAssets( GetDeprecateDependencyName( dependency, target ) ).Length > 0;
+            return AssetDatabase.FindAssets(GetDeprecateDependencyName(dependency, target)).Length > 0;
         }
 
-        internal static string GetDeprecateDependencyName( string dependency, BuildTarget target )
+        internal static string GetDeprecateDependencyName(string dependency, BuildTarget target)
         {
             return "CAS" + dependency + target.ToString() + "Dependencies";
         }
 
-        internal static string GetDeprecatedDependencyPath( string name, BuildTarget platform )
+        internal static string GetDeprecatedDependencyPath(string name, BuildTarget platform)
         {
             return editorFolderPath + "/CAS" + name + platform.ToString() + "Dependencies.xml";
         }
         #endregion
 
-        public static string GetNewVersionOrNull( string repo, string currVersion, bool force )
+        public static string GetNewVersionOrNull(string repo, string currVersion, bool force)
         {
             try
             {
@@ -260,153 +262,123 @@ namespace CAS.UEditor
                     if (!editorSettings.autoCheckForUpdatesEnabled)
                         return null;
 
-                    if (!HasTimePassed( editorLatestVersionTimestampPrefs + repo, 1, false ))
-                        newVerStr = EditorPrefs.GetString( editorLatestVersionPrefs + repo );
+                    if (!HasTimePassed(editorLatestVersionTimestampPrefs + repo, 1, false))
+                        newVerStr = EditorPrefs.GetString(editorLatestVersionPrefs + repo);
                 }
 
-                if (string.IsNullOrEmpty( newVerStr ))
-                    newVerStr = GetLatestVersion( repo, currVersion );
+                if (string.IsNullOrEmpty(newVerStr))
+                    newVerStr = GetLatestVersion(repo, currVersion);
 
                 if (newVerStr != null && newVerStr != currVersion)
                 {
-                    if (ParseVersionToCompare( currVersion ) < ParseVersionToCompare( newVerStr ))
+                    if (ParseVersionToCompare(currVersion) < ParseVersionToCompare(newVerStr))
                         return newVerStr;
                 }
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
             return null;
         }
 
-        private static System.Version ParseVersionToCompare( string versionName )
+        private static System.Version ParseVersionToCompare(string versionName)
         {
             try
             {
-                int separator = versionName.IndexOf( '-' );
+                int separator = versionName.IndexOf('-');
                 // Append Revision version for pre release
                 // And 9 Revision for release
                 if (separator > 0)
-                    versionName = versionName.Substring( 0, versionName.Length - separator + 1 ) +
+                    versionName = versionName.Substring(0, versionName.Length - separator + 1) +
                         "." + versionName[versionName.Length - 1];
                 else
                     versionName += ".9";
-                return new System.Version( versionName );
+                return new System.Version(versionName);
             }
 #if CASDeveloper
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
 #else
             catch {}
 #endif
-            return new System.Version( 0, 1 );
+            return new System.Version(0, 1);
         }
 
-        public static bool IsPackageExist( string package )
+        public static bool IsPackageExist(string package)
         {
-            return File.Exists( packageManifestPath ) &&
-                File.ReadAllText( packageManifestPath ).Contains( package );
+            return File.Exists(packageManifestPath) &&
+                File.ReadAllText(packageManifestPath).Contains(package);
         }
 
-        public static void LinksToolbarGUI( string gitRepoName )
+        public static void LinksToolbarGUI(string gitRepoName)
         {
-            EditorGUILayout.BeginHorizontal( EditorStyles.toolbar );
-            if (GUILayout.Button( "Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( gitRootURL + gitRepoName + "#support" );
-            if (GUILayout.Button( "Wiki", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
-                OpenDocumentation( gitRepoName );
-            if (GUILayout.Button( "CleverAdsSolutions.com", EditorStyles.toolbarButton ))
-                Application.OpenURL( websiteURL );
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            if (GUILayout.Button("Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
+                Application.OpenURL(gitRootURL + gitRepoName + "#support");
+            if (GUILayout.Button("Wiki", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
+                OpenDocumentation(gitRepoName);
+            if (GUILayout.Button("CleverAdsSolutions.com", EditorStyles.toolbarButton))
+                Application.OpenURL(websiteURL);
             EditorGUILayout.EndHorizontal();
         }
 
-        public static void OnHeaderGUI( string gitRepoName, bool allowedPackageUpdate, string currVersion, ref string newCASVersion )
+        public static void OnHeaderGUI(string gitRepoName, bool allowedPackageUpdate, string currVersion, ref string newCASVersion)
         {
-            EditorGUILayout.BeginHorizontal( EditorStyles.toolbar );
-            HelpStyles.HelpButton( gitRootURL + gitRepoName + "/wiki" );
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            HelpStyles.HelpButton(gitRootURL + gitRepoName + "/wiki");
 
-            if (GUILayout.Button( gitRepoName + " " + currVersion, EditorStyles.toolbarButton ))
-                Application.OpenURL( gitRootURL + gitRepoName + "/releases" );
-            if (GUILayout.Button( "Check for Updates", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
+            if (GUILayout.Button(gitRepoName + " " + currVersion, EditorStyles.toolbarButton))
+                Application.OpenURL(gitRootURL + gitRepoName + "/releases");
+            if (GUILayout.Button("Check for Updates", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
             {
-                newCASVersion = GetNewVersionOrNull( gitRepoName, currVersion, true );
-                string message = string.IsNullOrEmpty( newCASVersion ) ? "You are using the latest version."
+                newCASVersion = GetNewVersionOrNull(gitRepoName, currVersion, true);
+                string message = string.IsNullOrEmpty(newCASVersion) ? "You are using the latest version."
                     : "There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.";
-                EditorUtility.DisplayDialog( "Check for Updates", message, "OK" );
+                EditorUtility.DisplayDialog("Check for Updates", message, "OK");
             }
 
-            if (GUILayout.Button( "Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( gitRootURL + gitRepoName + "#support" );
+            if (GUILayout.Button("Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
+                Application.OpenURL(gitRootURL + gitRepoName + "#support");
             EditorGUILayout.EndHorizontal();
 
-            if (!string.IsNullOrEmpty( newCASVersion ))
+            if (!string.IsNullOrEmpty(newCASVersion))
             {
                 var updateMessage = "There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.";
 #if UNITY_2018_4_OR_NEWER
                 if (allowedPackageUpdate)
                 {
-                    if (HelpStyles.WarningWithButton( updateMessage, "Update" ))
-                        UpdatePackageManagerRepo( gitRepoName, newCASVersion );
+                    if (HelpStyles.WarningWithButton(updateMessage, "Update"))
+                        UpdatePackageManagerRepo(gitRepoName, newCASVersion);
                 }
                 else
 #endif
                 {
-                    EditorGUILayout.HelpBox( updateMessage, MessageType.Warning );
+                    EditorGUILayout.HelpBox(updateMessage, MessageType.Warning);
                 }
             }
         }
 
-        [Obsolete( "Please migrate to new implementation OnHeaderGUI()" )]
-        public static void AboutRepoGUI( string gitRepoName, bool allowedPackageUpdate, string currVersion, ref string newCASVersion )
-        {
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label( gitRepoName, EditorStyles.boldLabel, GUILayout.ExpandWidth( false ) );
-            GUILayout.Label( currVersion );
-            if (GUILayout.Button( "Check for Updates", EditorStyles.miniButton, GUILayout.ExpandWidth( false ) ))
-            {
-                newCASVersion = GetNewVersionOrNull( gitRepoName, currVersion, true );
-                string message = string.IsNullOrEmpty( newCASVersion ) ? "You are using the latest version."
-                    : "There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.";
-                EditorUtility.DisplayDialog( "Check for Updates", message, "OK" );
-            }
-            EditorGUILayout.EndHorizontal();
-            if (!string.IsNullOrEmpty( newCASVersion ))
-            {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.HelpBox( "There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.", MessageType.Warning );
-                var layoutParams = new[] { GUILayout.Height( 38 ), GUILayout.ExpandWidth( false ) };
-#if UNITY_2018_4_OR_NEWER
-                if (allowedPackageUpdate && GUILayout.Button( "Update", layoutParams ))
-                {
-                    UpdatePackageManagerRepo( gitRepoName, newCASVersion );
-                }
-#endif
-                if (GUILayout.Button( "Releases", layoutParams ))
-                    Application.OpenURL( gitRootURL + gitRepoName + "/releases" );
-                EditorGUILayout.EndHorizontal();
-            }
-        }
         #endregion
 
         #region EDM4U Reflection
-        internal static void CheckAssemblyForType<T>( string assembly )
+        internal static void CheckAssemblyForType<T>(string assembly)
         {
-            var targetType = typeof( T );
+            var targetType = typeof(T);
             var targetAssembly = targetType.Assembly.GetName().Name;
             if (targetAssembly != assembly)
-                Debug.LogError( logTag + targetType.FullName + " in assembly: " + targetAssembly + " Expecting: " + assembly );
+                Debug.LogError(logTag + targetType.FullName + " in assembly: " + targetAssembly + " Expecting: " + assembly);
         }
 
         internal static Type GetAndroidDependenciesResolverType()
         {
             const string assemblyName = "Google.JarResolver";
 #if CASDeveloper
-            CheckAssemblyForType<GooglePlayServices.PlayServicesResolver>( assemblyName );
+            CheckAssemblyForType<GooglePlayServices.PlayServicesResolver>(assemblyName);
 #endif
-            return Type.GetType( "GooglePlayServices.PlayServicesResolver, " + assemblyName, false );
+            return Type.GetType("GooglePlayServices.PlayServicesResolver, " + assemblyName, false);
         }
 
         public static bool IsAndroidDependenciesResolverExist()
@@ -414,22 +386,22 @@ namespace CAS.UEditor
             return GetAndroidDependenciesResolverType() != null;
         }
 
-        public static System.Version GetEDM4UVersion( BuildTarget platform )
+        public static System.Version GetEDM4UVersion(BuildTarget platform)
         {
 #if CASDeveloper
-            CheckAssemblyForType<Google.AndroidResolverVersionNumber>( "Google.JarResolver" );
-            CheckAssemblyForType<Google.IOSResolverVersionNumber>( "Google.IOSResolver" );
+            CheckAssemblyForType<Google.AndroidResolverVersionNumber>("Google.JarResolver");
+            CheckAssemblyForType<Google.IOSResolverVersionNumber>("Google.IOSResolver");
 #endif
             try
             {
                 Type resolverType = null;
                 if (platform == BuildTarget.Android)
-                    resolverType = Type.GetType( "Google.AndroidResolverVersionNumber, Google.JarResolver", false );
+                    resolverType = Type.GetType("Google.AndroidResolverVersionNumber, Google.JarResolver", false);
                 else if (platform == BuildTarget.iOS)
-                    resolverType = Type.GetType( "Google.IOSResolverVersionNumber, Google.IOSResolver", false );
+                    resolverType = Type.GetType("Google.IOSResolverVersionNumber, Google.IOSResolver", false);
                 if (resolverType == null)
                     return null;
-                return resolverType.GetProperty( "Value" ).GetValue( null, null ) as System.Version;
+                return resolverType.GetProperty("Value").GetValue(null, null) as System.Version;
             }
             catch
             {
@@ -437,7 +409,7 @@ namespace CAS.UEditor
             }
         }
 
-        public static bool TryResolveAndroidDependencies( bool force = true )
+        public static bool TryResolveAndroidDependencies(bool force = true)
         {
 #if UNITY_ANDROID
             CASPreprocessGradle.UpdateGradleTemplateIfNeed();
@@ -449,143 +421,143 @@ namespace CAS.UEditor
 
             bool needResolve = force;
             if (!needResolve)
-                needResolve = ( bool )resolverType
-                    .GetProperty( "AutomaticResolutionEnabled", BindingFlags.Public | BindingFlags.Static )
-                    .GetValue( null, null );
+                needResolve = (bool)resolverType
+                    .GetProperty("AutomaticResolutionEnabled", BindingFlags.Public | BindingFlags.Static)
+                    .GetValue(null, null);
             if (!needResolve)
                 return success;
             try
             {
-                EditorUtility.DisplayProgressBar( "Hold on.", "Resolve Android dependencies", 0.6f );
-                success = ( bool )resolverType
-                    .GetMethod( "ResolveSync", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof( bool ) }, null )
-                    .Invoke( null, new object[] { true } );
+                EditorUtility.DisplayProgressBar("Hold on.", "Resolve Android dependencies", 0.6f);
+                success = (bool)resolverType
+                    .GetMethod("ResolveSync", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(bool) }, null)
+                    .Invoke(null, new object[] { true });
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
             EditorUtility.ClearProgressBar();
             return success;
         }
 
-        public static T GetAndroidResolverSetting<T>( string property )
+        public static T GetAndroidResolverSetting<T>(string property)
         {
             const string assemblyName = "Google.JarResolver";
             const string settingsTypeName = "GooglePlayServices.SettingsDialog, " + assemblyName;
 #if CASDeveloper
-            CheckAssemblyForType<GooglePlayServices.SettingsDialog>( assemblyName );
+            CheckAssemblyForType<GooglePlayServices.SettingsDialog>(assemblyName);
 #endif
             try
             {
-                var settingsType = Type.GetType( settingsTypeName, false );
+                var settingsType = Type.GetType(settingsTypeName, false);
                 if (settingsType != null)
                 {
-                    return ( T )settingsType.GetProperty( property, BindingFlags.NonPublic | BindingFlags.Static )
-                            .GetValue( null, null );
+                    return (T)settingsType.GetProperty(property, BindingFlags.NonPublic | BindingFlags.Static)
+                            .GetValue(null, null);
                 }
             }
             catch (Exception e)
             {
-                Debug.LogWarning( logTag + settingsTypeName + " error: " + e.Message );
+                Debug.LogWarning(logTag + settingsTypeName + " error: " + e.Message);
             }
-            return default( T );
+            return default(T);
         }
 
-        public static T GetIOSResolverSetting<T>( string property )
+        public static T GetIOSResolverSetting<T>(string property)
         {
             const string assemblyName = "Google.IOSResolver";
             const string settingsTypeName = "Google.IOSResolver, " + assemblyName;
 #if CASDeveloper
-            CheckAssemblyForType<Google.IOSResolver>( assemblyName );
+            CheckAssemblyForType<Google.IOSResolver>(assemblyName);
 #endif
             try
             {
-                var settingsType = Type.GetType( settingsTypeName, false );
+                var settingsType = Type.GetType(settingsTypeName, false);
                 if (settingsType != null)
-                    return ( T )settingsType.GetProperty( property, BindingFlags.Public | BindingFlags.Static )
-                            .GetValue( null, null );
+                    return (T)settingsType.GetProperty(property, BindingFlags.Public | BindingFlags.Static)
+                            .GetValue(null, null);
             }
             catch (Exception e)
             {
-                Debug.LogWarning( logTag + settingsTypeName + " error: " + e.Message );
+                Debug.LogWarning(logTag + settingsTypeName + " error: " + e.Message);
             }
-            return default( T );
+            return default(T);
         }
         #endregion
 
         #region Internal API
 
-        internal static void OpenDocumentation( string gitRepoName )
+        internal static void OpenDocumentation(string gitRepoName)
         {
-            Application.OpenURL( gitRootURL + gitRepoName + "/wiki" );
+            Application.OpenURL(gitRootURL + gitRepoName + "/wiki");
         }
 
-        internal static bool IsFirebaseServiceExist( string service )
+        internal static bool IsFirebaseServiceExist(string service)
         {
-            if (AssetDatabase.FindAssets( "Firebase." + service ).Length > 0)
+            if (AssetDatabase.FindAssets("Firebase." + service).Length > 0)
                 return true;
 
-            return IsPackageExist( "com.google.firebase." + service );
+            return IsPackageExist("com.google.firebase." + service);
         }
 
-        internal static void OpenSettingsWindow( BuildTarget target )
+        internal static void OpenSettingsWindow(BuildTarget target)
         {
-            var asset = GetSettingsAsset( target );
+            var asset = GetSettingsAsset(target);
             Selection.activeObject = asset;
-            EditorGUIUtility.PingObject( asset );
+            EditorGUIUtility.PingObject(asset);
         }
 
-        internal static string GetAdmobAppIdFromJson( string json )
+        internal static string GetAdmobAppIdFromJson(string json)
         {
-            return JsonUtility.FromJson<AdmobAppIdData>( json ).admob_app_id;
+            return JsonUtility.FromJson<AdmobAppIdData>(json).admob_app_id;
         }
 
-        internal static string GetTemplatePath( string templateFile )
+        internal static string GetTemplatePath(string templateFile)
         {
             string templateFolder = "/Templates/" + templateFile;
             string path = "Packages/" + packageName + templateFolder;
-            if (!File.Exists( path ))
+            if (!File.Exists(path))
             {
                 path = rootCASFolderPath + templateFolder;
-                if (!File.Exists( path ))
+                if (!File.Exists(path))
                 {
-                    Debug.LogError( logTag + "Template " + templateFile + " file not found. Try reimport CAS package." );
+                    Debug.LogError(logTag + "Template " + templateFile + " file not found. Try reimport CAS package.");
                     return null;
                 }
             }
             return path;
         }
 
-        internal static bool TryCopyFile( string source, string dest )
+        internal static bool TryCopyFile(string source, string dest)
         {
             try
             {
-                AssetDatabase.DeleteAsset( dest );
-                File.Copy( source, dest );
-                AssetDatabase.ImportAsset( dest );
+                AssetDatabase.DeleteAsset(dest);
+                File.Copy(source, dest);
+                AssetDatabase.ImportAsset(dest);
                 return true;
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
                 return false;
             }
         }
 
-        internal static void WriteToFile( string data, string path )
+        internal static void WriteToFile(string data, string path)
         {
             try
             {
-                var directoryPath = Path.GetDirectoryName( path );
-                if (!Directory.Exists( directoryPath ))
-                    Directory.CreateDirectory( directoryPath );
-                File.WriteAllText( path, data );
-                AssetDatabase.ImportAsset( path );
+                var directoryPath = Path.GetDirectoryName(path);
+                if (!Directory.Exists(directoryPath))
+                    Directory.CreateDirectory(directoryPath);
+                File.WriteAllText(path, data);
+                AssetDatabase.ImportAsset(path);
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
         }
 
@@ -606,24 +578,24 @@ namespace CAS.UEditor
             return false;
         }
 
-        internal static void DialogOrCancelBuild( string message, BuildTarget target = BuildTarget.NoTarget, string btn = "Continue" )
+        internal static void DialogOrCancelBuild(string message, BuildTarget target = BuildTarget.NoTarget, string btn = "Continue")
         {
-            if (!IsBatchMode() && !EditorUtility.DisplayDialog( "CAS Configure project", message, btn, "Cancel build" ))
-                StopBuildWithMessage( "Cancel build: " + message, target );
+            if (!IsBatchMode() && !EditorUtility.DisplayDialog("CAS Configure project", message, btn, "Cancel build"))
+                StopBuildWithMessage("Cancel build: " + message, target);
         }
 
-        internal static void StopBuildWithMessage( string message, BuildTarget target )
+        internal static void StopBuildWithMessage(string message, BuildTarget target)
         {
             EditorUtility.ClearProgressBar();
             if (target != BuildTarget.NoTarget
                 && !IsBatchMode()
-                && EditorUtility.DisplayDialog( "CAS Configure project", message, "Open Settings", "Close" ))
+                && EditorUtility.DisplayDialog("CAS Configure project", message, "Open Settings", "Close"))
             {
-                OpenSettingsWindow( target );
+                OpenSettingsWindow(target);
             }
 
 #if UNITY_2018_1_OR_NEWER
-            throw new BuildFailedException( logTag + message );
+            throw new BuildFailedException(logTag + message);
 #elif UNITY_2017_1_OR_NEWER
             throw new BuildPlayerWindow.BuildMethodException( logTag + message );
 #else
@@ -631,64 +603,64 @@ namespace CAS.UEditor
 #endif
         }
 
-        internal static string SelectSettingsFileAndGetAppId( string managerID, BuildTarget platform )
+        internal static string SelectSettingsFileAndGetAppId(string managerID, BuildTarget platform)
         {
             string filePath = "";
             try
             {
                 filePath = EditorUtility.OpenFilePanelWithFilters(
-                   "Select CAS Settings file for build", "", new[] { "Settings file", "json" } );
-                if (!string.IsNullOrEmpty( filePath ))
+                   "Select CAS Settings file for build", "", new[] { "Settings file", "json" });
+                if (!string.IsNullOrEmpty(filePath))
                 {
-                    var content = File.ReadAllText( filePath );
-                    WriteToFile( content, GetNativeSettingsPath( platform, managerID ) );
-                    return GetAdmobAppIdFromJson( content );
+                    var content = File.ReadAllText(filePath);
+                    WriteToFile(content, GetNativeSettingsPath(platform, managerID));
+                    return GetAdmobAppIdFromJson(content);
                 }
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
-            StopBuildWithMessage( "Selected wrong settings file: " + filePath, BuildTarget.NoTarget );
+            StopBuildWithMessage("Selected wrong settings file: " + filePath, BuildTarget.NoTarget);
             return null;
         }
 
-        internal static void GetCrossPromoAlias( BuildTarget platform, string managerId, HashSet<string> result )
+        internal static void GetCrossPromoAlias(BuildTarget platform, string managerId, HashSet<string> result)
         {
-            if (!IsDependencyExists( promoDependency, platform ))
+            if (!IsDependencyExists(promoDependency, platform))
                 return;
 
             string pattern = "alias\\\": \\\""; //: "iOSBundle\\\": \\\"";
-            string cachePath = GetNativeSettingsPath( platform, managerId );
+            string cachePath = GetNativeSettingsPath(platform, managerId);
 
-            if (File.Exists( cachePath ))
+            if (File.Exists(cachePath))
             {
                 try
                 {
-                    string content = File.ReadAllText( cachePath );
-                    int beginIndex = content.IndexOf( pattern );
+                    string content = File.ReadAllText(cachePath);
+                    int beginIndex = content.IndexOf(pattern);
                     while (beginIndex > 0)
                     {
                         beginIndex += pattern.Length;
-                        var endIndex = content.IndexOf( '\\', beginIndex );
-                        result.Add( content.Substring( beginIndex, endIndex - beginIndex ) );
-                        beginIndex = content.IndexOf( pattern, endIndex );
+                        var endIndex = content.IndexOf('\\', beginIndex);
+                        result.Add(content.Substring(beginIndex, endIndex - beginIndex));
+                        beginIndex = content.IndexOf(pattern, endIndex);
                     }
                 }
                 catch (Exception e)
                 {
-                    Debug.LogException( e );
+                    Debug.LogException(e);
                 }
             }
             return;
         }
 
-        private static string GetLatestVersion( string repo, string currVersion )
+        private static string GetLatestVersion(string repo, string currVersion)
         {
             const string title = "Get latest CAS version";
             string url = "https://api.github.com/repos/cleveradssolutions/" + repo + "/releases/latest";
 
-            using (var loader = UnityWebRequest.Get( url ))
+            using (var loader = UnityWebRequest.Get(url))
             {
                 loader.timeout = 30;
                 loader.SendWebRequest();
@@ -696,11 +668,11 @@ namespace CAS.UEditor
                 {
                     while (!loader.isDone)
                     {
-                        if (EditorUtility.DisplayCancelableProgressBar( title, repo,
-                            Mathf.Repeat( ( float )EditorApplication.timeSinceStartup * 0.2f, 1.0f ) ))
+                        if (EditorUtility.DisplayCancelableProgressBar(title, repo,
+                            Mathf.Repeat((float)EditorApplication.timeSinceStartup * 0.2f, 1.0f)))
                         {
                             loader.Dispose();
-                            SaveLatestRepoVersion( repo, currVersion );
+                            SaveLatestRepoVersion(repo, currVersion);
                             return null;
                         }
                     }
@@ -710,20 +682,20 @@ namespace CAS.UEditor
                     EditorUtility.ClearProgressBar();
                 }
 
-                if (string.IsNullOrEmpty( loader.error ))
+                if (string.IsNullOrEmpty(loader.error))
                 {
                     var content = loader.downloadHandler.text;
-                    var versionInfo = JsonUtility.FromJson<GitVersionInfo>( content );
-                    if (!string.IsNullOrEmpty( versionInfo.tag_name ))
-                        SaveLatestRepoVersion( repo, versionInfo.tag_name );
+                    var versionInfo = JsonUtility.FromJson<GitVersionInfo>(content);
+                    if (!string.IsNullOrEmpty(versionInfo.tag_name))
+                        SaveLatestRepoVersion(repo, versionInfo.tag_name);
 
                     return versionInfo.tag_name;
                 }
                 else
                 {
-                    Debug.LogError( logTag + "Check " + repo + " updates failed. Response " +
-                        loader.responseCode + ": " + loader.error );
-                    SaveLatestRepoVersion( repo, currVersion );
+                    Debug.LogError(logTag + "Check " + repo + " updates failed. Response " +
+                        loader.responseCode + ": " + loader.error);
+                    SaveLatestRepoVersion(repo, currVersion);
                 }
 
             }
@@ -749,21 +721,21 @@ namespace CAS.UEditor
             return 0;
         }
 
-        private static void UpdatePackageManagerRepo( string gitRepoName, string version )
+        internal static void UpdatePackageManagerRepo(string gitRepoName, string version)
         {
-            var request = UnityEditor.PackageManager.Client.Add( gitRootURL + gitRepoName + ".git#" + version );
+            var request = UnityEditor.PackageManager.Client.Add(gitRootURL + gitRepoName + ".git#" + version);
             try
             {
                 while (!request.IsCompleted)
                 {
                     if (EditorUtility.DisplayCancelableProgressBar(
-                        "Update Package Manager dependency", gitRepoName + " " + version, 0.5f ))
+                        "Update Package Manager dependency", gitRepoName + " " + version, 0.5f))
                         break;
                 }
                 if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
-                    Debug.Log( "Package Manager: Update " + request.Result.displayName );
+                    Debug.Log("Package Manager: Update " + request.Result.displayName);
                 else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
-                    Debug.LogError( request.Error.message );
+                    Debug.LogError(request.Error.message);
             }
             finally
             {
@@ -771,21 +743,21 @@ namespace CAS.UEditor
             }
         }
 
-        private static void SaveLatestRepoVersion( string repo, string version )
+        private static void SaveLatestRepoVersion(string repo, string version)
         {
-            EditorPrefs.SetString( editorLatestVersionPrefs + repo, version );
-            EditorPrefs.SetString( editorLatestVersionTimestampPrefs + repo, DateTime.Now.ToBinary().ToString() );
+            EditorPrefs.SetString(editorLatestVersionPrefs + repo, version);
+            EditorPrefs.SetString(editorLatestVersionTimestampPrefs + repo, DateTime.Now.ToBinary().ToString());
         }
 
-        internal static bool HasTimePassed( string prefKey, int days, bool projectOnly )
+        internal static bool HasTimePassed(string prefKey, int days, bool projectOnly)
         {
             string pref;
             if (projectOnly)
-                pref = PlayerPrefs.GetString( prefKey, string.Empty );
+                pref = PlayerPrefs.GetString(prefKey, string.Empty);
             else
-                pref = EditorPrefs.GetString( prefKey, string.Empty );
+                pref = EditorPrefs.GetString(prefKey, string.Empty);
 
-            if (string.IsNullOrEmpty( pref ))
+            if (string.IsNullOrEmpty(pref))
             {
                 return true;
             }
@@ -794,15 +766,15 @@ namespace CAS.UEditor
                 DateTime checkTime;
                 try
                 {
-                    long binartDate = long.Parse( pref );
-                    checkTime = DateTime.FromBinary( binartDate );
+                    long binartDate = long.Parse(pref);
+                    checkTime = DateTime.FromBinary(binartDate);
                 }
                 catch
                 {
                     return true;
                 }
-                checkTime = checkTime.Add( TimeSpan.FromDays( days ) );
-                return DateTime.Compare( DateTime.Now, checkTime ) > 0; // Now time is later than checkTime
+                checkTime = checkTime.Add(TimeSpan.FromDays(days));
+                return DateTime.Compare(DateTime.Now, checkTime) > 0; // Now time is later than checkTime
             }
         }
 
@@ -835,7 +807,7 @@ namespace CAS.UEditor
         public string key;
         public string value;
 
-        public KeyValuePair( string key, string value )
+        public KeyValuePair(string key, string value)
         {
             this.key = key;
             this.value = value;
@@ -857,31 +829,31 @@ namespace CAS.UEditor
 
         static HelpStyles()
         {
-            labelStyle = new GUIStyle( "AssetLabel" );
+            labelStyle = new GUIStyle("AssetLabel");
             labelStyle.fontSize = 9;
             labelStyle.fixedHeight = 10;
-            labelStyle.padding = new RectOffset( 4, 3, 0, 0 );
-            boxScopeStyle = new GUIStyle( EditorStyles.helpBox );
-            boxScopeStyle.padding = new RectOffset( 6, 6, 6, 6 );
-            wordWrapTextAred = new GUIStyle( EditorStyles.textArea );
+            labelStyle.padding = new RectOffset(4, 3, 0, 0);
+            boxScopeStyle = new GUIStyle(EditorStyles.helpBox);
+            boxScopeStyle.padding = new RectOffset(6, 6, 6, 6);
+            wordWrapTextAred = new GUIStyle(EditorStyles.textArea);
             wordWrapTextAred.wordWrap = true;
-            errorIconContent = EditorGUIUtility.IconContent( "d_console.erroricon.sml" );
-            errorIconContent = new GUIContent( string.Empty, errorIconContent.image,
-                "Remove dependency.\nThe dependency cannot be used in current configuration." );
-            helpIconContent = EditorGUIUtility.IconContent( "_Help" );
-            helpIconContent = new GUIContent( string.Empty, helpIconContent.image,
-                "Open home page of the mediation network." );
+            errorIconContent = EditorGUIUtility.IconContent("d_console.erroricon.sml");
+            errorIconContent = new GUIContent(string.Empty, errorIconContent.image,
+                "Remove dependency.\nThe dependency cannot be used in current configuration.");
+            helpIconContent = EditorGUIUtility.IconContent("_Help");
+            helpIconContent = new GUIContent(string.Empty, helpIconContent.image,
+                "Open home page of the mediation network.");
             tempContent = new GUIContent();
-            largeTitleStyle = new GUIStyle( EditorStyles.boldLabel );
+            largeTitleStyle = new GUIStyle(EditorStyles.boldLabel);
             largeTitleStyle.fontSize = 18;
 
             formatIcons = new Texture[5 * 2];
-            var editorIcons = AssetDatabase.FindAssets( CASEditorUtils.editorIconNamePrefix );
+            var editorIcons = AssetDatabase.FindAssets(CASEditorUtils.editorIconNamePrefix);
             for (int i = 0; i < editorIcons.Length; i++)
             {
-                var iconPath = AssetDatabase.GUIDToAssetPath( editorIcons[i] );
-                var asset = AssetDatabase.LoadAssetAtPath<Texture2D>( iconPath );
-                var suffix = iconPath.Substring( iconPath.LastIndexOf( '_' ) + 1 );
+                var iconPath = AssetDatabase.GUIDToAssetPath(editorIcons[i]);
+                var asset = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+                var suffix = iconPath.Substring(iconPath.LastIndexOf('_') + 1);
                 var index = -1;
                 switch (suffix)
                 {
@@ -902,11 +874,11 @@ namespace CAS.UEditor
                         break;
                 }
                 if (index > -1)
-                    formatIcons[index + ( iconPath.Contains( "_dark_" ) ? 5 : 0 )] = asset;
+                    formatIcons[index + (iconPath.Contains("_dark_") ? 5 : 0)] = asset;
             }
         }
 
-        public static Texture GetFormatIcon( AdFlags format, bool active )
+        public static Texture GetFormatIcon(AdFlags format, bool active)
         {
             int iconIndex;
             switch (format)
@@ -915,9 +887,6 @@ namespace CAS.UEditor
                 case AdFlags.Interstitial: iconIndex = 1; break;
                 case AdFlags.Rewarded: iconIndex = 2; break;
                 case AdFlags.Native: iconIndex = 3; break;
-#pragma warning disable CS0618 // Type or member is obsolete
-                case AdFlags.MediumRectangle: iconIndex = 4; break;
-#pragma warning restore CS0618 // Type or member is obsolete
                 default: return null;
             }
             return formatIcons[active ? iconIndex : iconIndex + 5];
@@ -925,7 +894,7 @@ namespace CAS.UEditor
 
         public static void BeginBoxScope()
         {
-            EditorGUILayout.BeginVertical( boxScopeStyle );
+            EditorGUILayout.BeginVertical(boxScopeStyle);
         }
 
         public static void EndBoxScope()
@@ -933,7 +902,7 @@ namespace CAS.UEditor
             EditorGUILayout.EndVertical();
         }
 
-        public static GUIContent GetContent( string text, Texture image, string tooltip = "" )
+        public static GUIContent GetContent(string text, Texture image, string tooltip = "")
         {
             tempContent.text = text;
             tempContent.image = image;
@@ -943,29 +912,29 @@ namespace CAS.UEditor
 
         public static void Devider()
         {
-            var dividerRect = EditorGUILayout.GetControlRect( GUILayout.Height( 1 ) );
+            var dividerRect = EditorGUILayout.GetControlRect(GUILayout.Height(1));
             if (Event.current.type == EventType.Repaint) //draw the divider
-                GUI.skin.box.Draw( dividerRect, GUIContent.none, 0 );
+                GUI.skin.box.Draw(dividerRect, GUIContent.none, 0);
         }
 
-        public static void HelpButton( string url )
+        public static void HelpButton(string url)
         {
-            if (GUILayout.Button( helpIconContent, EditorStyles.label, GUILayout.ExpandWidth( false ) ))
-                Application.OpenURL( url );
+            if (GUILayout.Button(helpIconContent, EditorStyles.label, GUILayout.ExpandWidth(false)))
+                Application.OpenURL(url);
 
         }
 
-        public static bool WarningWithButton( string message, string btnText, MessageType type = MessageType.Warning )
+        public static bool WarningWithButton(string message, string btnText, MessageType type = MessageType.Warning)
         {
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.HelpBox( message, type );
+            EditorGUILayout.HelpBox(message, type);
             // Expand height correct work with Unity 2020 or newer
 #if UNITY_2020_1_OR_NEWER
             var height = GUILayout.ExpandHeight( true );
 #else
-            var height = GUILayout.Height( 38 );
+            var height = GUILayout.Height(38);
 #endif
-            var action = GUILayout.Button( btnText, GUILayout.ExpandWidth( false ), height );
+            var action = GUILayout.Button(btnText, GUILayout.ExpandWidth(false), height);
             EditorGUILayout.EndHorizontal();
             return action;
         }

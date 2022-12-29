@@ -12,33 +12,27 @@ namespace CAS
     {
         LastPage = -1,
         GoogleAds = 0,
-        Vungle,
-        Kidoz,
-        Chartboost,
-        UnityAds,
-        AppLovin,
-        SuperAwesome,
-        [Obsolete( "No longer supported" )] StartApp,
-        AdColony,
-        FacebookAN,
-        InMobi,
-        [Obsolete( "No longer supported" )] MobFox,
-        MyTarget,
-        CrossPromotion,
-        IronSource,
-        YandexAds,
-        [Obsolete( "Coming soon" )] HyperMX,
-        MAX,
-        [Obsolete( "No longer supported" )] Smaato,
-        [Obsolete( "No longer supported" )] MoPub,
-        Tapjoy,
-        Fyber,
-        FairBid,
-        Mintegral,
-        Pangle,
-        [Obsolete( "No longer supported" )] Verizon,
-        [Obsolete( "No longer supported" )] AmazonAds,
-        [Obsolete( "No longer supported" )] OwnVAST
+        Vungle = 1,
+        Kidoz = 2,
+        Chartboost = 3,
+        UnityAds = 4,
+        AppLovin = 5,
+        SuperAwesome = 6,
+
+        AdColony = 8,
+        FacebookAN = 9,
+        InMobi = 10,
+
+        MyTarget = 12,
+        CrossPromotion = 13,
+        IronSource = 14,
+        YandexAds = 15,
+        [Obsolete( "Coming soon" )] HyperMX = 16,
+
+        Tapjoy = 20,
+        Fyber = 22,
+        Mintegral = 23,
+        Pangle = 24,
     }
 
     public static class AdNetworkExtension
@@ -106,7 +100,6 @@ namespace CAS
                 case AdNetwork.UnityAds: return "U";
                 case AdNetwork.AppLovin: return "AL";
                 case AdNetwork.SuperAwesome: return "SuA";
-                //case AdNetwork.StartApp: return "StA";
                 case AdNetwork.AdColony: return "AC";
                 case AdNetwork.FacebookAN: return "FB";
                 case AdNetwork.InMobi: return "IM";
@@ -114,7 +107,6 @@ namespace CAS
                 case AdNetwork.CrossPromotion: return "P";
                 case AdNetwork.IronSource: return "IS";
                 case AdNetwork.YandexAds: return "Ya";
-                //case AdNetwork.Smaato: return "Sm";
                 case AdNetwork.Tapjoy: return "TJ";
                 case AdNetwork.Fyber: return "Fy";
                 case AdNetwork.Mintegral: return "MB";
@@ -148,8 +140,8 @@ namespace CAS
                 "Sm",
                 "MP",
                 "TJ",
+                string.Empty,
                 "Fy",
-                string.Empty, //FairBid
                 "MB",
                 "Pa"
             };

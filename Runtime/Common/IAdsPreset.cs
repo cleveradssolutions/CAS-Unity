@@ -12,7 +12,6 @@ namespace CAS
         int defaultInterstitialInterval { get; }
         bool defaultDebugModeEnabled { get; }
         bool defaultIOSTrackLocationEnabled { get; }
-        bool defaultAnalyticsCollectionEnabled { get; }
         bool defaultInterstitialWhenNoRewardedAd { get; }
         AdFlags defaultAllowedFormats { get; }
         Audience defaultAudienceTagged { get; }

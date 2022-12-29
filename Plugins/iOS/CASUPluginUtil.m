@@ -6,34 +6,7 @@
 //
 
 #import "CASUPluginUtil.h"
-
-#if __has_include("UnityAppController.h")
-#import "UnityAppController.h"
-#else
-#ifdef __cplusplus
-extern "C" {
-#endif
-UIViewController * UnityGetGLViewController(void) {
-    return nil;
-}
-
-UIWindow * UnityGetMainWindow(void) {
-    return nil;
-}
-
-int UnityIsPaused(void) {
-    return 0;
-}
-
-void UnityPause(int pause) {
-}
-
-BOOL _didResignActive;
-
-#ifdef __cplusplus
-}
-#endif
-#endif /* if __has_include("UnityAppController.h") */
+#import "UnityInterface.h"
 
 @interface CASUPluginUtil ()
 /// References to objects Google Mobile ads objects created from Unity.

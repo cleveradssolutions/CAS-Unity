@@ -240,18 +240,5 @@ namespace CAS.AdObject
                 OnAdClicked.Invoke();
         }
         #endregion
-
-
-        [Obsolete( "Migrated to new ad size api: rectInPixels.height" )]
-        public float GetHeightInPixels()
-        {
-            return rectInPixels.height;
-        }
-
-        [Obsolete( "Migrated to new ad size api: rectInPixels.width" )]
-        public float GetWidthInPixels()
-        {
-            return rectInPixels.width;
-        }
     }
 }

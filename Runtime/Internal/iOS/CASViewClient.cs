@@ -20,15 +20,11 @@ namespace CAS.iOS
         private AdPosition _position = AdPosition.BottomCenter;
         private int _positionX = 0;
         private int _positionY = 0;
-        private bool _waitOfHideCallback;
-        private AdMetaData _lastImpression = null;
 
         public event CASViewEvent OnLoaded;
         public event CASViewEventWithError OnFailed;
         public event CASViewEventWithMeta OnImpression;
         public event CASViewEvent OnClicked;
-        public event CASViewEventWithMeta OnPresented;
-        public event CASViewEvent OnHidden;
 
         public AdSize size { get; private set; }
         public Rect rectInPixels { get; private set; }
@@ -36,37 +32,37 @@ namespace CAS.iOS
 
         public bool isReady
         {
-            get { return CASExterns.CASUIsAdViewReady( _viewRef ); }
+            get { return CASExterns.CASUIsAdViewReady(_viewRef); }
         }
 
         public int refreshInterval
         {
-            get { return CASExterns.CASUGetAdViewRefreshInterval( _viewRef ); }
-            set { CASExterns.CASUSetAdViewRefreshInterval( _viewRef, value ); }
+            get { return CASExterns.CASUGetAdViewRefreshInterval(_viewRef); }
+            set { CASExterns.CASUSetAdViewRefreshInterval(_viewRef, value); }
         }
 
         public AdPosition position
         {
             get { return _position; }
-            set { SetPosition( value, 0, 0 ); }
+            set { SetPosition(value, 0, 0); }
         }
 
-        internal CASViewClient( CASManagerClient manager, AdSize size )
+        internal CASViewClient(CASManagerClient manager, AdSize size)
         {
             _manager = manager;
             this.size = size;
         }
 
-        public void Attach( IntPtr viewRef, IntPtr client )
+        public void Attach(IntPtr viewRef, IntPtr client)
         {
             _viewRef = viewRef;
             _viewClient = client;
-            CASExterns.CASUAttachAdViewDelegate( viewRef,
+            CASExterns.CASUAttachAdViewDelegate(viewRef,
                 AdViewLoadedCallback,
                 AdViewFailedCallback,
                 AdViewPresentedCallback,
                 AdViewClickedCallback,
-                AdViewRectCallback );
+                AdViewRectCallback);
         }
 
         ~CASViewClient()
@@ -80,15 +76,15 @@ namespace CAS.iOS
             {
                 if (_viewRef != IntPtr.Zero)
                 {
-                    _manager.RemoveAdViewFromFactory( this );
-                    CASExterns.CASUDestroyAdView( _viewRef, _manager.managerID + "_" + (int)size );
+                    _manager.RemoveAdViewFromFactory(this);
+                    CASExterns.CASUDestroyAdView(_viewRef, _manager.managerID + "_" + (int)size);
                     _viewRef = IntPtr.Zero;
-                    ( (GCHandle)_viewClient ).Free();
+                    ((GCHandle)_viewClient).Free();
                 }
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
         }
 
@@ -99,39 +95,27 @@ namespace CAS.iOS
 
         public void Load()
         {
-            CASExterns.CASULoadAdView( _viewRef );
+            CASExterns.CASULoadAdView(_viewRef);
         }
 
-        public void SetActive( bool active )
+        public void SetActive(bool active)
         {
             if (active)
             {
-                CASExterns.CASUPresentAdView( _viewRef );
-                if (!_waitOfHideCallback)
-                {
-                    _waitOfHideCallback = true;
-                    if (_lastImpression != null && OnPresented != null)
-                        OnPresented( this, _lastImpression );
-                }
+                CASExterns.CASUPresentAdView(_viewRef);
                 return;
             }
 
             rectInPixels = Rect.zero;
-            CASExterns.CASUHideAdView( _viewRef );
-            if (_waitOfHideCallback)
-            {
-                _waitOfHideCallback = false;
-                if (OnHidden != null)
-                    OnHidden( this );
-            }
+            CASExterns.CASUHideAdView(_viewRef);
         }
 
-        public void SetPosition( int x, int y )
+        public void SetPosition(int x, int y)
         {
-            SetPosition( AdPosition.TopLeft, x, y );
+            SetPosition(AdPosition.TopLeft, x, y);
         }
 
-        private void SetPosition( AdPosition position, int x, int y )
+        private void SetPosition(AdPosition position, int x, int y)
         {
             if (position == AdPosition.Undefined)
                 return;
@@ -140,104 +124,91 @@ namespace CAS.iOS
                 _position = position;
                 _positionX = x;
                 _positionY = y;
-                CASExterns.CASUSetAdViewPosition( _viewRef, (int)position, x, y );
+                CASExterns.CASUSetAdViewPosition(_viewRef, (int)position, x, y);
             }
         }
 
-        private static CASViewClient IntPtrToAdViewClient( IntPtr managerClient )
+        private static CASViewClient IntPtrToAdViewClient(IntPtr managerClient)
         {
             GCHandle handle = (GCHandle)managerClient;
             return handle.Target as CASViewClient;
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUViewDidLoadCallback ) )]
-        private static void AdViewLoadedCallback( IntPtr view )
+        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUViewDidLoadCallback))]
+        private static void AdViewLoadedCallback(IntPtr view)
         {
             try
             {
-                var instance = IntPtrToAdViewClient( view );
+                var instance = IntPtrToAdViewClient(view);
                 if (instance != null && instance.OnLoaded != null)
-                    instance.OnLoaded( instance );
+                    instance.OnLoaded(instance);
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUViewDidFailedCallback ) )]
-        private static void AdViewFailedCallback( IntPtr view, int error )
+        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUViewDidFailedCallback))]
+        private static void AdViewFailedCallback(IntPtr view, int error)
         {
             try
             {
-                var instance = IntPtrToAdViewClient( view );
-                if (instance != null)
-                {
-                    if (instance.OnFailed != null)
-                        instance.OnFailed( instance, (AdError)error );
-
-                    if (instance._waitOfHideCallback)
-                    {
-                        instance._waitOfHideCallback = false;
-                        if (instance.OnHidden != null)
-                            instance.OnHidden( instance );
-                    }
-                }
+                var instance = IntPtrToAdViewClient(view);
+                if (instance != null && instance.OnFailed != null)
+                    instance.OnFailed(instance, (AdError)error);
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUViewWillPresentCallback ) )]
-        private static void AdViewPresentedCallback( IntPtr view, IntPtr impression )
+        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUViewWillPresentCallback))]
+        private static void AdViewPresentedCallback(IntPtr view, IntPtr impression)
         {
             try
             {
-                var instance = IntPtrToAdViewClient( view );
+                var instance = IntPtrToAdViewClient(view);
                 if (instance == null)
                     return;
-                var metadata = new CASImpressionClient( AdType.Banner, impression );
-                if (instance._lastImpression == null && instance.OnPresented != null)
-                    instance.OnPresented( instance, metadata );
-                instance._lastImpression = metadata;
+                var metadata = new CASImpressionClient(AdType.Banner, impression);
                 if (instance.OnImpression != null)
-                    instance.OnImpression( instance, metadata );
+                    instance.OnImpression(instance, metadata);
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUViewDidClickedCallback ) )]
-        private static void AdViewClickedCallback( IntPtr view )
+        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUViewDidClickedCallback))]
+        private static void AdViewClickedCallback(IntPtr view)
         {
             try
             {
-                var instance = IntPtrToAdViewClient( view );
+                var instance = IntPtrToAdViewClient(view);
                 if (instance != null && instance.OnClicked != null)
-                    instance.OnClicked( instance );
+                    instance.OnClicked(instance);
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
         }
 
-        [AOT.MonoPInvokeCallback( typeof( CASExterns.CASUViewDidRectCallback ) )]
-        private static void AdViewRectCallback( IntPtr view, float x, float y, float width, float heigt )
+        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUViewDidRectCallback))]
+        private static void AdViewRectCallback(IntPtr view, float x, float y, float width, float heigt)
         {
             try
             {
-                var instance = IntPtrToAdViewClient( view );
+                var instance = IntPtrToAdViewClient(view);
                 if (instance != null)
-                    instance.rectInPixels = new Rect( x, y, width, heigt );
+                    instance.rectInPixels = new Rect(x, y, width, heigt);
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
         }
     }

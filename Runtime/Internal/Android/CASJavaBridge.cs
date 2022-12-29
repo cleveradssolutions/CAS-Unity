@@ -99,7 +99,8 @@ namespace CAS.Android
             {
                 CASFactory.ExecuteEvent( () =>
                 {
-                    if (OnAdFailed != null) OnAdFailed( ( AdError )error );
+                    if (OnAdFailed != null)
+                        OnAdFailed( ( AdError )error );
                 } );
             }
         }

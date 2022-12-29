@@ -17,9 +17,7 @@ namespace CAS.Android
         private bool _analyticsCollectionEnabled = false;
         private bool _isDebugMode = false;
         private bool _isMutedAdSounds = false;
-        private LoadingManagerMode _loadingMode = LoadingManagerMode.Optimal;
-        private List<string> _testDeviceIds = new List<string>();
-        private bool _allowInterstitialAdsWhenVideoCostAreLower = false;
+        private bool _allowInterstitialAdsWhenVideoCostAreLower = true;
 
         private Gender _gender = Gender.Unknown;
         private int _age = 0;
@@ -28,27 +26,27 @@ namespace CAS.Android
 
         public CASSettingsClient()
         {
-            settingsBridge = new AndroidJavaClass( CASJavaBridge.settingsClass );
+            settingsBridge = new AndroidJavaClass(CASJavaBridge.settingsClass);
         }
 
         public string GetSDKVersion()
         {
-            return settingsBridge.CallStatic<string>( "getSDKVersion" );
+            return settingsBridge.CallStatic<string>("getSDKVersion");
         }
 
         public void ValidateIntegration()
         {
-            settingsBridge.CallStatic( "validateIntegration" );
+            settingsBridge.CallStatic("validateIntegration");
         }
 
         public string GetActiveMediationPattern()
         {
-            return settingsBridge.CallStatic<string>( "getActiveMediationPattern" );
+            return settingsBridge.CallStatic<string>("getActiveMediationPattern");
         }
 
-        public bool IsActiveMediationNetwork( AdNetwork net )
+        public bool IsActiveMediationNetwork(AdNetwork net)
         {
-            return settingsBridge.CallStatic<bool>( "isActiveMediationNetwork", (int)net );
+            return settingsBridge.CallStatic<bool>("isActiveMediationNetwork", (int)net);
         }
 
         public bool analyticsCollectionEnabled
@@ -57,38 +55,38 @@ namespace CAS.Android
             set
             {
                 _analyticsCollectionEnabled = value;
-                settingsBridge.CallStatic( "setAnalyticsCollectionEnabled", value );
+                settingsBridge.CallStatic("setAnalyticsCollectionEnabled", value);
             }
         }
 
         public int bannerRefreshInterval
         {
-            get { return settingsBridge.CallStatic<int>( "getBannerRefreshDelay" ); }
-            set { settingsBridge.CallStatic( "setRefreshBannerDelay", value ); }
+            get { return settingsBridge.CallStatic<int>("getBannerRefreshDelay"); }
+            set { settingsBridge.CallStatic("setRefreshBannerDelay", value); }
         }
 
         public int interstitialInterval
         {
-            get { return settingsBridge.CallStatic<int>( "getInterstitialInterval" ); }
-            set { settingsBridge.CallStatic( "setInterstitialInterval", value ); }
+            get { return settingsBridge.CallStatic<int>("getInterstitialInterval"); }
+            set { settingsBridge.CallStatic("setInterstitialInterval", value); }
         }
 
         public ConsentStatus userConsent
         {
-            get { return (ConsentStatus)settingsBridge.CallStatic<int>( "getUserConsent" ); }
-            set { settingsBridge.CallStatic( "setUserConsent", (int)value ); }
+            get { return (ConsentStatus)settingsBridge.CallStatic<int>("getUserConsent"); }
+            set { settingsBridge.CallStatic("setUserConsent", (int)value); }
         }
 
         public CCPAStatus userCCPAStatus
         {
-            get { return (CCPAStatus)settingsBridge.CallStatic<int>( "getCcpaStatus" ); }
-            set { settingsBridge.CallStatic( "setCcpaStatus", (int)value ); }
+            get { return (CCPAStatus)settingsBridge.CallStatic<int>("getCcpaStatus"); }
+            set { settingsBridge.CallStatic("setCcpaStatus", (int)value); }
         }
 
         public Audience taggedAudience
         {
-            get { return (Audience)settingsBridge.CallStatic<int>( "getTaggedAudience" ); }
-            set { settingsBridge.CallStatic( "setTaggedAudience", (int)value ); }
+            get { return (Audience)settingsBridge.CallStatic<int>("getTaggedAudience"); }
+            set { settingsBridge.CallStatic("setTaggedAudience", (int)value); }
         }
 
         public bool isDebugMode
@@ -97,7 +95,7 @@ namespace CAS.Android
             set
             {
                 _isDebugMode = value;
-                settingsBridge.CallStatic( "setNativeDebug", value );
+                settingsBridge.CallStatic("setNativeDebug", value);
             }
         }
 
@@ -107,44 +105,34 @@ namespace CAS.Android
             set
             {
                 _isMutedAdSounds = value;
-                settingsBridge.CallStatic( "setMutedAdSounds", value );
+                settingsBridge.CallStatic("setMutedAdSounds", value);
             }
         }
 
         public LoadingManagerMode loadingMode
         {
-            get { return _loadingMode; }
-            set
-            {
-                _loadingMode = value;
-                settingsBridge.CallStatic( "setLoadingMode", (int)value );
-            }
+            get { return (LoadingManagerMode)settingsBridge.CallStatic<int>("getLoadingMode"); }
+            set { settingsBridge.CallStatic("setLoadingMode", (int)value); }
         }
 
-        public void SetTestDeviceIds( List<string> testDeviceIds )
+        public void SetTestDeviceIds(IList<string> testDeviceIds)
         {
-            settingsBridge.CallStatic( "clearTestDeviceIds" );
-            _testDeviceIds = testDeviceIds;
+            settingsBridge.CallStatic("clearTestDeviceIds");
             for (int i = 0; i < testDeviceIds.Count; i++)
             {
-                settingsBridge.CallStatic( "addTestDeviceId", testDeviceIds[i] );
+                settingsBridge.CallStatic("addTestDeviceId", testDeviceIds[i]);
             }
-        }
-
-        public List<string> GetTestDeviceIds()
-        {
-            return _testDeviceIds;
         }
 
         public void RestartInterstitialInterval()
         {
-            settingsBridge.CallStatic( "restartInterstitialInterval" );
+            settingsBridge.CallStatic("restartInterstitialInterval");
         }
 
         public bool isExecuteEventsOnUnityThread
         {
             get { return CASFactory.IsExecuteEventsOnUnityThread(); }
-            set { CASFactory.SetExecuteEventsOnUnityThread( value ); }
+            set { CASFactory.SetExecuteEventsOnUnityThread(value); }
         }
 
         public bool iOSAppPauseOnBackground
@@ -165,7 +153,7 @@ namespace CAS.Android
             set
             {
                 _allowInterstitialAdsWhenVideoCostAreLower = value;
-                settingsBridge.CallStatic( "allowInterInsteadOfRewarded", value );
+                settingsBridge.CallStatic("allowInterInsteadOfRewarded", value);
             }
         }
 
@@ -175,7 +163,7 @@ namespace CAS.Android
             set
             {
                 _gender = value;
-                settingsBridge.CallStatic( "setUserGender", (int)value );
+                settingsBridge.CallStatic("setUserGender", (int)value);
             }
         }
 
@@ -185,7 +173,7 @@ namespace CAS.Android
             set
             {
                 _age = value;
-                settingsBridge.CallStatic( "setUserAge", value );
+                settingsBridge.CallStatic("setUserAge", value);
             }
         }
     }

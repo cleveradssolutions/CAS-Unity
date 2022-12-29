@@ -84,6 +84,10 @@ void CASUSetLoadingWithMode(int mode) {
     [[CAS settings] setLoadingWithMode:(CASLoadingManagerMode)mode];
 }
 
+int CASUGetLoadingMode(void) {
+    return (int)[[CAS settings] getLoadingMode];
+}
+
 void CASUSetInterstitialAdsWhenVideoCostAreLower(BOOL allow) {
     [[CAS settings] setInterstitialAdsWhenVideoCostAreLowerWithAllow:allow];
 }
@@ -215,6 +219,17 @@ void CASUSetMediationExtras(CASManagerBuilderRef builderRef,
         [builder withMediationExtras:[CASUPluginUtil stringFromUnity:extraValues[i]]
                               forKey:[CASUPluginUtil stringFromUnity:extraKeys[i]]];
     }
+}
+
+void CASUSetConsentFlow(CASManagerBuilderRef builderRef,
+                        BOOL                 isEnabled,
+                        const char           *policyUrl) {
+    CASManagerBuilder *builder = (__bridge CASManagerBuilder *)builderRef;
+
+    CASConsentFlow *flow = [[CASConsentFlow alloc] initWithEnabled:isEnabled];
+
+    flow.privacyPolicyUrl = [CASUPluginUtil stringFromUnity:policyUrl];
+    [builder withConsentFlow:flow];
 }
 
 CASUManagerRef CASUInitializeManager(CASManagerBuilderRef               builderRef,
@@ -474,6 +489,10 @@ int CASUGetImpressionNetwork(CASImpressionRef impression) {
         NSString *network = internalImp.network;
 
         if (![network isEqualToString:CASNetwork.lastPageAd]) {
+            if ([network isEqualToString:CASNetwork.fyber]) {
+                network = CASNetwork.fairBid;
+            }
+
             NSUInteger netIndex = [[CASNetwork values] indexOfObject:network];
 
             if (netIndex != NSNotFound) {

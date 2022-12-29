@@ -624,7 +624,7 @@ namespace CAS.UEditor
         {
             for (int i = 0; i < depsSDK.Count; i++)
             {
-                if (allowAllTargets == depsSDK[i].addToAllTargets)
+                if (allowAllTargets == depsSDK[i].forAll)
                     AppendDependency( mediation, depsSDK[i], platform, builder );
             }
 
@@ -647,7 +647,7 @@ namespace CAS.UEditor
             if (platform == BuildTarget.Android)
                 builder.Append( sdk.version );
             builder.Append( "\" version=\"" ).Append( sdk.version ).Append( "\"" );
-            if (sdk.addToAllTargets && platform == BuildTarget.iOS)
+            if (sdk.forAll && platform == BuildTarget.iOS)
                 builder.Append( " addToAllTargets=\"true\"" );
 
             var sourcesBuilder = new StringBuilder();
