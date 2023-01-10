@@ -5,8 +5,6 @@
 //
 
 using System;
-using System.Reflection;
-using UnityScript.Steps;
 
 namespace CAS
 {
