@@ -23,6 +23,7 @@
         _rewardCallback.client = client;
         _appReturnDelegate = [[CASUCallback alloc] initWithComplete:false];
         _appReturnDelegate.client = client;
+        manager.adLoadDelegate = self;
     }
 
     return self;
