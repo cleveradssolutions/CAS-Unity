@@ -36,6 +36,11 @@ CAS.MobileAds.BuildManager().WithConsentFlow(
 - [iOS] The minimum iOS version supports is 12.0.
 - Enabled by default `CAS.MobileAds.settings.allowInterstitialAdsWhenVideoCostAreLower`.
 
+## [2.9.9] - 2023-01-12
+### Dependencies
+- [Android] Wraps [2.9.9 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [2.9.9 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+
 ## [2.9.8] - 2022-12-12
 ### Dependencies
 - [Android] Wraps [2.9.8 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
