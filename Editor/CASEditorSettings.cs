@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -30,7 +30,7 @@ namespace CAS.UEditor
 
         public bool generateIOSDeepLinksForPromo = true;
         public bool bitcodeIOSDisabled = true;
-        public string attributionReportEndpoint = CASEditorUtils.attributionReportEndPoint;
+        public string attributionReportEndpoint = null;
 
         /// <summary>
         /// {key}.lproj Language code (ISO-639)

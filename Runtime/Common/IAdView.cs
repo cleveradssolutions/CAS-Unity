@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -25,7 +25,7 @@ namespace CAS
         /// </summary>
         event CASViewEventWithError OnFailed;
         /// <summary>
-        /// Called when the new ad content did present for user with <see cref="AdMetaData"/> about the impression. 
+        /// Called when the ad impression detects paid revenue. 
         /// </summary>
         event CASViewEventWithMeta OnImpression;
         /// <summary>

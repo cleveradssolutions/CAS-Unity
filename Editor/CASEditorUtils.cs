@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -58,7 +58,7 @@ namespace CAS.UEditor
         internal const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
         internal const string supportURL = gitUnityRepoURL + "#support";
         internal const string gitAppAdsTxtRepoUrl = gitRootURL + "App-ads.txt";
-        internal const string attributionReportEndPoint = "https://postbacks-app.com"; // MAX
+        internal const string attributionReportEndPoint = "https://";
 
         internal const string generalDeprecateDependency = "General";
         internal const string teenDeprecateDependency = "Teen";
@@ -125,11 +125,18 @@ namespace CAS.UEditor
         #region Public API
         public static string GetName(this AdNetwork network)
         {
-            if (network == Dependency.adBase)
-                return Dependency.adBaseName;
-            if ((int)network == 17)
-                return AdNetwork.AppLovin.ToString();
-            return network.ToString();
+            // Fix Wrong String implementation of deprecated Enums
+            switch (network)
+            {
+                case Dependency.adBase:
+                    return Dependency.adBaseName;
+                case AdNetwork.DigitalTurbine:
+                    return "DigitalTurbine";
+                case AdNetwork.AudienceNetwork:
+                    return "AudienceNetwork";
+                default:
+                    return network.ToString();
+            }
         }
 
         public static string GetNativeSettingsPath(BuildTarget platform, string managerId)
@@ -191,17 +198,47 @@ namespace CAS.UEditor
             return "CAS" + platform.ToString() + name + "Dependencies";
         }
 
+        private static bool IsPathInPackage(string path)
+        {
+            return !path.StartsWith("Assets/");
+        }
+        private static bool IsPathInHomeAssets(string path)
+        {
+            return path.StartsWith("Assets/CleverAdsSolutions/");
+        }
+
         public static string GetDependencyPath(string name, BuildTarget platform)
         {
             var depFileName = GetDependencyName(name, platform);
             var foundDepFiles = AssetDatabase.FindAssets(depFileName);
+            string result = null;
             for (int i = 0; i < foundDepFiles.Length; i++)
             {
                 var pathToFile = AssetDatabase.GUIDToAssetPath(foundDepFiles[i]);
-                if (pathToFile.EndsWith(".xml"))
-                    return pathToFile;
+                if (pathToFile.EndsWith(depFileName + ".xml"))
+                {
+                    if (result == null)
+                    {
+                        result = pathToFile;
+                    }
+                    else
+                    {
+                        string removeFile;
+                        if (!IsPathInPackage(pathToFile) && (IsPathInPackage(result) || IsPathInHomeAssets(result)))
+                        {
+                            removeFile = pathToFile;
+                        }
+                        else
+                        {
+                            removeFile = result;
+                            result = pathToFile;
+                        }
+                        Debug.LogWarning(logTag + "Removed duplicate dependency at path: " + removeFile);
+                        AssetDatabase.DeleteAsset(removeFile);
+                    }
+                }
             }
-            return null;
+            return result;
         }
 
         public static string GetDependencyPathOrDefault(string name, BuildTarget platform)

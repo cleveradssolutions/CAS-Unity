@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -27,19 +27,19 @@ namespace CAS.UEditor
             get { return advanced; }
         }
 
-        public static DependencyManager Create( BuildTarget platform, Audience audience, bool deepInit )
+        public static DependencyManager Create(BuildTarget platform, Audience audience, bool deepInit)
         {
-            string listPath = Utils.GetTemplatePath( "CAS" + platform.ToString() + "Mediation.list" );
+            string listPath = Utils.GetTemplatePath("CAS" + platform.ToString() + "Mediation.list");
             if (listPath == null)
                 return null;
 
-            var mediation = JsonUtility.FromJson<DependencyManager>( File.ReadAllText( listPath ) );
-            mediation.Init( platform, deepInit );
-            mediation.SetAudience( audience );
+            var mediation = JsonUtility.FromJson<DependencyManager>(File.ReadAllText(listPath));
+            mediation.Init(platform, deepInit);
+            mediation.SetAudience(audience);
             return mediation;
         }
 
-        public static DependencyManager Create( Dependency[] simple, Dependency[] advanced )
+        public static DependencyManager Create(Dependency[] simple, Dependency[] advanced)
         {
             return new DependencyManager()
             {
@@ -52,11 +52,11 @@ namespace CAS.UEditor
         [UnityEngine.Scripting.Preserve]
         public static string GetActiveMediationPattern()
         {
-            var target = Create( EditorUserBuildSettings.activeBuildTarget, Audience.Mixed, true );
-            return GetActiveMediationPattern( target );
+            var target = Create(EditorUserBuildSettings.activeBuildTarget, Audience.Mixed, true);
+            return GetActiveMediationPattern(target);
         }
 
-        public static string GetActiveMediationPattern( DependencyManager manager, int size = 25 )
+        public static string GetActiveMediationPattern(DependencyManager manager, int size = 25)
         {
             if (manager == null)
                 return "";
@@ -64,21 +64,29 @@ namespace CAS.UEditor
             var result = new char[size];
             for (int i = 0; i < size; i++)
             {
-                var dependency = manager.Find( ( AdNetwork )i );
-                result[i] = ( dependency != null && dependency.IsInstalled() ) ? '1' : '0';
+                var dependency = manager.Find((AdNetwork)i);
+                result[i] = (dependency != null && dependency.IsInstalled()) ? '1' : '0';
             }
-            return new string( result );
+            return new string(result);
         }
 
-        public Dependency Find( AdNetwork network )
+        public Dependency Find(AdNetwork network)
         {
             if (network == Dependency.noNetwork)
                 return null;
-            return Find( network.GetName() );
+            return Find(network.GetName());
         }
 
-        public Dependency Find( string name )
+        public Dependency Find(string name)
         {
+            if (name == Dependency.adBaseName)
+            {
+                var dep = new Dependency(name);
+                dep.version = Dependency.FindInstalledVersion(name, platform);
+                dep.installedVersion = dep.version;
+                return dep;
+            }
+
             for (int i = 0; i < simple.Length; i++)
             {
                 if (simple[i].name == name)
@@ -94,15 +102,15 @@ namespace CAS.UEditor
 
         public Dependency FindCrossPromotion()
         {
-            return Find( AdNetwork.CrossPromotion.GetName() );
+            return Find(AdNetwork.CrossPromotion.GetName());
         }
     }
 
     [Serializable]
     public partial class Dependency
     {
-        public const AdNetwork adBase = ( AdNetwork )64;
-        public const AdNetwork noNetwork = ( AdNetwork )65;
+        public const AdNetwork adBase = (AdNetwork)64;
+        public const AdNetwork noNetwork = (AdNetwork)65;
         public const string adBaseName = "Base";
         public const string adOptimalName = "OptimalAds";
         public const string adFamiliesName = "FamiliesAds";
@@ -119,6 +127,14 @@ namespace CAS.UEditor
             Obsolete = 32
         }
 
+        public enum Filter
+        {
+            None = -1,
+            Adult = 0,
+            Any = 1,
+            Children = 2,
+        }
+
         [Serializable]
         public class SDK
         {
@@ -126,7 +142,7 @@ namespace CAS.UEditor
             public string version;
             public bool forAll;
 
-            public SDK( string name, string version, bool addToAllTargets = false )
+            public SDK(string name, string version, bool addToAllTargets = false)
             {
                 this.name = name;
                 this.version = version;
@@ -136,14 +152,14 @@ namespace CAS.UEditor
 
         public string name;
         public string altName = string.Empty;
-        public string version;
+        public string version = string.Empty;
         public AdNetwork require = noNetwork;
         public string url;
-        public int filter;
+        public Filter filter;
         public string[] dependencies = new string[0];
         public List<SDK> depsSDK = new List<SDK>();
         public AdNetwork[] contains = new AdNetwork[0];
-        public string[] source;
+        public string[] source = new string[0];
         public string comment;
         public Label labels = Label.Banner | Label.Inter | Label.Reward;
         public string embedFramework;
@@ -165,34 +181,14 @@ namespace CAS.UEditor
 
         public Dependency() { }
 
-        public Dependency( AdNetwork network )
-        {
-            this.name = network.GetName();
-        }
-
-        public Dependency( AdNetwork network, string url, string version, int filter, AdNetwork? require, params string[] dependencies )
-        {
-            this.name = network.GetName();
-            this.dependencies = dependencies;
-            this.version = version;
-            this.url = url;
-            this.filter = filter;
-            this.require = require ?? noNetwork;
-        }
-
-        public Dependency( string name, string url, string version, int filter, AdNetwork? require, params string[] dependencies )
+        public Dependency(string name)
         {
             this.name = name;
-            this.dependencies = dependencies;
-            this.version = version;
-            this.url = url;
-            this.filter = filter;
-            this.require = require ?? noNetwork;
         }
 
         public bool IsInstalled()
         {
-            return locked || !string.IsNullOrEmpty( installedVersion );
+            return locked || !string.IsNullOrEmpty(installedVersion);
         }
     }
 }

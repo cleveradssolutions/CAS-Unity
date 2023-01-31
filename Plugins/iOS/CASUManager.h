@@ -2,7 +2,7 @@
 //  CASUManager.h
 //  CASUnityPlugin
 //
-//  Copyright © 2022 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2023 Clever Ads Solutions. All rights reserved.
 //
 
 #import <CoreGraphics/CoreGraphics.h>
@@ -16,7 +16,6 @@
 - (nonnull instancetype)initWithManager:(CASMediationManager *_Nonnull)manager
                               forClient:(CASManagerClientRef _Nullable *_Nullable)client;
 
-@property (nonatomic, assign) CASManagerClientRef _Nullable *_Nullable client;
 @property (nonatomic, strong, nonnull) CASMediationManager *casManager;
 @property (nonatomic, strong, nullable) CASUCallback *interCallback;
 @property (nonatomic, strong, nullable) CASUCallback *rewardCallback;

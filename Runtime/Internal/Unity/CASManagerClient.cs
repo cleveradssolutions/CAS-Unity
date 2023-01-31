@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_EDITOR
@@ -80,6 +80,11 @@ namespace CAS.Unity
             add { _interstitial.OnAdOpening += value; }
             remove { _interstitial.OnAdOpening -= value; }
         }
+        public event CASEventWithMeta OnInterstitialAdImpression
+        {
+            add { _interstitial.OnAdImpression += value; }
+            remove { _interstitial.OnAdImpression -= value; }
+        }
         public event CASEventWithError OnInterstitialAdFailedToShow
         {
             add { _interstitial.OnAdFailedToShow += value; }
@@ -118,6 +123,11 @@ namespace CAS.Unity
             add { _rewarded.OnAdOpening += value; }
             remove { _rewarded.OnAdOpening -= value; }
         }
+        public event CASEventWithMeta OnRewardedAdImpression
+        {
+            add { _rewarded.OnAdImpression += value; }
+            remove { _rewarded.OnAdImpression -= value; }
+        }
         public event CASEventWithError OnRewardedAdFailedToShow
         {
             add { _rewarded.OnAdFailedToShow += value; }
@@ -143,6 +153,7 @@ namespace CAS.Unity
         #region Return to app not supported for Editor
         public event Action OnAppReturnAdShown;
         public event CASEventWithMeta OnAppReturnAdOpening;
+        public event CASEventWithMeta OnAppReturnAdImpression;
         public event CASEventWithError OnAppReturnAdFailedToShow;
         public event Action OnAppReturnAdClicked;
         public event Action OnAppReturnAdClosed;
@@ -169,7 +180,7 @@ namespace CAS.Unity
             enabledTypes = new bool[(int)AdType.None];
             for (int i = 0; i < enabledTypes.Length; i++)
                 enabledTypes[i] = ((int)initSettings.defaultAllowedFormats & (1 << i)) != 0;
-            
+
             _initCompleteAction = initSettings.initListener;
             _interstitial = new CASFullscreenView(this, AdType.Interstitial);
             _rewarded = new CASFullscreenView(this, AdType.Rewarded);

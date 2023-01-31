@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using UnityEngine;
@@ -20,33 +20,35 @@ namespace CAS.AdObject
         protected SerializedProperty onAdFailedToLoadProp;
         protected SerializedProperty onAdShownProp;
         protected SerializedProperty onAdClickedProp;
+        protected SerializedProperty onAdImpressionProp;
 
         protected void OnEnable()
         {
             var obj = serializedObject;
-            managerIdProp = obj.FindProperty( "managerId" );
+            managerIdProp = obj.FindProperty("managerId");
 
-            onAdLoadedProp = obj.FindProperty( "OnAdLoaded" );
-            onAdFailedToLoadProp = obj.FindProperty( "OnAdFailedToLoad" );
-            onAdShownProp = obj.FindProperty( "OnAdShown" );
-            onAdClickedProp = obj.FindProperty( "OnAdClicked" );
+            onAdLoadedProp = obj.FindProperty("OnAdLoaded");
+            onAdFailedToLoadProp = obj.FindProperty("OnAdFailedToLoad");
+            onAdShownProp = obj.FindProperty("OnAdShown");
+            onAdClickedProp = obj.FindProperty("OnAdClicked");
+            onAdImpressionProp = obj.FindProperty("OnAdImpression");
         }
 
         public override void OnInspectorGUI()
         {
             var obj = serializedObject;
             obj.UpdateIfRequiredOrScript();
-            EditorGUILayout.PropertyField( managerIdProp );
+            EditorGUILayout.PropertyField(managerIdProp);
             OnAdditionalPropertiesGUI();
 
-            loadEventsFoldout = GUILayout.Toggle( loadEventsFoldout, "Load Ad callbacks", EditorStyles.foldout );
+            loadEventsFoldout = GUILayout.Toggle(loadEventsFoldout, "Load Ad callbacks", EditorStyles.foldout);
             if (loadEventsFoldout)
             {
-                EditorGUILayout.PropertyField( onAdLoadedProp );
-                EditorGUILayout.PropertyField( onAdFailedToLoadProp );
+                EditorGUILayout.PropertyField(onAdLoadedProp);
+                EditorGUILayout.PropertyField(onAdFailedToLoadProp);
             }
 
-            contentEventsFoldout = GUILayout.Toggle( contentEventsFoldout, "Content callbacks", EditorStyles.foldout );
+            contentEventsFoldout = GUILayout.Toggle(contentEventsFoldout, "Content callbacks", EditorStyles.foldout);
             if (contentEventsFoldout)
                 OnCallbacksGUI();
 
@@ -61,12 +63,13 @@ namespace CAS.AdObject
 
         protected virtual void OnCallbacksGUI()
         {
-            EditorGUILayout.PropertyField( onAdShownProp );
-            EditorGUILayout.PropertyField( onAdClickedProp );
+            EditorGUILayout.PropertyField(onAdShownProp);
+            EditorGUILayout.PropertyField(onAdClickedProp);
+            EditorGUILayout.PropertyField(onAdImpressionProp);
         }
     }
 
-    [CustomEditor( typeof( BannerAdObject ) )]
+    [CustomEditor(typeof(BannerAdObject))]
     internal class BannerAdObjectInspector : BaseAdObjectInspector
     {
         private SerializedProperty adPositionProp;
@@ -87,11 +90,11 @@ namespace CAS.AdObject
         {
             base.OnEnable();
             var obj = serializedObject;
-            adPositionProp = obj.FindProperty( "adPosition" );
-            adOffsetProp = obj.FindProperty( "adOffset" );
-            adSizeProp = obj.FindProperty( "adSize" );
+            adPositionProp = obj.FindProperty("adPosition");
+            adOffsetProp = obj.FindProperty("adOffset");
+            adSizeProp = obj.FindProperty("adSize");
 
-            onAdHiddenProp = obj.FindProperty( "OnAdHidden" );
+            onAdHiddenProp = obj.FindProperty("OnAdHidden");
             adView = target as BannerAdObject;
         }
 
@@ -99,28 +102,28 @@ namespace CAS.AdObject
         {
             var isPlaying = Application.isPlaying;
             EditorGUI.BeginChangeCheck();
-            adPositionProp.intValue = EditorGUILayout.Popup( "Ad Position", adPositionProp.intValue, allowedPositions );
+            adPositionProp.intValue = EditorGUILayout.Popup("Ad Position", adPositionProp.intValue, allowedPositions);
             if (EditorGUI.EndChangeCheck())
             {
                 adOffsetProp.vector2IntValue = Vector2Int.zero;
                 if (isPlaying)
-                    adView.SetAdPositionEnumIndex( adPositionProp.intValue );
+                    adView.SetAdPositionEnumIndex(adPositionProp.intValue);
             }
 
             EditorGUI.indentLevel++;
-            EditorGUI.BeginDisabledGroup( adPositionProp.intValue != ( int )AdPosition.TopLeft );
+            EditorGUI.BeginDisabledGroup(adPositionProp.intValue != (int)AdPosition.TopLeft);
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField( adOffsetProp );
-            GUILayout.Label( "DP", GUILayout.ExpandWidth( false ) );
+            EditorGUILayout.PropertyField(adOffsetProp);
+            GUILayout.Label("DP", GUILayout.ExpandWidth(false));
             EditorGUILayout.EndHorizontal();
             if (EditorGUI.EndChangeCheck() && isPlaying)
             {
                 var newPos = adOffsetProp.vector2IntValue;
-                adView.SetAdPosition( newPos.x, newPos.y );
+                adView.SetAdPosition(newPos.x, newPos.y);
             }
             EditorGUI.EndDisabledGroup();
-            EditorGUILayout.LabelField( "Screen positioning coordinates are only available for the TopLeft position.", EditorStyles.wordWrappedMiniLabel );
+            EditorGUILayout.LabelField("Screen positioning coordinates are only available for the TopLeft position.", EditorStyles.wordWrappedMiniLabel);
             // Calling the calculation in the Editor results in incorrect data
             // because getting the screen size returns the size of the inspector.
             //if (isPlaying)
@@ -132,25 +135,25 @@ namespace CAS.AdObject
             EditorGUI.indentLevel--;
 
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField( adSizeProp );
+            EditorGUILayout.PropertyField(adSizeProp);
             if (EditorGUI.EndChangeCheck() && Application.isPlaying)
-                adView.SetAdSizeEnumIndex( adSizeProp.intValue );
+                adView.SetAdSizeEnumIndex(adSizeProp.intValue);
         }
 
         protected override void OnCallbacksGUI()
         {
             base.OnCallbacksGUI();
-            EditorGUILayout.PropertyField( onAdHiddenProp );
+            EditorGUILayout.PropertyField(onAdHiddenProp);
         }
 
         protected override void OnFooterGUI()
         {
-            EditorGUILayout.LabelField( "Use `gameObject.SetActive(visible)` method to show/hide banner ad.",
-                EditorStyles.wordWrappedMiniLabel );
+            EditorGUILayout.LabelField("Use `gameObject.SetActive(visible)` method to show/hide banner ad.",
+                EditorStyles.wordWrappedMiniLabel);
         }
     }
 
-    [CustomEditor( typeof( InterstitialAdObject ) )]
+    [CustomEditor(typeof(InterstitialAdObject))]
     [CanEditMultipleObjects]
     internal class InterstitialAdObjectInspector : BaseAdObjectInspector
     {
@@ -161,25 +164,25 @@ namespace CAS.AdObject
         {
             base.OnEnable();
             var obj = serializedObject;
-            onAdFailedToShowProp = obj.FindProperty( "OnAdFailedToShow" );
-            onAdClosedProp = obj.FindProperty( "OnAdClosed" );
+            onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
+            onAdClosedProp = obj.FindProperty("OnAdClosed");
         }
 
         protected override void OnCallbacksGUI()
         {
-            EditorGUILayout.PropertyField( onAdFailedToShowProp );
+            EditorGUILayout.PropertyField(onAdFailedToShowProp);
             base.OnCallbacksGUI();
-            EditorGUILayout.PropertyField( onAdClosedProp );
+            EditorGUILayout.PropertyField(onAdClosedProp);
         }
 
         protected override void OnFooterGUI()
         {
-            EditorGUILayout.LabelField( "Call `Present()` method to show Interstitial Ad.",
-                EditorStyles.wordWrappedMiniLabel );
+            EditorGUILayout.LabelField("Call `Present()` method to show Interstitial Ad.",
+                EditorStyles.wordWrappedMiniLabel);
         }
     }
 
-    [CustomEditor( typeof( RewardedAdObject ) )]
+    [CustomEditor(typeof(RewardedAdObject))]
     [CanEditMultipleObjects]
     internal class RewardedAdObjectInspector : BaseAdObjectInspector
     {
@@ -193,10 +196,10 @@ namespace CAS.AdObject
         {
             base.OnEnable();
             var obj = serializedObject;
-            restartInterstitialIntervalProp = obj.FindProperty( "restartInterstitialInterval" );
-            onAdFailedToShowProp = obj.FindProperty( "OnAdFailedToShow" );
-            onAdClosedProp = obj.FindProperty( "OnAdClosed" );
-            onRewardProp = obj.FindProperty( "OnReward" );
+            restartInterstitialIntervalProp = obj.FindProperty("restartInterstitialInterval");
+            onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
+            onAdClosedProp = obj.FindProperty("OnAdClosed");
+            onRewardProp = obj.FindProperty("OnReward");
         }
 
         protected override void OnAdditionalPropertiesGUI()
@@ -205,24 +208,24 @@ namespace CAS.AdObject
                 "Restart Interstitial Ad interval on rewarded ad closed",
                 restartInterstitialIntervalProp.boolValue
             );
-            EditorGUILayout.PropertyField( onRewardProp );
+            EditorGUILayout.PropertyField(onRewardProp);
         }
 
         protected override void OnCallbacksGUI()
         {
-            EditorGUILayout.PropertyField( onAdFailedToShowProp );
+            EditorGUILayout.PropertyField(onAdFailedToShowProp);
             base.OnCallbacksGUI();
-            EditorGUILayout.PropertyField( onAdClosedProp );
+            EditorGUILayout.PropertyField(onAdClosedProp);
         }
 
         protected override void OnFooterGUI()
         {
-            EditorGUILayout.LabelField( "Call `Present()` method to show Rewarded Ad.",
-                EditorStyles.wordWrappedMiniLabel );
+            EditorGUILayout.LabelField("Call `Present()` method to show Rewarded Ad.",
+                EditorStyles.wordWrappedMiniLabel);
         }
     }
 
-    [CustomEditor( typeof( ReturnToPlayAdObject ) )]
+    [CustomEditor(typeof(ReturnToPlayAdObject))]
     internal class ReturnToPlayAdObjectInspector : BaseAdObjectInspector
     {
         private SerializedProperty allowAdProp;
@@ -233,9 +236,9 @@ namespace CAS.AdObject
         {
             base.OnEnable();
             var obj = serializedObject;
-            allowAdProp = obj.FindProperty( "_allowReturnToPlayAd" );
-            onAdFailedToShowProp = obj.FindProperty( "OnAdFailedToShow" );
-            onAdClosedProp = obj.FindProperty( "OnAdClosed" );
+            allowAdProp = obj.FindProperty("_allowReturnToPlayAd");
+            onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
+            onAdClosedProp = obj.FindProperty("OnAdClosed");
         }
 
         protected override void OnAdditionalPropertiesGUI()
@@ -247,15 +250,15 @@ namespace CAS.AdObject
             );
             if (EditorGUI.EndChangeCheck() && Application.isPlaying)
             {
-                ( ( ReturnToPlayAdObject )target ).allowReturnToPlayAd = allowAdProp.boolValue;
+                ((ReturnToPlayAdObject)target).allowReturnToPlayAd = allowAdProp.boolValue;
             }
         }
 
         protected override void OnCallbacksGUI()
         {
-            EditorGUILayout.PropertyField( onAdFailedToShowProp );
+            EditorGUILayout.PropertyField(onAdFailedToShowProp);
             base.OnCallbacksGUI();
-            EditorGUILayout.PropertyField( onAdClosedProp );
+            EditorGUILayout.PropertyField(onAdClosedProp);
         }
     }
 }

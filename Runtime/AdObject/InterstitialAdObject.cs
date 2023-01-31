@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -10,9 +10,9 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
-    [AddComponentMenu( "CleverAdsSolutions/Interstitial Ad Object" )]
+    [AddComponentMenu("CleverAdsSolutions/Interstitial Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Interstitial-Ad-object" )]
+    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Interstitial-Ad-object")]
     public sealed class InterstitialAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
@@ -24,27 +24,54 @@ namespace CAS.AdObject
         public UnityEvent OnAdClicked;
         public UnityEvent OnAdClosed;
 
-        private IMediationManager manager;
+        public CASUEventWithMeta OnAdImpression;
 
+        private IMediationManager manager;
+        private bool loadAdOnAwake = false;
+
+        /// <summary>
+        /// Check ready ad to present.
+        /// </summary>
+        public bool isAdReady
+        {
+            get { return manager != null && manager.IsReadyAd(AdType.Interstitial); }
+        }
+
+        /// <summary>
+        /// Manual load Interstitial Ad.
+        /// <para>Please call load before each show ad when active load mode is <see cref="LoadingManagerMode.Manual"/>.</para>
+        /// <para>You can get a callback for the successful loading of an ad by subscribe <see cref="OnAdLoaded"/>.</para>
+        /// </summary>
+        public void LoadAd()
+        {
+            if (manager == null)
+                loadAdOnAwake = true;
+            else
+                manager.LoadAd(AdType.Interstitial);
+        }
+
+        /// <summary>
+        /// Presetn ad to user
+        /// </summary>
         public void Present()
         {
             if (manager == null)
             {
-                OnAdFailedToShow.Invoke( "Manager not initialized yet" );
+                OnAdFailedToShow.Invoke(AdError.ManagerIsDisabled.GetMessage());
                 return;
             }
-            manager.ShowAd( AdType.Interstitial );
+            manager.ShowAd(AdType.Interstitial);
         }
 
         #region MonoBehaviour
         private void Start()
         {
             MobileAds.settings.isExecuteEventsOnUnityThread = true;
-            if (!CASFactory.TryGetManagerByIndexAsync( OnManagerReady, managerId.index ))
-                OnAdFailedToLoad.Invoke( "Manager not initialized yet" );
+            if (!CASFactory.TryGetManagerByIndexAsync(OnManagerReady, managerId.index))
+                OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
 
-        private void OnManagerReady( IMediationManager manager )
+        private void OnManagerReady(IMediationManager manager)
         {
             if (!this) // When object are destroyed
                 return;
@@ -52,19 +79,26 @@ namespace CAS.AdObject
             this.manager = manager;
             manager.OnInterstitialAdLoaded += OnAdLoaded.Invoke;
             manager.OnInterstitialAdFailedToLoad += OnInterstitialAdFailedToLoad;
-            manager.OnInterstitialAdFailedToShow += OnAdFailedToShow.Invoke;
-            manager.OnInterstitialAdShown += OnAdShown.Invoke;
+            manager.OnInterstitialAdFailedToShow += OnInterstitialAdFailedToShow;
             manager.OnInterstitialAdClicked += OnAdClicked.Invoke;
             manager.OnInterstitialAdClosed += OnAdClosed.Invoke;
+            manager.OnInterstitialAdImpression += OnAdImpression.Invoke;
 
             try
             {
-                if (manager.IsReadyAd( AdType.Interstitial ))
+                if (manager.IsReadyAd(AdType.Interstitial))
+                {
                     OnAdLoaded.Invoke();
+                }
+                else if (loadAdOnAwake)
+                {
+                    loadAdOnAwake = false;
+                    manager.LoadAd(AdType.Interstitial);
+                }
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
         }
 
@@ -74,19 +108,24 @@ namespace CAS.AdObject
             {
                 manager.OnInterstitialAdLoaded -= OnAdLoaded.Invoke;
                 manager.OnInterstitialAdFailedToLoad -= OnInterstitialAdFailedToLoad;
-                manager.OnInterstitialAdFailedToShow -= OnAdFailedToShow.Invoke;
-                manager.OnInterstitialAdShown -= OnAdShown.Invoke;
+                manager.OnInterstitialAdFailedToShow -= OnInterstitialAdFailedToShow;
                 manager.OnInterstitialAdClicked -= OnAdClicked.Invoke;
                 manager.OnInterstitialAdClosed -= OnAdClosed.Invoke;
+                manager.OnInterstitialAdImpression -= OnAdImpression.Invoke;
             }
-            CASFactory.UnsubscribeReadyManagerAsync( OnManagerReady, managerId.index );
+            CASFactory.UnsubscribeReadyManagerAsync(OnManagerReady, managerId.index);
         }
         #endregion
 
         #region Manager Events wrappers
-        private void OnInterstitialAdFailedToLoad( AdError error )
+        private void OnInterstitialAdFailedToLoad(AdError error)
         {
-            OnAdFailedToLoad.Invoke( error.GetMessage() );
+            OnAdFailedToLoad.Invoke(error.GetMessage());
+        }
+        private void OnInterstitialAdFailedToShow(string error)
+        {
+            OnAdFailedToShow.Invoke(error);
+            OnAdClosed.Invoke();
         }
         #endregion
     }

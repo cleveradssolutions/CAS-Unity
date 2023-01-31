@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
@@ -61,6 +61,11 @@ namespace CAS.Android
             add { _interstitialProxy.OnAdOpening += value; }
             remove { _interstitialProxy.OnAdOpening -= value; }
         }
+        public event CASEventWithMeta OnInterstitialAdImpression
+        {
+            add { _interstitialProxy.OnAdImpression += value; }
+            remove { _interstitialProxy.OnAdImpression -= value; }
+        }
         public event CASEventWithError OnInterstitialAdFailedToShow
         {
             add { _interstitialProxy.OnAdFailedToShow += value; }
@@ -98,6 +103,11 @@ namespace CAS.Android
             add { _rewardedProxy.OnAdOpening += value; }
             remove { _rewardedProxy.OnAdOpening -= value; }
         }
+        public event CASEventWithMeta OnRewardedAdImpression
+        {
+            add { _rewardedProxy.OnAdImpression += value; }
+            remove { _rewardedProxy.OnAdImpression -= value; }
+        }
         public event CASEventWithError OnRewardedAdFailedToShow
         {
             add { _rewardedProxy.OnAdFailedToShow += value; }
@@ -128,6 +138,11 @@ namespace CAS.Android
         {
             add { _returnAdProxy.OnAdOpening += value; }
             remove { _returnAdProxy.OnAdOpening -= value; }
+        }
+        public event CASEventWithMeta OnAppReturnAdImpression
+        {
+            add { _returnAdProxy.OnAdImpression += value; }
+            remove { _returnAdProxy.OnAdImpression -= value; }
         }
         public event CASEventWithError OnAppReturnAdFailedToShow
         {

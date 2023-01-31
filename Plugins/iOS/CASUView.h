@@ -2,7 +2,7 @@
 //  CASUView.h
 //  CASUnityPlugin
 //
-//  Copyright © 2022 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2023 Clever Ads Solutions. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

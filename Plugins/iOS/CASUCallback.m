@@ -2,7 +2,7 @@
 //  CASUCallback.m
 //  CASUnityPlugin
 //
-//  Copyright © 2022 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2023 Clever Ads Solutions. All rights reserved.
 //
 
 #import "CASUCallback.h"
@@ -34,12 +34,22 @@
     }
 }
 
+- (void)didPayRevenueFor:(id<CASStatusHandler>)ad {
+    if (self.client) {
+        if (self.didImpressionCallback) {
+            _lastImpression = (NSObject<CASStatusHandler> *)ad;
+            self.didImpressionCallback(self.client, (__bridge CASImpressionRef)_lastImpression);
+        }
+    }
+}
+
 - (void)didShowAdFailedWithError:(NSString *)error {
     [CASUPluginUtil onAdsDidClosed];
 
-    if (self.didShowFailedCallback) {
-        if (self.client) {
-            self.didShowFailedCallback(self.client, [error cStringUsingEncoding:NSUTF8StringEncoding]);
+    if (self.client) {
+        if (self.didShowFailedCallback) {
+            
+            self.didShowFailedCallback(self.client, (int)[CAS getErrorFor:error]);
         }
     }
 }
@@ -49,16 +59,16 @@
         return;
     }
 
-    if (self.didCompleteCallback) {
-        if (self.client) {
+    if (self.client) {
+        if (self.didCompleteCallback) {
             self.didCompleteCallback(self.client);
         }
     }
 }
 
 - (void)didClickedAd {
-    if (self.didClickCallback) {
-        if (self.client) {
+    if (self.client) {
+        if (self.didClickCallback) {
             self.didClickCallback(self.client);
         }
     }
@@ -75,8 +85,8 @@
 
     [CASUPluginUtil onAdsDidClosed];
 
-    if (self.didClosedCallback) {
-        if (self.client) {
+    if (self.client) {
+        if (self.didClosedCallback) {
             self.didClosedCallback(self.client);
         }
     }
@@ -87,37 +97,23 @@
 }
 
 - (void)callInUITheradLoadedCallback {
-    if (self.didLoadedCallback) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.didLoadedCallback(self.client);
-        });
+    if (self.client) {
+        if (self.didLoadedCallback) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.didLoadedCallback(self.client);
+            });
+        }
     }
 }
 
 - (void)callInUITheradFailedToLoadCallbackWithError:(NSString *)error {
-    if (self.didFailedCallback) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.didFailedCallback(self.client, [self getErrorCodeFromString:error]);
-        });
+    if (self.client) {
+        if (self.didFailedCallback) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.didFailedCallback(self.client, (int)[CAS getErrorFor:error]);
+            });
+        }
     }
-}
-
-- (NSInteger)getErrorCodeFromString:(NSString *)error {
-    if (!error) {
-        return CASErrorInternalError;
-    }
-
-    return [error isEqualToString:@"No internet connection detected"] ? CASErrorNoConnection
-    : [error isEqualToString:@"No Fill"] ? CASErrorNoFill
-    : [error isEqualToString:@"Invalid configuration"] ? CASErrorConfigurationError
-    : [error isEqualToString:@"Ad are not ready. You need to call Load ads or use one of the automatic cache mode."] ? CASErrorNotReady
-    : [error isEqualToString:@"Manager is disabled"] ? CASErrorManagerIsDisabled
-    : [error isEqualToString:@"Reached cap for user"] ? CASErrorReachedCap
-    : [error isEqualToString:@"The interval between impressions Ad has not yet passed."] ? CASErrorIntervalNotYetPassed
-    : [error isEqualToString:@"Ad already displayed"] ? CASErrorAlreadyDisplayed
-    : [error isEqualToString:@"Application is paused"] ? CASErrorAppIsPaused
-    : [error isEqualToString:@"Not enough space to display ads"] ? CASErrorNotEnoughSpace
-    : CASErrorInternalError;
 }
 
 @end

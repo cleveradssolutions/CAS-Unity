@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -14,7 +14,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "3.0.0-rc1";
+        public const string wrapperVersion = "3.0.0";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.

@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -10,9 +10,9 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
-    [AddComponentMenu( "CleverAdsSolutions/Banner Ad Object" )]
+    [AddComponentMenu("CleverAdsSolutions/Banner Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ad-object" )]
+    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ad-object")]
     public sealed class BannerAdObject : MonoBehaviour
     {
         /// <summary>
@@ -24,8 +24,8 @@ namespace CAS.AdObject
 
         [SerializeField]
         private AdPosition adPosition = AdPosition.BottomCenter;
-        [Tooltip( "For greater control over where a AdView is placed on screen, make sure to select AdPosition.TopLeft.\n" +
-            "Use Density-independent Pixels (DP)." )]
+        [Tooltip("For greater control over where a AdView is placed on screen, make sure to select AdPosition.TopLeft.\n" +
+            "Use Density-independent Pixels (DP).")]
         [SerializeField]
         private Vector2Int adOffset = Vector2Int.zero;
         [SerializeField]
@@ -37,14 +37,17 @@ namespace CAS.AdObject
         public UnityEvent OnAdClicked;
         public UnityEvent OnAdHidden;
 
+        public CASUEventWithMeta OnAdImpression;
+
         private IMediationManager manager;
         private IAdView adView;
-        private bool waitOfLoad = false;
+        private bool loadAdOnAwake = false;
 
         /// <summary>
-        /// <see cref="IAdView.position"/>
+        /// The position where the AdView ad should be placed.
+        /// The <see cref="AdPosition"/> enum lists the valid ad position values.
         /// </summary>
-        public void SetAdPosition( AdPosition position )
+        public void SetAdPosition(AdPosition position)
         {
             adOffset = Vector2Int.zero;
             adPosition = position;
@@ -53,19 +56,24 @@ namespace CAS.AdObject
         }
 
         /// <summary>
-        /// <see cref="IAdView.SetPosition(int, int)"/>
+        /// For greater control over where a AdView is placed on screen than what's offered by <see cref="AdPosition"/> values.
+        /// <para>The top-left corner of the AdView will be positioned
+        /// at the <paramref name="x"/> and <paramref name="y"/> values passed to the method,
+        /// where the origin is the top-left of the screen.</para>
+        /// <para>The coordinates on the screen are determined not in pixels, but in Density-independent Pixels(DP)!</para>
+        /// <para>Screen positioning coordinates are only available for the <see cref="AdPosition.TopLeft"/>.</para>
         /// </summary>
         /// <param name="x">X-coordinate on screen in DP.</param>
         /// <param name="y">Y-coordinate on screen in DP.</param>
-        public void SetAdPosition( int x, int y )
+        public void SetAdPosition(int x, int y)
         {
-            adOffset = new Vector2Int( x, y );
+            adOffset = new Vector2Int(x, y);
             adPosition = AdPosition.TopLeft;
             if (adView != null)
-                adView.SetPosition( x, y );
+                adView.SetPosition(x, y);
         }
 
-        public void SetAdSize( AdSize size )
+        public void SetAdSize(AdSize size)
         {
             adSize = size;
             RefreshLinktWithAdView();
@@ -78,13 +86,15 @@ namespace CAS.AdObject
         public void LoadAd()
         {
             if (adView == null)
-                waitOfLoad = true;
+                loadAdOnAwake = true;
             else
                 adView.Load();
         }
 
         /// <summary>
-        /// <see cref="IAdView.rectInPixels"/>
+        /// Get the real AdView rect with position and size in pixels on screen.
+        /// <para>Return <see cref="Rect.zero"/> when ad view is not active.</para>
+        /// <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>
         /// </summary>
         public Rect rectInPixels
         {
@@ -96,14 +106,14 @@ namespace CAS.AdObject
             }
         }
 
-        public void SetAdPositionEnumIndex( int enumIndex )
+        public void SetAdPositionEnumIndex(int enumIndex)
         {
-            SetAdPosition( (AdPosition)enumIndex );
+            SetAdPosition((AdPosition)enumIndex);
         }
 
-        public void SetAdSizeEnumIndex( int enumIndex )
+        public void SetAdSizeEnumIndex(int enumIndex)
         {
-            SetAdSize( (AdSize)enumIndex );
+            SetAdSize((AdSize)enumIndex);
         }
 
         #region MonoBehaviour
@@ -115,8 +125,8 @@ namespace CAS.AdObject
         private void Start()
         {
             MobileAds.settings.isExecuteEventsOnUnityThread = true;
-            if (!CASFactory.TryGetManagerByIndexAsync( OnManagerReady, managerId.index ))
-                OnAdFailedToLoad.Invoke( "Manager not initialized yet" );
+            if (!CASFactory.TryGetManagerByIndexAsync(OnManagerReady, managerId.index))
+                OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
 
         private void OnEnable()
@@ -124,10 +134,10 @@ namespace CAS.AdObject
             if (adView != null)
             {
                 if (adPosition == AdPosition.TopLeft)
-                    adView.SetPosition( adOffset.x, adOffset.y );
+                    adView.SetPosition(adOffset.x, adOffset.y);
                 else
                     adView.position = adPosition;
-                adView.SetActive( true );
+                adView.SetActive(true);
                 if (adView.isReady)
                     OnAdShown.Invoke();
             }
@@ -137,7 +147,7 @@ namespace CAS.AdObject
         {
             if (adView != null)
             {
-                adView.SetActive( false );
+                adView.SetActive(false);
                 OnAdHidden.Invoke();
             }
         }
@@ -147,13 +157,13 @@ namespace CAS.AdObject
             if (Instance == this)
                 Instance = null;
             DetachAdView();
-            CASFactory.UnsubscribeReadyManagerAsync( OnManagerReady, managerId.index );
+            CASFactory.UnsubscribeReadyManagerAsync(OnManagerReady, managerId.index);
         }
 
         #endregion
 
         #region Manager Events wrappers
-        private void OnManagerReady( IMediationManager manager )
+        private void OnManagerReady(IMediationManager manager)
         {
             if (!this) // When object are destroyed
                 return;
@@ -164,21 +174,22 @@ namespace CAS.AdObject
 
         private void DetachAdView()
         {
-            if (adView != null)
-            {
-                adView.OnLoaded -= OnBannerLoaded;
-                adView.OnFailed -= OnBannerLoadFailed;
-                adView.OnClicked -= OnBannerClicked;
-                adView.SetActive( false );
-                adView = null;
-            }
+            if (adView == null)
+                return;
+
+            adView.OnLoaded -= OnBannerLoaded;
+            adView.OnFailed -= OnBannerLoadFailed;
+            adView.OnClicked -= OnBannerClicked;
+            adView.OnImpression -= OnBannerImpression;
+            adView.SetActive(false);
+            adView = null;
         }
 
         private void RefreshLinktWithAdView()
         {
             if (manager == null)
                 return;
-            var newView = manager.GetAdView( adSize );
+            var newView = manager.GetAdView(adSize);
             if (newView == adView)
                 return;
             DetachAdView();
@@ -186,6 +197,7 @@ namespace CAS.AdObject
             newView.OnLoaded += OnBannerLoaded;
             newView.OnFailed += OnBannerLoadFailed;
             newView.OnClicked += OnBannerClicked;
+            newView.OnImpression += OnBannerImpression;
 
             adView = newView;
 
@@ -196,26 +208,26 @@ namespace CAS.AdObject
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
 
             if (isActiveAndEnabled)
             {
                 if (adPosition == AdPosition.TopLeft)
-                    adView.SetPosition( adOffset.x, adOffset.y );
+                    adView.SetPosition(adOffset.x, adOffset.y);
                 else
                     adView.position = adPosition;
-                adView.SetActive( true );
+                adView.SetActive(true);
             }
 
-            if (waitOfLoad)
+            if (loadAdOnAwake)
             {
-                waitOfLoad = false;
+                loadAdOnAwake = false;
                 adView.Load();
             }
         }
 
-        private void OnBannerLoaded( IAdView ad )
+        private void OnBannerLoaded(IAdView ad)
         {
             if (ad == adView)
             {
@@ -225,16 +237,21 @@ namespace CAS.AdObject
             }
         }
 
-        private void OnBannerLoadFailed( IAdView ad, AdError error )
+        private void OnBannerLoadFailed(IAdView ad, AdError error)
         {
             if (ad != adView)
                 return;
-            OnAdFailedToLoad.Invoke( error.GetMessage() );
+            OnAdFailedToLoad.Invoke(error.GetMessage());
             if (isActiveAndEnabled)
                 OnAdHidden.Invoke();
         }
 
-        private void OnBannerClicked( IAdView view )
+        private void OnBannerImpression(IAdView ad, AdMetaData impression)
+        {
+            OnAdImpression.Invoke(impression);
+        }
+
+        private void OnBannerClicked(IAdView view)
         {
             if (view == adView)
                 OnAdClicked.Invoke();

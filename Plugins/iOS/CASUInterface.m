@@ -2,7 +2,7 @@
 //  CASUSettings.h
 //  CASUnityPlugin
 //
-//  Copyright © 2022 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2023 Clever Ads Solutions. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -246,7 +246,7 @@ CASUManagerRef CASUInitializeManager(CASManagerBuilderRef               builderR
         [builder withCompletionHandler:^(CASInitialConfig *config) {
             onInit(client,
                    config.error ? [config.error cStringUsingEncoding:NSUTF8StringEncoding] : NULL,
-                   config.isShouldBeShownConsentDialog,
+                   NO,
                    config.manager.isDemoAdMode);
         }];
     }
@@ -294,7 +294,8 @@ void CASUSetLastPageAdContent(CASUManagerRef managerRef, const char *contentJson
 void CASUSetInterstitialDelegate(CASUManagerRef                       managerRef,
                                  CASUDidLoadedAdCallback              didLoaded,
                                  CASUDidFailedAdCallback              didFailed,
-                                 CASUWillPresentAdCallback            willOpen,
+                                 CASUWillPresentAdCallback            willPresent,
+                                 CASUWillPresentAdCallback            didImpression,
                                  CASUDidShowAdFailedWithErrorCallback didShowWithError,
                                  CASUDidClickedAdCallback             didClick,
                                  CASUDidClosedAdCallback              didClosed) {
@@ -302,7 +303,8 @@ void CASUSetInterstitialDelegate(CASUManagerRef                       managerRef
 
     manager.interCallback.didLoadedCallback = didLoaded;
     manager.interCallback.didFailedCallback = didFailed;
-    manager.interCallback.willOpeningCallback = willOpen;
+    manager.interCallback.willOpeningCallback = willPresent;
+    manager.interCallback.didImpressionCallback = didImpression;
     manager.interCallback.didShowFailedCallback = didShowWithError;
     manager.interCallback.didClickCallback = didClick;
     manager.interCallback.didClosedCallback = didClosed;
@@ -331,7 +333,8 @@ void CASUPresentInterstitial(CASUManagerRef managerRef) {
 void CASUSetRewardedDelegate(CASUManagerRef                       managerRef,
                              CASUDidLoadedAdCallback              didLoaded,
                              CASUDidFailedAdCallback              didFailed,
-                             CASUWillPresentAdCallback            willOpen,
+                             CASUWillPresentAdCallback            willPresent,
+                             CASUWillPresentAdCallback            didImpression,
                              CASUDidShowAdFailedWithErrorCallback didShowWithError,
                              CASUDidClickedAdCallback             didClick,
                              CASUDidCompletedAdCallback           didComplete,
@@ -340,7 +343,8 @@ void CASUSetRewardedDelegate(CASUManagerRef                       managerRef,
 
     manager.rewardCallback.didLoadedCallback = didLoaded;
     manager.rewardCallback.didFailedCallback = didFailed;
-    manager.rewardCallback.willOpeningCallback = willOpen;
+    manager.rewardCallback.willOpeningCallback = willPresent;
+    manager.rewardCallback.didImpressionCallback = didImpression;
     manager.rewardCallback.didShowFailedCallback = didShowWithError;
     manager.rewardCallback.didClickCallback = didClick;
     manager.rewardCallback.didCompleteCallback = didComplete;
@@ -390,10 +394,10 @@ void CASUDestroyAdView(CASUViewRef viewRef, const char *key) {
 }
 
 void CASUAttachAdViewDelegate(CASUViewRef               viewRef,
-                              CASUDidLoadedAdCallback   didLoad,
-                              CASUDidFailedAdCallback   didFailed,
-                              CASUWillPresentAdCallback willPresent,
-                              CASUDidClickedAdCallback  didClicked,
+                              CASUViewDidLoadCallback   didLoad,
+                              CASUViewDidFailedCallback   didFailed,
+                              CASUViewWillPresentCallback willPresent,
+                              CASUViewDidClickedCallback  didClicked,
                               CASUViewDidRectCallback   didRect) {
     CASUView *view = (__bridge CASUView *)viewRef;
 
@@ -449,17 +453,19 @@ int CASUGetAdViewRefreshInterval(CASUViewRef viewRef) {
 
 #pragma mark - App Return Ads
 
-void CASUSetAppReturnDelegate(CASUManagerRef                       manager,
-                              CASUWillPresentAdCallback            willOpen,
+void CASUSetAppReturnDelegate(CASUManagerRef                       managerRef,
+                              CASUWillPresentAdCallback            willPresent,
+                              CASUWillPresentAdCallback            didImpression,
                               CASUDidShowAdFailedWithErrorCallback didShowWithError,
                               CASUDidClickedAdCallback             didClick,
                               CASUDidClosedAdCallback              didClosed) {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
 
-    internalManager.appReturnDelegate.willOpeningCallback = willOpen;
-    internalManager.appReturnDelegate.didShowFailedCallback = didShowWithError;
-    internalManager.appReturnDelegate.didClickCallback = didClick;
-    internalManager.appReturnDelegate.didClosedCallback = didClosed;
+    manager.appReturnDelegate.willOpeningCallback = willPresent;
+    manager.appReturnDelegate.didImpressionCallback = didImpression;
+    manager.appReturnDelegate.didShowFailedCallback = didShowWithError;
+    manager.appReturnDelegate.didClickCallback = didClick;
+    manager.appReturnDelegate.didClosedCallback = didClosed;
 }
 
 void CASUEnableAppReturnAds(CASUManagerRef manager) {

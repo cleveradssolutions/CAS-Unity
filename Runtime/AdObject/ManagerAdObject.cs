@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -10,9 +10,9 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
-    [AddComponentMenu( "CleverAdsSolutions/Initialize Manager Ad Object" )]
+    [AddComponentMenu("CleverAdsSolutions/Initialize Manager Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Manager-Ad-object" )]
+    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Manager-Ad-object")]
     public class ManagerAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
@@ -24,8 +24,8 @@ namespace CAS.AdObject
         public void Initialize()
         {
             MobileAds.BuildManager()
-               .WithManagerIdAtIndex( managerId.index )
-               .WithInitListener( OnInitializeResult )
+               .WithManagerIdAtIndex(managerId.index)
+               .WithInitListener(OnInitializeResult)
                .Initialize();
         }
 
@@ -35,7 +35,7 @@ namespace CAS.AdObject
                 Initialize();
         }
 
-        private void OnInitializeResult( bool success, string error )
+        private void OnInitializeResult(bool success, string error)
         {
             OnInitialized.Invoke();
         }
@@ -43,6 +43,9 @@ namespace CAS.AdObject
 
     [Serializable]
     public class CASUEventWithError : UnityEvent<string> { }
+
+    [Serializable]
+    public class CASUEventWithMeta : UnityEvent<AdMetaData> { }
 
     [Serializable]
     public struct ManagerIndex

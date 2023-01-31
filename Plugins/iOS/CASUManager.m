@@ -2,7 +2,7 @@
 //  CASUManager.m
 //  CASUnityPlugin
 //
-//  Copyright © 2022 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2023 Clever Ads Solutions. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -15,8 +15,7 @@
     self = [super init];
 
     if (self) {
-        self.casManager = manager;
-        _client = client;
+        _casManager = manager;
         _interCallback = [[CASUCallback alloc] initWithComplete:false];
         _interCallback.client = client;
         _rewardCallback = [[CASUCallback alloc] initWithComplete:true];
@@ -46,18 +45,18 @@
 - (void)onAdLoaded:(enum CASType)adType {
     // Callback called from any thread, so swith to UI thread for Unity.
     if (adType == CASTypeInterstitial) {
-        [self.interCallback callInUITheradLoadedCallback];
+        [_interCallback callInUITheradLoadedCallback];
     } else if (adType == CASTypeRewarded) {
-        [self.rewardCallback callInUITheradLoadedCallback];
+        [_rewardCallback callInUITheradLoadedCallback];
     }
 }
 
 - (void)onAdFailedToLoad:(enum CASType) adType withError:(NSString *)error {
     // Callback called from any thread, so swith to UI thread for Unity.
     if (adType == CASTypeInterstitial) {
-        [self.interCallback callInUITheradFailedToLoadCallbackWithError:error];
+        [_interCallback callInUITheradFailedToLoadCallbackWithError:error];
     } else if (adType == CASTypeRewarded) {
-        [self.rewardCallback callInUITheradFailedToLoadCallbackWithError:error];
+        [_rewardCallback callInUITheradFailedToLoadCallbackWithError:error];
     }
 }
 

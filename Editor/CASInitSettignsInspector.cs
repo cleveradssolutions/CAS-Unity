@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 #pragma warning disable 649
@@ -221,6 +221,7 @@ namespace CAS.UEditor
             serializedObject.Update();
             editorSettingsObj.Update();
 
+            GUILayout.Space(5);
             if (managerIdsList.count > 1)
             {
                 var appId = managerIdsProp.GetArrayElementAtIndex(0).stringValue;
@@ -229,6 +230,8 @@ namespace CAS.UEditor
             }
             managerIdsList.DoLayoutList();
             OnManagerIDVerificationGUI();
+            GUILayout.Space(5);
+
             DrawTestAdMode();
 
             if (DrawAdFlagToggle(AdFlags.Banner))
@@ -268,11 +271,10 @@ namespace CAS.UEditor
             serializedObject.ApplyModifiedProperties();
         }
 
-
         #region Draw list implementation
         private void DrawListHeader(Rect rect)
         {
-            EditorGUI.LabelField(rect, "Manager ID's " + (platform == BuildTarget.iOS ? "(iTunes ID)" : "(Bundle ID)"));
+            EditorGUI.LabelField(rect, "CAS Manager ID's " + (platform == BuildTarget.iOS ? "(iTunes ID)" : "(Bundle ID)"));
         }
 
         private void DrawListElement(Rect rect, int index, bool isActive, bool isFocused)
@@ -323,7 +325,7 @@ namespace CAS.UEditor
             if (platform != BuildTarget.Android)
                 return;
             permissionAdIdRemovedProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Remove permission to use Advertising ID (AD_ID)",
+                    "Prevent use of the Advertiser ID (AD_ID permission)",
                     permissionAdIdRemovedProp.boolValue);
         }
 
@@ -473,9 +475,9 @@ namespace CAS.UEditor
         {
             if (allowedAdFlagsProp.intValue == 0 || allowedAdFlagsProp.intValue == (int)AdFlags.Native)
             {
-                EditorGUI.indentLevel++;
+                EditorGUI.indentLevel += 2;
                 EditorGUILayout.HelpBox("Please include the ad formats that you want to use in your game.", MessageType.Error);
-                EditorGUI.indentLevel--;
+                EditorGUI.indentLevel -= 2;
                 return true;
             }
             return false;
@@ -483,32 +485,42 @@ namespace CAS.UEditor
 
         private void DrawTestAdMode()
         {
-            testAdModeProp.boolValue = EditorGUILayout.ToggleLeft("Test ad mode", testAdModeProp.boolValue);
-            EditorGUI.indentLevel++;
-            if (testAdModeProp.boolValue)
-                EditorGUILayout.HelpBox("Make sure you disable test ad mode and replace test manager ID with your own ad manager ID before publishing your app!", MessageType.Warning);
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            var enabled = testAdModeProp.boolValue;
+            var changed = GUILayout.Toggle(enabled, "", GUILayout.ExpandWidth(false));
+            changed = GUILayout.Toggle(changed, "Test ad mode", EditorStyles.toolbarButton);
+            if (enabled != changed)
+            {
+                enabled = !enabled;
+                testAdModeProp.boolValue = enabled;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUI.indentLevel += 2;
+            if (enabled)
+                EditorGUILayout.HelpBox("Make sure you disable test ad mode and replace demo manager ID with your own CAS ID before publishing your app!", MessageType.Warning);
             else if (EditorUserBuildSettings.development)
                 EditorGUILayout.HelpBox("Development build enabled, only test ads are allowed. " +
-                    "\nMake sure you disable Development build and use real ad manager ID before publishing your app!", MessageType.Warning);
+                    "\nMake sure you disable Development build and use real ad CAS ID before publishing your app!", MessageType.Warning);
             else
                 EditorGUILayout.HelpBox("When testing your app, make sure you use Test Ads mode or Development Build. " +
                 "Failure to do so can lead to suspension of your account.", MessageType.None);
-            EditorGUI.indentLevel--;
+            EditorGUI.indentLevel -= 2;
         }
 
         private void DrawInterstitialScope()
         {
-            EditorGUI.indentLevel++;
+            EditorGUI.indentLevel += 2;
             EditorGUILayout.LabelField("Impression interval(sec):");
             interstitialIntervalProp.intValue = EditorGUILayout.IntSlider(interstitialIntervalProp.intValue, 0, 120);
             if (interstitialIntervalProp.intValue > 0)
                 EditorGUILayout.HelpBox("For some time after the ad is closed, new ad impressions will fail.", MessageType.None);
-            EditorGUI.indentLevel--;
+            EditorGUI.indentLevel -= 2;
         }
 
         private void DrawRewardedScope(bool allowInter)
         {
-            EditorGUI.indentLevel++;
+            EditorGUI.indentLevel += 2;
             EditorGUI.BeginDisabledGroup(!allowInter);
             interWhenNoRewardedAdProp.boolValue = EditorGUILayout.ToggleLeft(
                HelpStyles.GetContent("Increase filling by Interstitial ads", null,
@@ -516,12 +528,12 @@ namespace CAS.UEditor
                "in this case, you can allow the display of Interstitial ads to receiving a reward in any case."),
                 allowInter && interWhenNoRewardedAdProp.boolValue);
             EditorGUI.EndDisabledGroup();
-            EditorGUI.indentLevel--;
+            EditorGUI.indentLevel -= 2;
         }
 
         private void DrawBannerScope()
         {
-            EditorGUI.indentLevel++;
+            EditorGUI.indentLevel += 2;
             EditorGUILayout.LabelField("Refresh rate(sec):");
             int refresh = EditorGUILayout.IntSlider(bannerRefreshProp.intValue, 0, 180);
             if (refresh < 10)
@@ -534,7 +546,7 @@ namespace CAS.UEditor
             {
                 EditorGUILayout.PropertyField(bannerSizeProp, HelpStyles.GetContent("PSV Ads Manager size", null));
             }
-            EditorGUI.indentLevel--;
+            EditorGUI.indentLevel -= 2;
         }
 
         private bool DrawAdFlagToggle(AdFlags flag)
@@ -547,7 +559,7 @@ namespace CAS.UEditor
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             var changed = GUILayout.Toggle(enabled, "", GUILayout.ExpandWidth(false));
-            changed = GUILayout.Toggle(changed, flag.ToString() + " placement included", EditorStyles.toolbarButton);
+            changed = GUILayout.Toggle(changed, flag.ToString() + " ad format", EditorStyles.toolbarButton);
             GUILayout.Label(content, EditorStyles.toolbar, GUILayout.ExpandWidth(false));
             if (enabled != changed)
             {

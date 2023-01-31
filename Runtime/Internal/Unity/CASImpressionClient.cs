@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_EDITOR
@@ -12,7 +12,7 @@ namespace CAS.Unity
     {
         private static int depth = 0;
 
-        public CASImpressionClient( AdType type ) : base( type )
+        public CASImpressionClient(AdType type) : base(type)
         {
             depth++;
         }
@@ -20,6 +20,11 @@ namespace CAS.Unity
         public override AdNetwork network
         {
             get { return AdNetwork.CrossPromotion; }
+        }
+
+        public override double revenue
+        {
+            get { return 0.001; }
         }
 
         public override double cpm

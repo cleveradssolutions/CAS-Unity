@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -20,19 +20,25 @@ namespace CAS
         SuperAwesome = 6,
 
         AdColony = 8,
-        FacebookAN = 9,
+        AudienceNetwork = 9,
         InMobi = 10,
 
         MyTarget = 12,
         CrossPromotion = 13,
         IronSource = 14,
         YandexAds = 15,
-        [Obsolete( "Coming soon" )] HyperMX = 16,
+        [Obsolete( "Coming soon" )]
+        HyperMX = 16,
 
         Tapjoy = 20,
-        Fyber = 22,
+        DigitalTurbine = 22,
         Mintegral = 23,
         Pangle = 24,
+
+        [Obsolete("Renamed to AudienceNetwork")]
+        FacebookAN = AudienceNetwork,
+        [Obsolete("Renamed to DigitalTurbine")]
+        Fyber = DigitalTurbine,
     }
 
     public static class AdNetworkExtension
@@ -65,7 +71,7 @@ namespace CAS
                     return "https://www.superawesome.com/privacy-hub/privacy-policy/";
                 case AdNetwork.AdColony:
                     return "https://www.adcolony.com/privacy-policy/";
-                case AdNetwork.FacebookAN:
+                case AdNetwork.AudienceNetwork:
                     return "https://developers.facebook.com/docs/audience-network/policy/";
                 case AdNetwork.InMobi:
                     return "https://www.inmobi.com/privacy-policy/";
@@ -83,7 +89,7 @@ namespace CAS
                     return "https://www.pangleglobal.com/privacy/enduser-en";
                 case AdNetwork.Chartboost:
                     return "https://www.cookiebot.com/en/privacy-policy-generator-gdpr/";
-                case AdNetwork.Fyber:
+                case AdNetwork.DigitalTurbine:
                     return "https://www.fyber.com/privacy-policy/";
                 default: return null;
             }
@@ -101,14 +107,14 @@ namespace CAS
                 case AdNetwork.AppLovin: return "AL";
                 case AdNetwork.SuperAwesome: return "SuA";
                 case AdNetwork.AdColony: return "AC";
-                case AdNetwork.FacebookAN: return "FB";
+                case AdNetwork.AudienceNetwork: return "FB";
                 case AdNetwork.InMobi: return "IM";
                 case AdNetwork.MyTarget: return "MT";
                 case AdNetwork.CrossPromotion: return "P";
                 case AdNetwork.IronSource: return "IS";
                 case AdNetwork.YandexAds: return "Ya";
                 case AdNetwork.Tapjoy: return "TJ";
-                case AdNetwork.Fyber: return "Fy";
+                case AdNetwork.DigitalTurbine: return "Fy";
                 case AdNetwork.Mintegral: return "MB";
                 case AdNetwork.Pangle: return "Pa";
                 default: return string.Empty;

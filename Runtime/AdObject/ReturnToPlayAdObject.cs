@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -10,9 +10,9 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
-    [AddComponentMenu( "CleverAdsSolutions/Return To Play Ad Object" )]
+    [AddComponentMenu("CleverAdsSolutions/Return To Play Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Return-To-Play-Ad-Object" )]
+    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Return-To-Play-Ad-Object")]
     public class ReturnToPlayAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
@@ -26,6 +26,8 @@ namespace CAS.AdObject
         public UnityEvent OnAdClicked;
         public UnityEvent OnAdClosed;
 
+        public CASUEventWithMeta OnAdImpression;
+
         private IMediationManager manager;
 
         public bool allowReturnToPlayAd
@@ -37,9 +39,9 @@ namespace CAS.AdObject
                 {
                     _allowReturnToPlayAd = value;
                     if (manager != null)
-                        manager.SetAppReturnAdsEnabled( _allowReturnToPlayAd );
+                        manager.SetAppReturnAdsEnabled(_allowReturnToPlayAd);
                     else
-                        CASFactory.TryGetManagerByIndexAsync( OnManagerReady, managerId.index );
+                        CASFactory.TryGetManagerByIndexAsync(OnManagerReady, managerId.index);
                 }
             }
         }
@@ -48,13 +50,13 @@ namespace CAS.AdObject
         private void Start()
         {
             MobileAds.settings.isExecuteEventsOnUnityThread = true;
-            if (!CASFactory.TryGetManagerByIndexAsync( OnManagerReady, managerId.index ))
-                OnAdFailedToLoad.Invoke( "Manager not initialized yet" );
+            if (!CASFactory.TryGetManagerByIndexAsync(OnManagerReady, managerId.index))
+                OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
 
-        private void OnManagerReady( IMediationManager manager )
+        private void OnManagerReady(IMediationManager manager)
         {
-            manager.SetAppReturnAdsEnabled( _allowReturnToPlayAd );
+            manager.SetAppReturnAdsEnabled(_allowReturnToPlayAd);
 
             if (!this) // When object are destroyed
                 return;
@@ -62,19 +64,20 @@ namespace CAS.AdObject
             this.manager = manager;
             manager.OnInterstitialAdLoaded += OnAdLoaded.Invoke;
             manager.OnInterstitialAdFailedToLoad += OnInterstitialAdFailedToLoad;
-            manager.OnAppReturnAdFailedToShow += OnAdFailedToShow.Invoke;
+            manager.OnAppReturnAdFailedToShow += OnInterstitialAdFailedToShow;
             manager.OnAppReturnAdShown += OnAdShown.Invoke;
             manager.OnAppReturnAdClicked += OnAdClicked.Invoke;
             manager.OnAppReturnAdClosed += OnAdClosed.Invoke;
+            manager.OnRewardedAdImpression -= OnAdImpression.Invoke;
 
             try
             {
-                if (manager.IsReadyAd( AdType.Interstitial ))
+                if (manager.IsReadyAd(AdType.Interstitial))
                     OnAdLoaded.Invoke();
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
         }
 
@@ -84,18 +87,24 @@ namespace CAS.AdObject
             {
                 manager.OnInterstitialAdLoaded -= OnAdLoaded.Invoke;
                 manager.OnInterstitialAdFailedToLoad -= OnInterstitialAdFailedToLoad;
-                manager.OnAppReturnAdFailedToShow -= OnAdFailedToShow.Invoke;
+                manager.OnAppReturnAdFailedToShow -= OnInterstitialAdFailedToShow;
                 manager.OnAppReturnAdShown -= OnAdShown.Invoke;
                 manager.OnAppReturnAdClicked -= OnAdClicked.Invoke;
                 manager.OnAppReturnAdClosed -= OnAdClosed.Invoke;
+                manager.OnRewardedAdImpression -= OnAdImpression.Invoke;
             }
         }
         #endregion
 
         #region Manager Events wrappers
-        private void OnInterstitialAdFailedToLoad( AdError error )
+        private void OnInterstitialAdFailedToLoad(AdError error)
         {
-            OnAdFailedToLoad.Invoke( error.GetMessage() );
+            OnAdFailedToLoad.Invoke(error.GetMessage());
+        }
+        private void OnInterstitialAdFailedToShow(string error)
+        {
+            OnAdFailedToShow.Invoke(error);
+            OnAdClosed.Invoke();
         }
         #endregion
     }

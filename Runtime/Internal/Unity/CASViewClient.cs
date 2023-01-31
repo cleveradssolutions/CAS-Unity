@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_EDITOR
@@ -274,6 +274,7 @@ namespace CAS.Unity
         public event CASEventWithAdError OnAdFailedToLoad;
         public event Action OnAdShown;
         public event CASEventWithMeta OnAdOpening;
+        public event CASEventWithMeta OnAdImpression;
         public event CASEventWithError OnAdFailedToShow;
         public event Action OnAdClicked;
         public event Action OnAdClosed;
@@ -412,6 +413,8 @@ namespace CAS.Unity
                 OnAdShown();
             if (OnAdOpening != null)
                 OnAdOpening(new CASImpressionClient(type));
+            if (OnAdImpression != null)
+                OnAdImpression(new CASImpressionClient(type));
         }
 
         private void CallAdClosed()

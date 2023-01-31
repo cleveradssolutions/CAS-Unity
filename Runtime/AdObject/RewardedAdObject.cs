@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -10,9 +10,9 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
-    [AddComponentMenu( "CleverAdsSolutions/Rewarded Ad Object" )]
+    [AddComponentMenu("CleverAdsSolutions/Rewarded Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Rewarded-Ad-object" )]
+    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Rewarded-Ad-object")]
     public sealed class RewardedAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
@@ -26,29 +26,57 @@ namespace CAS.AdObject
         public UnityEvent OnAdClicked;
         public UnityEvent OnAdClosed;
 
+        public CASUEventWithMeta OnAdImpression;
+
         public UnityEvent OnReward;
 
         private IMediationManager manager;
+        private bool loadAdOnAwake = false;
 
+        /// <summary>
+        /// Check ready ad to present.
+        /// </summary>
+        public bool isAdReady
+        {
+            get { return manager != null && manager.IsReadyAd(AdType.Rewarded); }
+        }
+
+        /// <summary>
+        /// Manual load Ad.
+        /// <para>Please call load before each show ad when active load mode is <see cref="LoadingManagerMode.Manual"/>.</para>
+        /// <para>You can get a callback for the successful loading of an ad by subscribe <see cref="OnAdLoaded"/>.</para>
+        /// </summary>
+        public void LoadAd()
+        {
+            if (manager == null)
+                loadAdOnAwake = true;
+            else
+                manager.LoadAd(AdType.Rewarded);
+        }
+
+        /// <summary>
+        /// Presetn ad to user
+        /// </summary>
         public void Present()
         {
             if (manager == null)
             {
-                OnAdFailedToShow.Invoke( "Manager not initialized yet" );
+                OnAdFailedToShow.Invoke(AdError.ManagerIsDisabled.GetMessage());
                 return;
             }
-            manager.ShowAd( AdType.Rewarded );
+            OnAdShown.Invoke();
+            manager.ShowAd(AdType.Rewarded);
         }
 
         #region MonoBehaviour
         private void Start()
         {
             MobileAds.settings.isExecuteEventsOnUnityThread = true;
-            if (!CASFactory.TryGetManagerByIndexAsync( OnManagerReady, managerId.index ))
-                OnAdFailedToLoad.Invoke( "Manager not initialized yet" );
+            if (!CASFactory.TryGetManagerByIndexAsync(OnManagerReady, managerId.index))
+                OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
 
-        private void OnManagerReady( IMediationManager manager )
+        private void OnManagerReady(IMediationManager manager)
         {
             if (!this) // When object are destroyed
                 return;
@@ -56,20 +84,27 @@ namespace CAS.AdObject
             this.manager = manager;
             manager.OnRewardedAdLoaded += OnAdLoaded.Invoke;
             manager.OnRewardedAdFailedToLoad += OnRewardedAdFailedToLoad;
-            manager.OnRewardedAdFailedToShow += OnAdFailedToShow.Invoke;
-            manager.OnRewardedAdShown += OnAdShown.Invoke;
+            manager.OnRewardedAdFailedToShow += OnRewardedAdFailedToShow;
             manager.OnRewardedAdClicked += OnAdClicked.Invoke;
             manager.OnRewardedAdCompleted += OnReward.Invoke;
             manager.OnRewardedAdClosed += OnRewardedAdClosed;
+            manager.OnRewardedAdImpression += OnAdImpression.Invoke;
 
             try
             {
-                if (manager.IsReadyAd( AdType.Rewarded ))
+                if (manager.IsReadyAd(AdType.Rewarded))
+                {
                     OnAdLoaded.Invoke();
+                }
+                else if (loadAdOnAwake)
+                {
+                    loadAdOnAwake = false;
+                    manager.LoadAd(AdType.Rewarded);
+                }
             }
             catch (Exception e)
             {
-                Debug.LogException( e );
+                Debug.LogException(e);
             }
         }
 
@@ -79,20 +114,26 @@ namespace CAS.AdObject
             {
                 manager.OnRewardedAdLoaded -= OnAdLoaded.Invoke;
                 manager.OnRewardedAdFailedToLoad -= OnRewardedAdFailedToLoad;
-                manager.OnRewardedAdFailedToShow -= OnAdFailedToShow.Invoke;
-                manager.OnRewardedAdShown -= OnAdShown.Invoke;
+                manager.OnRewardedAdFailedToShow -= OnRewardedAdFailedToShow;
                 manager.OnRewardedAdClicked -= OnAdClicked.Invoke;
                 manager.OnRewardedAdCompleted -= OnReward.Invoke;
                 manager.OnRewardedAdClosed -= OnRewardedAdClosed;
+                manager.OnRewardedAdImpression -= OnAdImpression.Invoke;
             }
-            CASFactory.UnsubscribeReadyManagerAsync( OnManagerReady, managerId.index );
+            CASFactory.UnsubscribeReadyManagerAsync(OnManagerReady, managerId.index);
         }
         #endregion
 
         #region Manager Events wrappers
-        private void OnRewardedAdFailedToLoad( AdError error )
+        private void OnRewardedAdFailedToLoad(AdError error)
         {
-            OnAdFailedToLoad.Invoke( error.GetMessage() );
+            OnAdFailedToLoad.Invoke(error.GetMessage());
+        }
+
+        private void OnRewardedAdFailedToShow(string error)
+        {
+            OnAdFailedToShow.Invoke(error);
+            OnAdClosed.Invoke();
         }
 
         private void OnRewardedAdClosed()

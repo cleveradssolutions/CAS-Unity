@@ -2,7 +2,7 @@
 //  CSAUTypes.h
 //  CASUnityPlugin
 //
-//  Copyright © 2022 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2023 Clever Ads Solutions. All rights reserved.
 //
 
 
@@ -25,10 +25,10 @@ typedef const void * CASImpressionRef;
 typedef void (*CASUInitializationCompleteCallback)(CASManagerClientRef *manager, const char *error, BOOL withConsent, BOOL isTestMode);
 
 typedef void (*CASUDidLoadedAdCallback)(CASManagerClientRef *manager);
-typedef void (*CASUDidFailedAdCallback)(CASManagerClientRef *manager, NSInteger error);
+typedef void (*CASUDidFailedAdCallback)(CASManagerClientRef *manager, int error);
 
 typedef void (*CASUWillPresentAdCallback)(CASManagerClientRef *manager, CASImpressionRef impression);
-typedef void (*CASUDidShowAdFailedWithErrorCallback)(CASManagerClientRef *manager, const char *error);
+typedef void (*CASUDidShowAdFailedWithErrorCallback)(CASManagerClientRef *manager, int error);
 typedef void (*CASUDidClickedAdCallback)(CASManagerClientRef *manager);
 typedef void (*CASUDidCompletedAdCallback)(CASManagerClientRef *manager);
 typedef void (*CASUDidClosedAdCallback)(CASManagerClientRef *manager);

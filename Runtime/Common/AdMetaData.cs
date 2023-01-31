@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System.Text;
@@ -20,6 +20,12 @@ namespace CAS
         /// The mediated network’s name that purchased the impression.
         /// </summary>
         public abstract AdNetwork network { get; }
+
+        /// <summary>
+        /// The Cost Per Mille estimated impressions of the ad in USD.
+        /// <para>The value accuracy is returned in the <see cref="priceAccuracy"/> property.</para>
+        /// </summary>
+        public abstract double revenue { get; }
 
         /// <summary>
         /// The Cost Per Mille estimated impressions of the ad in USD.

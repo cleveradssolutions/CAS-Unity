@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 using System;
@@ -44,6 +44,11 @@ namespace CAS
         /// </summary>
         event CASEventWithMeta OnInterstitialAdOpening;
         /// <summary>
+        /// Called when the ad impression detects paid revenue.
+        /// <para>The <see cref="AdMetaData.revenue"/> value from impression event is more precise than in the opening event.</para>
+        /// </summary>
+        event CASEventWithMeta OnInterstitialAdImpression;
+        /// <summary>
         /// Called when the ad is failed to display.
         /// </summary>
         event CASEventWithError OnInterstitialAdFailedToShow;
@@ -74,6 +79,11 @@ namespace CAS
         /// The same call as the <see cref="OnRewardedAdShown"/> but with <see cref="AdMetaData"/> about the impression. 
         /// </summary>
         event CASEventWithMeta OnRewardedAdOpening;
+        /// <summary>
+        /// Called when the ad impression detects paid revenue.
+        /// <para>The <see cref="AdMetaData.revenue"/> value from impression event is more precise than in the opening event.</para>
+        /// </summary>
+        event CASEventWithMeta OnRewardedAdImpression;
         /// <summary>
         /// Called when the ad is failed to display.
         /// </summary>
@@ -164,6 +174,11 @@ namespace CAS
         /// The same call as the <see cref="OnAppReturnAdShown"/> but with <see cref="AdMetaData"/> about the impression. 
         /// </summary>
         event CASEventWithMeta OnAppReturnAdOpening;
+        /// <summary>
+        /// Called when the ad impression detects paid revenue.
+        /// <para>The <see cref="AdMetaData.revenue"/> value from impression event is more precise than in the opening event.</para>
+        /// </summary>
+        event CASEventWithMeta OnAppReturnAdImpression;
         /// <summary>
         /// Called when the ad is failed to display.
         /// </summary>

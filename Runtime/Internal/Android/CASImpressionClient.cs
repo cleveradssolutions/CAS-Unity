@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
@@ -22,6 +22,11 @@ namespace CAS.Android
         public override AdNetwork network
         {
             get { return (AdNetwork)impression.Call<int>( "getNetwork" ); }
+        }
+
+        public override double revenue
+        {
+            get { return cpm / 1000.0; }
         }
 
         public override double cpm

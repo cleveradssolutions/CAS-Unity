@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || UNITY_IOS || CASDeveloper
@@ -88,16 +88,9 @@ namespace CAS.UEditor
                 if (newCASVersion != null)
                     Utils.DialogOrCancelBuild("There is a new version " + newCASVersion + " of the CAS Unity available for update.", target);
 
-                if (deps != null)
-                {
-                    if (!deps.installedAny)
-                        Utils.StopBuildWithMessage("Dependencies of native SDK were not found. " +
-                        "Please use 'Assets > CleverAdsSolutions > Settings' menu to integrate solutions or any SDK separately.", target);
-
-                    if (deps.IsNewerVersionFound())
-                        Utils.DialogOrCancelBuild("There is a new versions of the native dependencies available for update." +
-                            "Please use 'Assets > CleverAdsSolutions >Settings' menu to update.", target);
-                }
+                if (deps != null && deps.IsNewerVersionFound())
+                    Utils.DialogOrCancelBuild("There is a new versions of the native dependencies available for update." +
+                        "Please use 'Assets > CleverAdsSolutions >Settings' menu to update.", target);
             }
 
             if (settings.managersCount == 0 || string.IsNullOrEmpty(settings.GetManagerId(0)))
@@ -215,16 +208,13 @@ namespace CAS.UEditor
             var targetId = settings.GetManagerId(0);
 
             var message = updateSettingsError +
-                "\nPlease try using a real CAS identifier in the first place in Settings Window else contact support." +
-                "\n- Warning! -" +
-                "\n1. Continue build the app for release with current settings can reduce monetization revenue." +
-                "\n2. When build to testing your app, make sure you use Test Ads mode rather than live ads. " +
-                "Failure to do so can lead to suspension of your account.";
+                "\nPlease try using a real CAS identifier in the first place CAS Settings Window else contact support." +
+                "\nIf you haven't created an CAS account and registered an app yet, use Test Ads mode to continue build.";
 
             Debug.LogError(Utils.logTag + message);
             if (!Utils.IsBatchMode())
                 dialogResponse = EditorUtility.DisplayDialogComplex(title, message,
-                    "Continue", "Cancel Build", "Select settings file");
+                    "Continue", "Cancel Build", "Select configuration");
 
             if (dialogResponse == 0)
             {
@@ -372,7 +362,7 @@ namespace CAS.UEditor
 
         private static string DownloadRemoteSettings(string managerID, BuildTarget platform, CASInitSettings settings, DependencyManager deps)
         {
-            const string title = "Update CAS remote settings";
+            const string title = "Update CAS remote configuration";
 
             var editorSettings = CASEditorSettings.Load();
 
@@ -398,25 +388,7 @@ namespace CAS.UEditor
                 .Append("&bundle=").Append(UnityWebRequest.EscapeURL(managerID))
                 .Append("&hash=").Append(hash)
                 .Append("&lang=").Append(SystemLanguage.English)
-                .Append("&appDev=2")
-                .Append("&appV=").Append(PlayerSettings.bundleVersion)
-                .Append("&coppa=").Append((int)settings.defaultAudienceTagged)
-                .Append("&adTypes=").Append((int)settings.allowedAdFlags)
-                .Append("&nets=").Append(DependencyManager.GetActiveMediationPattern(deps))
-                .Append("&orient=").Append(Utils.GetOrientationId())
-                .Append("&framework=Unity_").Append(Application.unityVersion);
-            if (deps != null)
-            {
-                var buildCode = deps.GetInstalledBuildCode();
-                if (buildCode > 0)
-                    urlBuilder.Append("&sdk=").Append(buildCode);
-            }
-            if (string.IsNullOrEmpty(editorSettings.mostPopularCountryOfUsers))
-                urlBuilder.Append("&country=").Append("US");
-            else
-                urlBuilder.Append("&country=").Append(editorSettings.mostPopularCountryOfUsers);
-            if (platform == BuildTarget.Android)
-                urlBuilder.Append("&appVC=").Append(PlayerSettings.Android.bundleVersionCode);
+                .Append("&country=").Append(string.IsNullOrEmpty(editorSettings.mostPopularCountryOfUsers) ? "US" : editorSettings.mostPopularCountryOfUsers);
 
             #endregion
 
@@ -431,21 +403,24 @@ namespace CAS.UEditor
                             Mathf.Repeat((float)EditorApplication.timeSinceStartup * 0.2f, 1.0f)))
                         {
                             loader.Dispose();
-                            throw new Exception("Update CAS Settings canceled");
+                            throw new Exception("Update CAS configuration canceled");
                         }
                     }
+                    if (loader.responseCode == 204)
+                        throw new Exception("'" + managerID + "' is not registered in CAS.");
+
                     if (string.IsNullOrEmpty(loader.error))
                     {
                         var content = loader.downloadHandler.text.Trim();
-                        if (string.IsNullOrEmpty(content))
-                            throw new Exception("ManagerID [" + managerID + "] is not registered in CAS.");
-
-                        EditorUtility.DisplayProgressBar(title, "Write CAS settings", 0.7f);
-                        var data = JsonUtility.FromJson<AdmobAppIdData>(content);
-                        Utils.WriteToFile(content, Utils.GetNativeSettingsPath(platform, managerID));
-                        return data.admob_app_id;
+                        if (!string.IsNullOrEmpty(content))
+                        {
+                            EditorUtility.DisplayProgressBar(title, "Write CAS settings", 0.7f);
+                            var data = JsonUtility.FromJson<AdmobAppIdData>(content);
+                            Utils.WriteToFile(content, Utils.GetNativeSettingsPath(platform, managerID));
+                            return data.admob_app_id;
+                        }
                     }
-                    throw new Exception("Server response " + loader.responseCode + ": " + loader.error);
+                    throw new Exception("Connect to server for '" + managerID + "' is failed with error: " + loader.responseCode + " - " + loader.error);
                 }
                 finally
                 {

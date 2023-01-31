@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
@@ -21,31 +21,44 @@ namespace CAS.Android
         internal const string initCallbackClass = "com.cleversolutions.ads.unity.CASInitCallback";
         #endregion
 
-        internal static void RepeatCall( string method, AndroidJavaObject target, Dictionary<string, string> args, bool staticCall )
+        internal static void RepeatCall(string method, AndroidJavaObject target, Dictionary<string, string> args, bool staticCall)
         {
             if (args == null || args.Count == 0)
                 return;
 
             var tempArgs = new String[] { "String", "String" };
-            var methodID = AndroidJNIHelper.GetMethodID( target.GetRawClass(),
-                        "addExtras", tempArgs, staticCall );
-            
+            var methodID = AndroidJNIHelper.GetMethodID(target.GetRawClass(),
+                        "addExtras", tempArgs, staticCall);
+
             foreach (var item in args)
             {
                 tempArgs[0] = item.Key;
                 tempArgs[1] = item.Value;
-                var nativeArgs = AndroidJNIHelper.CreateJNIArgArray( tempArgs );
+                var nativeArgs = AndroidJNIHelper.CreateJNIArgArray(tempArgs);
                 try
                 {
                     if (staticCall)
-                        AndroidJNI.CallStaticVoidMethod( target.GetRawClass(), methodID, nativeArgs );
+                        AndroidJNI.CallStaticVoidMethod(target.GetRawClass(), methodID, nativeArgs);
                     else
-                        AndroidJNI.CallVoidMethod( target.GetRawObject(), methodID, nativeArgs );
+                        AndroidJNI.CallVoidMethod(target.GetRawObject(), methodID, nativeArgs);
                 }
                 finally
                 {
-                    AndroidJNIHelper.DeleteJNIArgArray( tempArgs, nativeArgs );
+                    AndroidJNIHelper.DeleteJNIArgArray(tempArgs, nativeArgs);
                 }
+            }
+        }
+
+
+        internal static void ImpressionEvent(CASEventWithMeta onEvent, AdType adType, AndroidJavaObject impression)
+        {
+            if (onEvent != null)
+            {
+                CASFactory.ExecuteEvent(() =>
+                {
+                    if (onEvent != null)
+                        onEvent(new CASImpressionClient(adType, impression));
+                });
             }
         }
     }
@@ -54,15 +67,15 @@ namespace CAS.Android
     {
         private readonly CASManagerClient manager;
 
-        public InitCallbackProxy( CASManagerClient manager )
-            : base( CASJavaBridge.initCallbackClass )
+        public InitCallbackProxy(CASManagerClient manager)
+            : base(CASJavaBridge.initCallbackClass)
         {
             this.manager = manager;
         }
 
-        public void onCASInitialized( string error, bool isTestMode )
+        public void onCASInitialized(string error, bool isTestMode)
         {
-            manager.OnInitializationCallback( error, isTestMode );
+            manager.OnInitializationCallback(error, isTestMode);
         }
     }
 
@@ -74,13 +87,14 @@ namespace CAS.Android
         public CASEventWithAdError OnAdFailed;
         public Action OnAdShown;
         public CASEventWithMeta OnAdOpening;
+        public CASEventWithMeta OnAdImpression;
         public CASEventWithError OnAdFailedToShow;
         public Action OnAdClicked;
         public Action OnAdCompleted;
         public Action OnAdClosed;
         public Action<Rect> OnAdRect;
 
-        public AdEventsProxy( AdType adType ) : base( CASJavaBridge.adCallbackClass )
+        public AdEventsProxy(AdType adType) : base(CASJavaBridge.adCallbackClass)
         {
             this.adType = adType;
             adTypeName = adType.ToString();
@@ -88,78 +102,80 @@ namespace CAS.Android
 
         public void onLoaded()
         {
-            CASFactory.UnityLog( "Callback Loaded " + adTypeName );
-            CASFactory.ExecuteEvent( OnAdLoaded );
+            CASFactory.UnityLog("Callback Loaded " + adTypeName);
+            CASFactory.ExecuteEvent(OnAdLoaded);
         }
 
-        public void onFailed( int error )
+        public void onFailed(int error)
         {
-            CASFactory.UnityLog( "Callback Failed " + adTypeName + " error: " + Enum.GetName( typeof( AdError ), error ) );
+            CASFactory.UnityLog("Callback Failed " + adTypeName + " error: " + error);
             if (OnAdFailed != null)
             {
-                CASFactory.ExecuteEvent( () =>
+                CASFactory.ExecuteEvent(() =>
                 {
                     if (OnAdFailed != null)
-                        OnAdFailed( ( AdError )error );
-                } );
+                        OnAdFailed((AdError)error);
+                });
             }
         }
 
-        public void onOpening( AndroidJavaObject impression )
+        public void onOpening(AndroidJavaObject impression)
         {
-            CASFactory.UnityLog( "Callback Presented " + adTypeName );
-            CASFactory.ExecuteEvent( OnAdShown );
-            if (OnAdOpening != null)
-            {
-                CASFactory.ExecuteEvent( () =>
-                {
-                    if (OnAdOpening != null)
-                        OnAdOpening( new CASImpressionClient( adType, impression ) );
-                } );
-            }
+            CASFactory.UnityLog("Callback Presented " + adTypeName);
+            CASFactory.ExecuteEvent(OnAdShown);
+            CASJavaBridge.ImpressionEvent(OnAdOpening, adType, impression);
         }
 
-        public void onShowFailed( string message )
+        public void onImpression(AndroidJavaObject impression)
         {
-            CASFactory.UnityLog( "Callback Failed to show " + adTypeName + " with error: " + message );
+            CASFactory.UnityLog("Callback Impression " + adTypeName);
+            CASJavaBridge.ImpressionEvent(OnAdImpression, adType, impression);
+        }
+
+        public void onShowFailed(int error)
+        {
+            CASFactory.UnityLog("Callback Failed to show " + adTypeName + " with error: " + error);
             if (OnAdFailedToShow != null)
             {
-                CASFactory.ExecuteEvent( () =>
+                CASFactory.ExecuteEvent(() =>
                 {
                     if (OnAdFailedToShow != null)
-                        OnAdFailedToShow( message );
-                } );
+                    {
+                        var adError = (AdError)error;
+                        OnAdFailedToShow(adError.GetMessage());
+                    }
+                });
             }
         }
 
         public void onClicked()
         {
-            CASFactory.UnityLog( "Callback Clicked " + adTypeName );
-            CASFactory.ExecuteEvent( OnAdClicked );
+            CASFactory.UnityLog("Callback Clicked " + adTypeName);
+            CASFactory.ExecuteEvent(OnAdClicked);
         }
 
         public void onComplete()
         {
-            CASFactory.UnityLog( "Callback Complete " + adTypeName );
-            CASFactory.ExecuteEvent( OnAdCompleted );
+            CASFactory.UnityLog("Callback Complete " + adTypeName);
+            CASFactory.ExecuteEvent(OnAdCompleted);
         }
 
         public void onClosed()
         {
-            CASFactory.UnityLog( "Callback Closed " + adTypeName );
-            CASFactory.ExecuteEvent( OnAdClosed );
+            CASFactory.UnityLog("Callback Closed " + adTypeName);
+            CASFactory.ExecuteEvent(OnAdClosed);
         }
 
-        public void onRect( int x, int y, int width, int height )
+        public void onRect(int x, int y, int width, int height)
         {
             if (OnAdRect != null)
             {
-                var rect = new Rect( x, y, width, height );
-                CASFactory.ExecuteEvent( () =>
+                var rect = new Rect(x, y, width, height);
+                CASFactory.ExecuteEvent(() =>
                 {
                     if (OnAdRect != null)
-                        OnAdRect( rect );
-                } );
+                        OnAdRect(rect);
+                });
             }
         }
     }

@@ -1,7 +1,7 @@
 ﻿//
 //  Clever Ads Solutions Unity Plugin
 //
-//  Copyright © 2022 CleverAdsSolutions. All rights reserved.
+//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
 #if UNITY_IOS || (CASDeveloper && UNITY_EDITOR)
@@ -36,7 +36,7 @@ namespace CAS.iOS
         internal delegate void CASUDidLoadedAdCallback(CASUManagerRef manager);
         internal delegate void CASUDidFailedAdCallback(CASUManagerRef manager, int error);
         internal delegate void CASUWillPresentAdCallback(CASUManagerRef manager, CASImpressionRef impression);
-        internal delegate void CASUDidShowAdFailedWithErrorCallback(CASUManagerRef manager, string error);
+        internal delegate void CASUDidShowAdFailedWithErrorCallback(CASUManagerRef manager, int error);
         internal delegate void CASUDidClickedAdCallback(CASUManagerRef manager);
         internal delegate void CASUDidCompletedAdCallback(CASUManagerRef manager);
         internal delegate void CASUDidClosedAdCallback(CASUManagerRef manager);
@@ -203,14 +203,15 @@ namespace CAS.iOS
         #region Interstitial Ads
         [DllImport("__Internal")]
         internal static extern void CASUSetInterstitialDelegate(
-        CASUManagerRef managerRef,
-        CASUDidLoadedAdCallback didLoad,
-        CASUDidFailedAdCallback didFaied,
-        CASUWillPresentAdCallback willOpen,
-        CASUDidShowAdFailedWithErrorCallback didShowWithError,
-        CASUDidClickedAdCallback didClick,
-        CASUDidClosedAdCallback didClosed
-    );
+            CASUManagerRef managerRef,
+            CASUDidLoadedAdCallback didLoad,
+            CASUDidFailedAdCallback didFaied,
+            CASUWillPresentAdCallback willPresent,
+            CASUWillPresentAdCallback didImpression,
+            CASUDidShowAdFailedWithErrorCallback didShowWithError,
+            CASUDidClickedAdCallback didClick,
+            CASUDidClosedAdCallback didClosed
+        );
 
         [DllImport("__Internal")]
         internal static extern void CASULoadInterstitial(CASUManagerRef managerRef);
@@ -225,10 +226,11 @@ namespace CAS.iOS
         #region Rewarded Ads
         [DllImport("__Internal")]
         internal static extern void CASUSetRewardedDelegate(
-            CASUManagerRef manager,
+            CASUManagerRef managerRef,
             CASUDidLoadedAdCallback didLoad,
             CASUDidFailedAdCallback didFaied,
-            CASUWillPresentAdCallback willOpen,
+            CASUWillPresentAdCallback willPresent,
+            CASUWillPresentAdCallback didImpression,
             CASUDidShowAdFailedWithErrorCallback didShowWithError,
             CASUDidClickedAdCallback didClick,
             CASUDidCompletedAdCallback didComplete,
@@ -259,10 +261,10 @@ namespace CAS.iOS
         [DllImport("__Internal")]
         internal static extern void CASUAttachAdViewDelegate(
             CASUViewRef viewRef,
-            CASUDidLoadedAdCallback didLoad,
-            CASUDidFailedAdCallback didFailed,
-            CASUWillPresentAdCallback willPresent,
-            CASUDidClickedAdCallback didClicked,
+            CASUViewDidLoadCallback didLoad,
+            CASUViewDidFailedCallback didFailed,
+            CASUViewWillPresentCallback willPresent,
+            CASUViewDidClickedCallback didClicked,
             CASUViewDidRectCallback didRect);
 
         [DllImport("__Internal")]
@@ -293,6 +295,7 @@ namespace CAS.iOS
         internal static extern void CASUSetAppReturnDelegate(
             CASUManagerRef manager,
             CASUWillPresentAdCallback willOpen,
+            CASUWillPresentAdCallback didImpression,
             CASUDidShowAdFailedWithErrorCallback didShowWithError,
             CASUDidClickedAdCallback didClick,
             CASUDidClosedAdCallback didClosed
