@@ -55,7 +55,6 @@ namespace CAS.UEditor
         private BuildTarget platform;
         private bool allowedPackageUpdate;
         private string newCASVersion = null;
-        private bool deprecateDependenciesExist;
         private Version edmVersion;
         private bool edmRequiredNewer = false;
         private string environmentDetails;
@@ -156,17 +155,21 @@ namespace CAS.UEditor
 
         private void HandleDeprecatedComponents()
         {
-            deprecatedAssets = new string[]{
-                Utils.GetDeprecateDependencyName( Utils.generalDeprecateDependency, platform ),
-                Utils.GetDeprecateDependencyName( Utils.teenDeprecateDependency, platform ),
-                Utils.GetDeprecateDependencyName( Utils.promoDeprecateDependency, platform ),
-                Utils.GetDependencyName( "Additional", platform )
-            };
+            RemoveDeprecatedAsset(Utils.GetDependencyName(Dependency.adBaseName, platform));
+            RemoveDeprecatedAsset(Utils.GetDependencyName("Additional", platform));
+            RemoveDeprecatedAsset(Utils.GetDeprecateDependencyName(Utils.generalDeprecateDependency, platform));
+            RemoveDeprecatedAsset(Utils.GetDeprecateDependencyName(Utils.teenDeprecateDependency, platform));
+            RemoveDeprecatedAsset(Utils.GetDeprecateDependencyName(Utils.promoDeprecateDependency, platform));
+        }
 
-            for (int i = 0; i < deprecatedAssets.Length; i++)
+        private void RemoveDeprecatedAsset(string name)
+        {
+            var assets = AssetDatabase.FindAssets(name, new[] { "Assets" });
+            for (int i = 0; i < assets.Length; i++)
             {
-                if (deprecateDependenciesExist |= AssetDatabase.FindAssets(deprecatedAssets[i]).Length > 0)
-                    break;
+                var path = AssetDatabase.GUIDToAssetPath(assets[i]);
+                Debug.LogWarning(Utils.logTag + "Removed deprecated asset: " + path);
+                AssetDatabase.MoveAssetToTrash(path);
             }
         }
 
@@ -246,7 +249,6 @@ namespace CAS.UEditor
             DrawSeparator();
             OnEditroRuntimeActiveAdGUI();
             OnAudienceGUI();
-            DeprecatedDependenciesGUI();
 
             if (dependencyManager == null)
             {
@@ -754,24 +756,6 @@ namespace CAS.UEditor
                     EditorGUILayout.EnumFlagsField("Editor runtime Active ad", (AdFlags)editorRuntimeActiveAdFlags));
                 if (EditorGUI.EndChangeCheck())
                     PlayerPrefs.SetInt(Utils.editorRuntimeActiveAdPrefs, editorRuntimeActiveAdFlags);
-            }
-        }
-
-        private void DeprecatedDependenciesGUI()
-        {
-            if (!deprecateDependenciesExist)
-                return;
-            if (HelpStyles.WarningWithButton("Deprecated dependencies found. " +
-                "Please remove them and use the new dependencies below.",
-                "Remove", MessageType.Error))
-            {
-                for (int i = 0; i < deprecatedAssets.Length; i++)
-                {
-                    var assets = AssetDatabase.FindAssets(deprecatedAssets[i]);
-                    for (int assetI = 0; assetI < assets.Length; assetI++)
-                        AssetDatabase.MoveAssetToTrash(AssetDatabase.GUIDToAssetPath(assets[assetI]));
-                }
-                deprecateDependenciesExist = false;
             }
         }
     }
