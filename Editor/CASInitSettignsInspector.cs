@@ -59,8 +59,6 @@ namespace CAS.UEditor
         private bool edmRequiredNewer = false;
         private string environmentDetails;
 
-        private string[] deprecatedAssets = null;
-
         private bool adsManagerExist = false;
         private int editorRuntimeActiveAdFlags;
 
@@ -83,7 +81,7 @@ namespace CAS.UEditor
 
             dependencyManager = DependencyManager.Create(platform, (Audience)audienceTaggedProp.enumValueIndex, true);
 
-            HandleDeprecatedComponents();
+            HandleDeprecatedComponents(allowedPackageUpdate);
             InitEDM4U();
             InitEnvironmentDetails();
 
@@ -153,9 +151,11 @@ namespace CAS.UEditor
                 platform = BuildTarget.NoTarget;
         }
 
-        private void HandleDeprecatedComponents()
+        private void HandleDeprecatedComponents(bool allowedPackageUpdate)
         {
-            RemoveDeprecatedAsset(Utils.GetDependencyName(Dependency.adBaseName, platform));
+            if (allowedPackageUpdate)
+                RemoveDeprecatedAsset(Utils.GetDependencyName(Dependency.adBaseName, platform));
+
             RemoveDeprecatedAsset(Utils.GetDependencyName("Additional", platform));
             RemoveDeprecatedAsset(Utils.GetDeprecateDependencyName(Utils.generalDeprecateDependency, platform));
             RemoveDeprecatedAsset(Utils.GetDeprecateDependencyName(Utils.teenDeprecateDependency, platform));

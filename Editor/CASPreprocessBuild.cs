@@ -366,31 +366,12 @@ namespace CAS.UEditor
 
             var editorSettings = CASEditorSettings.Load();
 
-            #region Create request URL
-            #region Hash
-            var managerIdBytes = new UTF8Encoding().GetBytes(managerID);
-            var suffix = new byte[] { 48, 77, 101, 68, 105, 65, 116, 73, 111, 78, 104, 65, 115, 72 };
-            if (platform == BuildTarget.iOS)
-                suffix[0] = 49;
-            var sourceBytes = new byte[managerID.Length + suffix.Length];
-            Array.Copy(managerIdBytes, 0, sourceBytes, 0, managerIdBytes.Length);
-            Array.Copy(suffix, 0, sourceBytes, managerIdBytes.Length, suffix.Length);
-
-            var hashBytes = new System.Security.Cryptography.MD5CryptoServiceProvider().ComputeHash(sourceBytes);
-            StringBuilder hashBuilder = new StringBuilder();
-            for (int i = 0; i < hashBytes.Length; i++)
-                hashBuilder.Append(Convert.ToString(hashBytes[i], 16).PadLeft(2, '0'));
-            var hash = hashBuilder.ToString().PadLeft(32, '0');
-            #endregion
-
-            var urlBuilder = new StringBuilder("https://psvpromo.psvgamestudio.com/Scr/cas.php?platform=")
+            var urlBuilder = new StringBuilder("https://psvpromo.psvgamestudio.com/cas-settings.php?apply=config&platform=")
                 .Append(platform == BuildTarget.Android ? 0 : 1)
-                .Append("&bundle=").Append(UnityWebRequest.EscapeURL(managerID))
-                .Append("&hash=").Append(hash)
-                .Append("&lang=").Append(SystemLanguage.English)
-                .Append("&country=").Append(string.IsNullOrEmpty(editorSettings.mostPopularCountryOfUsers) ? "US" : editorSettings.mostPopularCountryOfUsers);
+                .Append("&bundle=").Append(UnityWebRequest.EscapeURL(managerID));
+            if (!string.IsNullOrEmpty(editorSettings.mostPopularCountryOfUsers))
+                urlBuilder.Append("&country=").Append(editorSettings.mostPopularCountryOfUsers);
 
-            #endregion
 
             using (var loader = UnityWebRequest.Get(urlBuilder.ToString()))
             {

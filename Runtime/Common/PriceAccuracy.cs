@@ -10,15 +10,15 @@ namespace CAS
     public enum PriceAccuracy
     {
         /// <summary>
-        /// eCPM floor, also known as minimum eCPMs
+        /// The estimated revenue, can also be a minimum price (floor) for ad impression.
         /// </summary>
         Floor,
         /// <summary>
-        /// eCPM is the exact and committed value per 1000 impressions.
+        /// The revenue provided as part of the real-time auction.
         /// </summary>
         Bid,
         /// <summary>
-        /// When the demand source does not agree to disclose the payout of every impression - in such cases the cpm is ‘0’
+        /// The revenue is '0', when the demand source does not agree to disclose the payout of impression.
         /// </summary>
         Undisclosed
     }

@@ -22,19 +22,19 @@ namespace CAS
         public abstract AdNetwork network { get; }
 
         /// <summary>
-        /// The Cost Per Mille estimated impressions of the ad in USD.
-        /// <para>The value accuracy is returned in the <see cref="priceAccuracy"/> property.</para>
+        /// The revenue generated for the impression (USD). The revenue value is either estimated or exact, according to the precision
+        /// <para>The revenue value is either estimated or exact, according to the <see cref="priceAccuracy"/> property.</para>
         /// </summary>
         public abstract double revenue { get; }
 
         /// <summary>
         /// The Cost Per Mille estimated impressions of the ad in USD.
-        /// <para>The value accuracy is returned in the <see cref="priceAccuracy"/> property.</para>
+        /// <para>The same value as <see cref="revenue"/> multiplied by 1000.</para>
         /// </summary>
         public abstract double cpm { get; }
 
         /// <summary>
-        /// Accuracy of the CPM value.
+        /// Accuracy of the revenue value.
         /// </summary>
         public abstract PriceAccuracy priceAccuracy { get; }
 
