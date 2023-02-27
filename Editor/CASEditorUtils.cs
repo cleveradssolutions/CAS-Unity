@@ -32,7 +32,7 @@ namespace CAS.UEditor
         public const string androidLibPropertiesPath = androidLibFolderPath + "/project.properties";
         public const string androidLibNetworkConfigPath = androidLibFolderPath + "/res/xml/meta_network_security_config.xml";
 
-        public const string iosResSettingsPath = "ProjectSettings/ios_cas_settings";
+        public const string iosResSettingsPath = "Library/ios_cas_settings";
 
         public const string promoDependency = "CrossPromotion";
 
@@ -59,10 +59,6 @@ namespace CAS.UEditor
         internal const string supportURL = gitUnityRepoURL + "#support";
         internal const string gitAppAdsTxtRepoUrl = gitRootURL + "App-ads.txt";
         internal const string attributionReportEndPoint = "https://";
-
-        internal const string generalDeprecateDependency = "General";
-        internal const string teenDeprecateDependency = "Teen";
-        internal const string promoDeprecateDependency = "Promo";
 
         internal const string logTag = "[CleverAdsSolutions] ";
         internal const string logAutoFeature = "\nYou can disable this automatic feature by `Assets > CleverAdsSolutions > Settings > Other settings` menu.\n";
@@ -586,6 +582,7 @@ namespace CAS.UEditor
                 if (!Directory.Exists(directoryPath))
                     Directory.CreateDirectory(directoryPath);
                 File.WriteAllText(path, data);
+                File.SetLastWriteTime(path, System.DateTime.Now);
                 AssetDatabase.ImportAsset(path);
             }
             catch (Exception e)

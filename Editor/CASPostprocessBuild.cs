@@ -209,7 +209,7 @@ namespace CAS.UEditor
                 if (!string.IsNullOrEmpty(networksLines[i]))
                 {
                     var dict = adNetworkItems.AddDict();
-                    dict.SetString("SKAdNetworkIdentifier", networksLines[i]);
+                    dict.SetString("SKAdNetworkIdentifier", networksLines[i] + ".skadnetwork");
                 }
             }
         }

@@ -16,6 +16,7 @@ using System;
 using Utils = CAS.UEditor.CASEditorUtils;
 using System.Text;
 using UnityEngine.Networking;
+using System.Runtime.Remoting.Contexts;
 
 #if UNITY_2018_1_OR_NEWER
 using UnityEditor.Build.Reporting;
@@ -86,7 +87,7 @@ namespace CAS.UEditor
             {
                 var newCASVersion = Utils.GetNewVersionOrNull(Utils.gitUnityRepo, MobileAds.wrapperVersion, false);
                 if (newCASVersion != null)
-                    Utils.DialogOrCancelBuild("There is a new version " + newCASVersion + " of the CAS Unity available for update.", target);
+                    Debug.LogWarning(Utils.logTag + "There is a new version " + newCASVersion + " of the CAS Unity plugin available for update.");
 
                 if (deps != null && deps.IsNewerVersionFound())
                     Utils.DialogOrCancelBuild("There is a new versions of the native dependencies available for update." +
@@ -97,6 +98,8 @@ namespace CAS.UEditor
                 StopBuildIDNotFound(target);
 
             string admobAppId = UpdateRemoteSettingsAndGetAppId(settings, target, deps);
+
+            RemoveDeprecatedAssets();
 
             if (target == BuildTarget.Android)
                 ConfigureAndroid(settings, editorSettings, admobAppId);
@@ -110,12 +113,55 @@ namespace CAS.UEditor
                 Debug.Log(Utils.logTag + "Project configuration completed");
         }
 
+        private static void RemoveDeprecatedAssets()
+        {
+#if UNITY_ANDROID || CASDeveloper
+            const string deprecatedPluginPath = "Assets/Plugins/CAS";
+            if (Directory.Exists(deprecatedPluginPath))
+                AssetDatabase.MoveAssetToTrash(deprecatedPluginPath);
+
+            const string deprecatedConfigFileInRes = Utils.androidResSettingsPath + ".json";
+            if (File.Exists(deprecatedConfigFileInRes))
+                AssetDatabase.MoveAssetToTrash(deprecatedConfigFileInRes);
+
+            var androidRes = Path.GetDirectoryName(Utils.androidResSettingsPath);
+            if (Directory.Exists(androidRes))
+            {
+                var androidConfig = Directory.GetFiles(androidRes, "cas_settings*.json", SearchOption.TopDirectoryOnly);
+                var currentTime = DateTime.Now;
+                for (int i = 0; i < androidConfig.Length; i++)
+                {
+                    if (File.GetLastWriteTime(androidConfig[i]).AddHours(12) < currentTime)
+                    {
+                        File.Delete(androidConfig[i]);
+                        if (File.Exists(androidConfig[i] + ".meta"))
+                            File.Delete(androidConfig[i] + ".meta");
+                    }
+                }
+            }
+#endif
+
+            var iosConfigDeprecated = Directory.GetFiles("ProjectSettings", "ios_cas_settings*.json", SearchOption.TopDirectoryOnly);
+            for (int i = 0; i < iosConfigDeprecated.Length; i++)
+            {
+                File.Delete(iosConfigDeprecated[i]);
+            }
+
+            var removeAssets = AssetDatabase.FindAssets("l:Cas-remove", new[] { "Assets" });
+            for (int i = 0; i < removeAssets.Length; i++)
+            {
+#if !CASDeveloper
+                AssetDatabase.MoveAssetToTrash(AssetDatabase.GUIDToAssetPath(removeAssets[i]));
+#endif
+            }
+        }
+
         private static void ConfigureIOS()
         {
 #if UNITY_IOS || CASDeveloper
             if (!Utils.GetIOSResolverSetting<bool>("PodfileStaticLinkFrameworks"))
             {
-                Utils.DialogOrCancelBuild("Please enable 'Add use_frameworks!' and 'Link frameworks statically' found under " +
+                Debug.LogWarning(Utils.logTag + "Please enable 'Add use_frameworks!' and 'Link frameworks statically' found under " +
                         "'Assets -> External Dependency Manager -> iOS Resolver -> Settings' menu.\n" +
                         "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.");
             }
@@ -136,18 +182,10 @@ namespace CAS.UEditor
 #if UNITY_ANDROID || CASDeveloper
             EditorUtility.DisplayProgressBar(casTitle, "Validate CAS Android Build Settings", 0.8f);
 
-            const string deprecatedPluginPath = "Assets/Plugins/CAS";
-            if (Directory.Exists(deprecatedPluginPath))
-                AssetDatabase.MoveAssetToTrash(deprecatedPluginPath);
-
-            const string deprecatedConfigFileInRes = Utils.androidResSettingsPath + ".json";
-            if (File.Exists(deprecatedConfigFileInRes))
-                AssetDatabase.MoveAssetToTrash(deprecatedConfigFileInRes);
-
 #if !UNITY_2021_2_OR_NEWER
             if (PlayerSettings.Android.minSdkVersion < (AndroidSdkVersions)21)
             {
-                Utils.DialogOrCancelBuild("CAS required a higher minimum SDK API level. Set SDK level 21 (KitKat) and continue?", BuildTarget.NoTarget);
+                Utils.DialogOrCancelBuild("CAS required a higher minimum SDK API level. Set SDK level 21 and continue?", BuildTarget.NoTarget);
                 PlayerSettings.Android.minSdkVersion = (AndroidSdkVersions)21;
             }
 #endif
@@ -366,6 +404,21 @@ namespace CAS.UEditor
 
             var editorSettings = CASEditorSettings.Load();
 
+            var cachePath = Utils.GetNativeSettingsPath(platform, managerID);
+            try
+            {
+                if (File.Exists(cachePath) && File.GetLastWriteTime(cachePath).AddHours(12) > DateTime.Now)
+                {
+                    var content = File.ReadAllText(cachePath);
+                    var data = JsonUtility.FromJson<AdmobAppIdData>(content);
+                    return data.admob_app_id;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(Utils.logTag + e.Message);
+            }
+
             var urlBuilder = new StringBuilder("https://psvpromo.psvgamestudio.com/cas-settings.php?apply=config&platform=")
                 .Append(platform == BuildTarget.Android ? 0 : 1)
                 .Append("&bundle=").Append(UnityWebRequest.EscapeURL(managerID));
@@ -397,7 +450,7 @@ namespace CAS.UEditor
                         {
                             EditorUtility.DisplayProgressBar(title, "Write CAS settings", 0.7f);
                             var data = JsonUtility.FromJson<AdmobAppIdData>(content);
-                            Utils.WriteToFile(content, Utils.GetNativeSettingsPath(platform, managerID));
+                            Utils.WriteToFile(content, cachePath);
                             return data.admob_app_id;
                         }
                     }

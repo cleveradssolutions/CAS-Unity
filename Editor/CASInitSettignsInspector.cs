@@ -155,11 +155,6 @@ namespace CAS.UEditor
         {
             if (allowedPackageUpdate)
                 RemoveDeprecatedAsset(Utils.GetDependencyName(Dependency.adBaseName, platform));
-
-            RemoveDeprecatedAsset(Utils.GetDependencyName("Additional", platform));
-            RemoveDeprecatedAsset(Utils.GetDeprecateDependencyName(Utils.generalDeprecateDependency, platform));
-            RemoveDeprecatedAsset(Utils.GetDeprecateDependencyName(Utils.teenDeprecateDependency, platform));
-            RemoveDeprecatedAsset(Utils.GetDeprecateDependencyName(Utils.promoDeprecateDependency, platform));
         }
 
         private void RemoveDeprecatedAsset(string name)
