@@ -22,7 +22,7 @@ namespace CAS
         public abstract AdNetwork network { get; }
 
         /// <summary>
-        /// The revenue generated for the impression (USD). The revenue value is either estimated or exact, according to the precision
+        /// The revenue generated for the impression (USD). 
         /// <para>The revenue value is either estimated or exact, according to the <see cref="priceAccuracy"/> property.</para>
         /// </summary>
         public abstract double revenue { get; }

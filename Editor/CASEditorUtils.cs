@@ -253,15 +253,11 @@ namespace CAS.UEditor
         public static KeyValuePair[] DefaultUserTrackingUsageDescription()
         {
             return new KeyValuePair[]{
-                new KeyValuePair( "en", "Get ads that are more interesting and support keeping this game free by allowing tracking." ),
-                new KeyValuePair( "de", "\\\"Erlauben\\\" drücken benutzt Gerätinformationen für relevantere Werbeinhalte" ),
-                new KeyValuePair( "ru", "Получайте более интересную рекламу и помогайте этой игре быть бесплатной, поделившись информацией о устройстве." ),
-                new KeyValuePair( "es", "Presionando \\\"Permitir\\\", se usa la información del dispositivo para obtener contenido publicitario más relevante" ),
-                new KeyValuePair( "fr", "\\\"Autoriser\\\" permet d'utiliser les infos du téléphone pour afficher des contenus publicitaires plus pertinents" ),
-                new KeyValuePair( "ja", "\\\"許可\\\"をクリックすることで、デバイス情報を元により最適な広告を表示することができます" ),
-                new KeyValuePair( "ko", "\\\"허용\\\"을 누르면 더 관련성 높은 광고 콘텐츠를 제공하기 위해 기기 정보가 사용됩니다" ),
-                new KeyValuePair( "zh-Hans", "点击\\\"允许\\\"以使用设备信息获得更加相关的广告内容" ),
-                new KeyValuePair( "zh-Hant", "點擊\\\"允許\\\"以使用設備信息獲得更加相關的廣告內容" )
+                new KeyValuePair( "en", "Get ads that are more interesting and support keeping this game free by allowing tracking" ),
+                new KeyValuePair( "de", "Erhalten Sie interessantere Anzeigen und unterstützen Sie, dieses Spiel kostenlos zu halten, indem Sie Tracking zulassen" ),
+                new KeyValuePair( "ru", "Получайте более интересную рекламу и помогайте этой игре быть бесплатной, поделившись информацией о устройстве" ),
+                new KeyValuePair( "es", "Obtenga anuncios más interesantes y ayude a mantener este juego gratuito al permitir el seguimiento" ),
+                new KeyValuePair( "fr", "Obtenez des publicités plus intéressantes et aidez à garder ce jeu gratuit en autorisant le suivi" ),
             };
         }
 

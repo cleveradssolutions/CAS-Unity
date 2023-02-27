@@ -92,8 +92,8 @@ namespace CAS
         ///       .withPrivacyPolicy("https://url_to_privacy_policy")
         /// )
         /// </code>
-        /// By default, the consent flow will be shown to users who are protected by laws.
-        /// You can prevent us from showing the consent dialog to the user ussing followed lines:
+        /// CAS consent flow is enabled by default.
+        /// You can disable the consent flow by building Ad Manager:
         /// <code>
         /// .withConsentFlow(new ConsentFlow(isEnabled: false))
         /// </code>
