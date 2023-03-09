@@ -251,15 +251,17 @@ namespace CAS.UEditor
             return new KeyValuePair[]{
                 new KeyValuePair( "en", "Get ads that are more interesting and support keeping this game free by allowing tracking" ),
                 new KeyValuePair( "de", "Erhalten Sie interessantere Anzeigen und unterstützen Sie, dieses Spiel kostenlos zu halten, indem Sie Tracking zulassen" ),
-                new KeyValuePair( "ru", "Получайте более интересную рекламу и помогайте этой игре быть бесплатной, поделившись информацией о устройстве" ),
                 new KeyValuePair( "es", "Obtenga anuncios más interesantes y ayude a mantener este juego gratuito al permitir el seguimiento" ),
                 new KeyValuePair( "fr", "Obtenez des publicités plus intéressantes et aidez à garder ce jeu gratuit en autorisant le suivi" ),
+                new KeyValuePair( "ua", "Отримуйте більш цікаву рекламу та допомагайте цьому додатку залишатися безкоштовним, поділившись інформацією про пристрій"),
+                new KeyValuePair( "ru", "Получайте более интересную рекламу и помогайте этой игре быть бесплатной, поделившись информацией об устройстве" ),
             };
         }
 
         public static bool isUseAdvertiserIdLimited()
         {
-            return CASEditorSettings.Load().permissionAdIdRemoved;
+            return CASEditorSettings.Load()
+                .isUseAdvertiserIdLimited(CAS.MobileAds.BuildManager().defaultAudienceTagged);
         }
 
         #region Deprecated Dependencies paths
@@ -932,7 +934,7 @@ namespace CAS.UEditor
             EditorGUILayout.EndVertical();
         }
 
-        public static GUIContent GetContent(string text, Texture image, string tooltip = "")
+        public static GUIContent GetContent(string text, Texture image = null, string tooltip = "")
         {
             tempContent.text = text;
             tempContent.image = image;

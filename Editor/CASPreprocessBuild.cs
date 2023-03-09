@@ -16,7 +16,6 @@ using System;
 using Utils = CAS.UEditor.CASEditorUtils;
 using System.Text;
 using UnityEngine.Networking;
-using System.Runtime.Remoting.Contexts;
 
 #if UNITY_2018_1_OR_NEWER
 using UnityEditor.Build.Reporting;
@@ -207,7 +206,7 @@ namespace CAS.UEditor
                     Utils.GetCrossPromoAlias(BuildTarget.Android, settings.GetManagerId(i), promoAlias);
             }
 
-            UpdateAndroidPluginManifest(admobAppId, promoAlias, editorSettings);
+            UpdateAndroidPluginManifest(admobAppId, promoAlias, editorSettings, settings.defaultAudienceTagged);
 
             CASPreprocessGradle.Configure(editorSettings);
 #endif
@@ -269,7 +268,7 @@ namespace CAS.UEditor
             return Utils.SelectSettingsFileAndGetAppId(targetId, platform);
         }
 
-        private static void UpdateAndroidPluginManifest(string admobAppId, HashSet<string> queries, CASEditorSettings settings)
+        private static void UpdateAndroidPluginManifest(string admobAppId, HashSet<string> queries, CASEditorSettings settings, Audience audience)
         {
             const string metaAdmobApplicationID = "com.google.android.gms.ads.APPLICATION_ID";
             const string metaAdmobDelayInit = "com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT";
@@ -334,7 +333,7 @@ namespace CAS.UEditor
 
                 var elemAdIDPermission = new XElement("uses-permission",
                     new XAttribute(nameAttribute, "com.google.android.gms.permission.AD_ID"));
-                if (settings.permissionAdIdRemoved)
+                if (settings.isUseAdvertiserIdLimited(audience))
                     elemAdIDPermission.SetAttributeValue(nsTools + "node", "remove");
                 elemManifest.Add(elemAdIDPermission);
 

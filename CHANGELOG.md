@@ -1,14 +1,15 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
-## [3.1.0] - 2023-02-27
+## [3.0.2] - 2023-03-09
 ### Dependencies
-- [Android] Wraps [3.1.0 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
-- [iOS] Wraps [3.1.0 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+- [Android] Wraps [3.0.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [3.0.2 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 ### Features
 - [Editor] Compiled important plugin scripts to provide access to documentation when integrated by Unity Package Manager.
 - [Editor] Improved unity editor plugin cache. 
 - [Editor] The dialog of new version of the plugin before build has been replaced with a warning log.
 - [Android] Improved stability of full-screen ads when restarting the application from the desktop.
+- [Android] Added automatic management of the Advertiser ID (`AD_ID`) permission depending on the selected audience. You have the option to Add/Remove the permission under Other settings section.
 
 ## [3.0.1] - 2023-02-06
 ### Dependencies

@@ -41,7 +41,7 @@ namespace CAS.UEditor
         private SerializedProperty delayAppMeasurementGADInitProp;
         private SerializedProperty multiDexEnabledProp;
         private SerializedProperty updateGradlePluginVersionProp;
-        private SerializedProperty permissionAdIdRemovedProp;
+        private SerializedProperty permissionAdIdProp;
         private SerializedProperty mostPopularCountryOfUsersProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
@@ -125,7 +125,7 @@ namespace CAS.UEditor
             buildPreprocessEnabledProp = editorSettingsObj.FindProperty("buildPreprocessEnabled");
             updateGradlePluginVersionProp = editorSettingsObj.FindProperty("updateGradlePluginVersion");
             multiDexEnabledProp = editorSettingsObj.FindProperty("multiDexEnabled");
-            permissionAdIdRemovedProp = editorSettingsObj.FindProperty("permissionAdIdRemoved");
+            permissionAdIdProp = editorSettingsObj.FindProperty("permissionAdId");
 
             mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty("mostPopularCountryOfUsers");
             attributionReportEndpointProp = editorSettingsObj.FindProperty("attributionReportEndpoint");
@@ -317,15 +317,6 @@ namespace CAS.UEditor
         }
         #endregion
 
-        private void OnAndroidAdIdGUI()
-        {
-            if (platform != BuildTarget.Android)
-                return;
-            permissionAdIdRemovedProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Prevent use of the Advertiser ID (AD_ID permission)",
-                    permissionAdIdRemovedProp.boolValue);
-        }
-
         private void OnOtherSettingsGUI()
         {
             HelpStyles.BeginBoxScope();
@@ -335,6 +326,17 @@ namespace CAS.UEditor
                 EditorGUILayout.EndFadeGroup();
                 HelpStyles.EndBoxScope();
                 return;
+            }
+
+            if (platform == BuildTarget.Android)
+            {
+                EditorGUILayout.PropertyField(permissionAdIdProp,
+                    HelpStyles.GetContent("Advertiser ID permission"));
+            }
+            else
+            {
+                trackLocationEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                    "Location collection when user allowed", trackLocationEnabledProp.boolValue);
             }
 
             OnLoadingModeGUI();
@@ -707,30 +709,13 @@ namespace CAS.UEditor
                 case Audience.Children:
                     EditorGUILayout.HelpBox("Audiences under the age of 13 who subject of COPPA.",
                         MessageType.None);
-                    if (platform == BuildTarget.Android && !permissionAdIdRemovedProp.boolValue)
-                    {
-                        EditorGUILayout.HelpBox("Families Policy require that apps not use the Ad ID. " +
-                            "We recommend that you remove the permission using the checkbox below.",
-                            MessageType.Warning);
-                    }
                     break;
                 case Audience.NotChildren:
                     EditorGUILayout.HelpBox("Audiences over the age of 13 NOT subject to the restrictions of child protection laws.",
                         MessageType.None);
                     break;
             }
-            OnAndroidAdIdGUI();
-            OnIOSTrackLocationGUI();
             EditorGUI.indentLevel--;
-        }
-
-        private void OnIOSTrackLocationGUI()
-        {
-            if (platform != BuildTarget.iOS)
-                return;
-
-            trackLocationEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Location collection when user allowed", trackLocationEnabledProp.boolValue);
         }
 
         private void OnLoadingModeGUI()
