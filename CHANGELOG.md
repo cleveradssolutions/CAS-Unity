@@ -10,6 +10,8 @@
 - [Editor] The dialog of new version of the plugin before build has been replaced with a warning log.
 - [Android] Improved stability of full-screen ads when restarting the application from the desktop.
 - [Android] Added automatic management of the Advertiser ID (`AD_ID`) permission depending on the selected audience. You have the option to Add/Remove the permission under Other settings section.
+### Bug Fixes
+- [Android] Fixed `IAdView.rectInPixels` values.
 
 ## [3.0.1] - 2023-02-06
 ### Dependencies
