@@ -5,7 +5,6 @@
 //
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
-using System;
 using UnityEngine;
 
 namespace CAS.Android

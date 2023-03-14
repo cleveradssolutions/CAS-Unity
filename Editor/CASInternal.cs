@@ -11,7 +11,6 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
-using UnityEngine.Events;
 using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
@@ -28,6 +27,7 @@ namespace CAS.UEditor
         private BuildTarget platform;
 
         internal GUILayoutOption columnWidth;
+        internal static bool isDirt;
 
         private AnimBool solutionsFoldout = null;
         private AnimBool advancedFoldout = null;
@@ -101,7 +101,7 @@ namespace CAS.UEditor
             return false;
         }
 
-        internal string GetInstalledVersion()
+        public string GetInstalledVersion()
         {
             string version = "";
             var casDep = Find(Dependency.adBaseName);
@@ -123,7 +123,7 @@ namespace CAS.UEditor
             return version;
         }
 
-        internal int GetInstalledBuildCode()
+        public int GetInstalledBuildCode()
         {
             var version = GetInstalledVersion();
             if (!string.IsNullOrEmpty(version))
@@ -563,7 +563,10 @@ namespace CAS.UEditor
                 AssetDatabase.DeleteAsset(destination);
                 installedVersion = "";
                 if (mediation != null)
+                {
+                    DependencyManager.isDirt = true;
                     mediation.Init(platform);
+                }
             }
         }
 
@@ -626,6 +629,7 @@ namespace CAS.UEditor
             if (mediation == null)
                 return;
 
+            DependencyManager.isDirt = true;
             var requireItem = mediation.Find(require);
             if (requireItem != null)
             {

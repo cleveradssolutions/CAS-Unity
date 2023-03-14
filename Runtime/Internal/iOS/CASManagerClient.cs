@@ -6,8 +6,8 @@
 
 #if UNITY_IOS || (CASDeveloper && UNITY_EDITOR)
 using System;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace CAS.iOS

@@ -6,14 +6,13 @@
 
 #pragma warning disable 649
 using System;
-using UnityEngine;
-using UnityEditor;
-using UnityEditorInternal;
-using Utils = CAS.UEditor.CASEditorUtils;
 using System.IO;
-using System.Reflection;
 using System.Text;
+using UnityEditor;
 using UnityEditor.AnimatedValues;
+using UnityEditorInternal;
+using UnityEngine;
+using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
 {
@@ -53,11 +52,12 @@ namespace CAS.UEditor
         private ReorderableList managerIdsList;
         private ReorderableList userTrackingList;
         private BuildTarget platform;
-        private bool allowedPackageUpdate;
         private string newCASVersion = null;
         private Version edmVersion;
-        private bool edmRequiredNewer = false;
         private string environmentDetails;
+        private bool allowedPackageUpdate;
+        private bool legacyUnityAdsPackageInstalled;
+        private bool edmRequiredNewer = false;
 
         private bool adsManagerExist = false;
         private int editorRuntimeActiveAdFlags;
@@ -77,7 +77,12 @@ namespace CAS.UEditor
             iOSLocationDescriptionFoldout = new AnimBool(false, Repaint);
             otherSettingsFoldout = new AnimBool(false, Repaint);
 
-            allowedPackageUpdate = Utils.IsPackageExist(Utils.packageName);
+            if (File.Exists(Utils.packageManifestPath))
+            {
+                var manifest = File.ReadAllText(Utils.packageManifestPath);
+                allowedPackageUpdate = Utils.IsPackageExist(Utils.packageName, manifest);
+                legacyUnityAdsPackageInstalled = Utils.IsPackageExist(Utils.legacyUnityAdsPackageName, manifest);
+            }
 
             dependencyManager = DependencyManager.Create(platform, (Audience)audienceTaggedProp.enumValueIndex, true);
 
@@ -85,10 +90,14 @@ namespace CAS.UEditor
             InitEDM4U();
             InitEnvironmentDetails();
 
-            EditorApplication.delayCall += () =>
-            {
-                newCASVersion = Utils.GetNewVersionOrNull(Utils.gitUnityRepo, MobileAds.wrapperVersion, false);
-            };
+            newCASVersion = Utils.GetNewVersionOrNull(Utils.gitUnityRepo, MobileAds.wrapperVersion, false, OnRemoteCASVersionRecieved);
+        }
+
+        private void OnRemoteCASVersionRecieved(string version)
+        {
+            newCASVersion = version;
+            if (version != null)
+                Repaint();
         }
 
         private void InitMainProperties(SerializedObject props)
@@ -212,6 +221,7 @@ namespace CAS.UEditor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             Utils.OnHeaderGUI(Utils.gitUnityRepo, allowedPackageUpdate, MobileAds.wrapperVersion, ref newCASVersion);
+            EditorGUILayout.Space();
         }
 
         public override void OnInspectorGUI()
@@ -219,7 +229,6 @@ namespace CAS.UEditor
             serializedObject.Update();
             editorSettingsObj.Update();
 
-            GUILayout.Space(5);
             if (managerIdsList.count > 1)
             {
                 var appId = managerIdsProp.GetArrayElementAtIndex(0).stringValue;
@@ -252,6 +261,7 @@ namespace CAS.UEditor
             }
             else
             {
+                OnWarningsAreaGUI();
                 dependencyManager.OnGUI(platform, this);
                 OnEDMAreaGUI();
             }
@@ -584,46 +594,83 @@ namespace CAS.UEditor
                 Application.OpenURL(Utils.gitAppAdsTxtRepoUrl);
         }
 
-        private void OnEDMAreaGUI()
+        private void InstallEDM4U()
+        {
+            string cacheFile = Path.GetFullPath("Library/edm4u.unitypackage");
+            new EditorWebRequest(Utils.latestEMD4uURL)
+                .ToFile(cacheFile)
+                .WithProgress("Download External Dependency Manager")
+                .StartAsync((response) =>
+                {
+                    response.Dispose();
+                    AssetDatabase.ImportPackage(cacheFile, true);
+                    File.Delete(cacheFile);
+                });
+        }
+
+        private void OnWarningsAreaGUI()
         {
             if (edmVersion == null)
             {
-                HelpStyles.BeginBoxScope();
-                EditorGUILayout.HelpBox("In order to properly include third party dependencies in your project, " +
-                    "an External Dependency Manager is required.", MessageType.Error);
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Label("1. Download latest EDM4U.unitypackage", GUILayout.ExpandWidth(false));
-                if (GUILayout.Button("here", EditorStyles.miniButton, GUILayout.ExpandWidth(false)))
-                    Application.OpenURL(Utils.latestEMD4uURL);
-                EditorGUILayout.EndHorizontal();
-                GUILayout.Label("2. Import the EDM4U.unitypackage into your project.");
-                HelpStyles.EndBoxScope();
+                if (HelpStyles.WarningWithButton(
+                    "Mediation requires External Dependency Manager to resolve native dependencies",
+                    "Install", MessageType.Error))
+                    InstallEDM4U();
                 return;
             }
             if (edmRequiredNewer)
             {
-                if (HelpStyles.WarningWithButton("To properly include third-party dependencies in your project, " +
-                    "you need an External Dependency Manager version " + Utils.minEDM4UVersion + " or later.",
-                    "Download"))
-                    Application.OpenURL(Utils.latestEMD4uURL);
+                if (HelpStyles.WarningWithButton(
+                    "The External Dependency Manager version is outdated, required " + Utils.minEDM4UVersion + " or later.",
+                    "Update"))
+                    InstallEDM4U();
+            }
+
+            if (legacyUnityAdsPackageInstalled)
+            {
+                if (HelpStyles.WarningWithButton("Legacy Unity Ads package is installed. " +
+                    "This package is not used and causes a build error due to native library duplication.",
+                    "Remove",
+                    MessageType.Error))
+                    Utils.RemovePackage(Utils.legacyUnityAdsPackageName);
             }
 
             if (platform == BuildTarget.Android)
             {
 #if UNITY_2019_3_OR_NEWER
-                OnGradleTemplateDisabledGUI( "Main Gradle", Utils.mainGradlePath );
-                OnGradleTemplateDisabledGUI( "Base Gradle", Utils.projectGradlePath );
-                OnGradleTemplateDisabledGUI( "Launcher Gradle", Utils.launcherGradlePath );
-                OnGradleTemplateDisabledGUI( "Gradle Properties", Utils.propertiesGradlePath );
+                OnGradleTemplateDisabledGUI("Main Gradle", Utils.mainGradlePath);
+                OnGradleTemplateDisabledGUI("Base Gradle", Utils.projectGradlePath);
+                OnGradleTemplateDisabledGUI("Launcher Gradle", Utils.launcherGradlePath);
+                OnGradleTemplateDisabledGUI("Gradle Properties", Utils.propertiesGradlePath);
 #else
                 OnGradleTemplateDisabledGUI("Gradle", Utils.mainGradlePath);
 #endif
+            }
+            else if (platform == BuildTarget.iOS)
+            {
+                if (PlayerSettings.muteOtherAudioSources)
+                {
+                    if (HelpStyles.WarningWithButton("Known issue with muted all sounds in Unity Game " +
+                        "after closing interstitial ads when 'Mute Other AudioSources' option enabled in PlayerSettings.",
+                        "Disable"))
+                        PlayerSettings.muteOtherAudioSources = false;
+                }
+            }
+        }
 
-                if (HelpStyles.WarningWithButton("Changing dependencies will change the project settings. " +
-                    "Please use Android Resolver after the change complete.", "Resolve", MessageType.Info))
+        private void OnEDMAreaGUI()
+        {
+            if (platform == BuildTarget.Android)
+            {
+                if (edmVersion == null)
+                    return;
+                if (HelpStyles.WarningWithButton(
+                    "Changes to solutions/adapters must be resolved in project dependencies.",
+                    "Resolve", DependencyManager.isDirt ? MessageType.Warning : MessageType.None))
                 {
                     if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
                     {
+                        DependencyManager.isDirt = false;
                         var succses = Utils.TryResolveAndroidDependencies();
                         EditorUtility.DisplayDialog("Android Dependencies",
                             succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
@@ -635,17 +682,6 @@ namespace CAS.UEditor
                             "Android resolver not enabled. Unity Android platform target must be selected.",
                             "OK");
                     }
-                }
-                return;
-            }
-            if (platform == BuildTarget.iOS)
-            {
-                if (PlayerSettings.muteOtherAudioSources)
-                {
-                    OnWarningGUI("Mute Other AudioSources enabled in PlayerSettings",
-                        "Known issue with muted all sounds in Unity Game after closing interstitial ads. " +
-                        "We recommend not using 'Mute Other AudioSources'.",
-                        MessageType.Warning);
                 }
             }
         }
@@ -660,14 +696,6 @@ namespace CAS.UEditor
             if (HelpStyles.WarningWithButton(msg, "Enable", MessageType.Error))
                 CASPreprocessGradle.TryEnableGradleTemplate(path);
 #endif
-        }
-
-        private void OnWarningGUI(string title, string message, MessageType type)
-        {
-            HelpStyles.BeginBoxScope();
-            EditorGUILayout.HelpBox(title, type);
-            EditorGUILayout.LabelField(message, EditorStyles.wordWrappedLabel);
-            HelpStyles.EndBoxScope();
         }
 
         private void OnManagerIDVerificationGUI()

@@ -5,17 +5,17 @@
 //
 
 #if UNITY_ANDROID || UNITY_IOS || CASDeveloper
+using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Xml.Linq;
 using UnityEditor;
 using UnityEditor.Build;
-using System.IO;
-using System.Xml.Linq;
-using System.Linq;
-using System;
-using Utils = CAS.UEditor.CASEditorUtils;
-using System.Text;
+using UnityEngine;
 using UnityEngine.Networking;
+using Utils = CAS.UEditor.CASEditorUtils;
 
 #if UNITY_2018_1_OR_NEWER
 using UnityEditor.Build.Reporting;
@@ -424,41 +424,21 @@ namespace CAS.UEditor
             if (!string.IsNullOrEmpty(editorSettings.mostPopularCountryOfUsers))
                 urlBuilder.Append("&country=").Append(editorSettings.mostPopularCountryOfUsers);
 
-
-            using (var loader = UnityWebRequest.Get(urlBuilder.ToString()))
+            using (var request = new EditorWebRequest(urlBuilder.ToString())
+                .WithProgress(title)
+                .StartSync())
             {
-                try
-                {
-                    loader.SendWebRequest();
-                    while (!loader.isDone)
-                    {
-                        if (EditorUtility.DisplayCancelableProgressBar(title, managerID,
-                            Mathf.Repeat((float)EditorApplication.timeSinceStartup * 0.2f, 1.0f)))
-                        {
-                            loader.Dispose();
-                            throw new Exception("Update CAS configuration canceled");
-                        }
-                    }
-                    if (loader.responseCode == 204)
-                        throw new Exception("'" + managerID + "' is not registered in CAS.");
+                if (request.responseCode == 204)
+                    throw new Exception("'" + managerID + "' is not registered in CAS.");
 
-                    if (string.IsNullOrEmpty(loader.error))
-                    {
-                        var content = loader.downloadHandler.text.Trim();
-                        if (!string.IsNullOrEmpty(content))
-                        {
-                            EditorUtility.DisplayProgressBar(title, "Write CAS settings", 0.7f);
-                            var data = JsonUtility.FromJson<AdmobAppIdData>(content);
-                            Utils.WriteToFile(content, cachePath);
-                            return data.admob_app_id;
-                        }
-                    }
-                    throw new Exception("Connect to server for '" + managerID + "' is failed with error: " + loader.responseCode + " - " + loader.error);
-                }
-                finally
-                {
-                    EditorUtility.ClearProgressBar();
-                }
+                var content = request.ReadContent();
+                if (string.IsNullOrEmpty(content))
+                    throw new Exception("Connect to server for '" + managerID +
+                        "' is failed with error: " + request.responseCode + " - " + request.error);
+
+                var data = JsonUtility.FromJson<AdmobAppIdData>(content);
+                Utils.WriteToFile(content, cachePath);
+                return data.admob_app_id;
             }
         }
 

@@ -7,9 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
@@ -45,7 +43,7 @@ namespace CAS.UEditor
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
         public const string websiteURL = "https://cleveradssolutions.com";
-        public const string latestEMD4uURL = "https://github.com/googlesamples/unity-jar-resolver/blob/master/external-dependency-manager-latest.unitypackage";
+        public const string latestEMD4uURL = "https://github.com/googlesamples/unity-jar-resolver/raw/master/external-dependency-manager-latest.unitypackage";
 
         public static System.Version minEDM4UVersion
         {
@@ -67,6 +65,7 @@ namespace CAS.UEditor
         internal const string editorLatestVersionTimestampPrefs = "cas_last_ver_time_";
         internal const string iosSKAdNetworksTemplateFile = "CASSKAdNetworks.txt";
 
+        internal const string legacyUnityAdsPackageName = "com.unity.ads";
         internal const string editorIconNamePrefix = "cas_editoricon_";
         #endregion
 
@@ -198,9 +197,10 @@ namespace CAS.UEditor
         {
             return !path.StartsWith("Assets/");
         }
+
         private static bool IsPathInHomeAssets(string path)
         {
-            return path.StartsWith("Assets/CleverAdsSolutions/");
+            return path.StartsWith(rootCASFolderPath);
         }
 
         public static string GetDependencyPath(string name, BuildTarget platform)
@@ -260,33 +260,15 @@ namespace CAS.UEditor
 
         public static bool isUseAdvertiserIdLimited()
         {
-            return CASEditorSettings.Load()
-                .isUseAdvertiserIdLimited(CAS.MobileAds.BuildManager().defaultAudienceTagged);
+            var audience = GetSettingsAsset(BuildTarget.Android, false).defaultAudienceTagged;
+            return CASEditorSettings.Load().isUseAdvertiserIdLimited(audience);
         }
 
-        #region Deprecated Dependencies paths
-
-        internal static bool IsDeprecateDependencyExists(string dependency, BuildTarget target)
-        {
-            return AssetDatabase.FindAssets(GetDeprecateDependencyName(dependency, target)).Length > 0;
-        }
-
-        internal static string GetDeprecateDependencyName(string dependency, BuildTarget target)
-        {
-            return "CAS" + dependency + target.ToString() + "Dependencies";
-        }
-
-        internal static string GetDeprecatedDependencyPath(string name, BuildTarget platform)
-        {
-            return editorFolderPath + "/CAS" + name + platform.ToString() + "Dependencies.xml";
-        }
-        #endregion
-
-        public static string GetNewVersionOrNull(string repo, string currVersion, bool force)
+        public static string GetNewVersionOrNull(string repo, string currVersion, bool force, Action<string> asyncResult = null)
         {
             try
             {
-                string newVerStr = null;
+                string remoteVersion = null;
                 if (!force)
                 {
                     var editorSettings = CASEditorSettings.Load();
@@ -294,22 +276,25 @@ namespace CAS.UEditor
                         return null;
 
                     if (!HasTimePassed(editorLatestVersionTimestampPrefs + repo, 1, false))
-                        newVerStr = EditorPrefs.GetString(editorLatestVersionPrefs + repo);
+                        remoteVersion = EditorPrefs.GetString(editorLatestVersionPrefs + repo);
                 }
 
-                if (string.IsNullOrEmpty(newVerStr))
-                    newVerStr = GetLatestVersion(repo, currVersion);
+                if (string.IsNullOrEmpty(remoteVersion))
+                    return RequestLatestVersion(repo, currVersion, asyncResult);
 
-                if (newVerStr != null && newVerStr != currVersion)
-                {
-                    if (ParseVersionToCompare(currVersion) < ParseVersionToCompare(newVerStr))
-                        return newVerStr;
-                }
+                return GetNewVersionOrNull(currVersion, remoteVersion);
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
             }
+            return null;
+        }
+
+        private static string GetNewVersionOrNull(string local, string remote)
+        {
+            if (remote != local && ParseVersionToCompare(local) < ParseVersionToCompare(remote))
+                return remote;
             return null;
         }
 
@@ -338,10 +323,11 @@ namespace CAS.UEditor
             return new System.Version(0, 1);
         }
 
-        public static bool IsPackageExist(string package)
+        public static bool IsPackageExist(string package, string manifest = null)
         {
-            return File.Exists(packageManifestPath) &&
-                File.ReadAllText(packageManifestPath).Contains(package);
+            if (manifest == null && File.Exists(packageManifestPath))
+                manifest = File.ReadAllText(packageManifestPath);
+            return manifest != null && manifest.Contains("\"" + package + "\"");
         }
 
         public static void LinksToolbarGUI(string gitRepoName)
@@ -524,14 +510,6 @@ namespace CAS.UEditor
             Application.OpenURL(gitRootURL + gitRepoName + "/wiki");
         }
 
-        internal static bool IsFirebaseServiceExist(string service)
-        {
-            if (AssetDatabase.FindAssets("Firebase." + service).Length > 0)
-                return true;
-
-            return IsPackageExist("com.google.firebase." + service);
-        }
-
         internal static void OpenSettingsWindow(BuildTarget target)
         {
             var asset = GetSettingsAsset(target);
@@ -591,23 +569,6 @@ namespace CAS.UEditor
             {
                 Debug.LogException(e);
             }
-        }
-
-        internal static bool IsPortraitOrientation()
-        {
-            var orientation = PlayerSettings.defaultInterfaceOrientation;
-            if (orientation == UIOrientation.Portrait || orientation == UIOrientation.PortraitUpsideDown)
-            {
-                return true;
-            }
-            else if (orientation == UIOrientation.AutoRotation)
-            {
-                if (PlayerSettings.allowedAutorotateToPortrait
-                    && !PlayerSettings.allowedAutorotateToLandscapeRight
-                    && !PlayerSettings.allowedAutorotateToLandscapeLeft)
-                    return true;
-            }
-            return false;
         }
 
         internal static void DialogOrCancelBuild(string message, BuildTarget target = BuildTarget.NoTarget, string btn = "Continue")
@@ -687,92 +648,84 @@ namespace CAS.UEditor
             return;
         }
 
-        private static string GetLatestVersion(string repo, string currVersion)
+        private static string RequestLatestVersion(string repo, string currVersion, Action<string> asyncResult)
         {
-            const string title = "Get latest CAS version";
             string url = "https://api.github.com/repos/cleveradssolutions/" + repo + "/releases/latest";
-
-            using (var loader = UnityWebRequest.Get(url))
+            string remoteVersion = null;
+            EditorWebRequest.Result handler = (response) =>
             {
-                loader.timeout = 30;
-                loader.SendWebRequest();
                 try
                 {
-                    while (!loader.isDone)
-                    {
-                        if (EditorUtility.DisplayCancelableProgressBar(title, repo,
-                            Mathf.Repeat((float)EditorApplication.timeSinceStartup * 0.2f, 1.0f)))
-                        {
-                            loader.Dispose();
-                            SaveLatestRepoVersion(repo, currVersion);
-                            return null;
-                        }
-                    }
+                    var content = response.ReadContent();
+                    if (content != null)
+                        remoteVersion = JsonUtility.FromJson<GitVersionInfo>(content).tag_name;
                 }
-                finally
+                catch (Exception e)
                 {
-                    EditorUtility.ClearProgressBar();
+                    Debug.LogException(e);
                 }
-
-                if (string.IsNullOrEmpty(loader.error))
+                if (string.IsNullOrEmpty(remoteVersion))
                 {
-                    var content = loader.downloadHandler.text;
-                    var versionInfo = JsonUtility.FromJson<GitVersionInfo>(content);
-                    if (!string.IsNullOrEmpty(versionInfo.tag_name))
-                        SaveLatestRepoVersion(repo, versionInfo.tag_name);
-
-                    return versionInfo.tag_name;
+                    Debug.LogWarning(logTag + "Check " + repo + " updates failed. Code " +
+                        response.responseCode + ". " + response.error);
+                    SaveLatestRepoVersion(repo, currVersion);
                 }
                 else
                 {
-                    Debug.LogError(logTag + "Check " + repo + " updates failed. Response " +
-                        loader.responseCode + ": " + loader.error);
-                    SaveLatestRepoVersion(repo, currVersion);
+                    SaveLatestRepoVersion(repo, remoteVersion);
+                    remoteVersion = GetNewVersionOrNull(currVersion, remoteVersion);
                 }
+                response.Dispose();
 
+                if (asyncResult != null)
+                    asyncResult(remoteVersion);
+            };
+            var request = new EditorWebRequest(url);
+            if (asyncResult == null)
+            {
+                request.WithProgress("Check latest CAS version")
+                    .StartSync();
+                handler(request);
             }
-
-            return null;
-        }
-
-        internal static int GetOrientationId()
-        {
-            var orientation = Screen.orientation;
-            if (orientation == ScreenOrientation.Portrait || orientation == ScreenOrientation.PortraitUpsideDown)
-                return 1;
-            if (orientation == ScreenOrientation.LandscapeLeft || orientation == ScreenOrientation.LandscapeRight)
-                return 2;
-            var supportPortrait = Screen.autorotateToPortrait || Screen.autorotateToPortraitUpsideDown;
-            var supportLandscape = Screen.autorotateToLandscapeLeft || Screen.autorotateToLandscapeRight;
-            if (supportPortrait && supportLandscape)
-                return 0;
-            if (supportPortrait)
-                return 1;
-            if (supportLandscape)
-                return 2;
-            return 0;
+            else
+            {
+                request.StartAsync(handler);
+            }
+            return remoteVersion;
         }
 
         internal static void UpdatePackageManagerRepo(string gitRepoName, string version)
         {
             var request = UnityEditor.PackageManager.Client.Add(gitRootURL + gitRepoName + ".git#" + version);
-            try
+            new EditorOperation(() =>
             {
-                while (!request.IsCompleted)
+                if (request.IsCompleted)
                 {
-                    if (EditorUtility.DisplayCancelableProgressBar(
-                        "Update Package Manager dependency", gitRepoName + " " + version, 0.5f))
-                        break;
+                    if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
+                        Debug.Log("Package Manager: Updated " + request.Result.displayName);
+                    else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
+                        Debug.LogError(request.Error.message);
+                    return false;
                 }
-                if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
-                    Debug.Log("Package Manager: Update " + request.Result.displayName);
-                else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
-                    Debug.LogError(request.Error.message);
-            }
-            finally
+                return true;
+            });
+        }
+
+        internal static void RemovePackage(string packageName)
+        {
+            var request = UnityEditor.PackageManager.Client.Remove(packageName);
+            new EditorOperation(() =>
             {
-                EditorUtility.ClearProgressBar();
-            }
+                if (request.IsCompleted)
+                {
+                    if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
+                        Debug.Log("Package Manager: Removed " + packageName);
+                    else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
+                        Debug.LogError(request.Error.message);
+                    return false;
+                }
+                return true;
+            });
         }
 
         private static void SaveLatestRepoVersion(string repo, string version)
@@ -813,6 +766,7 @@ namespace CAS.UEditor
         internal static bool IsBatchMode()
         {
 #if UNITY_2018_3_OR_NEWER
+            //!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("UNITY_THISISABUILDMACHINE"));
             return Application.isBatchMode;
 #else
             return false;
@@ -964,11 +918,108 @@ namespace CAS.UEditor
 #if UNITY_2020_1_OR_NEWER
             var height = GUILayout.ExpandHeight( true );
 #else
-            var height = GUILayout.Height(38);
+            var height = GUILayout.Height(type == MessageType.None ? 28 : 38);
 #endif
             var action = GUILayout.Button(btnText, GUILayout.ExpandWidth(false), height);
             EditorGUILayout.EndHorizontal();
             return action;
+        }
+    }
+
+    internal class EditorOperation
+    {
+        private readonly Func<bool> operation;
+
+        internal EditorOperation(Func<bool> operation)
+        {
+            this.operation = operation;
+            EditorApplication.update += Process;
+        }
+
+        private void Process()
+        {
+            if (!operation())
+                EditorApplication.update -= Process;
+        }
+    }
+
+    internal class EditorWebRequest : UnityWebRequest
+    {
+        internal delegate void Result(EditorWebRequest request);
+
+        private Result result;
+        private string title;
+
+        internal EditorWebRequest(string url) : base(url, "GET", null, null)
+        {
+            timeout = 10;
+        }
+
+        public EditorWebRequest ToFile(string path)
+        {
+            timeout = 20;
+            var handler = new DownloadHandlerFile(path);
+            handler.removeFileOnAbort = true;
+            downloadHandler = handler;
+            return this;
+        }
+
+        public EditorWebRequest WithProgress(string title)
+        {
+            this.title = title;
+            return this;
+        }
+
+        public void StartAsync(Result result)
+        {
+            this.result = result;
+            Prepare();
+            EditorApplication.update += Process;
+        }
+
+        public EditorWebRequest StartSync()
+        {
+            if (title == null)
+                title = "CAS Wait for response";
+            Prepare();
+            while (!CheckDone()) { }
+            return this;
+        }
+
+        public string ReadContent()
+        {
+            return isDone ? downloadHandler.text.Trim() : null;
+        }
+
+        private void Prepare()
+        {
+            if (downloadHandler == null)
+                downloadHandler = new DownloadHandlerBuffer();
+            SendWebRequest();
+        }
+
+        private void Process()
+        {
+            if (CheckDone())
+                EditorApplication.update -= Process;
+        }
+
+        private bool CheckDone()
+        {
+            if (!isDone)
+            {
+                if (title == null)
+                    return false;
+                var totalBytes = GetResponseHeader("Content-Length");
+                var message = string.IsNullOrEmpty(totalBytes) ? "Connecting..." : (downloadedBytes + "/" + totalBytes);
+                if (!EditorUtility.DisplayCancelableProgressBar(title, message, downloadProgress))
+                    return false;
+            }
+            EditorUtility.ClearProgressBar();
+
+            if (result != null)
+                result(this);
+            return true;
         }
     }
 }
