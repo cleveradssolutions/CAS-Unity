@@ -253,7 +253,7 @@ namespace CAS.UEditor
                 new KeyValuePair( "de", "Erhalten Sie interessantere Anzeigen und unterstützen Sie, dieses Spiel kostenlos zu halten, indem Sie Tracking zulassen" ),
                 new KeyValuePair( "es", "Obtenga anuncios más interesantes y ayude a mantener este juego gratuito al permitir el seguimiento" ),
                 new KeyValuePair( "fr", "Obtenez des publicités plus intéressantes et aidez à garder ce jeu gratuit en autorisant le suivi" ),
-                new KeyValuePair( "ua", "Отримуйте більш цікаву рекламу та допомагайте цьому додатку залишатися безкоштовним, поділившись інформацією про пристрій"),
+                new KeyValuePair( "uk", "Отримуйте більш цікаву рекламу та допомагайте цьому додатку залишатися безкоштовним, поділившись інформацією про пристрій"),
                 new KeyValuePair( "ru", "Получайте более интересную рекламу и помогайте этой игре быть бесплатной, поделившись информацией об устройстве" ),
             };
         }
