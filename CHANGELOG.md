@@ -1,5 +1,17 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [3.1.1] - 2023-03-20
+### Dependencies
+- [Android] Wraps [3.1.1 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [3.1.1 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- [Editor] Added feature to check and remove Legacy Unity Ads package.
+- [Editor] The CAS plugin version query has been moved to the background.
+- [Editor] Simplify your External Dependency Manager installation process with a single click.
+### Bug Fixes
+- [iOS] Fixed the initial position of the banner ads.
+- [iOS] Fixed publishing app with new list of app tracking descriptions from CAS 3.0.2.
+
 ## [3.0.2] - 2023-03-09
 ### Dependencies
 - [Android] Wraps [3.0.2 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
