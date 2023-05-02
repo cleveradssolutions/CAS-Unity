@@ -39,6 +39,7 @@ namespace CAS.UEditor
         public const string launcherGradlePath = androidPluginsPath + "launcherTemplate.gradle";
         public const string projectGradlePath = androidPluginsPath + "baseProjectTemplate.gradle";
         public const string propertiesGradlePath = androidPluginsPath + "gradleTemplate.properties";
+        public const string settingsGradlePath = androidPluginsPath + "settingTemplate.gradle";
         public const string packageManifestPath = "Packages/manifest.json";
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
@@ -47,7 +48,7 @@ namespace CAS.UEditor
 
         public static System.Version minEDM4UVersion
         {
-            get { return new System.Version(1, 2, 175); }
+            get { return new System.Version(1, 2, 176); }
         }
         #endregion
 

@@ -642,6 +642,9 @@ namespace CAS.UEditor
                 OnGradleTemplateDisabledGUI("Base Gradle", Utils.projectGradlePath);
                 OnGradleTemplateDisabledGUI("Launcher Gradle", Utils.launcherGradlePath);
                 OnGradleTemplateDisabledGUI("Gradle Properties", Utils.propertiesGradlePath);
+#if UNITY_2022_2_OR_NEWER
+                OnGradleTemplateDisabledGUI("Settings Gradle", Utils.settingsGradlePath);
+#endif
 #else
                 OnGradleTemplateDisabledGUI("Gradle", Utils.mainGradlePath);
 #endif

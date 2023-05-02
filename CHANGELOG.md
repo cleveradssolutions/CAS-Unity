@@ -1,5 +1,13 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [3.1.4] - 2023-04-24
+### Dependencies
+- [Android] Wraps [3.1.4 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [3.1.4 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+- External Dependency Manager for Unity [1.2.176](https://github.com/googlesamples/unity-jar-resolver/releases/tag/v1.2.176)
+### Features
+- [Android] Unity 2022.2+ Support with EDM4U 1.2.176 update. Requires `settingsTemplate.gradle` to be enabled.
+
 ## [3.1.3] - 2023-04-24
 ### Dependencies
 - [Android] Wraps [3.1.3 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
