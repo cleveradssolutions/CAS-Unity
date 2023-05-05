@@ -48,7 +48,11 @@ namespace CAS.UEditor
 
         public static System.Version minEDM4UVersion
         {
+#if UNITY_2022_2_OR_NEWER
             get { return new System.Version(1, 2, 176); }
+#else
+            get { return new System.Version(1, 2, 174); }
+#endif
         }
         #endregion
 
