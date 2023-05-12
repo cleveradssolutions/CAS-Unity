@@ -39,7 +39,7 @@ namespace CAS.UEditor
         public const string launcherGradlePath = androidPluginsPath + "launcherTemplate.gradle";
         public const string projectGradlePath = androidPluginsPath + "baseProjectTemplate.gradle";
         public const string propertiesGradlePath = androidPluginsPath + "gradleTemplate.properties";
-        public const string settingsGradlePath = androidPluginsPath + "settingTemplate.gradle";
+        public const string settingsGradlePath = androidPluginsPath + "settingsTemplate.gradle";
         public const string packageManifestPath = "Packages/manifest.json";
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
