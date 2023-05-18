@@ -163,8 +163,7 @@ namespace CAS.UEditor
         internal static bool TryEnableGradleTemplate( string assetPath )
         {
             var fileName = Path.GetFileName( assetPath );
-            var internalTemplate =
-                Path.Combine( Path.Combine( GetUnityAndroidToolsPath(), "GradleTemplates" ), fileName );
+            var internalTemplate = GetUnityAndroidToolsPath("GradleTemplates", fileName);
 
             if (!File.Exists( internalTemplate ))
             {
@@ -193,7 +192,7 @@ namespace CAS.UEditor
         {
             string gradleLibPath;
             if (IsUsedGradleWrapperEmbeddedInUnity())
-                gradleLibPath = Path.Combine( Path.Combine( GetUnityAndroidToolsPath(), "gradle" ), "lib" );
+                gradleLibPath = GetUnityAndroidToolsPath("gradle", "lib");
             else
                 gradleLibPath = Path.Combine( EditorPrefs.GetString( "GradlePath" ), "lib" );
 
@@ -809,7 +808,16 @@ namespace CAS.UEditor
             return EditorPrefs.GetBool( "GradleUseEmbedded" );
         }
 
-        private static string GetUnityAndroidToolsPath()
+        private static string GetUnityAndroidToolsPath(params string[] parts)
+        {
+            var result = GetUnityAndroidToolsDirPath();
+            for (int i = 0; i < parts.Length; i++)
+                result = Path.Combine(result, parts[i]);
+
+            return Path.GetFullPath(result);
+        }
+
+        private static string GetUnityAndroidToolsDirPath()
         {
             // Alternate of internal unity method
             // BuildPipeline.GetBuildToolsDirectory( ( BuildTarget )13 );

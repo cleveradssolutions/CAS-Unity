@@ -1,5 +1,14 @@
 # Clever Ads Solutions Unity Plugin Change Log
 
+## [3.1.6] - 2023-05-17
+### Dependencies
+- [Android] Wraps [3.1.6 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [3.1.6 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
+### Features
+- Changes to `AdsSettings.userConsent` and `AdsSettings.userCCPAStatus` are now saved even after initialization CAS. You still need to restart the application to apply changes to mediation.
+### Bug Fixes
+- [Editor] Typo in Settings Template Util Field (#3)
+
 ## [3.1.5] - 2023-05-05
 ### Dependencies
 - [Android] Wraps [3.1.5 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
