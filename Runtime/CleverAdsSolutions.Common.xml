@@ -364,15 +364,6 @@
             <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
             </summary>
         </member>
-        <member name="P:CAS.IAdsSettings.analyticsCollectionEnabled">
-            <summary>
-            If your application uses Google Analytics (Firebase)
-            then Clever Ads Solutions collects ad impressions and states analytics.  
-            <para>This flag has no effect on ad revenue.</para>
-            <para>Disabling analytics collection may save internet traffic and improve application performance.</para>
-            Disabled by default.
-            </summary>
-        </member>
         <member name="E:CAS.IAdView.OnLoaded">
             <summary>
             Called when the ad loaded and ready to present.

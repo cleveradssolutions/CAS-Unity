@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dependencies>
   <androidPackages>
-    <androidPackage spec="com.cleveradssolutions:cas-sdk:3.1.6" version="3.1.6"/>
+    <androidPackage spec="com.cleveradssolutions:cas-sdk:3.2.0-rc1" version="3.2.0-rc1">
+      <repositories>
+        <repository>https://repo.repsy.io/mvn/cleveradssolutions/beta</repository>
+      </repositories>
+    </androidPackage>
   </androidPackages>
 </dependencies>
