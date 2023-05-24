@@ -112,11 +112,14 @@ namespace CAS.UEditor
             }
             finally
             {
-                EditorUtility.ClearProgressBar();
+                if (!IsBatchMode())
+                {
+                    EditorUtility.ClearProgressBar();
+                    EditorUtility.DisplayDialog("Configure project",
+                        "CAS Plugin has successfully applied all required configurations to your project.",
+                        "Ok");
+                }
             }
-            EditorUtility.DisplayDialog("Configure project",
-                "CAS Plugin has successfully applied all required configurations to your project.",
-                "Ok");
         }
 #endif
 

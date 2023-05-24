@@ -15,7 +15,7 @@
 #pragma mark - CAS Settings
 
 void CASUSetAnalyticsCollectionWithEnabled(BOOL enabled) {
-    [[CAS settings] setAnalyticsCollectionWithEnabled:enabled];
+    
 }
 
 void CASUSetTestDeviceWithIds(const char **testDeviceIDs, int testDeviceIDLength) {
@@ -49,27 +49,27 @@ void CASURestartInterstitialInterval(void) {
 }
 
 void CASUSetUserConsent(int consent) {
-    [[CAS settings] updateUserWithConsent:(CASConsentStatus)consent];
+    CAS.settings.userConsent = (CASConsentStatus)consent;
 }
 
 int CASUGetUserConsent(void) {
-    return (int)[[CAS settings] getUserConsent];
+    return (int)CAS.settings.userConsent;
 }
 
 void CASUSetCCPAStatus(int doNotSell) {
-    [[CAS settings] updateCCPAWithStatus:(CASCCPAStatus)doNotSell];
+    CAS.settings.userCCPAStatus = (CASCCPAStatus)doNotSell;
 }
 
 int CASUGetCCPAStatus(void) {
-    return (int)[[CAS settings] getCCPAStatus];
+    return (int)CAS.settings.userCCPAStatus;
 }
 
 void CASUSetAudienceTagged(int audience) {
-    [[CAS settings] setTaggedWithAudience:(CASAudience)audience];
+    CAS.settings.taggedAudience = (CASAudience)audience;
 }
 
 int CASUGetAudienceTagged(void) {
-    return (int)[[CAS settings] getTaggedAudience];
+    return (int)CAS.settings.taggedAudience;
 }
 
 void CASUSetDebugMode(BOOL mode) {
@@ -156,7 +156,7 @@ void CASUOpenDebugger(CASUManagerRef manager) {
             SEL selector = NSSelectorFromString(@"setTargetManager:");
 
             if (![vc respondsToSelector:selector]) {
-                NSLog(@"[CAS] Framework bridge cant connect to CASTestSuit");
+                NSLog(@"[CAS.AI] Framework bridge cant connect to CASTestSuit");
                 return;
             }
 
@@ -170,7 +170,7 @@ void CASUOpenDebugger(CASUManagerRef manager) {
         }
     }
 
-    NSLog(@"[CAS] Framework bridge cant find CASDebugger");
+    NSLog(@"[CAS.AI] Framework bridge cant find CASDebugger");
 }
 
 const char * CASUGetActiveMediationPattern(void) {
@@ -340,7 +340,7 @@ void CASUSetRewardedDelegate(CASUManagerRef                       managerRef,
                              CASUDidCompletedAdCallback           didComplete,
                              CASUDidClosedAdCallback              didClosed) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
-
+    
     manager.rewardCallback.didLoadedCallback = didLoaded;
     manager.rewardCallback.didFailedCallback = didFailed;
     manager.rewardCallback.willOpeningCallback = willPresent;

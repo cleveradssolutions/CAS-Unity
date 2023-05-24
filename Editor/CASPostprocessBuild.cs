@@ -19,7 +19,7 @@ using UnityEditor.iOS.Xcode.Extensions;
 
 namespace CAS.UEditor
 {
-    internal static class CASPostprocessBuild
+    public static class CASPostprocessBuild
     {
         private const string unityProjectName = "Unity-iPhone";
 

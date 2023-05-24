@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dependencies>
   <iosPods>
-    <iosPod name="CleverAdsSolutions-Base" version="3.1.6">
+    <iosPod name="CleverAdsSolutions-Base" version="3.1.7">
       <sources>
         <source>https://github.com/cleveradssolutions/CAS-Specs.git</source>
       </sources>
