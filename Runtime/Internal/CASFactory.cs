@@ -363,11 +363,7 @@ namespace CAS
         internal static void UnityLog(string message)
         {
             if (GetAdsSettings().isDebugMode)
-#if UNITY_IOS
-                Debug.Log( "[CAS:Unity] " + message );
-#else
-                Debug.Log("[CAS:] " + message);
-#endif
+                Debug.Log("[CAS.AI] " + message);
         }
 
         internal static void UnityLogException(Exception e)
