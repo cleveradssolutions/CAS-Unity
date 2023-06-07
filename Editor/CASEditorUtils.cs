@@ -44,7 +44,6 @@ namespace CAS.UEditor
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
         public const string websiteURL = "https://cleveradssolutions.com";
-        public const string latestEMD4uURL = "https://github.com/googlesamples/unity-jar-resolver/raw/master/external-dependency-manager-latest.unitypackage";
 
         public static System.Version minEDM4UVersion
         {
@@ -72,6 +71,7 @@ namespace CAS.UEditor
 
         internal const string legacyUnityAdsPackageName = "com.unity.ads";
         internal const string editorIconNamePrefix = "cas_editoricon_";
+        internal const string latestEMD4uURL = "https://github.com/googlesamples/unity-jar-resolver/raw/master/external-dependency-manager-latest.unitypackage";
         #endregion
 
         #region Menu items
@@ -371,17 +371,15 @@ namespace CAS.UEditor
 
             if (!string.IsNullOrEmpty(newCASVersion))
             {
-                var updateMessage = "There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.";
+                if (HelpStyles.WarningWithButton("There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.", "Update"))
+                {
 #if UNITY_2018_4_OR_NEWER
-                if (allowedPackageUpdate)
-                {
-                    if (HelpStyles.WarningWithButton(updateMessage, "Update"))
+                    if (allowedPackageUpdate)
                         UpdatePackageManagerRepo(gitRepoName, newCASVersion);
-                }
-                else
+                    else
 #endif
-                {
-                    EditorGUILayout.HelpBox(updateMessage, MessageType.Warning);
+                        InstallUnityPackagePlugin(GetUnityPackagePluginFromReleases(newCASVersion, gitRepoName))
+                            .WithProgress("Download plugin " + gitRepoName);
                 }
             }
         }
@@ -512,6 +510,25 @@ namespace CAS.UEditor
         #endregion
 
         #region Internal API
+
+        internal static EditorWebRequest InstallUnityPackagePlugin(string url)
+        {
+            string cacheFile = Path.GetFullPath("Library/" + Path.GetFileName(url));
+            var request = new EditorWebRequest(url)
+                .ToFile(cacheFile);
+            request.StartAsync((response) =>
+                {
+                    response.Dispose();
+                    AssetDatabase.ImportPackage(cacheFile, true);
+                    File.Delete(cacheFile);
+                });
+            return request;
+        }
+
+        internal static string GetUnityPackagePluginFromReleases(string version, string repo)
+        {
+            return gitRootURL + repo + "/releases/download/" + version + "/CleverAdsSolutions.unitypackage";
+        }
 
         internal static void OpenDocumentation(string gitRepoName)
         {
@@ -660,7 +677,7 @@ namespace CAS.UEditor
         {
             string url = "https://api.github.com/repos/cleveradssolutions/" + repo + "/releases/latest";
             string remoteVersion = null;
-            EditorWebRequest.Result handler = (response) =>
+            EditorWebRequest.OnComplete handler = (response) =>
             {
                 try
                 {
@@ -953,9 +970,9 @@ namespace CAS.UEditor
 
     internal class EditorWebRequest : UnityWebRequest
     {
-        internal delegate void Result(EditorWebRequest request);
+        internal delegate void OnComplete(EditorWebRequest request);
 
-        private Result result;
+        private OnComplete complete;
         private string title;
 
         internal EditorWebRequest(string url) : base(url, "GET", null, null)
@@ -978,9 +995,9 @@ namespace CAS.UEditor
             return this;
         }
 
-        public void StartAsync(Result result)
+        public void StartAsync(OnComplete complete)
         {
-            this.result = result;
+            this.complete = complete;
             Prepare();
             EditorApplication.update += Process;
         }
@@ -1025,8 +1042,8 @@ namespace CAS.UEditor
             }
             EditorUtility.ClearProgressBar();
 
-            if (result != null)
-                result(this);
+            if (complete != null)
+                complete(this);
             return true;
         }
     }

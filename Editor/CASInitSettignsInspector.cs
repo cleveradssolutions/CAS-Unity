@@ -591,16 +591,8 @@ namespace CAS.UEditor
 
         private void InstallEDM4U()
         {
-            string cacheFile = Path.GetFullPath("Library/edm4u.unitypackage");
-            new EditorWebRequest(Utils.latestEMD4uURL)
-                .ToFile(cacheFile)
-                .WithProgress("Download External Dependency Manager")
-                .StartAsync((response) =>
-                {
-                    response.Dispose();
-                    AssetDatabase.ImportPackage(cacheFile, true);
-                    File.Delete(cacheFile);
-                });
+            Utils.InstallUnityPackagePlugin(Utils.latestEMD4uURL)
+                 .WithProgress("Download External Dependency Manager");
         }
 
         private void OnWarningsAreaGUI()

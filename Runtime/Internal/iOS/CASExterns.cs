@@ -52,9 +52,6 @@ namespace CAS.iOS
 
         #region CAS Settings
         [DllImport("__Internal")]
-        internal static extern void CASUSetAnalyticsCollectionWithEnabled(bool enabled);
-
-        [DllImport("__Internal")]
         internal static extern void CASUSetTestDeviceWithIds(string[] testDeviceIDs, int testDeviceIDLength);
 
         [DllImport("__Internal")]
