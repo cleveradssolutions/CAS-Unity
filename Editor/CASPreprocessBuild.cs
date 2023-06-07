@@ -24,7 +24,7 @@ using UnityEditor.Build.Reporting;
 namespace CAS.UEditor
 {
 #if UNITY_2018_1_OR_NEWER
-    internal class CASPreprocessBuild : IPreprocessBuildWithReport
+    public class CASPreprocessBuild : IPreprocessBuildWithReport
 #else
     public class CASPreprocessBuild : IPreprocessBuild
 #endif
@@ -71,7 +71,7 @@ namespace CAS.UEditor
         }
         #endregion
 
-        public static void ConfigureProject(BuildTarget target, CASEditorSettings editorSettings)
+        internal static void ConfigureProject(BuildTarget target, CASEditorSettings editorSettings)
         {
             if (target != BuildTarget.Android && target != BuildTarget.iOS)
                 return;

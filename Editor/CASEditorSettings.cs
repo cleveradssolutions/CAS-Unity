@@ -21,15 +21,11 @@ namespace CAS.UEditor
         /// </summary>
         public string mostPopularCountryOfUsers = "BR";
 
-        public bool multiDexEnabled = true;
         public Permission permissionAdId = Permission.Auto;
-        [Obsolete("Exo player used in any case")]
-        public bool exoPlayerIncluded = true;
         public bool generateAndroidQuerriesForPromo = true;
         public bool updateGradlePluginVersion = true;
 
         public bool generateIOSDeepLinksForPromo = true;
-        public bool bitcodeIOSDisabled = true;
         public string attributionReportEndpoint = null;
 
         /// <summary>
@@ -40,6 +36,17 @@ namespace CAS.UEditor
         /// </summary>
         public KeyValuePair[] userTrackingUsageDescription = new KeyValuePair[0];
 
+
+        public bool bitcodeIOSDisabled { get { return true; } }
+        [Obsolete("Exo player used in any case")]
+        public bool exoPlayerIncluded { get { return true; } }
+
+#if MULTIDEX_ENABLED || !UNITY_2020_1_OR_NEWER
+        public bool multiDexEnabled = true;
+#else
+        // MultiDEX enable by default for API 21+
+        public bool multiDexEnabled { get { return false; } }
+#endif
 
         public static CASEditorSettings Load(bool createAsset = false)
         {

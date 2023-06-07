@@ -38,7 +38,6 @@ namespace CAS.UEditor
         private SerializedProperty autoCheckForUpdatesEnabledProp;
         private SerializedProperty buildPreprocessEnabledProp;
         private SerializedProperty delayAppMeasurementGADInitProp;
-        private SerializedProperty multiDexEnabledProp;
         private SerializedProperty updateGradlePluginVersionProp;
         private SerializedProperty permissionAdIdProp;
         private SerializedProperty mostPopularCountryOfUsersProp;
@@ -133,7 +132,6 @@ namespace CAS.UEditor
             delayAppMeasurementGADInitProp = editorSettingsObj.FindProperty("delayAppMeasurementGADInit");
             buildPreprocessEnabledProp = editorSettingsObj.FindProperty("buildPreprocessEnabled");
             updateGradlePluginVersionProp = editorSettingsObj.FindProperty("updateGradlePluginVersion");
-            multiDexEnabledProp = editorSettingsObj.FindProperty("multiDexEnabled");
             permissionAdIdProp = editorSettingsObj.FindProperty("permissionAdId");
 
             mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty("mostPopularCountryOfUsers");
@@ -372,20 +370,11 @@ namespace CAS.UEditor
 
             if (platform == BuildTarget.Android)
             {
-                EditorGUI.indentLevel++;
                 updateGradlePluginVersionProp.boolValue = EditorGUILayout.ToggleLeft(
                    HelpStyles.GetContent("Update Gradle Plugin enabled", null,
                        "The Gradle plugin version will be updated during build to be optimal " +
                        "for the current Gradle Wrapper version."),
                     updateGradlePluginVersionProp.boolValue);
-
-                EditorGUILayout.BeginHorizontal();
-                multiDexEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Multi DEX enabled",
-                    multiDexEnabledProp.boolValue);
-                HelpStyles.HelpButton(Utils.gitUnityRepoURL + "/wiki/Include-Android#enable-multidex");
-                EditorGUILayout.EndHorizontal();
-                EditorGUI.indentLevel--;
             }
             else
             {
