@@ -4,6 +4,18 @@
 //  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
+#define DisableBitcode
+
+// EDM4U will do this by default
+//#define AddMainTargetToPodfile
+
+// No longer required
+//#define AddApplicationQueriesSchames
+
+#if UNITY_2019_3_OR_NEWER
+#define EmbedDynamicLibraries
+#endif
+
 #if UNITY_IOS || CASDeveloper
 using System;
 using System.Collections.Generic;
@@ -45,7 +57,9 @@ namespace CAS.UEditor
                 plist.SetAttributionReportEndpoint(editorSettings.attributionReportEndpoint);
                 plist.SetDefaultUserTrackingDescription(editorSettings.userTrackingUsageDescription);
                 plist.AddSKAdNetworkItemsForCAS();
+#if AddApplicationQueriesSchames
                 plist.AddApplicationQueriesSchamesForCAS();
+#endif
             });
 
             EditXCProject(buildPath, unityProjectName, (project) =>
@@ -60,8 +74,8 @@ namespace CAS.UEditor
             if (editorSettings.generateIOSDeepLinksForPromo && initSettings)
                 ApplyCrosspromoDynamicLinks(buildPath, initSettings, depManager);
 
-#if UNITY_2019_3_OR_NEWER
-            UpdatePodfileForUnity2019( buildPath );
+#if AddMainTargetToPodfile
+            UpdatePodfileForUnity2019(buildPath);
 #endif
             Debug.Log(CASEditorUtils.logTag + "Postrocess Build done.");
         }
@@ -77,29 +91,26 @@ namespace CAS.UEditor
             EditXCProject(buildPath, unityProjectName, (project) =>
             {
                 var appTargetGuid = project.GetAppGUID();
-                if (editorSettings.bitcodeIOSDisabled)
-                {
-                    project.SetBitcodeEnabled(appTargetGuid, false);
-                    var frameworkGuid = project.GetFrameworkGUID();
-                    if (appTargetGuid != frameworkGuid)
-                        project.SetBitcodeEnabled(frameworkGuid, false);
-                }
+#if DisableBitcode
+                project.SetBitcodeEnabled(appTargetGuid, false);
+                var frameworkGuid = project.GetFrameworkGUID();
+                if (appTargetGuid != frameworkGuid)
+                    project.SetBitcodeEnabled(frameworkGuid, false);
+#endif
                 project.LocalizeUserTrackingDescription(buildPath, appTargetGuid, editorSettings.userTrackingUsageDescription);
 
-                if (IsNeedEmbedDynamicLibraries())
-                {
-                    var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
-                    project.EmbedDynamicLibrariesIfNeeded(buildPath, appTargetGuid, depManager);
-                }
+#if EmbedDynamicLibraries
+                var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
+                project.EmbedDynamicLibrariesIfNeeded(buildPath, appTargetGuid, depManager);
+#endif
             });
 
-            if (editorSettings.bitcodeIOSDisabled)
+#if DisableBitcode
+            EditXCProject(Path.Combine(buildPath, "Pods"), "Pods", (project) =>
             {
-                EditXCProject(Path.Combine(buildPath, "Pods"), "Pods", (project) =>
-                {
-                    project.SetBitcodeEnabled(project.ProjectGuid(), false);
-                });
-            }
+                project.SetBitcodeEnabled(project.ProjectGuid(), false);
+            });
+#endif
         }
 
         private static void UpdatePodfileForUnity2019(string buildPath)
@@ -561,15 +572,6 @@ namespace CAS.UEditor
             }
         }
 
-        private static bool IsNeedEmbedDynamicLibraries()
-        {
-#if UNITY_2019_3_OR_NEWER
-            return true;
-#else
-            return false;
-#endif
-        }
-
         private static void EmbedDynamicLibrariesIfNeeded(this PBXProject project, string buildPath, string targetGuid, DependencyManager deps)
         {
             for (int i = 0; i < deps.networks.Length; i++)
@@ -582,8 +584,8 @@ namespace CAS.UEditor
                     continue;
 
 #if UNITY_2019_3_OR_NEWER
-                var fileGuid = project.AddFile( dynamicLibraryPath, dynamicLibraryPath );
-                project.AddFileToEmbedFrameworks( targetGuid, fileGuid );
+                var fileGuid = project.AddFile(dynamicLibraryPath, dynamicLibraryPath);
+                project.AddFileToEmbedFrameworks(targetGuid, fileGuid);
 #endif
             }
         }

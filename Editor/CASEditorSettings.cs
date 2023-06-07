@@ -22,8 +22,6 @@ namespace CAS.UEditor
         public string mostPopularCountryOfUsers = "BR";
 
         public Permission permissionAdId = Permission.Auto;
-        public bool generateAndroidQuerriesForPromo = true;
-        public bool updateGradlePluginVersion = true;
 
         public bool generateIOSDeepLinksForPromo = true;
         public string attributionReportEndpoint = null;
@@ -37,9 +35,12 @@ namespace CAS.UEditor
         public KeyValuePair[] userTrackingUsageDescription = new KeyValuePair[0];
 
 
-        public bool bitcodeIOSDisabled { get { return true; } }
-        [Obsolete("Exo player used in any case")]
-        public bool exoPlayerIncluded { get { return true; } }
+#if UNITY_2022_2_OR_NEWER
+        // Unity 2022.2 migrate to valid gradle 7.1.2
+        public bool updateGradlePluginVersion { get { return false; } }
+#else
+        public bool updateGradlePluginVersion = true;
+#endif
 
 #if MULTIDEX_ENABLED || !UNITY_2020_1_OR_NEWER
         public bool multiDexEnabled = true;
@@ -47,6 +48,13 @@ namespace CAS.UEditor
         // MultiDEX enable by default for API 21+
         public bool multiDexEnabled { get { return false; } }
 #endif
+
+        [Obsolete("No longer required to work Cross Promo")]
+        public bool generateAndroidQuerriesForPromo { get { return false; } }
+        [Obsolete("Exo player used in any case")]
+        public bool exoPlayerIncluded { get { return true; } }
+        [Obsolete("Starting with Xcode 14, bitcode is no longer required")]
+        public bool bitcodeIOSDisabled { get { return true; } }
 
         public static CASEditorSettings Load(bool createAsset = false)
         {

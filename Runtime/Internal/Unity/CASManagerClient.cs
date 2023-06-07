@@ -360,7 +360,7 @@ namespace CAS.Unity
         internal void Log(string message)
         {
             if (_settings.isDebugMode)
-                Debug.Log("[CleverAdsSolutions] " + message);
+                Debug.Log("[CAS.AI] " + message);
         }
 
         public bool isFullscreenAdVisible

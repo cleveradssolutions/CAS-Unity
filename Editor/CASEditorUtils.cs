@@ -63,7 +63,7 @@ namespace CAS.UEditor
         internal const string gitAppAdsTxtRepoUrl = gitRootURL + "App-ads.txt";
         internal const string attributionReportEndPoint = "https://";
 
-        internal const string logTag = "[CleverAdsSolutions] ";
+        internal const string logTag = "[CAS.AI] ";
         internal const string logAutoFeature = "\nYou can disable this automatic feature by `Assets > CleverAdsSolutions > Settings > Other settings` menu.\n";
         internal const string editorRuntimeActiveAdPrefs = "typesadsavailable";
         internal const string editorLatestVersionPrefs = "cas_last_ver_";

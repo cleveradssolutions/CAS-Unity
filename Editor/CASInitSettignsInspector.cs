@@ -38,7 +38,9 @@ namespace CAS.UEditor
         private SerializedProperty autoCheckForUpdatesEnabledProp;
         private SerializedProperty buildPreprocessEnabledProp;
         private SerializedProperty delayAppMeasurementGADInitProp;
+#if !UNITY_2022_2_OR_NEWER
         private SerializedProperty updateGradlePluginVersionProp;
+#endif
         private SerializedProperty permissionAdIdProp;
         private SerializedProperty mostPopularCountryOfUsersProp;
         private SerializedProperty attributionReportEndpointProp;
@@ -131,7 +133,9 @@ namespace CAS.UEditor
             autoCheckForUpdatesEnabledProp = editorSettingsObj.FindProperty("autoCheckForUpdatesEnabled");
             delayAppMeasurementGADInitProp = editorSettingsObj.FindProperty("delayAppMeasurementGADInit");
             buildPreprocessEnabledProp = editorSettingsObj.FindProperty("buildPreprocessEnabled");
+#if !UNITY_2022_2_OR_NEWER
             updateGradlePluginVersionProp = editorSettingsObj.FindProperty("updateGradlePluginVersion");
+#endif
             permissionAdIdProp = editorSettingsObj.FindProperty("permissionAdId");
 
             mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty("mostPopularCountryOfUsers");
@@ -370,11 +374,13 @@ namespace CAS.UEditor
 
             if (platform == BuildTarget.Android)
             {
+#if !UNITY_2022_2_OR_NEWER
                 updateGradlePluginVersionProp.boolValue = EditorGUILayout.ToggleLeft(
                    HelpStyles.GetContent("Update Gradle Plugin enabled", null,
                        "The Gradle plugin version will be updated during build to be optimal " +
                        "for the current Gradle Wrapper version."),
                     updateGradlePluginVersionProp.boolValue);
+#endif
             }
             else
             {
@@ -628,11 +634,11 @@ namespace CAS.UEditor
             {
 #if UNITY_2019_3_OR_NEWER
                 OnGradleTemplateDisabledGUI("Main Gradle", Utils.mainGradlePath);
-                OnGradleTemplateDisabledGUI("Base Gradle", Utils.projectGradlePath);
-                OnGradleTemplateDisabledGUI("Launcher Gradle", Utils.launcherGradlePath);
                 OnGradleTemplateDisabledGUI("Gradle Properties", Utils.propertiesGradlePath);
 #if UNITY_2022_2_OR_NEWER
                 OnGradleTemplateDisabledGUI("Settings Gradle", Utils.settingsGradlePath);
+#else
+                OnGradleTemplateDisabledGUI("Base Gradle", Utils.projectGradlePath);
 #endif
 #else
                 OnGradleTemplateDisabledGUI("Gradle", Utils.mainGradlePath);

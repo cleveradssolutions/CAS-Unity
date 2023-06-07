@@ -4,6 +4,8 @@
 //  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
+//#define GenerateAndroidQuerriesForCASPromo
+
 #if UNITY_ANDROID || UNITY_IOS || CASDeveloper
 using System;
 using System.Collections.Generic;
@@ -200,11 +202,13 @@ namespace CAS.UEditor
 #endif
 
             HashSet<string> promoAlias = new HashSet<string>();
+#if GenerateAndroidQuerriesForCASPromo
             if (editorSettings.generateAndroidQuerriesForPromo)
             {
                 for (int i = 0; i < settings.managersCount; i++)
                     Utils.GetCrossPromoAlias(BuildTarget.Android, settings.GetManagerId(i), promoAlias);
             }
+#endif
 
             UpdateAndroidPluginManifest(admobAppId, promoAlias, editorSettings, settings.defaultAudienceTagged);
 
