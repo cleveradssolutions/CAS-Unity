@@ -607,17 +607,7 @@ namespace CAS.UEditor
                 builder.Append("  </").Append(depTagName).Append("s>").AppendLine()
                        .AppendLine("</dependencies>");
 
-                var replace = File.Exists(destination);
-                if (!replace)
-                {
-                    var destDir = Path.GetDirectoryName(destination);
-                    if (!Directory.Exists(destDir))
-                        Directory.CreateDirectory(destDir);
-                }
-
-                File.WriteAllText(destination, builder.ToString());
-                if (!replace)
-                    AssetDatabase.ImportAsset(destination);
+                Utils.WriteToAsset(destination, builder.ToString());
 
                 Init(platform, mediation);
             }

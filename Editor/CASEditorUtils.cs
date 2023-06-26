@@ -563,32 +563,35 @@ namespace CAS.UEditor
             return path;
         }
 
-        internal static bool TryCopyFile(string source, string dest)
+        internal static void WriteToAsset(string path, params string[] data)
         {
-            try
-            {
-                AssetDatabase.DeleteAsset(dest);
-                File.Copy(source, dest);
-                AssetDatabase.ImportAsset(dest);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-                return false;
-            }
+            WriteToAsset(path, true, data);
         }
 
-        internal static void WriteToFile(string data, string path)
+        internal static void WriteToAsset(string path, bool overwrite, params string[] data)
         {
+            if (data.Length == 0)
+                return;
             try
             {
-                var directoryPath = Path.GetDirectoryName(path);
-                if (!Directory.Exists(directoryPath))
-                    Directory.CreateDirectory(directoryPath);
-                File.WriteAllText(path, data);
-                File.SetLastWriteTime(path, System.DateTime.Now);
-                AssetDatabase.ImportAsset(path);
+                var fullPath = Path.GetFullPath(path);
+                var needImport = !AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+                if (!overwrite && !needImport) return;
+
+                if (needImport)
+                {
+                    var directoryPath = Path.GetDirectoryName(fullPath);
+                    if (!Directory.Exists(directoryPath))
+                        Directory.CreateDirectory(directoryPath);
+                }
+
+                if (data.Length == 1)
+                    File.WriteAllText(fullPath, data[0]);
+                else
+                    File.WriteAllLines(fullPath, data);
+                File.SetLastWriteTime(fullPath, System.DateTime.Now);
+                if (needImport)
+                    AssetDatabase.ImportAsset(path);
             }
             catch (Exception e)
             {
@@ -631,7 +634,7 @@ namespace CAS.UEditor
                 if (!string.IsNullOrEmpty(filePath))
                 {
                     var content = File.ReadAllText(filePath);
-                    WriteToFile(content, GetNativeSettingsPath(platform, managerID));
+                    WriteToAsset(GetNativeSettingsPath(platform, managerID), content);
                     return GetAdmobAppIdFromJson(content);
                 }
             }
@@ -649,7 +652,7 @@ namespace CAS.UEditor
                 return;
 
             string pattern = "alias\\\": \\\""; //: "iOSBundle\\\": \\\"";
-            string cachePath = GetNativeSettingsPath(platform, managerId);
+            string cachePath = Path.GetFullPath(GetNativeSettingsPath(platform, managerId));
 
             if (File.Exists(cachePath))
             {

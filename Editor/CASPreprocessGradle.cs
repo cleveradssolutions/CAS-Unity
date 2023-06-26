@@ -102,7 +102,7 @@ namespace CAS.UEditor
             List<string> propsFile = ReadGradleFile("Gradle Properties", Utils.propertiesGradlePath);
 
             if (UpdateGradlePropertiesFile(propsFile, gradleProps))
-                File.WriteAllLines(Utils.propertiesGradlePath, propsFile.ToArray());
+                Utils.WriteToAsset(Utils.propertiesGradlePath, propsFile.ToArray());
 #else
             // Unity below version 2019.3 does not have a Gradle Properties file
             // and changes are applied to the base Gradle file.
@@ -119,8 +119,7 @@ namespace CAS.UEditor
                 if (UpdateLauncherGradleFile(launcherGradle, settings, launcherGradlePath))
                 {
 #if UNITY_2019_3_OR_NEWER
-                    File.WriteAllLines(launcherGradlePath, launcherGradle.ToArray());
-                    AssetDatabase.ImportAsset(launcherGradlePath);
+                    Utils.WriteToAsset(launcherGradlePath, launcherGradle.ToArray());
 #else
                     // Unity below version 2019.3 does not have a Gradle Launcher file
                     // and changes are applied to the base Gradle file.
@@ -130,10 +129,7 @@ namespace CAS.UEditor
             }
 
             if (baseGradleChanged)
-            {
-                File.WriteAllLines(baseGradlePath, baseGradle.ToArray());
-                AssetDatabase.ImportAsset(baseGradlePath);
-            }
+                Utils.WriteToAsset(baseGradlePath, baseGradle.ToArray());
         }
 
         internal static void UpdateGradleTemplateIfNeed()
