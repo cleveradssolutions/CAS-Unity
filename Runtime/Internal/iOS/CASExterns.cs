@@ -6,6 +6,7 @@
 
 #if UNITY_IOS || (CASDeveloper && UNITY_EDITOR)
 using System.Runtime.InteropServices;
+using System;
 
 // Type representing a CASManagerBuilder type
 using CASManagerBuilderRef = System.IntPtr;
@@ -25,13 +26,17 @@ using CASManagerClientRef = System.IntPtr;
 // Type representing a NSObject<CASStatusHandler> type
 using CASImpressionRef = System.IntPtr;
 
+// Type representing a CASConsentFlow
+using CASConsentFlowRef = System.IntPtr;
+using UnityEngine;
+
 namespace CAS.iOS
 {
     // Externs used by the iOS component.
     internal class CASExterns
     {
         #region CAS Mediation Manager callbacks
-        internal delegate void CASUInitializationCompleteCallback(CASUManagerRef manager, string error, bool withConsent, bool isTestMode);
+        internal delegate void CASUInitializationCompleteCallback(CASUManagerRef manager, string error, string countryCode, bool withConsent, bool isTestMode);
 
         internal delegate void CASUDidLoadedAdCallback(CASUManagerRef manager);
         internal delegate void CASUDidFailedAdCallback(CASUManagerRef manager, int error);
@@ -49,6 +54,9 @@ namespace CAS.iOS
         internal delegate void CASUViewDidClickedCallback(CASUViewRef view);
         internal delegate void CASUViewDidRectCallback(CASUViewRef view, float x, float y, float width, float height);
         #endregion
+
+        internal delegate void CASUConsentFlowCompletion();
+        internal delegate void CASUATTCompletion(int status);
 
         #region CAS Settings
         [DllImport("__Internal")]
@@ -150,8 +158,12 @@ namespace CAS.iOS
         internal static extern void CASUSetConsentFlow(
             CASManagerBuilderRef builderRef,
             bool isEnabled,
-            string privacyUrl
+            string privacyUrl,
+            CASUConsentFlowCompletion completion
         );
+
+        [DllImport("__Internal")]
+        internal static extern void CASUDisableConsentFlow(CASManagerBuilderRef builderRef);
 
         /// <summary>
         /// Set Mediation Extras to manager Builder
@@ -330,6 +342,70 @@ namespace CAS.iOS
         [DllImport("__Internal")]
         internal static extern double CASUGetImpressionLifetimeRevenue(CASImpressionRef impression);
         #endregion
+
+        [DllImport("__Internal")]
+        internal static extern void CASUShowConsentFlow(bool enabled, string policy, CASUConsentFlowCompletion completion);
+
+        [DllImport("__Internal")]
+        internal static extern void CASURequestATT(CASUATTCompletion callback);
+        [DllImport("__Internal")]
+        internal static extern int CASUGetATTStatus();
+    }
+
+    internal class CASExternCallbacks
+    {
+        internal static Action consentFlowComplete;
+        private static ATTrackingStatus.CompleteHandler attTrackingComplete;
+
+        internal static void ATTRequest(ATTrackingStatus.CompleteHandler callback)
+        {
+            if (attTrackingComplete != null)
+            {
+                if (callback != null)
+                    attTrackingComplete += callback;
+                return;
+            }
+            if (callback == null)
+                attTrackingComplete = IgnoreResponsePlug;
+            else
+                attTrackingComplete = callback;
+
+            CASExterns.CASURequestATT(ATTRequestCompleted);
+        }
+
+        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUConsentFlowCompletion))]
+        internal static void OnConsentFlowCompletion()
+        {
+            try
+            {
+                // Callback in UI Thread from native side
+                if (consentFlowComplete != null)
+                    consentFlowComplete();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            consentFlowComplete = null;
+        }
+
+        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUATTCompletion))]
+        internal static void ATTRequestCompleted(int status)
+        {
+            try
+            {
+                // Callback in UI Thread from native side
+                if (attTrackingComplete != null)
+                    attTrackingComplete((ATTrackingStatus.AuthorizationStatus)status);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            attTrackingComplete = null;
+        }
+
+        private static void IgnoreResponsePlug(ATTrackingStatus.AuthorizationStatus status) { }
     }
 }
 #endif

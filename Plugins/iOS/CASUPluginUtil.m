@@ -61,61 +61,6 @@ static BOOL _pauseOnBackground = YES;
     _pauseOnBackground = pause;
 }
 
-+ (NSString *)stringFromUnity:(const char *)bytes {
-    return bytes ? @(bytes) : nil;
-}
-
-+ (const char *)stringToUnity:(NSString *)str {
-    if (!str) {
-        return NULL;
-    }
-
-    const char *string = str.UTF8String;
-    char *res = (char *)malloc(strlen(string) + 1);
-    strcpy(res, string);
-    return res;
-}
-
-+ (const char *)adMetaDataToStringPointer:(id<CASStatusHandler>)ad {
-    NSMutableString *result = [[NSMutableString alloc] initWithCapacity:64];
-
-    [result appendString:@"cpm="];
-    [result appendFormat:@"%.3f", ad.cpm];
-    [result appendString:@";accuracy="];
-    [result appendString:[@(ad.priceAccuracy) stringValue]];
-    [result appendString:@";"];
-
-    NSString *network = ad.network;
-
-    if (![network isEqualToString:CASNetwork.lastPageAd]) {
-        NSUInteger netIndex = [[CASNetwork values] indexOfObject:network];
-
-        if (netIndex != NSNotFound) {
-            [result appendString:@"network="];
-            [result appendString:[@(netIndex) stringValue]];
-            [result appendString:@";"];
-        }
-    }
-
-    NSString *creativeId = ad.creativeIdentifier;
-
-    if (creativeId.length != 0) {
-        [result appendString:@"creative="];
-        [result appendString:creativeId];
-        [result appendString:@";"];
-    }
-
-    NSString *identifier = ad.identifier;
-
-    if (creativeId.length != 0) {
-        [result appendString:@"id="];
-        [result appendString:identifier];
-        [result appendString:@";"];
-    }
-
-    return [CASUPluginUtil stringToUnity:result];
-}
-
 + (UIViewController *)unityGLViewController {
     return UnityGetGLViewController()
             ? : UnityGetMainWindow().rootViewController

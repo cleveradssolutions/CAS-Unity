@@ -45,7 +45,8 @@ namespace CAS
         internal string targetId;
         internal string userID;
         internal Dictionary<string, string> extras;
-        internal InitCompleteAction initListener;
+        internal InitCompleteAction initListenerDeprecated;
+        internal CASInitCompleteEvent initListener;
         internal ConsentFlow consentFlow;
 #pragma warning restore 649
         #endregion
@@ -80,6 +81,12 @@ namespace CAS
         }
 
         public IManagerBuilder WithInitListener(InitCompleteAction listener)
+        {
+            initListenerDeprecated = listener;
+            return this;
+        }
+        
+        public IManagerBuilder WithCompletionListener(CASInitCompleteEvent listener)
         {
             initListener = listener;
             return this;

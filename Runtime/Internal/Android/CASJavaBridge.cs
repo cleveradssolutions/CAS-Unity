@@ -14,10 +14,12 @@ namespace CAS.Android
     internal static class CASJavaBridge
     {
         #region Clever Ads Solutions SDK class names
-        internal const string bridgeBuilderClass = "com.cleversolutions.ads.unity.CASBridgeBuilder";
-        internal const string settingsClass = "com.cleversolutions.ads.unity.CASBridgeSettings";
-        internal const string adCallbackClass = "com.cleversolutions.ads.unity.CASCallback";
-        internal const string initCallbackClass = "com.cleversolutions.ads.unity.CASInitCallback";
+        internal const string pluginPackage = "com.cleveradssolutions.unityplugin";
+        internal const string bridgeBuilderClass = pluginPackage + ".CASBridgeBuilder";
+        internal const string settingsClass = pluginPackage + ".CASBridgeSettings";
+        internal const string adCallbackClass = pluginPackage + ".CASCallback";
+        internal const string initCallbackClass = pluginPackage + ".CASInitCallback";
+        internal const string consentFlowClass = pluginPackage + ".CASConsentFlow";
         #endregion
 
         internal static void RepeatCall(string method, AndroidJavaObject target, Dictionary<string, string> args, bool staticCall)
@@ -65,16 +67,61 @@ namespace CAS.Android
     internal class InitCallbackProxy : AndroidJavaProxy
     {
         private readonly CASManagerClient manager;
+        internal CASInitCompleteEvent complete;
+        internal InitCompleteAction completeDeprecated;
 
-        public InitCallbackProxy(CASManagerClient manager)
+        public InitCallbackProxy(CASManagerClient manager, CASInitSettings config)
             : base(CASJavaBridge.initCallbackClass)
         {
             this.manager = manager;
+            complete = config.initListener;
+            completeDeprecated = config.initListenerDeprecated;
         }
 
-        public void onCASInitialized(string error, bool isTestMode)
+        public void onCASInitialized(string error, bool isTestMode, string countryCode, bool isConsentRequired)
         {
-            manager.OnInitializationCallback(error, isTestMode);
+            if (string.IsNullOrEmpty(error))
+                error = null;
+            if (string.IsNullOrEmpty(countryCode))
+                countryCode = null;
+
+            CASFactory.UnityLog("OnInitialization " + error);
+
+            CASFactory.ExecuteEvent(() =>
+            {
+                manager.isTestAdMode = isTestMode;
+                manager._initError = error;
+                manager._initCountryCode = countryCode;
+                manager._initConsentRequired = isConsentRequired;
+                manager._initProxy = null;
+                manager.HandleInitEvent(complete, completeDeprecated);
+            });
+        }
+    }
+
+    internal class CASConsentFlowClient : IDisposable
+    {
+        private readonly AndroidJavaObject obj;
+
+        internal CASConsentFlowClient(ConsentFlow flow)
+        {
+            obj = new AndroidJavaObject(CASJavaBridge.consentFlowClass);
+            if (!flow.isEnabled)
+                obj.Call("disable");
+            if (flow.privacyPolicyUrl != null)
+                obj.Call("withPrivacyPolicy", flow.privacyPolicyUrl);
+            if (flow.OnCompleted != null)
+                obj.Call("withDismissListener", new AndroidJavaRunnable(flow.OnCompleted));
+        }
+
+        internal void show()
+        {
+            obj.Call("show");
+        }
+
+        public void Dispose()
+        {
+            obj.Dispose();
         }
     }
 

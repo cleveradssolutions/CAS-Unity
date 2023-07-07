@@ -593,15 +593,18 @@ namespace CAS.UEditor
                        .AppendLine("<dependencies>")
                        .Append("  <").Append(depTagName).Append("s>").AppendLine();
 
+                var includeVersions = CASEditorSettings.Load().includeAdDependencyVersions;
+
                 for (int i = 0; i < dependencies.Length; i++)
                 {
-                    AppendDependency(mediation, new SDK(dependencies[i], version), platform, builder);
+                    AppendDependency(mediation, new SDK(dependencies[i], version), platform, builder, !includeVersions);
                 }
 
                 // EDM4U have a bug.
                 // Dependencies that will be added For All Targets must be at the end of the list of dependencies.
                 // Otherwise, those dependencies that should not be for all targets will be tagged for all targets.
-                AppendSDK(platform, mediation, builder, false);
+                if (includeVersions)
+                    AppendSDK(platform, mediation, builder, false);
                 AppendSDK(platform, mediation, builder, true);
 
                 builder.Append("  </").Append(depTagName).Append("s>").AppendLine()
@@ -634,7 +637,7 @@ namespace CAS.UEditor
             for (int i = 0; i < depsSDK.Count; i++)
             {
                 if (allowAllTargets == depsSDK[i].forAll)
-                    AppendDependency(mediation, depsSDK[i], platform, builder);
+                    AppendDependency(mediation, depsSDK[i], platform, builder, false);
             }
 
             if (mediation == null)
@@ -648,7 +651,7 @@ namespace CAS.UEditor
             }
         }
 
-        private void AppendDependency(DependencyManager mediation, SDK sdk, BuildTarget platform, StringBuilder builder)
+        private void AppendDependency(DependencyManager mediation, SDK sdk, BuildTarget platform, StringBuilder builder, bool includeAllSources)
         {
             var depTagName = platform == BuildTarget.Android ? "androidPackage" : "iosPod";
             var depAttrName = platform == BuildTarget.Android ? "spec" : "name";
@@ -670,7 +673,7 @@ namespace CAS.UEditor
                 for (int i = 0; i < contains.Length; i++)
                 {
                     var item = mediation.Find(contains[i]);
-                    if (item != null && item.depsSDK.Count == 0)
+                    if (item != null && (includeAllSources || item.depsSDK.Count == 0))
                     {
                         item.AppendSources(platform, sourcesBuilder);
                     }

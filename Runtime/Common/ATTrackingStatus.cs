@@ -17,13 +17,13 @@ namespace CAS
     /// <summary>
     /// A class that provides a tracking authorization request and the tracking authorization status of the app.
     /// </summary>
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Tracking-Transparency" )]
+    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Tracking-Transparency")]
     public static class ATTrackingStatus
     {
         /// <summary>
         /// The status values for app tracking authorization.
         /// </summary>
-        [WikiPage( "https://developer.apple.com/documentation/apptrackingtransparency/attrackingmanager/authorizationstatus" )]
+        [WikiPage("https://developer.apple.com/documentation/apptrackingtransparency/attrackingmanager/authorizationstatus")]
         public enum AuthorizationStatus
         {
             /// <summary>
@@ -48,92 +48,49 @@ namespace CAS
             Authorized
         }
 
-        public delegate void CompleteHandler( AuthorizationStatus status );
+        public delegate void CompleteHandler(AuthorizationStatus status);
 
         /// <summary>
         /// The request for user authorization to access app-related data.
         /// This method allows you to request the user permission dialogue.
         /// </summary>
-        [WikiPage( "https://developer.apple.com/documentation/apptrackingtransparency/attrackingmanager/3547037-requesttrackingauthorization" )]
+        [WikiPage("https://developer.apple.com/documentation/apptrackingtransparency/attrackingmanager/3547037-requesttrackingauthorization")]
         public static void Request()
         {
-            Request( null );
+            Request(null);
         }
 
         /// <summary>
         /// The request for user authorization to access app-related data.
         /// This method allows you to request the user permission dialogue.
         /// </summary>
-        [WikiPage( "https://developer.apple.com/documentation/apptrackingtransparency/attrackingmanager/3547037-requesttrackingauthorization" )]
-        public static void Request( CompleteHandler callback )
+        [WikiPage("https://developer.apple.com/documentation/apptrackingtransparency/attrackingmanager/3547037-requesttrackingauthorization")]
+        public static void Request(CompleteHandler callback)
         {
-            if (_completeCallback != null)
-            {
-                if (callback != null)
-                    _completeCallback += callback;
-                return;
-            }
-            if (callback == null)
-                _completeCallback = IgnoreResponsePlug;
-            else
-                _completeCallback = callback;
-
 #if NATIVE_REQUEST
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
-                CASURequestATT( ATTRequestCompleted );
+                CAS.iOS.CASExternCallbacks.ATTRequest(callback);
                 return;
             }
 #endif
-            ATTRequestCompleted( ( int )AuthorizationStatus.NotDetermined );
+            if (callback != null)
+                callback(AuthorizationStatus.NotDetermined);
         }
 
         /// <summary>
         /// The authorization status that is current for the calling application.
         /// This method allows you to check the app tracking transparency (ATT) authorization status.
         /// </summary>
-        [WikiPage( "https://developer.apple.com/documentation/apptrackingtransparency/attrackingmanager/3547038-trackingauthorizationstatus" )]
+        [WikiPage("https://developer.apple.com/documentation/apptrackingtransparency/attrackingmanager/3547038-trackingauthorizationstatus")]
         public static AuthorizationStatus GetStatus()
         {
 #if NATIVE_REQUEST
             if (Application.platform == RuntimePlatform.IPhonePlayer)
-                return ( AuthorizationStatus )CASUGetATTStatus();
+                return (AuthorizationStatus)CAS.iOS.CASExterns.CASUGetATTStatus();
 #endif
             return AuthorizationStatus.NotDetermined;
         }
 
-
-        #region Implementation
-        private static CompleteHandler _completeCallback = null;
-
-#if NATIVE_REQUEST
-        private delegate void CASUATTCompletion( int status );
-
-        [DllImport( "__Internal" )]
-        private static extern void CASURequestATT( CASUATTCompletion callback );
-        [DllImport( "__Internal" )]
-        private static extern int CASUGetATTStatus();
-#endif
-
-#if NATIVE_REQUEST
-        [AOT.MonoPInvokeCallback( typeof( CASUATTCompletion ) )]
-#endif
-        private static void ATTRequestCompleted( int status )
-        {
-            try
-            {
-                // Callback in UI Thread from native side
-                if (_completeCallback != null)
-                    _completeCallback( ( AuthorizationStatus )status );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-            _completeCallback = null;
-        }
-
-        private static void IgnoreResponsePlug( AuthorizationStatus status ) { }
-        #endregion
     }
 }

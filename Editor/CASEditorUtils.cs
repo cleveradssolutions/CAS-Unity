@@ -338,6 +338,7 @@ namespace CAS.UEditor
             return manifest != null && manifest.Contains("\"" + package + "\"");
         }
 
+        // Deprecated. Replaced with OnHeaderGUI()
         public static void LinksToolbarGUI(string gitRepoName)
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
@@ -345,7 +346,7 @@ namespace CAS.UEditor
                 Application.OpenURL(gitRootURL + gitRepoName + "#support");
             if (GUILayout.Button("Wiki", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
                 OpenDocumentation(gitRepoName);
-            if (GUILayout.Button("CleverAdsSolutions.com", EditorStyles.toolbarButton))
+            if (GUILayout.Button("CAS.ai", EditorStyles.toolbarButton))
                 Application.OpenURL(websiteURL);
             EditorGUILayout.EndHorizontal();
         }

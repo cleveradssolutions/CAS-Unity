@@ -45,6 +45,7 @@ namespace CAS.UEditor
         private SerializedProperty mostPopularCountryOfUsersProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
+        private SerializedProperty includeAdDependencyVersionsProp;
         #endregion
 
         #region Utility fields
@@ -87,7 +88,6 @@ namespace CAS.UEditor
 
             dependencyManager = DependencyManager.Create(platform, (Audience)audienceTaggedProp.enumValueIndex, true);
 
-            HandleDeprecatedComponents(allowedPackageUpdate);
             InitEDM4U();
             InitEnvironmentDetails();
 
@@ -140,6 +140,7 @@ namespace CAS.UEditor
 
             mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty("mostPopularCountryOfUsers");
             attributionReportEndpointProp = editorSettingsObj.FindProperty("attributionReportEndpoint");
+            includeAdDependencyVersionsProp = editorSettingsObj.FindProperty("includeAdDependencyVersions");
 
             userTrackingUsageDescriptionProp = editorSettingsObj.FindProperty("userTrackingUsageDescription");
 
@@ -160,23 +161,6 @@ namespace CAS.UEditor
                 platform = BuildTarget.iOS;
             else
                 platform = BuildTarget.NoTarget;
-        }
-
-        private void HandleDeprecatedComponents(bool allowedPackageUpdate)
-        {
-            if (allowedPackageUpdate)
-                RemoveDeprecatedAsset(Utils.GetDependencyName(Dependency.adBaseName, platform));
-        }
-
-        private void RemoveDeprecatedAsset(string name)
-        {
-            var assets = AssetDatabase.FindAssets(name, new[] { "Assets" });
-            for (int i = 0; i < assets.Length; i++)
-            {
-                var path = AssetDatabase.GUIDToAssetPath(assets[i]);
-                Debug.LogWarning(Utils.logTag + "Removed deprecated asset: " + path);
-                AssetDatabase.MoveAssetToTrash(path);
-            }
         }
 
         private void InitEDM4U()
@@ -218,7 +202,7 @@ namespace CAS.UEditor
         {
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("CleverAdsSolutions", HelpStyles.largeTitleStyle);
+            GUILayout.Label("CAS.AI", HelpStyles.largeTitleStyle);
             GUILayout.Label(platform.ToString(), HelpStyles.largeTitleStyle, GUILayout.ExpandWidth(false));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -411,9 +395,14 @@ namespace CAS.UEditor
                 autoCheckForUpdatesEnabledProp.boolValue);
 
             delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Delay measurement of the Google SDK initialization",
+                "Delay measurement of the Ad SDK initialization",
                 delayAppMeasurementGADInitProp.boolValue);
+            
+            includeAdDependencyVersionsProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Include Ad dependency versions",
+                includeAdDependencyVersionsProp.boolValue);
 
+#if CAS_POPULAR_COUNTRY
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Most popular country of users (ISO2)", GUILayout.ExpandWidth(false));
             EditorGUI.BeginChangeCheck();
@@ -426,6 +415,7 @@ namespace CAS.UEditor
                 mostPopularCountryOfUsersProp.stringValue = countryCode.ToUpper();
             }
             EditorGUILayout.EndHorizontal();
+#endif
 
             EditorGUILayout.EndFadeGroup();
             HelpStyles.EndBoxScope();
@@ -661,6 +651,16 @@ namespace CAS.UEditor
                     if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
                     {
                         DependencyManager.isDirt = false;
+                        if (allowedPackageUpdate)
+                        {
+                            var assets = AssetDatabase.FindAssets(Utils.GetDependencyName(Dependency.adBaseName, platform), new[] { "Assets" });
+                            for (int i = 0; i < assets.Length; i++)
+                            {
+                                var path = AssetDatabase.GUIDToAssetPath(assets[i]);
+                                Debug.LogWarning(Utils.logTag + "Removed deprecated asset: " + path);
+                                AssetDatabase.MoveAssetToTrash(path);
+                            }
+                        }
                         var succses = Utils.TryResolveAndroidDependencies();
                         EditorUtility.DisplayDialog("Android Dependencies",
                             succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",

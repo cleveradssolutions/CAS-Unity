@@ -12,11 +12,16 @@ using UnityEngine;
 
 namespace CAS.iOS
 {
-    internal sealed class CASManagerClient : IMediationManager
+    internal sealed class CASManagerClient : IInternalManager
     {
         private IntPtr _managerRef;
         private IntPtr _managerClient;
-        private InitCompleteAction _initCompleteAction;
+        private CASInitCompleteEvent _initComplete;
+        private InitCompleteAction _initCompleteDeprecated;
+        private bool _initialized = false;
+        private string _initError;
+        private string _initCountryCode;
+        private bool _initConsentRequired;
         private LastPageAdContent _lastPageAdContent = null;
         private readonly List<IAdView> _adViews = new List<IAdView>();
 
@@ -100,7 +105,19 @@ namespace CAS.iOS
 
             if (initData.consentFlow != null)
             {
-                CASExterns.CASUSetConsentFlow(builderRef, initData.consentFlow.isEnabled, initData.consentFlow.privacyPolicyUrl);
+                if (initData.consentFlow.isEnabled)
+                {
+                    CASExternCallbacks.consentFlowComplete += initData.consentFlow.OnCompleted;
+
+                    CASExterns.CASUSetConsentFlow(builderRef,
+                        initData.consentFlow.isEnabled,
+                        initData.consentFlow.privacyPolicyUrl,
+                        CASExternCallbacks.OnConsentFlowCompletion);
+                }
+                else
+                {
+                    CASExterns.CASUDisableConsentFlow(builderRef);
+                }
             }
 
             if (initData.extras != null && initData.extras.Count != 0)
@@ -117,8 +134,8 @@ namespace CAS.iOS
                 CASExterns.CASUSetMediationExtras(builderRef, extrasKeys, extrasValues, extrasKeys.Length);
             }
 
-            if (initData.initListener != null)
-                _initCompleteAction = initData.initListener;
+            _initComplete = initData.initListener;
+            _initCompleteDeprecated = initData.initListenerDeprecated;
 
             _managerRef = CASExterns.CASUInitializeManager(builderRef, _managerClient, InitializationCompleteCallback, managerID);
 
@@ -148,6 +165,24 @@ namespace CAS.iOS
                 ReturnAdDidClickedAdCallback,
                 ReturnAdDidClosedAdCallback);
             return this;
+        }
+
+        public void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction)
+        {
+            if (_initialized)
+            {
+                _initComplete = null;
+                _initCompleteDeprecated = null;
+                if (initEvent != null)
+                    initEvent(
+                        new InitialConfiguration(_initError, this, _initCountryCode, _initConsentRequired)
+                    );
+                if (initAction != null)
+                    initAction(_initError == null, _initError);
+                return;
+            }
+            _initComplete += initEvent;
+            _initCompleteDeprecated += initAction;
         }
         #endregion
 
@@ -249,7 +284,7 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUInitializationCompleteCallback))]
-        private static void InitializationCompleteCallback(IntPtr client, string error, bool withConsent, bool isTestMode)
+        private static void InitializationCompleteCallback(IntPtr client, string error, string countryCode, bool withConsent, bool isTestMode)
         {
             try
             {
@@ -258,11 +293,11 @@ namespace CAS.iOS
                 if (instance != null)
                 {
                     instance.isTestAdMode = isTestMode;
-                    if (instance._initCompleteAction != null)
-                    {
-                        instance._initCompleteAction(error == null, error);
-                        instance._initCompleteAction = null;
-                    }
+                    instance._initError = error;
+                    instance._initCountryCode = countryCode;
+                    instance._initConsentRequired = withConsent;
+                    instance._initialized = true;
+                    instance.HandleInitEvent(instance._initComplete, instance._initCompleteDeprecated);
                 }
             }
             catch (Exception e)

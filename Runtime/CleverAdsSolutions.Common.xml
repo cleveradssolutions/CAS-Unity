@@ -196,6 +196,11 @@
             Override a link to the App's Privacy Policy in the consent dialog.
             </summary>
         </member>
+        <member name="M:CAS.ConsentFlow.WithCompletionListener(System.Action)">
+            <summary>
+            Optional. Set a listener to be invoked when the dialog is dismissed.
+            </summary>
+        </member>
         <member name="F:CAS.ConsentStatus.Undefined">
             <summary>
             Mediation ads network behavior
@@ -462,13 +467,6 @@
             <exception cref="T:System.NotSupportedException">Not supported platform. Allowed Android, iOS and Editor only</exception>
             <exception cref="T:System.ArgumentNullException">CAS ID are not found</exception>
         </member>
-        <member name="M:CAS.IManagerBuilder.Initialize">
-            <summary>
-            Same as <see cref="M:CAS.IManagerBuilder.Build"/> method.
-            </summary>
-            <exception cref="T:System.NotSupportedException">Not supported platform. Allowed Android, iOS and Editor only</exception>
-            <exception cref="T:System.ArgumentNullException">CAS ID are not found</exception>
-        </member>
         <member name="M:CAS.IManagerBuilder.WithCASId(System.Int32)">
             <summary>
             An CAS manager ID is a unique ID number assigned to each of your ad placements when they're created in CAS.
@@ -489,21 +487,9 @@
             </summary>
             <exception cref="T:System.ArgumentNullException">CAS ID are is empty</exception>
         </member>
-        <member name="M:CAS.IManagerBuilder.WithManagerIdAtIndex(System.Int32)">
+        <member name="M:CAS.IManagerBuilder.WithCompletionListener(CAS.CASInitCompleteEvent)">
             <summary>
-            Same as <see cref="M:CAS.IManagerBuilder.WithCASId(System.Int32)"/> method. 
-            </summary>
-            <exception cref="T:System.ArgumentNullException">CAS ID are not found with index</exception>
-        </member>
-        <member name="M:CAS.IManagerBuilder.WithManagerId(System.String)">
-            <summary>
-            Same as <see cref="M:CAS.IManagerBuilder.WithCASId(System.String)"/> method. 
-            </summary>
-            <exception cref="T:System.ArgumentNullException">CAS ID is empty</exception>
-        </member>
-        <member name="M:CAS.IManagerBuilder.WithInitListener(CAS.InitCompleteAction)">
-            <summary>
-            Set listener to initialization complete result callback.
+            Set listener to receive a callback after all CAS initialization processes have completed.
             </summary>
         </member>
         <member name="M:CAS.IManagerBuilder.WithEnabledAdTypes(CAS.AdFlags[])">
@@ -556,6 +542,30 @@
             <para>If you're just looking to experiment with the SDK in a Hello World app, though, you can use the true with any manager ID string.</para>
             <para><b>Don't forget to set False test ad mode to release application.</b></para>
             </summary>
+        </member>
+        <member name="M:CAS.IManagerBuilder.WithInitListener(CAS.InitCompleteAction)">
+            <summary>
+            Same as <see cref="M:CAS.IManagerBuilder.WithCompletionListener(CAS.CASInitCompleteEvent)"/>
+            </summary>
+        </member>
+        <member name="M:CAS.IManagerBuilder.WithManagerIdAtIndex(System.Int32)">
+            <summary>
+            Same as <see cref="M:CAS.IManagerBuilder.WithCASId(System.Int32)"/> method. 
+            </summary>
+            <exception cref="T:System.ArgumentNullException">CAS ID are not found with index</exception>
+        </member>
+        <member name="M:CAS.IManagerBuilder.WithManagerId(System.String)">
+            <summary>
+            Same as <see cref="M:CAS.IManagerBuilder.WithCASId(System.String)"/> method. 
+            </summary>
+            <exception cref="T:System.ArgumentNullException">CAS ID is empty</exception>
+        </member>
+        <member name="M:CAS.IManagerBuilder.Initialize">
+            <summary>
+            Same as <see cref="M:CAS.IManagerBuilder.Build"/> method.
+            </summary>
+            <exception cref="T:System.NotSupportedException">Not supported platform. Allowed Android, iOS and Editor only</exception>
+            <exception cref="T:System.ArgumentNullException">CAS ID are not found</exception>
         </member>
         <member name="T:CAS.IMediationManager">
             <summary>
@@ -860,6 +870,26 @@
             <summary>
             Schedule action on the next Update() loop in Unity Thread.
             <para>Warning! To enable EventExecutor requires call once static <see cref="M:CAS.EventExecutor.Initialize"/> method.</para>
+            </summary>
+        </member>
+        <member name="F:CAS.InitialConfiguration.error">
+            <summary>
+            Get the CAS manager initialization error message or NULL if initialization is successful.
+            </summary>
+        </member>
+        <member name="F:CAS.InitialConfiguration.manager">
+            <summary>
+            Get the initialized CAS manager.
+            </summary>
+        </member>
+        <member name="F:CAS.InitialConfiguration.countryCode">
+            <summary>
+            Get the user's ISO-2 country code, or NULL if the location fails.
+            </summary>
+        </member>
+        <member name="F:CAS.InitialConfiguration.isConsentRequired">
+            <summary>
+            The consent must be requested from the user.
             </summary>
         </member>
     </members>

@@ -6,6 +6,7 @@
 
 using System;
 using UnityEngine;
+using UnityEditor;
 
 namespace CAS.UEditor
 {
@@ -15,6 +16,7 @@ namespace CAS.UEditor
         public bool autoCheckForUpdatesEnabled = true;
         public bool delayAppMeasurementGADInit = true;
         public bool buildPreprocessEnabled = true;
+        public bool includeAdDependencyVersions = false;
 
         /// <summary>
         /// ISO2 such as US, RU ...
@@ -78,6 +80,27 @@ namespace CAS.UEditor
             Auto = 0,
             Required = 1,
             Removed = 2
+        }
+    }
+
+    [CustomEditor(typeof(CASEditorSettings))]
+    internal class CASEditorSettingsInspector : Editor
+    {
+        protected override void OnHeaderGUI()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("CAS.AI", HelpStyles.largeTitleStyle);
+            GUILayout.Label("Editor Settings", HelpStyles.largeTitleStyle, GUILayout.ExpandWidth(false));
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+        }
+
+        public override void OnInspectorGUI()
+        {
+            EditorGUILayout.HelpBox("This Asset is created automatically to store Unity Editor behavior settings.", MessageType.Info);
+            EditorGUILayout.HelpBox("Use the 'Assets > CleverAdsSolutions > [Platform] Settings' menu to change the settings.", MessageType.Info);
+            EditorGUILayout.HelpBox("Feel free to move this and other assets from 'CleverAdsSolutions/Editor' to any Editor folder in the project that is convenient for you.", MessageType.Info);
         }
     }
 }
