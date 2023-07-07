@@ -8,6 +8,7 @@
 
 //#define DeclareJavaVersion
 
+#if !UNITY_2022_2_OR_NEWER
 // Many SDKs use the new <queries> element for Android 11 in their bundled Android Manifest files.
 // The Android Gradle plugin version should support new elements, else this will cause build errors:
 // Android resource linking failed
@@ -17,6 +18,7 @@
 // Known issue with jCenter repository where repository is not responding
 // and gradle build stops with timeout error.
 #define ReplaceJCenterToMavenCentral
+#endif
 
 // Exclude `com.google.android.gms:play-services-ads-identifier` from build.
 // Issue: The Advertising ID cannot be used in applications Designed for family.
