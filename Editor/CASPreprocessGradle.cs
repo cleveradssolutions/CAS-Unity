@@ -104,8 +104,10 @@ namespace CAS.UEditor
                 if (UpdateLauncherGradleFile( launcherGradle, settings, launcherGradlePath ))
                 {
 #if UNITY_2019_3_OR_NEWER
+                    var needImport = !File.Exists(Path.GetFullPath(launcherGradlePath));
                     File.WriteAllLines( launcherGradlePath, launcherGradle.ToArray() );
-                    AssetDatabase.ImportAsset( launcherGradlePath );
+                    if (needImport)
+                        AssetDatabase.ImportAsset( launcherGradlePath );
 #else
                     // Unity below version 2019.3 does not have a Gradle Launcher file
                     // and changes are applied to the base Gradle file.
@@ -116,8 +118,10 @@ namespace CAS.UEditor
 
             if (baseGradleChanged)
             {
+                var needImport = !File.Exists(Path.GetFullPath(baseGradlePath));
                 File.WriteAllLines( baseGradlePath, baseGradle.ToArray() );
-                AssetDatabase.ImportAsset( baseGradlePath );
+                if (needImport)
+                    AssetDatabase.ImportAsset( baseGradlePath );
             }
         }
 
