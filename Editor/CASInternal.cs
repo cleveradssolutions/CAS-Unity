@@ -167,7 +167,7 @@ namespace CAS.UEditor
             }
         }
 
-        internal void UpdateDependencies(BuildTarget platform)
+        public void UpdateDependencies(BuildTarget platform)
         {
             for (int i = 0; i < simple.Length; i++)
             {

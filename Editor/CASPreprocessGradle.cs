@@ -11,10 +11,6 @@
 #define DeclareJavaVersion
 #endif
 
-#if !UNITY_2020_1_OR_NEWER
-#define MULTIDEX_ENABLED
-#endif
-
 #if !UNITY_2022_2_OR_NEWER
 // Many SDKs use the new <queries> element for Android 11 in their bundled Android Manifest files.
 // The Android Gradle plugin version should support new elements, else this will cause build errors:
@@ -380,11 +376,7 @@ namespace CAS.UEditor
         {
             int line = 0;
             bool isChanged = false;
-#if MULTIDEX_ENABLED
             bool required = settings.multiDexEnabled;
-#else
-            bool required = false;
-#endif
 
 #if ExcludeGoogleAdIdDependency
             bool appendExcludeAdId = settings.permissionAdIdRemoved;

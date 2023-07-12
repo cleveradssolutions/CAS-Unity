@@ -18,11 +18,6 @@ namespace CAS.UEditor
         public bool buildPreprocessEnabled = true;
         public bool includeAdDependencyVersions = false;
 
-        /// <summary>
-        /// ISO2 such as US, RU ...
-        /// </summary>
-        public string mostPopularCountryOfUsers = "BR";
-
         public Permission permissionAdId = Permission.Auto;
 
         public bool generateIOSDeepLinksForPromo = true;
@@ -44,7 +39,7 @@ namespace CAS.UEditor
         public bool updateGradlePluginVersion = true;
 #endif
 
-#if MULTIDEX_ENABLED || !UNITY_2020_1_OR_NEWER
+#if MULTIDEX_ENABLED
         public bool multiDexEnabled = true;
 #else
         // MultiDEX enable by default for API 21+

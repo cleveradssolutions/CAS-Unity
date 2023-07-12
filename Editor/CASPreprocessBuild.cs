@@ -413,8 +413,6 @@ namespace CAS.UEditor
             var urlBuilder = new StringBuilder("https://psvpromo.psvgamestudio.com/cas-settings.php?apply=config&platform=")
                 .Append(platform == BuildTarget.Android ? 0 : 1)
                 .Append("&bundle=").Append(UnityWebRequest.EscapeURL(managerID));
-            if (!string.IsNullOrEmpty(editorSettings.mostPopularCountryOfUsers))
-                urlBuilder.Append("&country=").Append(editorSettings.mostPopularCountryOfUsers);
 
             using (var request = new EditorWebRequest(urlBuilder.ToString())
                 .WithProgress(title)
