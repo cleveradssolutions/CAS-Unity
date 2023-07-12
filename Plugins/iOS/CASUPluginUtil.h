@@ -17,7 +17,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)saveObject:(nullable id)obj withKey:(nonnull NSString *)key;
 - (void)removeObjectWithKey:(nonnull NSString *)key;
 
-+ (const char *)adMetaDataToStringPointer:(id<CASStatusHandler>)ad;
 + (UIViewController *)unityGLViewController;
 + (void)onAdsWillPressent;
 + (void)onAdsDidClosed;

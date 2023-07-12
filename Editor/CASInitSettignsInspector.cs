@@ -651,16 +651,6 @@ namespace CAS.UEditor
                     if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
                     {
                         DependencyManager.isDirt = false;
-                        if (allowedPackageUpdate)
-                        {
-                            var assets = AssetDatabase.FindAssets(Utils.GetDependencyName(Dependency.adBaseName, platform), new[] { "Assets" });
-                            for (int i = 0; i < assets.Length; i++)
-                            {
-                                var path = AssetDatabase.GUIDToAssetPath(assets[i]);
-                                Debug.LogWarning(Utils.logTag + "Removed deprecated asset: " + path);
-                                AssetDatabase.MoveAssetToTrash(path);
-                            }
-                        }
                         var succses = Utils.TryResolveAndroidDependencies();
                         EditorUtility.DisplayDialog("Android Dependencies",
                             succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",

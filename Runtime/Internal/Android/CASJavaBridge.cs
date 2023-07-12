@@ -78,7 +78,7 @@ namespace CAS.Android
             completeDeprecated = config.initListenerDeprecated;
         }
 
-        public void onCASInitialized(string error, bool isTestMode, string countryCode, bool isConsentRequired)
+        public void onCASInitialized(string error, string countryCode, bool isConsentRequired, bool isTestMode)
         {
             if (string.IsNullOrEmpty(error))
                 error = null;

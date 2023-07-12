@@ -42,6 +42,9 @@ namespace CAS.UEditor
         public const string settingsGradlePath = androidPluginsPath + "settingsTemplate.gradle";
         public const string packageManifestPath = "Packages/manifest.json";
 
+        public const int targetAndroidVersion = 21;
+        public const int targetIOSVersion = 12;
+
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
         public const string websiteURL = "https://cleveradssolutions.com";
 
@@ -198,7 +201,8 @@ namespace CAS.UEditor
 
         public static string GetDependencyName(string name, BuildTarget platform)
         {
-            return "CAS" + platform.ToString() + name + "Dependencies";
+            var platformPrefix = name == Dependency.adBaseName ? "" : platform.ToString();
+            return "CAS" + platformPrefix + name + "Dependencies";
         }
 
         private static bool IsPathInPackage(string path)
@@ -945,7 +949,7 @@ namespace CAS.UEditor
             EditorGUILayout.HelpBox(message, type);
             // Expand height correct work with Unity 2020 or newer
 #if UNITY_2020_1_OR_NEWER
-            var height = GUILayout.ExpandHeight( true );
+            var height = GUILayout.ExpandHeight(true);
 #else
             var height = GUILayout.Height(type == MessageType.None ? 28 : 38);
 #endif

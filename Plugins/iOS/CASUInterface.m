@@ -43,27 +43,27 @@ void CASUSetTestDeviceWithIds(const char **testDeviceIDs, int testDeviceIDLength
         [testDeviceIDsArray addObject:CASUStringFromUnity(testDeviceIDs[i])];
     }
 
-    [[CAS settings] setTestDeviceWithIds:testDeviceIDsArray];
+    [CAS.settings setTestDeviceWithIds:testDeviceIDsArray];
 }
 
 void CASUSetBannerRefreshRate(int interval) {
-    [[CAS settings] setBannerRefreshWithInterval:interval];
+    CAS.settings.bannerRefreshInterval = interval;
 }
 
 int CASUGetBannerRefreshRate(void) {
-    return (int)[[CAS settings] getBannerRefreshInterval];
+    return (int)CAS.settings.bannerRefreshInterval;
 }
 
 void CASUSetInterstitialInterval(int interval) {
-    [[CAS settings] setInterstitialWithInterval:interval];
+    CAS.settings.interstitialInterval = interval;
 }
 
 int CASUGetInterstitialInterval(void) {
-    return (int)[[CAS settings] getInterstitialInterval];
+    return (int)CAS.settings.interstitialInterval;
 }
 
 void CASURestartInterstitialInterval(void) {
-    [[CAS settings] restartInterstitialInterval];
+    [CAS.settings restartInterstitialInterval];
 }
 
 void CASUSetUserConsent(int consent) {
@@ -91,23 +91,23 @@ int CASUGetAudienceTagged(void) {
 }
 
 void CASUSetDebugMode(BOOL mode) {
-    [[CAS settings] setDebugMode:mode];
+    CAS.settings.debugMode = mode;
 }
 
 void CASUSetMuteAdSoundsTo(BOOL muted) {
-    [[CAS settings] setMuteAdSoundsTo:muted];
+    CAS.settings.mutedAdSounds = muted;
 }
 
 void CASUSetLoadingWithMode(int mode) {
-    [[CAS settings] setLoadingWithMode:(CASLoadingManagerMode)mode];
+    [CAS.settings setLoadingWithMode:(CASLoadingManagerMode)mode];
 }
 
 int CASUGetLoadingMode(void) {
-    return (int)[[CAS settings] getLoadingMode];
+    return (int)[CAS.settings getLoadingMode];
 }
 
 void CASUSetInterstitialAdsWhenVideoCostAreLower(BOOL allow) {
-    [[CAS settings] setInterstitialAdsWhenVideoCostAreLowerWithAllow:allow];
+    [CAS.settings setInterstitialAdsWhenVideoCostAreLowerWithAllow:allow];
 }
 
 void CASUSetiOSAppPauseOnBackground(BOOL pause) {
@@ -119,7 +119,7 @@ BOOL CASUGetiOSAppPauseOnBackground(void) {
 }
 
 void CASUSetTrackLocationEnabled(BOOL enabled) {
-    [[CAS settings] setTrackLocationWithEnabled:enabled];
+    [CAS.settings setTrackLocationWithEnabled:enabled];
 }
 
 #pragma mark - User targeting options

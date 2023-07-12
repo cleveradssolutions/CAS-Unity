@@ -306,7 +306,7 @@ namespace CAS.UEditor
             var path = Path.Combine(root, projectName + ".xcodeproj") + "/project.pbxproj";
             if (!File.Exists(path))
             {
-                Debug.LogError(CASEditorUtils.logTag + "XCode project not found: " + path);
+                Debug.LogWarning(CASEditorUtils.logTag + "XCode project not found: " + path);
                 return;
             }
             var project = new PBXProject();

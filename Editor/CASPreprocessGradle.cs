@@ -59,7 +59,7 @@ namespace CAS.UEditor
 #endif
 
             const string launcherGradlePath = Utils.launcherGradlePath;
-            var launcherGradle = ReadGradleFile("Launcher Gradle", launcherGradlePath);
+            var launcherGradle = ReadGradleFile("Launcher Gradle", launcherGradlePath, settings.multiDexEnabled);
 #else
             const string baseGradlePath = Utils.mainGradlePath;
             const string launcherGradlePath = Utils.mainGradlePath;
@@ -784,7 +784,7 @@ namespace CAS.UEditor
 #endregion
 
 #region Utils
-        private static List<string> ReadGradleFile(string prefix, string path)
+        private static List<string> ReadGradleFile(string prefix, string path, bool required = true)
         {
             try
             {
@@ -795,6 +795,9 @@ namespace CAS.UEditor
             {
                 Debug.LogException(e);
             }
+
+            if (!required)
+                return null;
 
             var message = "A successful build requires do modifications to " + prefix + " template. " +
                 "But the template is not activated now.";

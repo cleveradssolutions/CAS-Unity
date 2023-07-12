@@ -164,13 +164,19 @@ namespace CAS.UEditor
                         "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.");
             }
 
-            // UNITY_2019_4_OR_NEWER - Deprecated iOS 9
-            // UNITY_2020_1_OR_NEWER - Deprecated iOS 10
-            var iosVersion = PlayerSettings.iOS.targetOSVersionString;
-            if (iosVersion.StartsWith("9.") || iosVersion.StartsWith("10.") || iosVersion.StartsWith("11."))
+            try
             {
-                Utils.DialogOrCancelBuild("CAS required a higher minimum deployment target. Set iOS 12.0 and continue?", BuildTarget.NoTarget);
-                PlayerSettings.iOS.targetOSVersionString = "12.0";
+                var iosVersion = int.Parse(PlayerSettings.iOS.targetOSVersionString.Split('.')[0]);
+                if (iosVersion < Utils.targetIOSVersion)
+                {
+                    Utils.DialogOrCancelBuild("CAS required a higher minimum deployment target. Set iOS " +
+                        Utils.targetIOSVersion + " and continue?", BuildTarget.NoTarget);
+                    PlayerSettings.iOS.targetOSVersionString = Utils.targetIOSVersion + ".0";
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("Minimum deployment target check failed: " + e.ToString());
             }
 #endif
         }
@@ -181,10 +187,11 @@ namespace CAS.UEditor
             EditorUtility.DisplayProgressBar(casTitle, "Validate CAS Android Build Settings", 0.8f);
 
 #if !UNITY_2021_2_OR_NEWER
-            if (PlayerSettings.Android.minSdkVersion < (AndroidSdkVersions)21)
+            if (PlayerSettings.Android.minSdkVersion < (AndroidSdkVersions)Utils.targetAndroidVersion)
             {
-                Utils.DialogOrCancelBuild("CAS required a higher minimum SDK API level. Set SDK level 21 and continue?", BuildTarget.NoTarget);
-                PlayerSettings.Android.minSdkVersion = (AndroidSdkVersions)21;
+                Utils.DialogOrCancelBuild("CAS required a higher minimum SDK API level. Set SDK level " +
+                    Utils.targetAndroidVersion + " and continue?", BuildTarget.NoTarget);
+                PlayerSettings.Android.minSdkVersion = (AndroidSdkVersions)Utils.targetAndroidVersion;
             }
 #endif
 
