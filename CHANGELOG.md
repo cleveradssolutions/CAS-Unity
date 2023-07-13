@@ -3,7 +3,8 @@
 ## [3.2.0] - 2023-06-17
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.0 SDK
 - Added `ConsentFlow.WithCompletionListener()` to invoke Action when the dialog is dismissed.
-- Added `MobileAds.ShowConsentFlow()` method to manually display ConsentFlow, befoer or after initialization. On CAS initialization, the ConsentFlow still can be displayed automatically when conditions are met. 
+- Added `MobileAds.ShowConsentFlow()` method to manually display ConsentFlow, before and after CAS initialization. 
+  > On CAS initialization, the ConsentFlow still can be displayed automatically when conditions are met. 
 ```csharp
 MobileAds.ShowConsentFlow(
   new ConsentFlow()
@@ -18,7 +19,7 @@ MobileAds.BuildManager().WithCompletionListener((config) =>
   string userCountryISO2OrNull = config.countryCode;
   bool protectionApplied = config.isConsentRequired;
   IMediationManager manager = config.manager;
-}).Build()
+}).Build();
 ```
 - The `AdsSettings.analyticsCollectionEnabled` is deprecated and enabled by default for CrossPromo. 
 - [Android] The Launcher Gradle template file is no longer required.
@@ -32,7 +33,8 @@ MobileAds.BuildManager().WithCompletionListener((config) =>
 - [Editor] Added option to `Include Ad dependency versions` in Editor Ads Settings window. The Ads SDK versions are no longer visible in Gradle and Podfile by default.
 - [Editor] The `Most popular country of users` option is no longer required.
 - [Editor] The `CASEditorSettings` inspector is hidden.
-### Bug Fixes
+### Fixes
+- [Android] Fixed Unity Activity freezing after Return to App Ads closed.
 - [Editor] Fixed infinity import assets bug on Windows Unity Editor.
 
 ## [3.1.9] - 2023-06-12
