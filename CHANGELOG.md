@@ -1,6 +1,6 @@
 # CAS.AI Unity Plugin Change Log
 
-## [3.2.0] - 2023-06-17
+## [3.2.0] - 2023-06-20
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.0 SDK
 - Added `ConsentFlow.WithCompletionListener()` to invoke Action when the dialog is dismissed.
 - Added `MobileAds.ShowConsentFlow()` method to manually display ConsentFlow, before and after CAS initialization. 
@@ -21,6 +21,11 @@ MobileAds.BuildManager().WithCompletionListener((config) =>
   IMediationManager manager = config.manager;
 }).Build();
 ```
+## Changes
+- The list of networks that are included in the Clever solutions has been changed.: 
+  - Optimal solution: Added Chartboost and DTExchange.
+  - Families solution: Added Chartboost and DTExchange.
+- The CAS ConsentFlow dialog will not be present to users who have seen the Google User Messaging Platform form. The user's choice will apply to all networks in the mediation.
 - The `AdsSettings.analyticsCollectionEnabled` is deprecated and enabled by default for CrossPromo. 
 - [Android] The Launcher Gradle template file is no longer required.
 - [Android] The Base Gradle template file is no longer required for Unity 2022.2 or newer.

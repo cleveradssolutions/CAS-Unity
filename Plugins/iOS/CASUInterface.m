@@ -250,7 +250,7 @@ void CASUSetConsentFlow(CASManagerBuilderRef      builderRef,
     flow.privacyPolicyUrl = CASUStringFromUnity(policyUrl);
 
     if (completion) {
-        flow.dismissHandler = ^() {
+        flow.completionHandler = ^(enum CASConsentFlowStatus status) {
             completion();
         };
     }
@@ -613,7 +613,7 @@ void CASUShowConsentFlow(BOOL                      enabled,
     flow.privacyPolicyUrl = CASUStringFromUnity(policy);
 
     if (completion) {
-        flow.dismissHandler = ^() {
+        flow.completionHandler = ^(enum CASConsentFlowStatus status) {
             completion();
         };
     }

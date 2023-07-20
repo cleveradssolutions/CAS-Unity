@@ -14,7 +14,7 @@ namespace CAS.Android
     internal static class CASJavaBridge
     {
         #region Clever Ads Solutions SDK class names
-        internal const string pluginPackage = "com.cleveradssolutions.unityplugin";
+        internal const string pluginPackage = "com.cleveradssolutions.plugin.unity";
         internal const string bridgeBuilderClass = pluginPackage + ".CASBridgeBuilder";
         internal const string settingsClass = pluginPackage + ".CASBridgeSettings";
         internal const string adCallbackClass = pluginPackage + ".CASCallback";
