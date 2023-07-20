@@ -14,7 +14,7 @@ using UnityEngine;
 namespace CAS.Unity
 {
     [AddComponentMenu("")]
-    internal class CASManagerClient : MonoBehaviour, IMediationManager
+    internal class CASManagerClient : MonoBehaviour, IInternalManager
     {
         private List<Action> _eventsQueue = new List<Action>();
         private GUIStyle _btnStyle = null;
@@ -30,7 +30,8 @@ namespace CAS.Unity
         private CASFullscreenView _interstitial;
         [SerializeField]
         private CASFullscreenView _rewarded;
-
+        
+        private CASInitCompleteEvent _initCompleteEvent;
         private InitCompleteAction _initCompleteAction;
         private LastPageAdContent _lastPageAdContent;
 
@@ -181,9 +182,20 @@ namespace CAS.Unity
             for (int i = 0; i < enabledTypes.Length; i++)
                 enabledTypes[i] = ((int)initSettings.defaultAllowedFormats & (1 << i)) != 0;
 
-            _initCompleteAction = initSettings.initListener;
+            _initCompleteEvent = initSettings.initListener;
+            _initCompleteAction = initSettings.initListenerDeprecated;
             _interstitial = new CASFullscreenView(this, AdType.Interstitial);
             _rewarded = new CASFullscreenView(this, AdType.Rewarded);
+        }
+
+        public void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction)
+        {
+            if (initEvent != null)
+                initEvent(new InitialConfiguration(null, this, "US", true));
+            if (initAction != null)
+                initAction(true, null);
+            _initCompleteAction = null;
+            _initCompleteEvent = null;
         }
 
         #region IMediationManager implementation
@@ -301,8 +313,7 @@ namespace CAS.Unity
 
         private void CallInitComplete()
         {
-            if (_initCompleteAction != null)
-                _initCompleteAction(true, null);
+            HandleInitEvent(_initCompleteEvent, _initCompleteAction);
         }
 
         public void Update()
@@ -360,7 +371,7 @@ namespace CAS.Unity
         internal void Log(string message)
         {
             if (_settings.isDebugMode)
-                Debug.Log("[CleverAdsSolutions] " + message);
+                Debug.Log("[CAS.AI] " + message);
         }
 
         public bool isFullscreenAdVisible

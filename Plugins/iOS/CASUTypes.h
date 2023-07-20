@@ -21,8 +21,11 @@ typedef const void * CASUViewRef;
 /// Type representing a NSObject<CASStatusHandler> type
 typedef const void * CASImpressionRef;
 
+/// Type representing a CASConsentFlow
+typedef const void * CASConsentFlowRef;
+
 // MARK: - CAS Mediation Manager callbacks
-typedef void (*CASUInitializationCompleteCallback)(CASManagerClientRef *manager, const char *error, BOOL withConsent, BOOL isTestMode);
+typedef void (*CASUInitializationCompleteCallback)(CASManagerClientRef *manager, const char *error, const char *countryCode, BOOL withConsent, BOOL isTestMode);
 
 typedef void (*CASUDidLoadedAdCallback)(CASManagerClientRef *manager);
 typedef void (*CASUDidFailedAdCallback)(CASManagerClientRef *manager, int error);
@@ -41,3 +44,4 @@ typedef void (*CASUViewDidClickedCallback)(CASViewClientRef *view);
 typedef void (*CASUViewDidRectCallback)(CASViewClientRef *view, float x, float y, float width, float height);
 
 typedef void (*CASUATTCompletion)(NSUInteger status);
+typedef void (*CASUConsentFlowCompletion)(void);

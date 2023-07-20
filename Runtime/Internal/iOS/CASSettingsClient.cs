@@ -12,7 +12,6 @@ namespace CAS.iOS
 {
     internal class CASSettingsClient : IAdsSettings, ITargetingOptions
     {
-        private bool _analyticsCollectionEnabled = false;
         private bool _isDebugMode = false;
         private bool _isMutedAdSounds = false;
         private bool _allowInterstitialAdsWhenVideoCostAreLower = true;
@@ -21,15 +20,7 @@ namespace CAS.iOS
         private Gender _gender = Gender.Unknown;
         private int _age = 0;
 
-        public bool analyticsCollectionEnabled
-        {
-            get { return _analyticsCollectionEnabled; }
-            set
-            {
-                _analyticsCollectionEnabled = value;
-                CASExterns.CASUSetAnalyticsCollectionWithEnabled(value);
-            }
-        }
+        public bool analyticsCollectionEnabled { get; set; }
 
         public int bannerRefreshInterval
         {

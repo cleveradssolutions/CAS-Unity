@@ -71,8 +71,8 @@ static const int AD_SIZE_LINE = 7;
         case AD_SIZE_BANNER: return CASSize.banner;
 
         case AD_SIZE_ADAPTIVE: {
-            CGRect screenRect = [controller.view bounds];
-            CGFloat width = MIN(CGRectGetWidth(screenRect), CASSize.leaderboard.width);
+            CGSize screenSize = [self getSafeBoundsView:controller.view].size;
+            CGFloat width = MIN(screenSize.width, CASSize.leaderboard.width);
             return [CASSize getAdaptiveBannerForMaxWidth:width];
         }
 
@@ -82,11 +82,13 @@ static const int AD_SIZE_LINE = 7;
 
         case AD_SIZE_MREC: return CASSize.mediumRectangle;
 
-        case AD_SIZE_FULL_WIDTH:
-            return [CASSize getAdaptiveBannerInContainer:controller.view];
+        case AD_SIZE_FULL_WIDTH:{
+            CGSize screenSize = [self getSafeBoundsView:controller.view].size;
+            return [CASSize getAdaptiveBannerForMaxWidth:screenSize.width];
+        }
 
         case AD_SIZE_LINE:{
-            CGSize screenSize = [controller.view bounds].size;
+            CGSize screenSize = [self getSafeBoundsView:controller.view].size;
             BOOL inLandscape = screenSize.height < screenSize.width;
             CGFloat bannerHeight;
 
@@ -206,18 +208,21 @@ static const int AD_SIZE_LINE = 7;
     }
 }
 
-- (void)positionView:(UIView *)view
-        inParentView:(UIView *)parentView {
-    CGRect parentBounds = parentView.bounds;
-
+- (CGRect)getSafeBoundsView:(UIView *)view {
     if (@available(iOS 11, *)) {
-        CGRect safeAreaFrame = parentView.safeAreaLayoutGuide.layoutFrame;
+        CGRect safeAreaFrame = view.safeAreaLayoutGuide.layoutFrame;
 
         if (!CGSizeEqualToSize(CGSizeZero, safeAreaFrame.size)) {
-            parentBounds = safeAreaFrame;
+            return safeAreaFrame;
         }
     }
 
+    return view.bounds;
+}
+
+- (void)positionView:(UIView *)view
+        inParentView:(UIView *)parentView {
+    CGRect parentBounds = [self getSafeBoundsView:parentView];
     CGSize adSize = view.intrinsicContentSize;
 
     if (CGSizeEqualToSize(CGSizeZero, adSize)) {

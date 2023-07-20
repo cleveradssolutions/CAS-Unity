@@ -1,4 +1,51 @@
-# Clever Ads Solutions Unity Plugin Change Log
+# CAS.AI Unity Plugin Change Log
+
+## [3.2.0] - 2023-06-20
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.0 SDK
+- Added `ConsentFlow.WithCompletionListener()` to invoke Action when the dialog is dismissed.
+- Added `MobileAds.ShowConsentFlow()` method to manually display ConsentFlow, before and after CAS initialization. 
+  > On CAS initialization, the ConsentFlow still can be displayed automatically when conditions are met. 
+```csharp
+MobileAds.ShowConsentFlow(
+  new ConsentFlow()
+    .WithCompletionListener(() => Debug.Log("The dialog is dismissed."))
+);
+```
+- Added `IManagerBuilder.WithCompletionListener()` with new `InitialConfiguration` parameter:
+```csharp
+MobileAds.BuildManager().WithCompletionListener((config) =>
+{
+  string initErrorOrNull = config.error;
+  string userCountryISO2OrNull = config.countryCode;
+  bool protectionApplied = config.isConsentRequired;
+  IMediationManager manager = config.manager;
+}).Build();
+```
+## Changes
+- The list of networks that are included in the Clever solutions has been changed.: 
+  - Optimal solution: Added Chartboost and DTExchange.
+  - Families solution: Added Chartboost and DTExchange.
+- The CAS ConsentFlow dialog will not be present to users who have seen the Google User Messaging Platform form. The user's choice will apply to all networks in the mediation.
+- The `AdsSettings.analyticsCollectionEnabled` is deprecated and enabled by default for CrossPromo. 
+- [Android] The Launcher Gradle template file is no longer required.
+- [Android] The Base Gradle template file is no longer required for Unity 2022.2 or newer.
+- [Android] The Multidex is no longer required.
+- [Android] The Gradle version update is no longer required for Unity 2022.2 or newer.
+- [Android] The Queries is no longer required for CrossPromo.
+- [iOS] The `Unity-iPhone` target is no longer required in the Podfile.
+- [iOS] The Queries Schemes is no longer required in the Info.plist.
+- [Editor] Added one click plugin version update for `.unitypackage` integration in Editor Ads Settings window.
+- [Editor] Added option to `Include Ad dependency versions` in Editor Ads Settings window. The Ads SDK versions are no longer visible in Gradle and Podfile by default.
+- [Editor] The `Most popular country of users` option is no longer required.
+- [Editor] The `CASEditorSettings` inspector is hidden.
+### Fixes
+- [Android] Fixed Unity Activity freezing after Return to App Ads closed.
+- [Editor] Fixed infinity import assets bug on Windows Unity Editor.
+
+## [3.1.9] - 2023-06-12
+### Dependencies
+- [Android] Wraps [3.1.9 SDK](https://github.com/cleveradssolutions/CAS-Android/releases)
+- [iOS] Wraps [3.1.9 SDK](https://github.com/cleveradssolutions/CAS-iOS/releases)
 
 ## [3.1.8] - 2023-05-31
 ### Dependencies

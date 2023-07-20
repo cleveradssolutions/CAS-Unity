@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 namespace CAS.Android
 {
-    internal sealed class CASManagerClient : IMediationManager
+    internal sealed class CASManagerClient : IInternalManager
     {
         private AdEventsProxy _interstitialProxy;
         private AdEventsProxy _rewardedProxy;
@@ -19,12 +19,14 @@ namespace CAS.Android
         private AndroidJavaObject _managerBridge;
         private LastPageAdContent _lastPageAdContent = null;
 
-        private InitCompleteAction _initCompleteAction;
-        private InitCallbackProxy _initListener;
+        internal InitCallbackProxy _initProxy;
+        internal string _initError;
+        internal string _initCountryCode;
+        internal bool _initConsentRequired;
         private readonly List<IAdView> _adViews = new List<IAdView>();
 
         public string managerID { get; private set; }
-        public bool isTestAdMode { get; private set; }
+        public bool isTestAdMode { get; set; }
 
         public LastPageAdContent lastPageAdContent
         {
@@ -178,12 +180,11 @@ namespace CAS.Android
         }
 #endif
 
-        internal CASManagerClient Init(CASInitSettings initData)
+        internal IMediationManager Init(CASInitSettings initData)
         {
             managerID = initData.targetId;
             isTestAdMode = initData.IsTestAdMode();
-            _initCompleteAction = initData.initListener;
-            _initListener = new InitCallbackProxy(this);
+            _initProxy = new InitCallbackProxy(this, initData);
             _interstitialProxy = new AdEventsProxy(AdType.Interstitial);
             _rewardedProxy = new AdEventsProxy(AdType.Rewarded);
             _returnAdProxy = new AdEventsProxy(AdType.Interstitial);
@@ -198,16 +199,16 @@ namespace CAS.Android
 
                 if (initData.consentFlow != null)
                 {
-                    if (initData.consentFlow.isEnabled)
-                        builder.Call("enableConsentFlow", initData.consentFlow.privacyPolicyUrl);
-                    else
+                    if (!initData.consentFlow.isEnabled)
                         builder.Call("disableConsentFlow");
+                    else
+                        builder.Call("withConsentFlow", new CASConsentFlowClient(initData.consentFlow));
                 }
 
                 CASJavaBridge.RepeatCall("addExtras", builder, initData.extras, false);
 
 
-                builder.Call("setCallbacks", _initListener, _interstitialProxy, _rewardedProxy);
+                builder.Call("setCallbacks", _initProxy, _interstitialProxy, _rewardedProxy);
 
                 _managerBridge = builder.Call<AndroidJavaObject>("build",
                     initData.targetId, Application.unityVersion, (int)initData.allowedAdFlags);
@@ -215,23 +216,20 @@ namespace CAS.Android
             return this;
         }
 
-        public void OnInitializationCallback(string error, bool testMode)
+        public void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction)
         {
-            CASFactory.UnityLog("OnInitialization " + error);
-            isTestAdMode = testMode;
-            if (_initCompleteAction != null)
+            if (_initProxy == null)
             {
-                CASFactory.ExecuteEvent(() =>
-                {
-                    if (string.IsNullOrEmpty(error))
-                        _initCompleteAction(true, null);
-                    else
-                        _initCompleteAction(false, error);
-
-                    _initCompleteAction = null;
-                });
+                if (initEvent != null)
+                    initEvent(
+                        new InitialConfiguration(_initError, this, _initCountryCode, _initConsentRequired)
+                    );
+                if (initAction != null)
+                    initAction(_initError == null, _initError);
+                return;
             }
-            _initListener = null;
+            _initProxy.complete += initEvent;
+            _initProxy.completeDeprecated += initAction;
         }
         #endregion
 

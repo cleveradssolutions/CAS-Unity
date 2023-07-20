@@ -16,6 +16,11 @@ using UnityEngine;
 
 namespace CAS
 {
+    internal interface IInternalManager : IMediationManager
+    {
+        void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction);
+    }
+
     internal static class CASFactory
     {
         private static volatile bool executeEventsOnUnityThread = true;
@@ -155,8 +160,8 @@ namespace CAS
                     var readyManager = managers[i];
                     if (readyManager != null && readyManager.managerID == initSettings.targetId)
                     {
-                        if (initSettings.initListener != null)
-                            initSettings.initListener(true, null);
+                        (readyManager as IInternalManager)
+                            .HandleInitEvent(initSettings.initListener, initSettings.initListenerDeprecated);
                         return readyManager;
                     }
                 }
@@ -257,11 +262,6 @@ namespace CAS
 
         internal static void ValidateIntegration()
         {
-#if UNITY_EDITOR
-            // TODO: Implementation editor validation
-            if (Application.isEditor)
-                return;
-#endif
 #if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
             {
@@ -339,6 +339,33 @@ namespace CAS
 #endif
             return false;
         }
+
+        internal static void ShowConsentFlow(ConsentFlow flow)
+        {
+#if UNITY_EDITOR
+            UnityLog("Show Consent flow has been called but not supported in Unity Editor.");
+#endif
+#if PlatformAndroid
+            if (Application.platform == RuntimePlatform.Android)
+            {
+                using (var androidFlow = new CAS.Android.CASConsentFlowClient(flow))
+                {
+                    androidFlow.show();
+                }
+            }
+#endif
+#if PlatformIOS
+            if (Application.platform == RuntimePlatform.IPhonePlayer)
+            {
+                CAS.iOS.CASExternCallbacks.consentFlowComplete += flow.OnCompleted;
+                CAS.iOS.CASExterns.CASUShowConsentFlow(
+                    flow.isEnabled,
+                    flow.privacyPolicyUrl,
+                    CAS.iOS.CASExternCallbacks.OnConsentFlowCompletion
+                );
+            }
+#endif
+        }
         #endregion
 
         internal static void ExecuteEvent(Action action)
@@ -363,11 +390,7 @@ namespace CAS
         internal static void UnityLog(string message)
         {
             if (GetAdsSettings().isDebugMode)
-#if UNITY_IOS
-                Debug.Log( "[CAS:Unity] " + message );
-#else
-                Debug.Log("[CAS:] " + message);
-#endif
+                Debug.Log("[CAS.AI] " + message);
         }
 
         internal static void UnityLogException(Exception e)

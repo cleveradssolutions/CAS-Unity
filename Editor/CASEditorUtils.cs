@@ -42,9 +42,11 @@ namespace CAS.UEditor
         public const string settingsGradlePath = androidPluginsPath + "settingsTemplate.gradle";
         public const string packageManifestPath = "Packages/manifest.json";
 
+        public const int targetAndroidVersion = 21;
+        public const int targetIOSVersion = 12;
+
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
         public const string websiteURL = "https://cleveradssolutions.com";
-        public const string latestEMD4uURL = "https://github.com/googlesamples/unity-jar-resolver/raw/master/external-dependency-manager-latest.unitypackage";
 
         public static System.Version minEDM4UVersion
         {
@@ -63,7 +65,7 @@ namespace CAS.UEditor
         internal const string gitAppAdsTxtRepoUrl = gitRootURL + "App-ads.txt";
         internal const string attributionReportEndPoint = "https://";
 
-        internal const string logTag = "[CleverAdsSolutions] ";
+        internal const string logTag = "[CAS.AI] ";
         internal const string logAutoFeature = "\nYou can disable this automatic feature by `Assets > CleverAdsSolutions > Settings > Other settings` menu.\n";
         internal const string editorRuntimeActiveAdPrefs = "typesadsavailable";
         internal const string editorLatestVersionPrefs = "cas_last_ver_";
@@ -72,6 +74,7 @@ namespace CAS.UEditor
 
         internal const string legacyUnityAdsPackageName = "com.unity.ads";
         internal const string editorIconNamePrefix = "cas_editoricon_";
+        internal const string latestEMD4uURL = "https://github.com/googlesamples/unity-jar-resolver/raw/master/external-dependency-manager-latest.unitypackage";
         #endregion
 
         #region Menu items
@@ -198,7 +201,8 @@ namespace CAS.UEditor
 
         public static string GetDependencyName(string name, BuildTarget platform)
         {
-            return "CAS" + platform.ToString() + name + "Dependencies";
+            var platformPrefix = name == Dependency.adBaseName ? "" : platform.ToString();
+            return "CAS" + platformPrefix + name + "Dependencies";
         }
 
         private static bool IsPathInPackage(string path)
@@ -338,6 +342,7 @@ namespace CAS.UEditor
             return manifest != null && manifest.Contains("\"" + package + "\"");
         }
 
+        // Deprecated. Replaced with OnHeaderGUI()
         public static void LinksToolbarGUI(string gitRepoName)
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
@@ -345,7 +350,7 @@ namespace CAS.UEditor
                 Application.OpenURL(gitRootURL + gitRepoName + "#support");
             if (GUILayout.Button("Wiki", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
                 OpenDocumentation(gitRepoName);
-            if (GUILayout.Button("CleverAdsSolutions.com", EditorStyles.toolbarButton))
+            if (GUILayout.Button("CAS.ai", EditorStyles.toolbarButton))
                 Application.OpenURL(websiteURL);
             EditorGUILayout.EndHorizontal();
         }
@@ -371,17 +376,15 @@ namespace CAS.UEditor
 
             if (!string.IsNullOrEmpty(newCASVersion))
             {
-                var updateMessage = "There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.";
+                if (HelpStyles.WarningWithButton("There is a new version " + newCASVersion + " of the " + gitRepoName + " available for update.", "Update"))
+                {
 #if UNITY_2018_4_OR_NEWER
-                if (allowedPackageUpdate)
-                {
-                    if (HelpStyles.WarningWithButton(updateMessage, "Update"))
+                    if (allowedPackageUpdate)
                         UpdatePackageManagerRepo(gitRepoName, newCASVersion);
-                }
-                else
+                    else
 #endif
-                {
-                    EditorGUILayout.HelpBox(updateMessage, MessageType.Warning);
+                        InstallUnityPackagePlugin(GetUnityPackagePluginFromReleases(newCASVersion, gitRepoName))
+                            .WithProgress("Download plugin " + gitRepoName);
                 }
             }
         }
@@ -513,6 +516,25 @@ namespace CAS.UEditor
 
         #region Internal API
 
+        internal static EditorWebRequest InstallUnityPackagePlugin(string url)
+        {
+            string cacheFile = Path.GetFullPath("Library/" + Path.GetFileName(url));
+            var request = new EditorWebRequest(url)
+                .ToFile(cacheFile);
+            request.StartAsync((response) =>
+                {
+                    response.Dispose();
+                    AssetDatabase.ImportPackage(cacheFile, true);
+                    File.Delete(cacheFile);
+                });
+            return request;
+        }
+
+        internal static string GetUnityPackagePluginFromReleases(string version, string repo)
+        {
+            return gitRootURL + repo + "/releases/download/" + version + "/CleverAdsSolutions.unitypackage";
+        }
+
         internal static void OpenDocumentation(string gitRepoName)
         {
             Application.OpenURL(gitRootURL + gitRepoName + "/wiki");
@@ -546,32 +568,35 @@ namespace CAS.UEditor
             return path;
         }
 
-        internal static bool TryCopyFile(string source, string dest)
+        internal static void WriteToAsset(string path, params string[] data)
         {
-            try
-            {
-                AssetDatabase.DeleteAsset(dest);
-                File.Copy(source, dest);
-                AssetDatabase.ImportAsset(dest);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-                return false;
-            }
+            WriteToAsset(path, true, data);
         }
 
-        internal static void WriteToFile(string data, string path)
+        internal static void WriteToAsset(string path, bool overwrite, params string[] data)
         {
+            if (data.Length == 0)
+                return;
             try
             {
-                var directoryPath = Path.GetDirectoryName(path);
-                if (!Directory.Exists(directoryPath))
-                    Directory.CreateDirectory(directoryPath);
-                File.WriteAllText(path, data);
-                File.SetLastWriteTime(path, System.DateTime.Now);
-                AssetDatabase.ImportAsset(path);
+                var fullPath = Path.GetFullPath(path);
+                var needImport = !AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+                if (!overwrite && !needImport) return;
+
+                if (needImport)
+                {
+                    var directoryPath = Path.GetDirectoryName(fullPath);
+                    if (!Directory.Exists(directoryPath))
+                        Directory.CreateDirectory(directoryPath);
+                }
+
+                if (data.Length == 1)
+                    File.WriteAllText(fullPath, data[0]);
+                else
+                    File.WriteAllLines(fullPath, data);
+                File.SetLastWriteTime(fullPath, System.DateTime.Now);
+                if (needImport)
+                    AssetDatabase.ImportAsset(path);
             }
             catch (Exception e)
             {
@@ -614,7 +639,7 @@ namespace CAS.UEditor
                 if (!string.IsNullOrEmpty(filePath))
                 {
                     var content = File.ReadAllText(filePath);
-                    WriteToFile(content, GetNativeSettingsPath(platform, managerID));
+                    WriteToAsset(GetNativeSettingsPath(platform, managerID), content);
                     return GetAdmobAppIdFromJson(content);
                 }
             }
@@ -632,7 +657,7 @@ namespace CAS.UEditor
                 return;
 
             string pattern = "alias\\\": \\\""; //: "iOSBundle\\\": \\\"";
-            string cachePath = GetNativeSettingsPath(platform, managerId);
+            string cachePath = Path.GetFullPath(GetNativeSettingsPath(platform, managerId));
 
             if (File.Exists(cachePath))
             {
@@ -660,7 +685,7 @@ namespace CAS.UEditor
         {
             string url = "https://api.github.com/repos/cleveradssolutions/" + repo + "/releases/latest";
             string remoteVersion = null;
-            EditorWebRequest.Result handler = (response) =>
+            EditorWebRequest.OnComplete handler = (response) =>
             {
                 try
                 {
@@ -924,7 +949,7 @@ namespace CAS.UEditor
             EditorGUILayout.HelpBox(message, type);
             // Expand height correct work with Unity 2020 or newer
 #if UNITY_2020_1_OR_NEWER
-            var height = GUILayout.ExpandHeight( true );
+            var height = GUILayout.ExpandHeight(true);
 #else
             var height = GUILayout.Height(type == MessageType.None ? 28 : 38);
 #endif
@@ -953,9 +978,9 @@ namespace CAS.UEditor
 
     internal class EditorWebRequest : UnityWebRequest
     {
-        internal delegate void Result(EditorWebRequest request);
+        internal delegate void OnComplete(EditorWebRequest request);
 
-        private Result result;
+        private OnComplete complete;
         private string title;
 
         internal EditorWebRequest(string url) : base(url, "GET", null, null)
@@ -978,9 +1003,9 @@ namespace CAS.UEditor
             return this;
         }
 
-        public void StartAsync(Result result)
+        public void StartAsync(OnComplete complete)
         {
-            this.result = result;
+            this.complete = complete;
             Prepare();
             EditorApplication.update += Process;
         }
@@ -1025,8 +1050,8 @@ namespace CAS.UEditor
             }
             EditorUtility.ClearProgressBar();
 
-            if (result != null)
-                result(this);
+            if (complete != null)
+                complete(this);
             return true;
         }
     }

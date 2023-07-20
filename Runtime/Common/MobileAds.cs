@@ -14,7 +14,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "3.1.9";
+        public const string wrapperVersion = "3.2.0";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -60,6 +60,14 @@ namespace CAS
         public static IManagerBuilder BuildManager()
         {
             return CASFactory.LoadDefaultBuiderFromResources();
+        }
+
+        /// <summary>
+        /// Reset User consent status and manual start the dialog, and display it on screen.
+        /// </summary>
+        public static void ShowConsentFlow(ConsentFlow flow)
+        {
+            CASFactory.ShowConsentFlow(flow);
         }
 
         /// <summary>

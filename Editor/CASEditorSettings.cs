@@ -6,6 +6,7 @@
 
 using System;
 using UnityEngine;
+using UnityEditor;
 
 namespace CAS.UEditor
 {
@@ -15,21 +16,11 @@ namespace CAS.UEditor
         public bool autoCheckForUpdatesEnabled = true;
         public bool delayAppMeasurementGADInit = true;
         public bool buildPreprocessEnabled = true;
+        public bool includeAdDependencyVersions = false;
 
-        /// <summary>
-        /// ISO2 such as US, RU ...
-        /// </summary>
-        public string mostPopularCountryOfUsers = "BR";
-
-        public bool multiDexEnabled = true;
         public Permission permissionAdId = Permission.Auto;
-        [Obsolete("Exo player used in any case")]
-        public bool exoPlayerIncluded = true;
-        public bool generateAndroidQuerriesForPromo = true;
-        public bool updateGradlePluginVersion = true;
 
         public bool generateIOSDeepLinksForPromo = true;
-        public bool bitcodeIOSDisabled = true;
         public string attributionReportEndpoint = null;
 
         /// <summary>
@@ -40,6 +31,27 @@ namespace CAS.UEditor
         /// </summary>
         public KeyValuePair[] userTrackingUsageDescription = new KeyValuePair[0];
 
+
+#if UNITY_2022_2_OR_NEWER
+        // Unity 2022.2 migrate to valid gradle 7.1.2
+        public bool updateGradlePluginVersion { get { return false; } }
+#else
+        public bool updateGradlePluginVersion = true;
+#endif
+
+#if MULTIDEX_ENABLED
+        public bool multiDexEnabled = true;
+#else
+        // MultiDEX enable by default for API 21+
+        public bool multiDexEnabled { get { return false; } }
+#endif
+
+        [Obsolete("No longer required to work Cross Promo")]
+        public bool generateAndroidQuerriesForPromo { get { return false; } }
+        [Obsolete("Exo player used in any case")]
+        public bool exoPlayerIncluded { get { return true; } }
+        [Obsolete("Starting with Xcode 14, bitcode is no longer required")]
+        public bool bitcodeIOSDisabled { get { return true; } }
 
         public static CASEditorSettings Load(bool createAsset = false)
         {
@@ -63,6 +75,27 @@ namespace CAS.UEditor
             Auto = 0,
             Required = 1,
             Removed = 2
+        }
+    }
+
+    [CustomEditor(typeof(CASEditorSettings))]
+    internal class CASEditorSettingsInspector : Editor
+    {
+        protected override void OnHeaderGUI()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("CAS.AI", HelpStyles.largeTitleStyle);
+            GUILayout.Label("Editor Settings", HelpStyles.largeTitleStyle, GUILayout.ExpandWidth(false));
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+        }
+
+        public override void OnInspectorGUI()
+        {
+            EditorGUILayout.HelpBox("This Asset is created automatically to store Unity Editor behavior settings.", MessageType.Info);
+            EditorGUILayout.HelpBox("Use the 'Assets > CleverAdsSolutions > [Platform] Settings' menu to change the settings.", MessageType.Info);
+            EditorGUILayout.HelpBox("Feel free to move this and other assets from 'CleverAdsSolutions/Editor' to any Editor folder in the project that is convenient for you.", MessageType.Info);
         }
     }
 }

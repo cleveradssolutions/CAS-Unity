@@ -38,12 +38,14 @@ namespace CAS.UEditor
         private SerializedProperty autoCheckForUpdatesEnabledProp;
         private SerializedProperty buildPreprocessEnabledProp;
         private SerializedProperty delayAppMeasurementGADInitProp;
-        private SerializedProperty multiDexEnabledProp;
+#if !UNITY_2022_2_OR_NEWER
         private SerializedProperty updateGradlePluginVersionProp;
+#endif
         private SerializedProperty permissionAdIdProp;
         private SerializedProperty mostPopularCountryOfUsersProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
+        private SerializedProperty includeAdDependencyVersionsProp;
         #endregion
 
         #region Utility fields
@@ -86,7 +88,6 @@ namespace CAS.UEditor
 
             dependencyManager = DependencyManager.Create(platform, (Audience)audienceTaggedProp.enumValueIndex, true);
 
-            HandleDeprecatedComponents(allowedPackageUpdate);
             InitEDM4U();
             InitEnvironmentDetails();
 
@@ -132,12 +133,14 @@ namespace CAS.UEditor
             autoCheckForUpdatesEnabledProp = editorSettingsObj.FindProperty("autoCheckForUpdatesEnabled");
             delayAppMeasurementGADInitProp = editorSettingsObj.FindProperty("delayAppMeasurementGADInit");
             buildPreprocessEnabledProp = editorSettingsObj.FindProperty("buildPreprocessEnabled");
+#if !UNITY_2022_2_OR_NEWER
             updateGradlePluginVersionProp = editorSettingsObj.FindProperty("updateGradlePluginVersion");
-            multiDexEnabledProp = editorSettingsObj.FindProperty("multiDexEnabled");
+#endif
             permissionAdIdProp = editorSettingsObj.FindProperty("permissionAdId");
 
             mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty("mostPopularCountryOfUsers");
             attributionReportEndpointProp = editorSettingsObj.FindProperty("attributionReportEndpoint");
+            includeAdDependencyVersionsProp = editorSettingsObj.FindProperty("includeAdDependencyVersions");
 
             userTrackingUsageDescriptionProp = editorSettingsObj.FindProperty("userTrackingUsageDescription");
 
@@ -158,23 +161,6 @@ namespace CAS.UEditor
                 platform = BuildTarget.iOS;
             else
                 platform = BuildTarget.NoTarget;
-        }
-
-        private void HandleDeprecatedComponents(bool allowedPackageUpdate)
-        {
-            if (allowedPackageUpdate)
-                RemoveDeprecatedAsset(Utils.GetDependencyName(Dependency.adBaseName, platform));
-        }
-
-        private void RemoveDeprecatedAsset(string name)
-        {
-            var assets = AssetDatabase.FindAssets(name, new[] { "Assets" });
-            for (int i = 0; i < assets.Length; i++)
-            {
-                var path = AssetDatabase.GUIDToAssetPath(assets[i]);
-                Debug.LogWarning(Utils.logTag + "Removed deprecated asset: " + path);
-                AssetDatabase.MoveAssetToTrash(path);
-            }
         }
 
         private void InitEDM4U()
@@ -216,7 +202,7 @@ namespace CAS.UEditor
         {
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("CleverAdsSolutions", HelpStyles.largeTitleStyle);
+            GUILayout.Label("CAS.AI", HelpStyles.largeTitleStyle);
             GUILayout.Label(platform.ToString(), HelpStyles.largeTitleStyle, GUILayout.ExpandWidth(false));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -372,20 +358,13 @@ namespace CAS.UEditor
 
             if (platform == BuildTarget.Android)
             {
-                EditorGUI.indentLevel++;
+#if !UNITY_2022_2_OR_NEWER
                 updateGradlePluginVersionProp.boolValue = EditorGUILayout.ToggleLeft(
                    HelpStyles.GetContent("Update Gradle Plugin enabled", null,
                        "The Gradle plugin version will be updated during build to be optimal " +
                        "for the current Gradle Wrapper version."),
                     updateGradlePluginVersionProp.boolValue);
-
-                EditorGUILayout.BeginHorizontal();
-                multiDexEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Multi DEX enabled",
-                    multiDexEnabledProp.boolValue);
-                HelpStyles.HelpButton(Utils.gitUnityRepoURL + "/wiki/Include-Android#enable-multidex");
-                EditorGUILayout.EndHorizontal();
-                EditorGUI.indentLevel--;
+#endif
             }
             else
             {
@@ -416,9 +395,14 @@ namespace CAS.UEditor
                 autoCheckForUpdatesEnabledProp.boolValue);
 
             delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Delay measurement of the Google SDK initialization",
+                "Delay measurement of the Ad SDK initialization",
                 delayAppMeasurementGADInitProp.boolValue);
+            
+            includeAdDependencyVersionsProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Include Ad dependency versions",
+                includeAdDependencyVersionsProp.boolValue);
 
+#if CAS_POPULAR_COUNTRY
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Most popular country of users (ISO2)", GUILayout.ExpandWidth(false));
             EditorGUI.BeginChangeCheck();
@@ -431,6 +415,7 @@ namespace CAS.UEditor
                 mostPopularCountryOfUsersProp.stringValue = countryCode.ToUpper();
             }
             EditorGUILayout.EndHorizontal();
+#endif
 
             EditorGUILayout.EndFadeGroup();
             HelpStyles.EndBoxScope();
@@ -596,16 +581,8 @@ namespace CAS.UEditor
 
         private void InstallEDM4U()
         {
-            string cacheFile = Path.GetFullPath("Library/edm4u.unitypackage");
-            new EditorWebRequest(Utils.latestEMD4uURL)
-                .ToFile(cacheFile)
-                .WithProgress("Download External Dependency Manager")
-                .StartAsync((response) =>
-                {
-                    response.Dispose();
-                    AssetDatabase.ImportPackage(cacheFile, true);
-                    File.Delete(cacheFile);
-                });
+            Utils.InstallUnityPackagePlugin(Utils.latestEMD4uURL)
+                 .WithProgress("Download External Dependency Manager");
         }
 
         private void OnWarningsAreaGUI()
@@ -639,11 +616,11 @@ namespace CAS.UEditor
             {
 #if UNITY_2019_3_OR_NEWER
                 OnGradleTemplateDisabledGUI("Main Gradle", Utils.mainGradlePath);
-                OnGradleTemplateDisabledGUI("Base Gradle", Utils.projectGradlePath);
-                OnGradleTemplateDisabledGUI("Launcher Gradle", Utils.launcherGradlePath);
                 OnGradleTemplateDisabledGUI("Gradle Properties", Utils.propertiesGradlePath);
 #if UNITY_2022_2_OR_NEWER
                 OnGradleTemplateDisabledGUI("Settings Gradle", Utils.settingsGradlePath);
+#else
+                OnGradleTemplateDisabledGUI("Base Gradle", Utils.projectGradlePath);
 #endif
 #else
                 OnGradleTemplateDisabledGUI("Gradle", Utils.mainGradlePath);
