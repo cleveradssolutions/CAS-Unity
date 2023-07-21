@@ -164,6 +164,8 @@ namespace CAS.UEditor
                         "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.");
             }
 
+            // Unity 2021.3 have minimum iOS version 12
+#if !UNITY_2021_3_OR_NEWER
             try
             {
                 var iosVersion = int.Parse(PlayerSettings.iOS.targetOSVersionString.Split('.')[0]);
@@ -179,13 +181,14 @@ namespace CAS.UEditor
                 Debug.LogWarning("Minimum deployment target check failed: " + e.ToString());
             }
 #endif
+#endif
         }
 
         private static void ConfigureAndroid(CASInitSettings settings, CASEditorSettings editorSettings, string admobAppId)
         {
 #if UNITY_ANDROID || CASDeveloper
-            EditorUtility.DisplayProgressBar(casTitle, "Validate CAS Android Build Settings", 0.8f);
 
+            // Unity 2021.2 have minimum API 21
 #if !UNITY_2021_2_OR_NEWER
             if (PlayerSettings.Android.minSdkVersion < (AndroidSdkVersions)Utils.targetAndroidVersion)
             {
@@ -287,7 +290,7 @@ namespace CAS.UEditor
             XName valueAttribute = ns + "value";
 
             string manifestPath = Path.GetFullPath(Utils.androidLibManifestPath);
-            var manifestExist = File.Exists(manifestPath);
+            var needImport = !File.Exists(manifestPath);
 
             CreateAndroidLibIfNedded();
 
@@ -361,8 +364,10 @@ namespace CAS.UEditor
                 // XDocument required absolute path
                 document.Save(manifestPath);
                 // But Unity not support absolute path
-                if (!manifestExist)
+#if !UNITY_2021_3_OR_NEWER
+                if (needImport)
                     AssetDatabase.ImportAsset(Utils.androidLibManifestPath);
+#endif
             }
             catch (Exception e)
             {
@@ -386,6 +391,9 @@ namespace CAS.UEditor
                 "        <domain includeSubdomains=\"true\">127.0.0.1</domain>",
                 "    </domain-config>",
                 "</network-security-config>");
+
+            if (!AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(Utils.androidLibFolderPath))
+                AssetDatabase.ImportAsset(Utils.androidLibFolderPath);
         }
 
         private static string DownloadRemoteSettings(string managerID, BuildTarget platform, CASInitSettings settings, DependencyManager deps)

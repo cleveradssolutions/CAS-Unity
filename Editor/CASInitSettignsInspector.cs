@@ -397,25 +397,10 @@ namespace CAS.UEditor
             delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
                 "Delay measurement of the Ad SDK initialization",
                 delayAppMeasurementGADInitProp.boolValue);
-            
+
             includeAdDependencyVersionsProp.boolValue = EditorGUILayout.ToggleLeft(
                 "Include Ad dependency versions",
                 includeAdDependencyVersionsProp.boolValue);
-
-#if CAS_POPULAR_COUNTRY
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("Most popular country of users (ISO2)", GUILayout.ExpandWidth(false));
-            EditorGUI.BeginChangeCheck();
-            var countryCode = mostPopularCountryOfUsersProp.stringValue;
-            countryCode = EditorGUILayout.TextField(countryCode, GUILayout.Width(25.0f));
-            if (EditorGUI.EndChangeCheck())
-            {
-                if (countryCode.Length > 2)
-                    countryCode = countryCode.Substring(0, 2);
-                mostPopularCountryOfUsersProp.stringValue = countryCode.ToUpper();
-            }
-            EditorGUILayout.EndHorizontal();
-#endif
 
             EditorGUILayout.EndFadeGroup();
             HelpStyles.EndBoxScope();
@@ -617,13 +602,14 @@ namespace CAS.UEditor
 #if UNITY_2019_3_OR_NEWER
                 OnGradleTemplateDisabledGUI("Main Gradle", Utils.mainGradlePath);
                 OnGradleTemplateDisabledGUI("Gradle Properties", Utils.propertiesGradlePath);
-#if UNITY_2022_2_OR_NEWER
-                OnGradleTemplateDisabledGUI("Settings Gradle", Utils.settingsGradlePath);
-#else
-                OnGradleTemplateDisabledGUI("Base Gradle", Utils.projectGradlePath);
-#endif
 #else
                 OnGradleTemplateDisabledGUI("Gradle", Utils.mainGradlePath);
+#endif
+#if UNITY_2022_2_OR_NEWER
+                OnGradleTemplateDisabledGUI("Settings Gradle", Utils.settingsGradlePath);
+#endif
+#if UNITY_2019_3_OR_NEWER && !UNITY_2022_2_OR_NEWER
+                OnGradleTemplateDisabledGUI("Base Gradle", Utils.projectGradlePath);
 #endif
             }
             else if (platform == BuildTarget.iOS)
@@ -653,13 +639,13 @@ namespace CAS.UEditor
                         DependencyManager.isDirt = false;
                         var succses = Utils.TryResolveAndroidDependencies();
                         EditorUtility.DisplayDialog("Android Dependencies",
-                            succses ? "Resolution Succeeded" : "Resolution Failed. See the log for details.",
+                            succses ? "Resolution Succeeded" : "Resolution Failed! See the log for details.",
                             "OK");
                     }
                     else
                     {
                         EditorUtility.DisplayDialog("Android Dependencies",
-                            "Android resolver not enabled. Unity Android platform target must be selected.",
+                            "Resolution Failed! Android resolver not enabled. Unity Android platform target must be selected.",
                             "OK");
                     }
                 }

@@ -42,8 +42,8 @@ namespace CAS.UEditor
         public const string settingsGradlePath = androidPluginsPath + "settingsTemplate.gradle";
         public const string packageManifestPath = "Packages/manifest.json";
 
-        public const int targetAndroidVersion = 21;
-        public const int targetIOSVersion = 12;
+        public const int targetAndroidVersion = 21; // Disabled check for UNITY_2021_2_OR_NEWER
+        public const int targetIOSVersion = 12; // Disabled check for UNITY_2021_3_OR_NEWER
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
         public const string websiteURL = "https://cleveradssolutions.com";
@@ -439,9 +439,16 @@ namespace CAS.UEditor
 
         public static bool TryResolveAndroidDependencies(bool force = true)
         {
+            if (!File.Exists(mainGradlePath))
+            {
+                Debug.LogError("Resolution Failed! Android Main Gradle Template must be enabled to apply project dependencies.");
+                return false;
+            }
+
 #if UNITY_ANDROID
             CASPreprocessGradle.UpdateGradleTemplateIfNeed();
 #endif
+
             bool success = false;
             var resolverType = GetAndroidDependenciesResolverType();
             if (resolverType == null)
@@ -580,10 +587,10 @@ namespace CAS.UEditor
             try
             {
                 var fullPath = Path.GetFullPath(path);
-                var needImport = !AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
-                if (!overwrite && !needImport) return;
+                var fileExists = File.Exists(path);
+                if (!overwrite && fileExists) return;
 
-                if (needImport)
+                if (!fileExists)
                 {
                     var directoryPath = Path.GetDirectoryName(fullPath);
                     if (!Directory.Exists(directoryPath))
@@ -594,8 +601,26 @@ namespace CAS.UEditor
                     File.WriteAllText(fullPath, data[0]);
                 else
                     File.WriteAllLines(fullPath, data);
-                File.SetLastWriteTime(fullPath, System.DateTime.Now);
-                if (needImport)
+                if (Application.platform == RuntimePlatform.OSXEditor)
+                    File.SetLastWriteTime(fullPath, System.DateTime.Now);
+
+
+#if UNITY_2021_3_OR_NEWER || CASDeveloper
+                // Known issue with an infinite import loop
+                // Unity 2021.3 has changed the .androidlib import to be a single asset
+                // instead of a folder of multiple assets.
+                // Error message:
+                /**
+                 * An infinite import loop has been detected. 
+                 * The following Assets were imported multiple times, 
+                 * but no changes to them have been detected. 
+                 * Please check if any custom code is trying to import them:
+                 * Assets/Plugins/Android/CASPlugin.androidlib
+                 */
+                if (path.StartsWith(androidLibFolderPath))
+                    fileExists = false;
+#endif
+                if (!fileExists)
                     AssetDatabase.ImportAsset(path);
             }
             catch (Exception e)

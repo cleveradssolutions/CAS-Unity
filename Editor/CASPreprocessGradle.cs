@@ -156,10 +156,7 @@ namespace CAS.UEditor
                     }
                 }
                 if (needUpdate)
-                {
-                    File.Delete(Utils.mainGradlePath);
                     TryEnableGradleTemplate(Utils.mainGradlePath);
-                }
             }
             catch (Exception e)
             {
@@ -167,7 +164,7 @@ namespace CAS.UEditor
             }
         }
 
-        internal static bool TryEnableGradleTemplate(string assetPath)
+        internal static string[] TryEnableGradleTemplate(string assetPath)
         {
             var fileName = Path.GetFileName(assetPath);
             var internalTemplate = GetUnityAndroidToolsPath("GradleTemplates", fileName);
@@ -175,24 +172,20 @@ namespace CAS.UEditor
             if (!File.Exists(internalTemplate))
             {
                 Debug.LogError(Utils.logTag + "Template file not found: " + internalTemplate);
-                return false;
+                return null;
             }
             try
             {
-                string directoryName = Path.GetDirectoryName(assetPath);
-                if (!Directory.Exists(directoryName))
-                    Directory.CreateDirectory(directoryName);
-
-                File.Copy(internalTemplate, Path.GetFullPath(assetPath), true);
-                AssetDatabase.ImportAsset(assetPath);
+                var fileLines = File.ReadAllLines(internalTemplate);
+                Utils.WriteToAsset(assetPath, fileLines);
                 Debug.Log(Utils.logTag + "Gradle template activated: " + assetPath);
-                return true;
+                return fileLines;
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
+                return null;
             }
-            return false;
         }
 
         internal static Version GetGradleWrapperVersion()
@@ -229,6 +222,7 @@ namespace CAS.UEditor
         private static bool UpdateGradlePropertiesFile(List<string> propFile, GradleProperty[] props)
         {
             var isChanged = false;
+#if UNITY_2019_3_OR_NEWER || CASDeveloper
             var line = 0;
             while (line < propFile.Count)
             {
@@ -266,16 +260,18 @@ namespace CAS.UEditor
                     isChanged = true;
                 }
             }
+#endif
             return isChanged;
         }
 
         private static bool UpdateGradlePropertiesInMainFile(List<string> gradle, GradleProperty[] props, string filePath)
         {
+            var isChanged = false;
+#if !UNITY_2019_3_OR_NEWER || CASDeveloper
             const string addBeforeLine = "apply plugin";
             const string beginPropsComment = "// CAS Properties Start";
             const string endPropsComment = "// CAS Properties End";
             var beginPropsLine = -1;
-            var isChanged = false;
             var tryFindProp = false;
 
             var line = -1;
@@ -369,7 +365,9 @@ namespace CAS.UEditor
 
             if (writeToFile)
                 gradle.InsertRange(line, propertiesLines.ToArray());
-            return isChanged || writeToFile;
+            isChanged = isChanged || writeToFile;
+#endif
+            return isChanged;
         }
 
         private static bool UpdateLauncherGradleFile(List<string> gradle, CASEditorSettings settings, string filePath)
@@ -562,6 +560,7 @@ namespace CAS.UEditor
 
         private static bool UpdateGradlePluginVersion(List<string> gradle, string filePath)
         {
+#if UpdateGradleToSupportAndroid11 || CASDeveloper
             const string gradlePluginVersion = "classpath 'com.android.tools.build:gradle:";
             // Find Gradle Plugin Version
             int lineIndex = 0;
@@ -658,14 +657,16 @@ namespace CAS.UEditor
             {
                 Debug.LogException(e);
             }
+#endif
             return false;
         }
 
         private static bool UpdateBaseGradleRepositories(List<string> gradle, string filePath)
         {
+            var isChanged = false;
+#if ReplaceJCenterToMavenCentral || CASDeveloper
             const string mavenCentralLine = "mavenCentral()";
 
-            var isChanged = false;
             var isFoundCentralRepo = false;
             for (int line = 0; line < gradle.Count; line++)
             {
@@ -706,12 +707,13 @@ namespace CAS.UEditor
 
             if (!isChanged && !isFoundCentralRepo)
                 LogWhenGradleLineNotFound("repositories{}", filePath);
-
+#endif
             return isChanged;
         }
 
         private static bool FixGradleCompatibilityUnity2018(List<string> gradle, string filePath)
         {
+#if !UNITY_2019_3_OR_NEWER || CASDeveloper
             // New Gradle Wrapper 3.6+ generates a `gradleOut-release.aab`,
             // but Unity 2018 look for a `gradleOut.aab` instead.
             // So we create new taskto rename AAB file for Unity build system.
@@ -772,10 +774,13 @@ namespace CAS.UEditor
             gradle.AddRange(content);
             Debug.Log(Utils.logTag + message + " in " + filePath);
             return true;
+#else
+            return false;
+#endif
         }
-#endregion
+        #endregion
 
-#region Utils
+        #region Utils
         private static List<string> ReadGradleFile(string prefix, string path, bool required = true)
         {
             try
@@ -794,15 +799,9 @@ namespace CAS.UEditor
             var message = "A successful build requires do modifications to " + prefix + " template. " +
                 "But the template is not activated now.";
             Utils.DialogOrCancelBuild(message + "\nClick Сontinue to activate.", BuildTarget.NoTarget);
-            try
-            {
-                if (TryEnableGradleTemplate(path) && File.Exists(path))
-                    return new List<string>(File.ReadAllLines(path));
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
+            var fileLines = TryEnableGradleTemplate(path);
+            if (fileLines != null)
+                return new List<string>(fileLines);
             Utils.StopBuildWithMessage(message, BuildTarget.NoTarget);
             return null;
         }
@@ -848,7 +847,7 @@ namespace CAS.UEditor
                 result = Path.Combine(result, "Data");
             return Path.Combine(Path.Combine(Path.Combine(result, "PlaybackEngines"), "AndroidPlayer"), "Tools");
         }
-#endregion
+        #endregion
 
         private class GradleProperty
         {
