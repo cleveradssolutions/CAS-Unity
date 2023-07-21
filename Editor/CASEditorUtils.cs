@@ -523,6 +523,11 @@ namespace CAS.UEditor
 
         #region Internal API
 
+        internal static void Log(string message)
+        {
+            Debug.Log(logTag + message);
+        }
+
         internal static EditorWebRequest InstallUnityPackagePlugin(string url)
         {
             string cacheFile = Path.GetFullPath("Library/" + Path.GetFileName(url));
@@ -618,7 +623,7 @@ namespace CAS.UEditor
                  * Assets/Plugins/Android/CASPlugin.androidlib
                  */
                 if (path.StartsWith(androidLibFolderPath))
-                    fileExists = false;
+                    fileExists = true;
 #endif
                 if (!fileExists)
                     AssetDatabase.ImportAsset(path);

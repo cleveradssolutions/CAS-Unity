@@ -77,7 +77,7 @@ namespace CAS.UEditor
 #if AddMainTargetToPodfile
             UpdatePodfileForUnity2019(buildPath);
 #endif
-            Debug.Log(CASEditorUtils.logTag + "Postrocess Build done.");
+            CASEditorUtils.Log("Postrocess Build done: " + MobileAds.wrapperVersion);
         }
 
         [PostProcessBuild(int.MaxValue - 2)]
@@ -261,7 +261,7 @@ namespace CAS.UEditor
             if (atsRoot == null || atsRoot.GetType() != typeof(PlistElementDict))
             {
                 // Add the missing App Transport Security settings for publishers if needed. 
-                Debug.Log(CASEditorUtils.logTag + "Adding App Transport Security settings...");
+                CASEditorUtils.Log("Adding App Transport Security settings");
                 atsRoot = plist.root.CreateDict("NSAppTransportSecurity");
                 atsRoot.AsDict().SetBoolean("NSAllowsArbitraryLoads", true);
                 return;
@@ -273,7 +273,7 @@ namespace CAS.UEditor
             if (atsRootDict.ContainsKey("NSAllowsArbitraryLoads")
                 && atsRootDict.ContainsKey("NSAllowsArbitraryLoadsInWebContent"))
             {
-                Debug.Log(CASEditorUtils.logTag + "Removing NSAllowsArbitraryLoadsInWebContent");
+                CASEditorUtils.Log("Removing NSAllowsArbitraryLoadsInWebContent");
                 atsRootDict.Remove("NSAllowsArbitraryLoadsInWebContent");
             }
         }
@@ -360,7 +360,7 @@ namespace CAS.UEditor
                 }
                 else
                 {
-                    Debug.Log(CASEditorUtils.logTag + "Not found Raw file: " + pathInAssets);
+                    CASEditorUtils.Log("Not found Raw file: " + pathInAssets);
                 }
             }
         }
@@ -387,7 +387,7 @@ namespace CAS.UEditor
                 string link = "applinks:psvios" + casSettings.GetManagerId(0) + ".page.link";
                 entitlements.AddAssociatedDomains(new[] { link });
                 entitlements.WriteToFile();
-                Debug.Log(CASEditorUtils.logTag + "Apply application Associated Domain: " + link);
+                CASEditorUtils.Log("Apply application Associated Domain: " + link);
             }
             catch (Exception e)
             {

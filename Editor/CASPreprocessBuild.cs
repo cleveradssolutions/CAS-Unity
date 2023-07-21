@@ -111,16 +111,12 @@ namespace CAS.UEditor
                 Debug.LogWarning(Utils.logTag + "Test Ads Mode enabled! Make sure the build is for testing purposes only!\n" +
                     "Use 'Assets > CleverAdsSolutions > Settings' menu to disable Test Ad Mode.");
             else
-                Debug.Log(Utils.logTag + "Project configuration completed");
+                Utils.Log("Project configuration completed: " + MobileAds.wrapperVersion);
         }
 
         private static void RemoveDeprecatedAssets()
         {
 #if UNITY_ANDROID || CASDeveloper
-            const string deprecatedPluginPath = "Assets/Plugins/CAS";
-            if (Directory.Exists(deprecatedPluginPath))
-                AssetDatabase.MoveAssetToTrash(deprecatedPluginPath);
-
             var androidRes = Path.GetDirectoryName(Utils.androidResSettingsPath);
             if (Directory.Exists(androidRes))
             {
@@ -144,14 +140,6 @@ namespace CAS.UEditor
                 File.Delete(iosConfigDeprecated[i]);
             }
 #endif
-
-            var removeAssets = AssetDatabase.FindAssets("l:Cas-remove", new[] { "Assets" });
-            for (int i = 0; i < removeAssets.Length; i++)
-            {
-#if !CASDeveloper
-                AssetDatabase.MoveAssetToTrash(AssetDatabase.GUIDToAssetPath(removeAssets[i]));
-#endif
-            }
         }
 
         private static void ConfigureIOS()

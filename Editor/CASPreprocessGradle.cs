@@ -178,7 +178,7 @@ namespace CAS.UEditor
             {
                 var fileLines = File.ReadAllLines(internalTemplate);
                 Utils.WriteToAsset(assetPath, fileLines);
-                Debug.Log(Utils.logTag + "Gradle template activated: " + assetPath);
+                Utils.Log("Gradle template activated: " + assetPath);
                 return fileLines;
             }
             catch (Exception e)
@@ -235,7 +235,7 @@ namespace CAS.UEditor
                         {
                             isRemoved = true;
                             propFile.RemoveAt(line);
-                            Debug.Log(Utils.logTag + "Remove gradle property: " + props[i].name);
+                            Utils.Log("Remove gradle property: " + props[i].name);
                             isChanged = true;
                         }
                         else
@@ -256,7 +256,7 @@ namespace CAS.UEditor
                 if (!props[i].exist)
                 {
                     propFile.Insert(line, props[i].name + "=" + props[i].enabled);
-                    Debug.Log(Utils.logTag + "Set gradle property: " + props[i].name + " = " + props[i].enabled);
+                    Utils.Log("Set gradle property: " + props[i].name + " = " + props[i].enabled);
                     isChanged = true;
                 }
             }
@@ -333,7 +333,7 @@ namespace CAS.UEditor
                     if (props[i].remove)
                     {
                         gradle.RemoveAt(line);
-                        Debug.Log(Utils.logTag + "Remove gradle property: " + props[i].name);
+                        Utils.Log("Remove gradle property: " + props[i].name);
                         isChanged = true;
                         --line;
                         break;
@@ -356,7 +356,7 @@ namespace CAS.UEditor
                 if (props[i].exist)
                     continue;
                 propertiesLines.Add("        it.setProperty(\"" + props[i].name + "\", " + props[i].enabled + ")");
-                Debug.Log(Utils.logTag + "Set gradle property: " + props[i].name + " = " + props[i].enabled);
+                Utils.Log("Set gradle property: " + props[i].name + " = " + props[i].enabled);
                 writeToFile = true;
             }
             propertiesLines.Add("    }");
@@ -400,7 +400,7 @@ namespace CAS.UEditor
                     }
                     else
                     {
-                        Debug.Log( Utils.logTag + "Removed: '" + excludeAdID + "' from: " + filePath );
+                        Utils.Log( "Removed: '" + excludeAdID + "' from: " + filePath );
                         gradle.RemoveAt( line );
                         --line;
                         isChanged = true;
@@ -420,7 +420,7 @@ namespace CAS.UEditor
                 if (lineForExclude > 0)
                 {
                     gradle.Insert( lineForExclude, excludeAdIDLine );
-                    Debug.Log( Utils.logTag + "Appended " + excludeAdID + " to " + filePath );
+                    Utils("Appended " + excludeAdID + " to " + filePath);
                     appendExcludeAdId = false;
                     isChanged = true;
                     ++line;
@@ -456,7 +456,7 @@ namespace CAS.UEditor
                     if (!removeLine)
                     {
                         gradle[line] = miltidexAndroidXLine;
-                        Debug.Log(Utils.logTag + "Updated " + multidexAndroidSupport +
+                        Utils.Log("Updated " + multidexAndroidSupport +
                             " to " + multidexAndroidX + " in " + filePath + Utils.logAutoFeature);
                         isChanged = true;
                     }
@@ -473,7 +473,7 @@ namespace CAS.UEditor
                 }
                 if (removeLine)
                 {
-                    Debug.Log(Utils.logTag + "Removed: '" + gradle[line] + "' from: " + filePath);
+                    Utils.Log("Removed: '" + gradle[line] + "' from: " + filePath);
                     gradle.RemoveAt(line);
                     --line;
                     isChanged = true;
@@ -483,7 +483,7 @@ namespace CAS.UEditor
             if (!multidexExist && settings.multiDexEnabled)
             {
                 gradle.Insert(line, miltidexAndroidXLine);
-                Debug.Log(Utils.logTag + "Appended " + multidexAndroidX + " to " + filePath + Utils.logAutoFeature);
+                Utils.Log("Appended " + multidexAndroidX + " to " + filePath + Utils.logAutoFeature);
                 multidexExist = true;
                 isChanged = true;
                 ++line;
@@ -523,7 +523,7 @@ namespace CAS.UEditor
                 gradle.InsertRange( line, compileOptions );
                 line += compileOptions.Length;
                 isChanged = true;
-                Debug.Log( Utils.logTag + "Appended Compile options to use Java Version 1.8 in " + filePath + Utils.logAutoFeature );
+                Utils.Log( "Appended Compile options to use Java Version 1.8 in " + filePath + Utils.logAutoFeature );
             }
 #endif
             // Find multidexEnable in defaultConfig{} scope
@@ -551,7 +551,7 @@ namespace CAS.UEditor
                 {
                     gradle.Insert(firstLineInDefaultConfigScope,
                         "        " + multidexConfig + " true // Enabled by CAS settings");
-                    Debug.Log(Utils.logTag + "Enable Multidex in Default Config of " + filePath + Utils.logAutoFeature);
+                    Utils.Log("Enable Multidex in Default Config of " + filePath + Utils.logAutoFeature);
                     isChanged = true;
                 }
             }
@@ -648,7 +648,7 @@ namespace CAS.UEditor
                 {
                     var oldLine = gradle[lineIndex];
                     gradle[lineIndex] = gradle[lineIndex].Replace(currVerStr, target.ToString());
-                    Debug.Log(Utils.logTag + "Updated Gradle Build Tools Plugin version.\n" +
+                    Utils.Log("Updated Gradle Build Tools Plugin version.\n" +
                                 "From: " + oldLine + "\nTo:" + gradle[lineIndex] + Utils.logAutoFeature);
                     return true;
                 }
@@ -686,7 +686,7 @@ namespace CAS.UEditor
                     else if (gradle[line].Contains("jcenter()"))
                     {
                         gradle.RemoveAt(line--);
-                        Debug.Log(Utils.logTag + "Deprecated jCenter repository removed from " + filePath);
+                        Utils.Log("Deprecated jCenter repository removed from " + filePath);
                         isChanged = true;
                     }
 
@@ -700,7 +700,7 @@ namespace CAS.UEditor
                 if (!isFoundCentralRepo)
                 {
                     gradle.Insert(beginReposLine, "        " + mavenCentralLine);
-                    Debug.Log(Utils.logTag + "Maven Central repository appended to " + filePath);
+                    Utils.Log("Maven Central repository appended to " + filePath);
                     isChanged = true;
                 }
             }
@@ -772,7 +772,7 @@ namespace CAS.UEditor
                 endContentLine
             };
             gradle.AddRange(content);
-            Debug.Log(Utils.logTag + message + " in " + filePath);
+            Utils.Log(message + " in " + filePath);
             return true;
 #else
             return false;

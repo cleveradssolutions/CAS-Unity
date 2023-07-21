@@ -53,7 +53,7 @@ namespace CAS.UEditor
 
         private ReorderableList managerIdsList;
         private ReorderableList userTrackingList;
-        private BuildTarget platform;
+        private BuildTarget platform = BuildTarget.NoTarget;
         private string newCASVersion = null;
         private Version edmVersion;
         private string environmentDetails;
@@ -71,7 +71,14 @@ namespace CAS.UEditor
         #region Initialize logic
         private void OnEnable()
         {
-            SetSettingsPlatform();
+            try
+            {
+                SetSettingsPlatform();
+            }
+            catch (MissingReferenceException)
+            {
+                // The variable m_Targets of CASInitSettignsInspector doesn't exist anymore.
+            }
 
             InitMainProperties(serializedObject);
             InitEditorSettingsProperties();
@@ -159,8 +166,6 @@ namespace CAS.UEditor
                 platform = BuildTarget.Android;
             else if (assetName.EndsWith(BuildTarget.iOS.ToString()))
                 platform = BuildTarget.iOS;
-            else
-                platform = BuildTarget.NoTarget;
         }
 
         private void InitEDM4U()
