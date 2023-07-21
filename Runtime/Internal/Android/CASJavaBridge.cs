@@ -101,7 +101,7 @@ namespace CAS.Android
 
     internal class CASConsentFlowClient : IDisposable
     {
-        private readonly AndroidJavaObject obj;
+        internal readonly AndroidJavaObject obj;
 
         internal CASConsentFlowClient(ConsentFlow flow)
         {

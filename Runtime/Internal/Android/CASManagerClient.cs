@@ -202,7 +202,7 @@ namespace CAS.Android
                     if (!initData.consentFlow.isEnabled)
                         builder.Call("disableConsentFlow");
                     else
-                        builder.Call("withConsentFlow", new CASConsentFlowClient(initData.consentFlow));
+                        builder.Call("withConsentFlow", new CASConsentFlowClient(initData.consentFlow).obj);
                 }
 
                 CASJavaBridge.RepeatCall("addExtras", builder, initData.extras, false);
