@@ -1,5 +1,13 @@
 # CAS.AI Unity Plugin Change Log
 
+## [3.2.1] - 2023-06-25
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.1 SDK
+### Fixes
+- [Android] Fixed signature exception from `CAS.Android.CASConsentFlowClient`.
+- [Android] Fixed rare `UnsupportedOperationException` from Test Ads Activity.
+- [iOS] Fixed fatal error `Library not loaded` for DigitalTurbine. 
+- [iOS] Fixed a critical performance bug for AudienceNetwork, Tapjoy, UnityAds.
+
 ## [3.2.0] - 2023-06-20
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.0 SDK
 - Added `ConsentFlow.WithCompletionListener()` to invoke Action when the dialog is dismissed.
