@@ -1,5 +1,10 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.2.2] - 2023-07-03
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.2 SDK
+### Fixes
+- [Android] Fixed `Exception: No such proxy method: onCASInitialized` with Test Ad Mode.
+
 ## [3.2.1] - 2023-06-25
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.1 SDK
 ### Fixes
