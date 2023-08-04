@@ -1,5 +1,8 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.2.3] - 2023-07-04
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.3 SDK
+
 # [3.2.2] - 2023-07-03
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.2 SDK
 ### Fixes
