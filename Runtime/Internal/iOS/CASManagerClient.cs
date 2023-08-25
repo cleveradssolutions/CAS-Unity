@@ -18,15 +18,12 @@ namespace CAS.iOS
         private IntPtr _managerClient;
         private CASInitCompleteEvent _initComplete;
         private InitCompleteAction _initCompleteDeprecated;
-        private bool _initialized = false;
-        private string _initError;
-        private string _initCountryCode;
-        private bool _initConsentRequired;
         private LastPageAdContent _lastPageAdContent = null;
         private readonly List<IAdView> _adViews = new List<IAdView>();
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get; private set; }
+        public InitialConfiguration initialConfig { get; set; }
 
         public LastPageAdContent lastPageAdContent
         {
@@ -87,7 +84,7 @@ namespace CAS.iOS
             }
         }
 
-        internal CASManagerClient Init(CASInitSettings initData)
+        internal IInternalManager Init(CASInitSettings initData)
         {
             managerID = initData.targetId;
             isTestAdMode = initData.IsTestAdMode();
@@ -169,16 +166,12 @@ namespace CAS.iOS
 
         public void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction)
         {
-            if (_initialized)
+            if (initialConfig != null)
             {
-                _initComplete = null;
-                _initCompleteDeprecated = null;
                 if (initEvent != null)
-                    initEvent(
-                        new InitialConfiguration(_initError, this, _initCountryCode, _initConsentRequired)
-                    );
+                    initEvent(initialConfig);
                 if (initAction != null)
-                    initAction(_initError == null, _initError);
+                    initAction(initialConfig.error == null, initialConfig.error);
                 return;
             }
             _initComplete += initEvent;
@@ -293,11 +286,16 @@ namespace CAS.iOS
                 if (instance != null)
                 {
                     instance.isTestAdMode = isTestMode;
-                    instance._initError = error;
-                    instance._initCountryCode = countryCode;
-                    instance._initConsentRequired = withConsent;
-                    instance._initialized = true;
+                    instance.initialConfig = new InitialConfiguration(error, instance, countryCode, withConsent);
+
+                    CASFactory.OnManagerInitialized(instance);
                     instance.HandleInitEvent(instance._initComplete, instance._initCompleteDeprecated);
+
+                    if (error != InitializationError.NoConnection)
+                    {
+                        instance._initComplete = null;
+                        instance._initCompleteDeprecated = null;
+                    }
                 }
             }
             catch (Exception e)

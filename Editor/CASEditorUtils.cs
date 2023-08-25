@@ -136,8 +136,10 @@ namespace CAS.UEditor
             {
                 case Dependency.adBase:
                     return Dependency.adBaseName;
-                case AdNetwork.DigitalTurbine:
-                    return "DigitalTurbine";
+                case AdNetwork.DTExchange:
+                    return "DTExchange";
+                case AdNetwork.LiftoffMonetize:
+                    return "LiftoffMonetize";
                 case AdNetwork.AudienceNetwork:
                     return "AudienceNetwork";
                 default:

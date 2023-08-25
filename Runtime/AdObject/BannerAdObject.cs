@@ -13,7 +13,7 @@ namespace CAS.AdObject
     [AddComponentMenu("CleverAdsSolutions/Banner Ad Object")]
     [DisallowMultipleComponent]
     [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ad-object")]
-    public sealed class BannerAdObject : MonoBehaviour
+    public sealed class BannerAdObject : MonoBehaviour, IInternalAdObject
     {
         /// <summary>
         /// Last active Banner Ad object. May be is null!
@@ -125,7 +125,7 @@ namespace CAS.AdObject
         private void Start()
         {
             MobileAds.settings.isExecuteEventsOnUnityThread = true;
-            if (!CASFactory.TryGetManagerByIndexAsync(OnManagerReady, managerId.index))
+            if (!CASFactory.TryGetManagerByIndexAsync(this, managerId.index))
                 OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
 
@@ -157,18 +157,15 @@ namespace CAS.AdObject
             if (Instance == this)
                 Instance = null;
             DetachAdView();
-            CASFactory.UnsubscribeReadyManagerAsync(OnManagerReady, managerId.index);
+            CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
         }
 
         #endregion
 
         #region Manager Events wrappers
-        private void OnManagerReady(IMediationManager manager)
+        void IInternalAdObject.OnManagerReady(InitialConfiguration config)
         {
-            if (!this) // When object are destroyed
-                return;
-
-            this.manager = manager;
+            this.manager = config.manager;
             RefreshLinktWithAdView();
         }
 

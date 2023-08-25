@@ -69,6 +69,82 @@ namespace CAS.AdObject
         }
     }
 
+    [CustomEditor(typeof(ManagerAdObject))]
+    internal class ManagerAdObjectInspector : Editor
+    {
+        protected bool metaPrivacyFoldout;
+        private SerializedProperty managerIdProp;
+        private SerializedProperty initializeOnAwakeProp;
+        private SerializedProperty metaDataProcessingProp;
+        private SerializedProperty metaAdvertiserTrackingProp;
+        private SerializedProperty onInitializedProp;
+        private SerializedProperty onInitializationFailedProp;
+
+        private void OnEnable()
+        {
+            var obj = serializedObject;
+            managerIdProp = obj.FindProperty("managerId");
+            initializeOnAwakeProp = obj.FindProperty("initializeOnAwake");
+            metaDataProcessingProp = obj.FindProperty("metaDataProcessing");
+            metaAdvertiserTrackingProp = obj.FindProperty("metaAdvertiserTracking");
+
+            onInitializedProp = obj.FindProperty("OnInitialized");
+            onInitializationFailedProp = obj.FindProperty("OnInitializationFailed");
+        }
+
+        public override void OnInspectorGUI()
+        {
+            var obj = serializedObject;
+            obj.UpdateIfRequiredOrScript();
+            EditorGUILayout.PropertyField(managerIdProp);
+            EditorGUILayout.PropertyField(initializeOnAwakeProp);
+            EditorGUI.indentLevel++;
+            if (initializeOnAwakeProp.boolValue)
+                EditorGUILayout.HelpBox("The CAS begin initialization automatically on the component awake", MessageType.None);
+            else
+                EditorGUILayout.HelpBox("Call `Initialize()` method to begin CAS initialization", MessageType.None);
+            EditorGUI.indentLevel--;
+
+            EditorGUILayout.PropertyField(onInitializedProp);
+            EditorGUILayout.PropertyField(onInitializationFailedProp);
+
+            metaPrivacyFoldout = GUILayout.Toggle(metaPrivacyFoldout, "Meta Audience Network Privacy", EditorStyles.foldout);
+            if (metaPrivacyFoldout)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(metaDataProcessingProp);
+                switch ((CCPAStatus)metaDataProcessingProp.intValue)
+                {
+                    case CCPAStatus.OptInSale:
+                        EditorGUILayout.HelpBox("CAS will override Limited Data Use flag for Meta Audience Network:\nAdSettings.setDataProcessingOptions([])", MessageType.None);
+                        break;
+                    case CCPAStatus.OptOutSale:
+                        EditorGUILayout.HelpBox("CAS will override Limited Data Use flag for Meta Audience Network:\nAdSettings.setDataProcessingOptions([\"LDU\"])", MessageType.None);
+                        break;
+                    default:
+                        EditorGUILayout.HelpBox("CAS will not override Limited Data Use flag for Meta Audience Network.", MessageType.None);
+                        break;
+                }
+                EditorGUILayout.PropertyField(metaAdvertiserTrackingProp);
+                switch ((ConsentStatus)metaAdvertiserTrackingProp.intValue)
+                {
+                    case ConsentStatus.Accepted:
+                        EditorGUILayout.HelpBox("[iOS] CAS will override Advertising Tracking flag for Meta Audience Network:\nAdSettings.setAdvertiserTrackingEnabled(true)", MessageType.None);
+                        break;
+                    case ConsentStatus.Denied:
+                        EditorGUILayout.HelpBox("[iOS] CAS will override Advertising Tracking flag for Meta Audience Network:\nAdSettings.setAdvertiserTrackingEnabled(false)", MessageType.None);
+                        break;
+                    default:
+                        EditorGUILayout.HelpBox("[iOS] CAS will not override Advertising Tracking flag for Meta Audience Network.", MessageType.None);
+                        break;
+                }
+                EditorGUI.indentLevel--;
+            }
+
+            obj.ApplyModifiedProperties();
+        }
+    }
+
     [CustomEditor(typeof(BannerAdObject))]
     internal class BannerAdObjectInspector : BaseAdObjectInspector
     {

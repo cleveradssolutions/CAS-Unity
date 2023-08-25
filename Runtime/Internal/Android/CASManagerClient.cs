@@ -20,13 +20,11 @@ namespace CAS.Android
         private LastPageAdContent _lastPageAdContent = null;
 
         internal InitCallbackProxy _initProxy;
-        internal string _initError;
-        internal string _initCountryCode;
-        internal bool _initConsentRequired;
         private readonly List<IAdView> _adViews = new List<IAdView>();
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get; set; }
+        public InitialConfiguration initialConfig { get; set; }
 
         public LastPageAdContent lastPageAdContent
         {
@@ -180,7 +178,7 @@ namespace CAS.Android
         }
 #endif
 
-        internal IMediationManager Init(CASInitSettings initData)
+        internal IInternalManager Init(CASInitSettings initData)
         {
             managerID = initData.targetId;
             isTestAdMode = initData.IsTestAdMode();
@@ -218,14 +216,12 @@ namespace CAS.Android
 
         public void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction)
         {
-            if (_initProxy == null)
+            if (initialConfig != null)
             {
                 if (initEvent != null)
-                    initEvent(
-                        new InitialConfiguration(_initError, this, _initCountryCode, _initConsentRequired)
-                    );
+                    initEvent(initialConfig);
                 if (initAction != null)
-                    initAction(_initError == null, _initError);
+                    initAction(initialConfig.error == null, initialConfig.error);
                 return;
             }
             _initProxy.complete += initEvent;

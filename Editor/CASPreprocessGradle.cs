@@ -18,10 +18,14 @@
 // error: unexpected element <queries> found in <manifest>.
 #define UpdateGradleToSupportAndroid11
 
+// Not Required by default to check wrapper version.
+//#define UpdateGradleForUsedWrapper
+
 // Known issue with jCenter repository where repository is not responding
 // and gradle build stops with timeout error.
 #define ReplaceJCenterToMavenCentral
 #endif
+
 
 // Exclude `com.google.android.gms:play-services-ads-identifier` from build.
 // Issue: The Advertising ID cannot be used in applications Designed for family.
@@ -582,10 +586,11 @@ namespace CAS.UEditor
                 var currVerStr = gradle[lineIndex].Substring(beginIndex,
                     gradle[lineIndex].IndexOf('\'', beginIndex) - beginIndex);
 
-                // https://developer.android.com/studio/releases/gradle-plugin#updating-gradle
-                Version wrapper = GetGradleWrapperVersion();
                 Version version = new Version(currVerStr);
                 Version target = null;
+#if UpdateGradleForUsedWrapper
+                // https://developer.android.com/studio/releases/gradle-plugin#updating-gradle
+                Version wrapper = GetGradleWrapperVersion();
                 if (wrapper != null)
                 {
                     if (wrapper.Major == 5)
@@ -601,25 +606,15 @@ namespace CAS.UEditor
                     {
                         if (wrapper.Minor < 5)
                             target = new Version(4, 0, 2);
-
-                        // Unity 2018.4 require applying gradle properties with the following construct
-                        // ([rootProject] + (rootProject.subprojects as List)).each {
-                        //   ext { it.setProperty( "android.useAndroidX", true ) }
-                        // }
-                        // But gradle 4.2.2 no longer support such methods
-                        // So, we want to use maximum 4.1.3 version.
-#if false
                         else if (wrapper.Minor < 7)
                             target = new Version( 4, 1, 3 );
                         else
                             target = new Version( 4, 2, 2 );
-#else
-                        else
-                            target = new Version(4, 1, 3);
-#endif
                     }
                 }
-                else if (version.Major == 4)
+                else
+#endif
+                if (version.Major == 4)
                 {
                     if (version.Minor == 0 && version.Build < 2)
                         target = new Version(4, 0, 2);

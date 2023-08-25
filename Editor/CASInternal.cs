@@ -19,9 +19,13 @@ namespace CAS.UEditor
     {
         #region Internal implementation
         [SerializeField]
+        private string version;
+        [SerializeField]
         private Dependency[] simple;
         [SerializeField]
-        private Dependency[] advanced;
+        private Dependency[] adapters;
+        [SerializeField]
+        private string[] deprecated;
         private List<OtherDependency> other = new List<OtherDependency>();
 
         private BuildTarget platform;
@@ -36,24 +40,32 @@ namespace CAS.UEditor
         internal void Init(BuildTarget platform, bool deepInit = true)
         {
             this.platform = platform;
+            var managerToInit = deepInit ? this : null;
             for (int i = 0; i < simple.Length; i++)
-                simple[i].Reset();
-            for (int i = 0; i < advanced.Length; i++)
-                advanced[i].Reset();
-
-            if (!deepInit)
             {
-                for (int i = 0; i < simple.Length; i++)
-                    simple[i].Init(platform, null);
-                for (int i = 0; i < advanced.Length; i++)
-                    advanced[i].Init(platform, null);
-                return;
+                simple[i].Reset();
+                simple[i].Init(platform, managerToInit);
+            }
+            for (int i = 0; i < adapters.Length; i++)
+            {
+                adapters[i].Reset();
+                adapters[i].Init(platform, managerToInit);
             }
 
-            for (int i = 0; i < simple.Length; i++)
-                simple[i].Init(platform, this);
-            for (int i = 0; i < advanced.Length; i++)
-                advanced[i].Init(platform, this);
+            if (managerToInit == null)
+                return;
+
+            for (int i = 0; i < deprecated.Length; i++)
+            {
+                var destination = Utils.GetDependencyPath(deprecated[i], platform);
+                if (File.Exists(destination))
+                {
+                    AssetDatabase.DeleteAsset(destination);
+                    Debug.LogError(Utils.logTag + " The " + deprecated[i] +
+                        " Adapter is no longer supported, it may have been renamed. Don't forget to include the new adapter.");
+                }
+            }
+
             other.Clear();
             var depsAssets = AssetDatabase.FindAssets("Dependencies");
             for (int i = 0; i < depsAssets.Length; i++)
@@ -86,58 +98,6 @@ namespace CAS.UEditor
             }
         }
 
-        internal bool IsNewerVersionFound()
-        {
-            for (int i = 0; i < solutions.Length; i++)
-            {
-                if (solutions[i].isNewer)
-                    return true;
-            }
-            for (int i = 0; i < networks.Length; i++)
-            {
-                if (networks[i].isNewer)
-                    return true;
-            }
-            return false;
-        }
-
-        public string GetInstalledVersion()
-        {
-            string version = "";
-            var casDep = Find(Dependency.adBaseName);
-            if (casDep != null)
-                version = casDep.version;
-            if (!string.IsNullOrEmpty(version))
-                return version;
-
-            casDep = Find(Dependency.adOptimalName);
-            if (casDep != null)
-                version = casDep.installedVersion;
-            if (!string.IsNullOrEmpty(version))
-                return version;
-
-            casDep = Find(Dependency.adFamiliesName);
-            if (casDep != null)
-                version = casDep.installedVersion;
-
-            return version;
-        }
-
-        public int GetInstalledBuildCode()
-        {
-            var version = GetInstalledVersion();
-            if (!string.IsNullOrEmpty(version))
-            {
-                try
-                {
-                    var parsesV = new System.Version(version);
-                    return parsesV.Major * 1000 + parsesV.Minor * 100 + parsesV.Build;
-                }
-                catch { }
-            }
-            return 0;
-        }
-
         private void OnHeaderGUI()
         {
             EditorGUILayout.BeginHorizontal();
@@ -151,11 +111,11 @@ namespace CAS.UEditor
         private void CheckDependencyUpdates(BuildTarget platform)
         {
             bool updatesFound = false;
-            for (int i = 0; !updatesFound && i < simple.Length; i++)
-                updatesFound = simple[i].isNewer;
+            for (int i = 0; !updatesFound && i < solutions.Length; i++)
+                updatesFound = solutions[i].isNewer;
 
-            for (int i = 0; !updatesFound && i < advanced.Length; i++)
-                updatesFound = advanced[i].isNewer;
+            for (int i = 0; !updatesFound && i < adapters.Length; i++)
+                updatesFound = adapters[i].isNewer;
 
             if (updatesFound)
             {
@@ -164,25 +124,6 @@ namespace CAS.UEditor
                 {
                     UpdateDependencies(platform);
                 }
-            }
-        }
-
-        public void UpdateDependencies(BuildTarget platform)
-        {
-            for (int i = 0; i < simple.Length; i++)
-            {
-                if (simple[i].filter == Dependency.Filter.None) // remove deprecated
-                    simple[i].DisableDependencies(platform, this);
-                else if (simple[i].isNewer)
-                    simple[i].ActivateDependencies(platform, this);
-            }
-
-            for (int i = 0; i < advanced.Length; i++)
-            {
-                if (advanced[i].filter == Dependency.Filter.None) // remove deprecated
-                    advanced[i].DisableDependencies(platform, this);
-                else if (advanced[i].isNewer)
-                    advanced[i].ActivateDependencies(platform, this);
             }
         }
 
@@ -200,7 +141,7 @@ namespace CAS.UEditor
             columnWidth = GUILayout.MaxWidth(EditorGUIUtility.currentViewWidth * 0.15f);
 
 
-            if (simple.Length > 0)
+            if (solutions.Length > 0)
             {
                 HelpStyles.BeginBoxScope();
                 solutionsFoldout.target = GUILayout.Toggle(solutionsFoldout.target, "Mediation Solutions", EditorStyles.foldout);
@@ -208,14 +149,14 @@ namespace CAS.UEditor
                 if (EditorGUILayout.BeginFadeGroup(solutionsFoldout.faded))
                 {
                     OnHeaderGUI();
-                    for (int i = 0; i < simple.Length; i++)
-                        simple[i].OnGUI(this, platform);
+                    for (int i = 0; i < solutions.Length; i++)
+                        solutions[i].OnGUI(this, platform);
                 }
                 EditorGUILayout.EndFadeGroup();
                 HelpStyles.EndBoxScope();
             }
 
-            if (advanced.Length > 0)
+            if (adapters.Length > 0)
             {
                 HelpStyles.BeginBoxScope();
                 var advancedVisible = advancedFoldout.target;
@@ -228,15 +169,15 @@ namespace CAS.UEditor
                     int installed = 0;
                     var forceOpen = false;
 
-                    for (int i = 0; i < advanced.Length; i++)
+                    for (int i = 0; i < adapters.Length; i++)
                     {
-                        if (!string.IsNullOrEmpty(advanced[i].installedVersion))
+                        if (!string.IsNullOrEmpty(adapters[i].installedVersion))
                         {
                             installed++;
-                            if (advanced[i].notSupported)
+                            if (adapters[i].notSupported)
                             {
                                 forceOpen = true;
-                                Debug.LogError(Utils.logTag + advanced[i].name +
+                                Debug.LogError(Utils.logTag + adapters[i].name +
                                     " Dependencies found that are not valid to use.");
                             }
                         }
@@ -247,8 +188,8 @@ namespace CAS.UEditor
                 if (EditorGUILayout.BeginFadeGroup(advancedFoldout.faded))
                 {
                     OnHeaderGUI();
-                    for (int i = 0; i < advanced.Length; i++)
-                        advanced[i].OnGUI(this, platform);
+                    for (int i = 0; i < adapters.Length; i++)
+                        adapters[i].OnGUI(this, platform);
                 }
                 EditorGUILayout.EndFadeGroup();
                 HelpStyles.EndBoxScope();
@@ -272,10 +213,10 @@ namespace CAS.UEditor
 
         internal void SetAudience(Audience audience)
         {
-            for (int i = 0; i < simple.Length; i++)
-                simple[i].FilterAudience(audience);
-            for (int i = 0; i < advanced.Length; i++)
-                advanced[i].FilterAudience(audience);
+            for (int i = 0; i < solutions.Length; i++)
+                solutions[i].FilterAudience(audience);
+            for (int i = 0; i < adapters.Length; i++)
+                adapters[i].FilterAudience(audience);
         }
 
         private struct OtherDependency
@@ -446,10 +387,14 @@ namespace CAS.UEditor
                 }
             }
 
+            string netTitle = " " + name;
+            if (altName.Length != 0)
+                netTitle += "/" + altName;
+
             if (installed || locked)
             {
                 EditorGUI.BeginDisabledGroup((!installed && locked) || (installed && isRequired && !locked && !isNewer));
-                if (!GUILayout.Toggle(true, " " + name + altName, GUILayout.ExpandWidth(false)))
+                if (!GUILayout.Toggle(true, netTitle, GUILayout.ExpandWidth(false)))
                     DisableDependencies(platform, mediation);
                 if (sdkVersion != null)
                     GUILayout.Label(sdkVersion, EditorStyles.centeredGreyMiniLabel, GUILayout.ExpandWidth(false));
@@ -490,9 +435,9 @@ namespace CAS.UEditor
             }
             else
             {
-                EditorGUI.BeginDisabledGroup(notSupported || (dependencies.Length == 0 && depsSDK.Count == 0));
+                EditorGUI.BeginDisabledGroup(notSupported || (dependency.Length == 0 && depsSDK.Count == 0));
 
-                if (GUILayout.Toggle(false, " " + name + altName, GUILayout.ExpandWidth(false)))
+                if (GUILayout.Toggle(false, netTitle, GUILayout.ExpandWidth(false)))
                 {
                     ActivateDependencies(platform, mediation);
                     GUIUtility.ExitGUI();
@@ -518,19 +463,24 @@ namespace CAS.UEditor
             }
 
             if ((notSupported && installed) || (installed && locked) || (isRequired && !locked && !installed))
+            {
                 GUILayout.Label(HelpStyles.errorIconContent, GUILayout.Width(20));
-            else if (string.IsNullOrEmpty(url))
-                GUILayout.Space(25);
-            else if (GUILayout.Button(HelpStyles.helpIconContent, EditorStyles.label, GUILayout.Width(20)))
-                Application.OpenURL(url);
-
+            }
+            else
+            {
+                var url = id.GetPrivacyPolicy();
+                if (string.IsNullOrEmpty(url))
+                    GUILayout.Space(25);
+                else if (GUILayout.Button(HelpStyles.helpIconContent, EditorStyles.label, GUILayout.Width(20)))
+                    Application.OpenURL(url);
+            }
             EditorGUILayout.EndHorizontal();
             if (contains.Length > 0)
             {
                 var footerText = new StringBuilder();
                 for (int i = 0; i < contains.Length; i++)
                 {
-                    if (contains[i] != adBase)
+                    if (contains[i] != adBaseName)
                     {
                         if (footerText.Length > 0)
                             footerText.Append(", ");
@@ -572,7 +522,7 @@ namespace CAS.UEditor
 
         public void ActivateDependencies(BuildTarget platform, DependencyManager mediation = null)
         {
-            if (dependencies.Length == 0 && depsSDK.Count == 0)
+            if (dependency.Length == 0 && depsSDK.Count == 0)
             {
                 Debug.LogError(Utils.logTag + name + " have no dependencies. Please try reimport CAS package.");
                 return;
@@ -606,10 +556,8 @@ namespace CAS.UEditor
                     builder.Append("    </").Append(sourcesTagName).Append('>').AppendLine();
                 }
 
-                for (int i = 0; i < dependencies.Length; i++)
-                {
-                    AppendDependency(mediation, new SDK(dependencies[i], version), platform, builder);
-                }
+                if (dependency.Length > 0)
+                    AppendDependency(mediation, new SDK(dependency, version), platform, builder);
 
                 // EDM4U have a bug.
                 // Dependencies that will be added For All Targets must be at the end of the list of dependencies.
@@ -647,7 +595,7 @@ namespace CAS.UEditor
         {
             for (int i = 0; i < depsSDK.Count; i++)
             {
-                if (allowAllTargets == depsSDK[i].forAll)
+                if (allowAllTargets == depsSDK[i].embed)
                     AppendDependency(mediation, depsSDK[i], platform, builder);
             }
 
@@ -672,20 +620,19 @@ namespace CAS.UEditor
             if (platform == BuildTarget.Android)
                 builder.Append(sdk.version);
             builder.Append("\" version=\"").Append(sdk.version).Append("\"");
-            if (sdk.forAll && platform == BuildTarget.iOS)
+            if (sdk.embed && platform == BuildTarget.iOS)
                 builder.Append(" addToAllTargets=\"true\"");
             builder.Append("/>").AppendLine();
         }
 
         private void AppendSources(BuildTarget platform, StringBuilder builder, DependencyManager mediation)
         {
-            if (source == null)
+            if (source.Length == 0)
                 return;
             var sourceTagName = platform == BuildTarget.Android ? "repository" : "source";
-            for (int i = 0; i < source.Length; i++)
-                builder.Append("      <").Append(sourceTagName).Append('>')
-                    .Append(source[i])
-                    .Append("</").Append(sourceTagName).Append('>').AppendLine();
+            builder.Append("      <").Append(sourceTagName).Append('>')
+                .Append(source)
+                .Append("</").Append(sourceTagName).Append('>').AppendLine();
 
             if (mediation != null)
             {

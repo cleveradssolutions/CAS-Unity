@@ -13,7 +13,7 @@ namespace CAS.AdObject
     [AddComponentMenu("CleverAdsSolutions/Return To Play Ad Object")]
     [DisallowMultipleComponent]
     [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Return-To-Play-Ad-Object")]
-    public class ReturnToPlayAdObject : MonoBehaviour
+    public class ReturnToPlayAdObject : MonoBehaviour, IInternalAdObject
     {
         public ManagerIndex managerId;
         [SerializeField]
@@ -41,7 +41,7 @@ namespace CAS.AdObject
                     if (manager != null)
                         manager.SetAppReturnAdsEnabled(_allowReturnToPlayAd);
                     else
-                        CASFactory.TryGetManagerByIndexAsync(OnManagerReady, managerId.index);
+                        CASFactory.TryGetManagerByIndexAsync(this, managerId.index);
                 }
             }
         }
@@ -50,18 +50,15 @@ namespace CAS.AdObject
         private void Start()
         {
             MobileAds.settings.isExecuteEventsOnUnityThread = true;
-            if (!CASFactory.TryGetManagerByIndexAsync(OnManagerReady, managerId.index))
+            if (!CASFactory.TryGetManagerByIndexAsync(this, managerId.index))
                 OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
-
-        private void OnManagerReady(IMediationManager manager)
+        
+        void IInternalAdObject.OnManagerReady(InitialConfiguration config)
         {
+            this.manager = config.manager;
+
             manager.SetAppReturnAdsEnabled(_allowReturnToPlayAd);
-
-            if (!this) // When object are destroyed
-                return;
-
-            this.manager = manager;
             manager.OnInterstitialAdLoaded += OnAdLoaded.Invoke;
             manager.OnInterstitialAdFailedToLoad += OnInterstitialAdFailedToLoad;
             manager.OnAppReturnAdFailedToShow += OnInterstitialAdFailedToShow;

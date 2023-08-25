@@ -90,11 +90,15 @@ namespace CAS.Android
             CASFactory.ExecuteEvent(() =>
             {
                 manager.isTestAdMode = isTestMode;
-                manager._initError = error;
-                manager._initCountryCode = countryCode;
-                manager._initConsentRequired = isConsentRequired;
-                manager._initProxy = null;
+                manager.initialConfig = new InitialConfiguration(error, manager, countryCode, isConsentRequired);
+                CASFactory.OnManagerInitialized(manager);
                 manager.HandleInitEvent(complete, completeDeprecated);
+                if (error != InitializationError.NoConnection)
+                {
+                    manager._initProxy = null;
+                    complete = null;
+                    completeDeprecated = null;
+                }
             });
         }
     }

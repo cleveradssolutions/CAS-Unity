@@ -875,6 +875,7 @@
         <member name="F:CAS.InitialConfiguration.error">
             <summary>
             Get the CAS manager initialization error message or NULL if initialization is successful.
+            Check constants from <see cref="T:CAS.InitializationError"/> class.
             </summary>
         </member>
         <member name="F:CAS.InitialConfiguration.manager">
@@ -890,6 +891,30 @@
         <member name="F:CAS.InitialConfiguration.isConsentRequired">
             <summary>
             The consent must be requested from the user.
+            </summary>
+        </member>
+        <member name="F:CAS.InitializationError.NoConnection">
+            <summary>
+            Indicates that device network connection is not stable enough.
+            Your listener is stored in memory and will be called when initialization is successful.
+            </summary>
+        </member>
+        <member name="F:CAS.InitializationError.NotRegisteredID">
+            <summary>
+            Indicates that the CAS ID is not registered in system.
+            Contact support to clarify the reasons.
+            </summary>
+        </member>
+        <member name="F:CAS.InitializationError.VerificationFailed">
+            <summary>
+            Indicates that the SDK version is no longer compatible.
+            Please update to the latest SDK.
+            </summary>
+        </member>
+        <member name="F:CAS.InitializationError.ServerError">
+            <summary>
+            Indicates a temporary problem with the server.
+            If the error could be 100% replicated, please give feedback to us.
             </summary>
         </member>
     </members>

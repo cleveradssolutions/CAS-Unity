@@ -39,6 +39,9 @@ namespace CAS.Unity
 
         public string managerID { get { return casId; } }
         public bool isTestAdMode { get { return true; } }
+        public InitialConfiguration initialConfig {
+            get { return new InitialConfiguration(null, this, "US", true); }
+        }
 
         public LastPageAdContent lastPageAdContent
         {
@@ -161,7 +164,7 @@ namespace CAS.Unity
         #endregion
 #pragma warning restore 67
 
-        internal static IMediationManager Create(CASInitSettings initSettings)
+        internal static IInternalManager Create(CASInitSettings initSettings)
         {
             var obj = new GameObject("[CAS] Mediation Manager");
             //obj.hideFlags = HideFlags.HideInHierarchy;
@@ -191,11 +194,9 @@ namespace CAS.Unity
         public void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction)
         {
             if (initEvent != null)
-                initEvent(new InitialConfiguration(null, this, "US", true));
+                initEvent(initialConfig);
             if (initAction != null)
                 initAction(true, null);
-            _initCompleteAction = null;
-            _initCompleteEvent = null;
         }
 
         #region IMediationManager implementation
@@ -313,7 +314,10 @@ namespace CAS.Unity
 
         private void CallInitComplete()
         {
+            CASFactory.OnManagerInitialized(this);
             HandleInitEvent(_initCompleteEvent, _initCompleteAction);
+            _initCompleteEvent = null;
+            _initCompleteAction = null;
         }
 
         public void Update()

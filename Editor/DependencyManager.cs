@@ -23,7 +23,7 @@ namespace CAS.UEditor
 
         public Dependency[] networks
         {
-            get { return advanced; }
+            get { return adapters; }
         }
 
         public static DependencyManager Create(BuildTarget platform, Audience audience, bool deepInit)
@@ -38,12 +38,19 @@ namespace CAS.UEditor
             return mediation;
         }
 
-        public static DependencyManager Create(Dependency[] simple, Dependency[] advanced)
+        public static DependencyManager Create(Dependency[] solutions, Dependency[] adapters)
+        {
+            return Create(solutions, adapters, new string[0]);
+        }
+
+        public static DependencyManager Create(Dependency[] solutions, Dependency[] adapters, string[] deprecated)
         {
             return new DependencyManager()
             {
-                simple = simple,
-                advanced = advanced
+                version = MobileAds.wrapperVersion,
+                simple = solutions,
+                adapters = adapters,
+                deprecated = deprecated
             };
         }
 
@@ -86,17 +93,84 @@ namespace CAS.UEditor
                 return dep;
             }
 
-            for (int i = 0; i < simple.Length; i++)
+            for (int i = 0; i < solutions.Length; i++)
             {
-                if (simple[i].name == name)
-                    return simple[i];
+                if (solutions[i].name == name)
+                    return solutions[i];
             }
-            for (int i = 0; i < advanced.Length; i++)
+            for (int i = 0; i < adapters.Length; i++)
             {
-                if (advanced[i].name == name)
-                    return advanced[i];
+                if (adapters[i].name == name)
+                    return adapters[i];
             }
             return null;
+        }
+
+        public void UpdateDependencies(BuildTarget platform)
+        {
+            for (int i = 0; i < solutions.Length; i++)
+            {
+                if (solutions[i].isNewer)
+                    solutions[i].ActivateDependencies(platform, this);
+            }
+
+            for (int i = 0; i < adapters.Length; i++)
+            {
+                if (adapters[i].isNewer)
+                    adapters[i].ActivateDependencies(platform, this);
+            }
+        }
+
+        public string GetInstalledVersion()
+        {
+            string version = "";
+            var casDep = Find(Dependency.adBaseName);
+            if (casDep != null)
+                version = casDep.version;
+            if (!string.IsNullOrEmpty(version))
+                return version;
+
+            casDep = Find(Dependency.adOptimalName);
+            if (casDep != null)
+                version = casDep.installedVersion;
+            if (!string.IsNullOrEmpty(version))
+                return version;
+
+            casDep = Find(Dependency.adFamiliesName);
+            if (casDep != null)
+                version = casDep.installedVersion;
+
+            return version;
+        }
+
+        public int GetInstalledBuildCode()
+        {
+            var version = GetInstalledVersion();
+            if (!string.IsNullOrEmpty(version))
+            {
+                try
+                {
+                    var parsesV = new System.Version(version);
+                    return parsesV.Major * 1000 + parsesV.Minor * 100 + parsesV.Build;
+                }
+                catch { }
+            }
+            return 0;
+        }
+        
+        public bool IsNewerVersionFound()
+        {
+            for (int i = 0; i < simple.Length; i++)
+            {
+                if (simple[i].isNewer)
+                    return true;
+            }
+            for (int i = 0; i < adapters.Length; i++)
+            {
+                if (adapters[i].isNewer)
+                    return true;
+            }
+            return false;
         }
 
         public Dependency FindCrossPromotion()
@@ -139,30 +213,29 @@ namespace CAS.UEditor
         {
             public string name;
             public string version;
-            public bool forAll;
+            public bool embed;
 
             public SDK(string name, string version, bool addToAllTargets = false)
             {
                 this.name = name;
                 this.version = version;
-                this.forAll = addToAllTargets;
+                this.embed = addToAllTargets;
             }
         }
 
+        public AdNetwork id;
         public string name;
         public string altName = string.Empty;
         public string version = string.Empty;
         public AdNetwork require = noNetwork;
-        public string url;
         public Filter filter;
-        public string[] dependencies = new string[0];
+        public string dependency = string.Empty;
         public List<SDK> depsSDK = new List<SDK>();
-        public AdNetwork[] contains = new AdNetwork[0];
-        public string[] source = new string[0];
+        public string[] contains = new string[0];
+        public string source = string.Empty;
         public string comment;
         public Label labels = Label.Banner | Label.Inter | Label.Reward;
-        public string embedFramework;
-
+        
         public string installedVersion { get; set; }
         public bool isNewer { get; set; }
         /// <summary>

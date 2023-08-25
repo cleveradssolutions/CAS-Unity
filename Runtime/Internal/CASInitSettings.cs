@@ -60,7 +60,7 @@ namespace CAS
         public IMediationManager Build()
         {
             if (string.IsNullOrEmpty(targetId))
-                WithManagerIdAtIndex(0);
+                WithCASId(0);
             return CASFactory.CreateManager(this);
         }
 

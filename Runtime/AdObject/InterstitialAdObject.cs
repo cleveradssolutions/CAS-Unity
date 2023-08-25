@@ -13,7 +13,7 @@ namespace CAS.AdObject
     [AddComponentMenu("CleverAdsSolutions/Interstitial Ad Object")]
     [DisallowMultipleComponent]
     [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Interstitial-Ad-object")]
-    public sealed class InterstitialAdObject : MonoBehaviour
+    public sealed class InterstitialAdObject : MonoBehaviour, IInternalAdObject
     {
         public ManagerIndex managerId;
 
@@ -67,16 +67,13 @@ namespace CAS.AdObject
         private void Start()
         {
             MobileAds.settings.isExecuteEventsOnUnityThread = true;
-            if (!CASFactory.TryGetManagerByIndexAsync(OnManagerReady, managerId.index))
+            if (!CASFactory.TryGetManagerByIndexAsync(this, managerId.index))
                 OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
 
-        private void OnManagerReady(IMediationManager manager)
+        void IInternalAdObject.OnManagerReady(InitialConfiguration config)
         {
-            if (!this) // When object are destroyed
-                return;
-
-            this.manager = manager;
+            this.manager = config.manager;
             manager.OnInterstitialAdLoaded += OnAdLoaded.Invoke;
             manager.OnInterstitialAdFailedToLoad += OnInterstitialAdFailedToLoad;
             manager.OnInterstitialAdFailedToShow += OnInterstitialAdFailedToShow;
@@ -113,7 +110,7 @@ namespace CAS.AdObject
                 manager.OnInterstitialAdClosed -= OnAdClosed.Invoke;
                 manager.OnInterstitialAdImpression -= OnAdImpression.Invoke;
             }
-            CASFactory.UnsubscribeReadyManagerAsync(OnManagerReady, managerId.index);
+            CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
         }
         #endregion
 

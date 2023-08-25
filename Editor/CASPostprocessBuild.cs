@@ -12,9 +12,8 @@
 // No longer required
 //#define AddApplicationQueriesSchames
 
-#if UNITY_2019_3_OR_NEWER
-#define EmbedDynamicLibraries
-#endif
+//#define EmbedDynamicLibraries
+
 
 #if UNITY_IOS || CASDeveloper
 using System;
@@ -572,6 +571,7 @@ namespace CAS.UEditor
             }
         }
 
+#if EmbedDynamicLibraries
         private static void EmbedDynamicLibrariesIfNeeded(this PBXProject project, string buildPath, string targetGuid, DependencyManager deps)
         {
             for (int i = 0; i < deps.networks.Length; i++)
@@ -583,13 +583,12 @@ namespace CAS.UEditor
                 if (!Directory.Exists(Path.Combine(buildPath, dynamicLibraryPath)))
                     continue;
 
-#if UNITY_2019_3_OR_NEWER
                 var fileGuid = project.AddFile(dynamicLibraryPath, dynamicLibraryPath);
                 project.AddFileToEmbedFrameworks(targetGuid, fileGuid);
-#endif
             }
         }
-        #endregion
+#endif
+#endregion
     }
 }
 #endif

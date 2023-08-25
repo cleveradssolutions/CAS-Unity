@@ -18,7 +18,13 @@ namespace CAS
 {
     internal interface IInternalManager : IMediationManager
     {
+        InitialConfiguration initialConfig { get; }
         void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction);
+    }
+
+    internal interface IInternalAdObject
+    {
+        void OnManagerReady(InitialConfiguration config);
     }
 
     internal static class CASFactory
@@ -26,8 +32,8 @@ namespace CAS
         private static volatile bool executeEventsOnUnityThread = true;
 
         private static IAdsSettings settings;
-        private static List<IMediationManager> managers;
-        private static List<Action<IMediationManager>> initCallback = new List<Action<IMediationManager>>();
+        private static List<IInternalManager> managers;
+        private static List<List<IInternalAdObject>> initCallback = new List<List<IInternalAdObject>>();
         private static Dictionary<string, string> globalExtras;
 
         internal static bool isDebug { get { return GetAdsSettings().isDebugMode; } }
@@ -59,7 +65,7 @@ namespace CAS
 #if UNITY_ANDROID
             return Resources.Load<CASInitSettings>("CASSettingsAndroid");
 #elif UNITY_IOS
-            return Resources.Load<CASInitSettings>( "CASSettingsiOS" );
+            return Resources.Load<CASInitSettings>("CASSettingsiOS");
 #else
             return null;
 #endif
@@ -140,31 +146,23 @@ namespace CAS
 
         internal static IMediationManager CreateManager(CASInitSettings initSettings)
         {
-            if (managers == null)
-            {
-                if (initSettings.managersCount == 0)
-                {
-                    managers = new List<IMediationManager>();
-                }
-                else
-                {
-                    managers = new List<IMediationManager>(initSettings.managersCount);
-                    for (int i = 0; i < initSettings.managersCount; i++)
-                        managers.Add(null);
-                }
-            }
-            else
+            if (managers != null)
             {
                 for (int i = 0; i < managers.Count; i++)
                 {
                     var readyManager = managers[i];
                     if (readyManager != null && readyManager.managerID == initSettings.targetId)
                     {
-                        (readyManager as IInternalManager)
-                            .HandleInitEvent(initSettings.initListener, initSettings.initListenerDeprecated);
+                        readyManager.HandleInitEvent(initSettings.initListener, initSettings.initListenerDeprecated);
                         return readyManager;
                     }
                 }
+            }
+            else
+            {
+                managers = new List<IInternalManager>(initSettings.managersCount);
+                for (int i = 0; i < initSettings.managersCount; i++)
+                    managers.Add(null);
             }
 
             if (settings == null)
@@ -182,7 +180,7 @@ namespace CAS
                 initSettings.extras = mergeExtras;
             }
 
-            IMediationManager manager = null;
+            IInternalManager manager = null;
 #if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
                 manager = new CAS.Android.CASManagerClient().Init(initSettings);
@@ -200,25 +198,61 @@ namespace CAS
             if (executeEventsOnUnityThread)
                 EventExecutor.Initialize();
 
-            var managerIndex = initSettings.IndexOfManagerId(initSettings.targetId);
+            var managerIndex = initSettings.IndexOfManagerId(manager.managerID);
             if (managerIndex < 0)
-            {
-                managerIndex = managers.Count;
                 managers.Add(manager);
-            }
             else
-            {
                 managers[managerIndex] = manager;
-            }
-            if (managerIndex < initCallback.Count)
+            return manager;
+        }
+
+        internal static bool TryGetManagerByIndexAsync(IInternalAdObject adObject, int index)
+        {
+            if (index < 0)
+                throw new ArgumentOutOfRangeException("index", "Manager index cannot be less than 0");
+
+            if (managers != null && index < managers.Count)
             {
-                var onInitManager = initCallback[managerIndex];
-                if (onInitManager != null)
+                var readyManager = managers[index];
+                if (readyManager != null && readyManager.initialConfig != null)
                 {
-                    initCallback[managerIndex] = null;
+                    adObject.OnManagerReady(readyManager.initialConfig);
+                    return true;
+                }
+            }
+
+            for (int i = initCallback.Count; i <= index; i++)
+                initCallback.Add(null);
+            if (initCallback[index] == null)
+                initCallback[index] = new List<IInternalAdObject>();
+
+            initCallback[index].Add(adObject);
+            return false;
+        }
+
+        internal static void UnsubscribeReadyManagerAsync(IInternalAdObject callback, int index)
+        {
+            if (index < initCallback.Count && initCallback[index] != null)
+                initCallback[index].Remove(callback);
+        }
+
+        internal static void OnManagerInitialized(IInternalManager manager)
+        {
+            if (managers == null) return;
+            var managerIndex = managers.IndexOf(manager);
+            if (managerIndex != -1 && managerIndex < initCallback.Count)
+            {
+                var initList = initCallback[managerIndex];
+                if (initList == null)
+                    return;
+                initCallback[managerIndex] = null;
+                for (int i = 0; i < initList.Count; i++)
+                {
                     try
                     {
-                        onInitManager(manager);
+                        // Check out MonoBehaviour which is still alive
+                        if ((MonoBehaviour)initList[i])
+                            initList[i].OnManagerReady(manager.initialConfig);
                     }
                     catch (Exception e)
                     {
@@ -226,38 +260,6 @@ namespace CAS
                     }
                 }
             }
-            return manager;
-        }
-
-        internal static bool TryGetManagerByIndexAsync(Action<IMediationManager> callback, int index)
-        {
-            if (index < 0)
-                throw new ArgumentOutOfRangeException("index", "Manager index cannot be less than 0");
-
-            if (managers != null && index < managers.Count && managers[index] != null)
-            {
-                callback(managers[index]);
-                return true;
-            }
-
-            if (index != 0)
-            {
-                var initSettings = LoadInitSettingsFromResources();
-                if (initSettings && initSettings.managersCount > 0 && initSettings.managersCount - 1 < index)
-                    throw new ArgumentOutOfRangeException("index",
-                        "Manager with index " + index + " not found in settings." +
-                        "\nUse 'Assets > CleverAdsSolutions > Settings' menu to set all used Manager Ids.");
-            }
-            for (int i = initCallback.Count; i <= index; i++)
-                initCallback.Add(null);
-            initCallback[index] += callback;
-            return false;
-        }
-
-        internal static void UnsubscribeReadyManagerAsync(Action<IMediationManager> callback, int index)
-        {
-            if (initCallback != null && index < initCallback.Count)
-                initCallback[index] -= callback;
         }
 
         internal static void ValidateIntegration()

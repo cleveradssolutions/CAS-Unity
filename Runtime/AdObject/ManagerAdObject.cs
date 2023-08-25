@@ -13,32 +13,66 @@ namespace CAS.AdObject
     [AddComponentMenu("CleverAdsSolutions/Initialize Manager Ad Object")]
     [DisallowMultipleComponent]
     [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Manager-Ad-object")]
-    public class ManagerAdObject : MonoBehaviour
+    public class ManagerAdObject : MonoBehaviour, IInternalAdObject
     {
         public ManagerIndex managerId;
         [SerializeField]
         private bool initializeOnAwake = true;
+        public CCPAStatus metaDataProcessing = CCPAStatus.Undefined;
+        public ConsentStatus metaAdvertiserTracking = ConsentStatus.Undefined;
 
         public UnityEvent OnInitialized;
+        public CASUEventWithError OnInitializationFailed;
 
         public void Initialize()
         {
-            MobileAds.BuildManager()
+            CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
+
+            var builder = MobileAds.BuildManager()
                .WithManagerIdAtIndex(managerId.index)
-               .WithInitListener(OnInitializeResult)
-               .Initialize();
+               .WithCompletionListener(OnManagerReady);
+
+            if (metaDataProcessing != CCPAStatus.Undefined)
+            {
+                builder.WithMediationExtras(
+                    MediationExtras.facebookDataProcessing,
+                    metaDataProcessing == CCPAStatus.OptInSale ? "" : "LDU"
+                );
+            }
+            if (metaAdvertiserTracking != ConsentStatus.Undefined)
+            {
+                builder.WithMediationExtras(
+                    MediationExtras.facebookAdvertiserTracking,
+                    metaAdvertiserTracking == ConsentStatus.Accepted ? "1" : "0"
+                );
+            }
+
+            builder.Initialize();
         }
 
+
+        #region MonoBehaviour
         private void Start()
         {
             if (initializeOnAwake)
                 Initialize();
+            else
+                CASFactory.TryGetManagerByIndexAsync(this, managerId.index);
         }
 
-        private void OnInitializeResult(bool success, string error)
+        private void OnDestroy()
         {
-            OnInitialized.Invoke();
+            CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
         }
+
+        public void OnManagerReady(InitialConfiguration config)
+        {
+            if (config.error == null)
+                OnInitialized.Invoke();
+            else
+                OnInitializationFailed.Invoke(config.error);
+        }
+        #endregion
     }
 
     [Serializable]
