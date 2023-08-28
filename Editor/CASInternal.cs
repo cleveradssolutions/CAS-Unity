@@ -18,8 +18,10 @@ namespace CAS.UEditor
     public partial class DependencyManager
     {
         #region Internal implementation
+#pragma warning disable CS0414
         [SerializeField]
         private string version;
+#pragma warning restore CS0414
         [SerializeField]
         private Dependency[] simple;
         [SerializeField]

@@ -255,6 +255,7 @@ void CASUSetConsentFlow(CASManagerBuilderRef      builderRef,
         };
     }
 
+    flow.viewControllerToPresent = [CASUPluginUtil unityGLViewController];
     [builder withConsentFlow:flow];
 }
 
@@ -528,10 +529,6 @@ int CASUGetImpressionNetwork(CASImpressionRef impression) {
         NSString *network = internalImp.network;
 
         if (![network isEqualToString:CASNetwork.lastPageAd]) {
-            if ([network isEqualToString:CASNetwork.fyber]) {
-                network = CASNetwork.fairBid;
-            }
-
             NSUInteger netIndex = [[CASNetwork values] indexOfObject:network];
 
             if (netIndex != NSNotFound) {
@@ -631,5 +628,11 @@ void CASURequestATT(CASUATTCompletion completion) {
 }
 
 NSUInteger CASUGetATTStatus(void) {
-    return [CASInternalUtils adTrackingStatus];
+    NSUInteger status = [CASInternalUtils adTrackingStatus];
+
+    if (status == 4) {
+        return 0;
+    }
+
+    return status;
 }
