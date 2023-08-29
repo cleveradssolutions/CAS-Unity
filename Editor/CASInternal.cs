@@ -46,11 +46,18 @@ namespace CAS.UEditor
             for (int i = 0; i < simple.Length; i++)
             {
                 simple[i].Reset();
-                simple[i].Init(platform, managerToInit);
             }
             for (int i = 0; i < adapters.Length; i++)
             {
                 adapters[i].Reset();
+            }
+            // Cannot be merged Reset and Init in single loop.
+            for (int i = 0; i < simple.Length; i++)
+            {
+                simple[i].Init(platform, managerToInit);
+            }
+            for (int i = 0; i < adapters.Length; i++)
+            {
                 adapters[i].Init(platform, managerToInit);
             }
 
