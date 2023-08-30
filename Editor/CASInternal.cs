@@ -636,12 +636,13 @@ namespace CAS.UEditor
 
         private void AppendSources(BuildTarget platform, StringBuilder builder, DependencyManager mediation)
         {
-            if (source.Length == 0)
-                return;
-            var sourceTagName = platform == BuildTarget.Android ? "repository" : "source";
-            builder.Append("      <").Append(sourceTagName).Append('>')
-                .Append(source)
-                .Append("</").Append(sourceTagName).Append('>').AppendLine();
+            if (source.Length > 0)
+            {
+                var sourceTagName = platform == BuildTarget.Android ? "repository" : "source";
+                builder.Append("      <").Append(sourceTagName).Append('>')
+                    .Append(source)
+                    .Append("</").Append(sourceTagName).Append('>').AppendLine();
+            }
 
             if (mediation != null)
             {
