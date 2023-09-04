@@ -760,18 +760,14 @@ namespace CAS.UEditor
         internal static void UpdatePackageManagerRepo(string gitRepoName, string version)
         {
             var request = UnityEditor.PackageManager.Client.Add(gitRootURL + gitRepoName + ".git#" + version);
-            new EditorOperation(() =>
+
+            while (!request.IsCompleted)
             {
-                if (request.IsCompleted)
-                {
-                    if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
-                        Debug.Log("Package Manager: Updated " + request.Result.displayName);
-                    else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
-                        Debug.LogError(request.Error.message);
-                    return false;
-                }
-                return true;
-            });
+                if (request.Status == UnityEditor.PackageManager.StatusCode.Success)
+                    Debug.Log("Package Manager: Updated " + request.Result.displayName);
+                else if (request.Status >= UnityEditor.PackageManager.StatusCode.Failure)
+                    Debug.LogError(request.Error.message);
+            }
         }
 
         internal static void RemovePackage(string packageName)
