@@ -1,5 +1,16 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.2.5] - 2023-09-05
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.5 SDK
+## Changes
+- [iOS] Updated ATT dialog text to be consistent with Apple policy (3.2.2 Unacceptable).
+- Removed Tapjoy network support.
+  > Video product Tapjoy is now integrated as a demand partner on the ironSource, iSX exchange.
+- Added debug price ($1) and creative ID for test ads impression.
+## Fixes
+- [Editor] Fixed `Metadata file could not be found` during version package update.
+- [Editor] Disabled of Gradle Tools version update for Used Gradle wrapper version in build.
+
 # [3.2.4] - 2023-07-15
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.4 SDK
 
