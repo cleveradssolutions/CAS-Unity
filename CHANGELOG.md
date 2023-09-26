@@ -1,5 +1,35 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.3.0] - 2023-09-26
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.3.0 SDK
+- Added the option to switch to using Google User Messaging Platform instead of CAS Consent Flow.  
+Please contact support to migrate to a certified CMP.  
+  > You also have the opportunity to independently use any certified CMP before CAS initialization and CAS SDK will transmit information about the user’s consent for mediation.
+- Added the options to define the **Limited Data Use** and **Advertising Tracking** flags for Meta Audience Network in the inspector of `ManagerAdObject`.
+- Added an `OnInitialziationFailed` event to the `ManagerAdObject` inspector.
+- Added an `InitializationError` class with const strings to compare with `InitialConfiguration.error` values.
+## Changes
+- The Meta Audience Network has been removed from the optimal advertising solution.  
+  > If you want to continue using the Audience Network for monetization, then add the adapter dependency and comply with its privacy requirements.
+- The Network names have been replaced with more conventional ones in the Firebase `ad_impression` event.
+- The `AdMetaData.identifier` property now returns the Placement ID from the network on which the ad was shown.
+- The `AdNetwork.Vungle` renamed to LiftoffMonetize.
+- The `AdNetwork.DigitalTurbine` renamed to DTExchange.
+## New ads networks support in closed beta
+- HyprMX - Focused to USA region only.
+- Smaato - Support Banner ad only.
+
+# [3.2.5] - 2023-09-05
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.5 SDK
+## Changes
+- [iOS] Updated ATT dialog text to be consistent with Apple policy (3.2.2 Unacceptable).
+- Removed Tapjoy network support.
+  > Video product Tapjoy is now integrated as a demand partner on the ironSource, iSX exchange.
+- Added debug price ($1) and creative ID for test ads impression.
+## Fixes
+- [Editor] Fixed `Metadata file could not be found` during version package update.
+- [Editor] Disabled of Gradle Tools version update for Used Gradle wrapper version in build.
+
 # [3.2.4] - 2023-07-15
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.2.4 SDK
 

@@ -263,12 +263,14 @@ namespace CAS.UEditor
         public static KeyValuePair[] DefaultUserTrackingUsageDescription()
         {
             return new KeyValuePair[]{
-                new KeyValuePair( "en", "Get ads that are more interesting and support keeping this game free by allowing tracking" ),
-                new KeyValuePair( "de", "Erhalten Sie interessantere Anzeigen und unterstützen Sie, dieses Spiel kostenlos zu halten, indem Sie Tracking zulassen" ),
-                new KeyValuePair( "es", "Obtenga anuncios más interesantes y ayude a mantener este juego gratuito al permitir el seguimiento" ),
-                new KeyValuePair( "fr", "Obtenez des publicités plus intéressantes et aidez à garder ce jeu gratuit en autorisant le suivi" ),
-                new KeyValuePair( "uk", "Отримуйте більш цікаву рекламу та допомагайте цьому додатку залишатися безкоштовним, поділившись інформацією про пристрій"),
-                new KeyValuePair( "ru", "Получайте более интересную рекламу и помогайте этой игре быть бесплатной, поделившись информацией об устройстве" ),
+                new KeyValuePair( "en", "Your data will remain confidential and will only be used to provide you a better and personalised ad experience" ),
+                new KeyValuePair( "de", "Ihre Daten bleiben vertraulich und werden nur dazu verwendet, Ihnen ein besseres und personalisiertes Werbeerlebnis zu bieten" ),
+                new KeyValuePair( "es", "Sus datos permanecerán confidenciales y solo se utilizarán para brindarle una experiencia publicitaria mejor y personalizada" ),
+                new KeyValuePair( "fr", "Vos données resteront confidentielles et seront utilisées uniquement pour vous offrir une expérience publicitaire meilleure et personnalisée" ),
+                new KeyValuePair( "uk", "Ваші дані залишатимуться конфіденційними та використовуватимуться лише для надання вам кращої та персоналізованої реклами"),
+                new KeyValuePair( "ru", "Ваши данные останутся конфиденциальными и будут использоваться только для предоставления вам более качественной и персонализированной рекламы" ),
+                new KeyValuePair( "pt", "Seus dados permanecerão confidenciais e serão usados apenas para lhe proporcionar uma experiência publicitária melhor e personalizada" ),
+                new KeyValuePair( "ja", "お客様のデータは機密として保持され、より優れたパーソナライズされた広告エクスペリエンスを提供するためにのみ使用されます" ),
             };
         }
 
