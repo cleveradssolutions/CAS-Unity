@@ -230,6 +230,7 @@ namespace CAS.UEditor
         public AdNetwork require = noNetwork;
         public Filter filter;
         public string dependency = string.Empty;
+        public string embedLib = string.Empty;
         public List<SDK> depsSDK = new List<SDK>();
         public string[] contains = new string[0];
         public string source = string.Empty;

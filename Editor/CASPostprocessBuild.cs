@@ -4,15 +4,22 @@
 //  Copyright © 2023 CleverAdsSolutions. All rights reserved.
 //
 
+// Bitcode is deprecated in Xcode 14.
+// Unity 2020.3.44f still use Bitcode.
 #define DisableBitcode
 
-// EDM4U will do this by default
+// EDM4U will add `Unity-iPhone` target to Podfile by default
 //#define AddMainTargetToPodfile
 
 // No longer required
 //#define AddApplicationQueriesSchames
 
-//#define EmbedDynamicLibraries
+#if UNITY_2019_3_OR_NEWER
+#define EmbedDynamicFrameworks
+
+// Avoid DTExchange issue with lost dSYMs path in XCFramework
+#define UnpackDTExchangeXCFramework
+#endif
 
 
 #if UNITY_IOS || CASDeveloper
@@ -64,8 +71,10 @@ namespace CAS.UEditor
             EditXCProject(buildPath, unityProjectName, (project) =>
             {
                 var appTargetGuid = project.GetAppGUID();
-                project.EnableSwiftLibraries(appTargetGuid);
+                var frameworkTargetGuid = project.GetFrameworkGUID();
+                project.EnableSwiftLibraries(appTargetGuid, frameworkTargetGuid);
                 project.FixLibrariesExecutablePath(appTargetGuid, depManager);
+                project.FixGenerationInfoPlist(frameworkTargetGuid);
                 if (initSettings)
                     project.CopyConfigCacheFileForCAS(buildPath, appTargetGuid, initSettings);
             });
@@ -98,9 +107,9 @@ namespace CAS.UEditor
 #endif
                 project.LocalizeUserTrackingDescription(buildPath, appTargetGuid, editorSettings.userTrackingUsageDescription);
 
-#if EmbedDynamicLibraries
+#if EmbedDynamicFrameworks
                 var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
-                project.EmbedDynamicLibrariesIfNeeded(buildPath, appTargetGuid, depManager);
+                project.EmbedDynamicFrameworks(buildPath, appTargetGuid, depManager);
 #endif
             });
 
@@ -399,14 +408,12 @@ namespace CAS.UEditor
             project.SetBuildProperty(targetGuid, "ENABLE_BITCODE", enabled ? "YES" : "NO");
         }
 
-        private static void EnableSwiftLibraries(this PBXProject project, string mainTargetGuid)
+        private static void EnableSwiftLibraries(this PBXProject project, string mainTargetGuid, string frameworkTargetGuid)
         {
-            var frameworkTargetGuid = project.GetFrameworkGUID();
             var swiftVersion = project.GetBuildPropertyForAnyConfig(frameworkTargetGuid, "SWIFT_VERSION");
             if (string.IsNullOrEmpty(swiftVersion))
                 project.SetBuildProperty(frameworkTargetGuid, "SWIFT_VERSION", "5.0");
             project.SetBuildProperty(frameworkTargetGuid, "CLANG_ENABLE_MODULES", "YES");
-
 
             // For Swift 5+ code that uses the standard libraries,
             // the Swift Standard Libraries MUST be embedded for iOS < 12.2
@@ -450,6 +457,19 @@ namespace CAS.UEditor
 
             var swiftFileGuid = project.AddFile(relativePath, relativePath, PBXSourceTree.Source);
             project.AddFileToBuild(frameworkTargetGuid, swiftFileGuid);
+        }
+
+        /// <summary>
+        /// Known issue with failed validation by Apple:
+        /// <para>
+        /// The bundle 'Payload/Cubes World.app/Frameworks/UnityFramework.framework' is missing plist key. 
+        /// The Info.plist file is missing the required key: CFBundleShortVersionString. 
+        /// Please find more information about CFBundleShortVersionString
+        /// </para>
+        /// This happens when some pods want to enable GENERATE_INFOPLIST_FILE, but Unity is not support it.
+        /// </summary>
+        private static void FixGenerationInfoPlist(this PBXProject project, string targetGuid){
+            project.SetBuildProperty(targetGuid, "GENERATE_INFOPLIST_FILE", "NO");
         }
 
         private static void FixLibrariesExecutablePath(this PBXProject project, string targetGuid, DependencyManager deps)
@@ -571,24 +591,38 @@ namespace CAS.UEditor
             }
         }
 
-#if EmbedDynamicLibraries
-        private static void EmbedDynamicLibrariesIfNeeded(this PBXProject project, string buildPath, string targetGuid, DependencyManager deps)
+#if EmbedDynamicFrameworks
+        private static void EmbedDynamicFrameworks(this PBXProject project, string buildPath, string targetGuid, DependencyManager deps)
         {
             for (int i = 0; i < deps.networks.Length; i++)
             {
-                var dynamicLibraryPath = deps.networks[i].embedFramework;
-                if (string.IsNullOrEmpty(dynamicLibraryPath))
-                    continue;
-                dynamicLibraryPath = Path.Combine("Pods", dynamicLibraryPath);
-                if (!Directory.Exists(Path.Combine(buildPath, dynamicLibraryPath)))
+                var frameworkPath = deps.networks[i].embedLib;
+                if (string.IsNullOrEmpty(frameworkPath) || !deps.networks[i].IsInstalled())
                     continue;
 
-                var fileGuid = project.AddFile(dynamicLibraryPath, dynamicLibraryPath);
+                frameworkPath = Path.Combine("Pods", frameworkPath);
+
+#if UnpackDTExchangeXCFramework
+                if (deps.networks[i].name == "DTExchange")
+                    frameworkPath = UnpackXCFramework(frameworkPath);
+#endif
+
+                var pathInProject = Path.Combine("Frameworks", Path.GetFileName(frameworkPath));
+                var fileGuid = project.AddFile(frameworkPath, pathInProject);
                 project.AddFileToEmbedFrameworks(targetGuid, fileGuid);
             }
         }
 #endif
-#endregion
+
+        private static string UnpackXCFramework(string path)
+        {
+            var frameworkName = Path.GetFileNameWithoutExtension(path) + ".framework";
+            var sdkDir = Path.Combine(path, "ios-arm64");
+            if (PlayerSettings.iOS.sdkVersion == iOSSdkVersion.SimulatorSDK)
+                sdkDir += "_x86_64-simulator";
+            return Path.Combine(sdkDir, frameworkName);
+        }
+        #endregion
     }
 }
 #endif
