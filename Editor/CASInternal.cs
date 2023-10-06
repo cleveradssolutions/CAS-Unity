@@ -70,7 +70,7 @@ namespace CAS.UEditor
                 if (File.Exists(destination))
                 {
                     AssetDatabase.DeleteAsset(destination);
-                    Debug.LogError(Utils.logTag + " The " + deprecated[i] +
+                    Debug.LogWarning(Utils.logTag + " The " + deprecated[i] +
                         " Adapter is no longer supported, it may have been renamed. Don't forget to include the new adapter.");
                 }
             }

@@ -1,5 +1,18 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.3.1] - 2023-10-06
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.3.1 SDK
+## Changes
+- [iOS] The Pangle has been removed from the Families Ads Solution.  
+  > The Pangle source does not provide ads under COPPA restrictions. The Pangle is still included in the Optimal Ads Solution.
+## Bug Fixes
+- [iOS] Fixed issue with missing `CFBundleShortVersionString` in UnityFramework.
+- [iOS] Fixed issue with copying dynamic frameworks to app archive.
+- [Android] Fixed a rare issue with the banner could be hidden by another view.
+- Fixed automatic removal of the Tapjoy adapter that could cause build errors. 
+## New ads networks support in closed beta
+- Bigo
+
 # [3.3.0] - 2023-09-26
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.3.0 SDK
 - Added the option to switch to using Google User Messaging Platform instead of CAS Consent Flow.  
