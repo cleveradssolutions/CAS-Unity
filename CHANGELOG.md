@@ -1,5 +1,18 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.3.2] - 2023-10-17
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.3.2 SDK
+- Added `AdNetwork.CASExchange`
+- [Android] Optimized calling native methods for managing banners.
+## Bug Fixes
+- [Android] Fixed an issue with an invisible banner ad with Unity 2021.3.31f1 and 2022.3.10f1.
+- [iOS] Fixed `YandexMobileAdsBundle.bundle is not added` with ussed `use_frameworks! :linkage => :static` in Podfile.
+  > Due to an bug in the Yandex Ads SDK, we had to add the bundle to the app target.
+- [iOS] Fixed `Multiple commands produce` with Dynamic frameworks if `use_frameworks!` in Podfile.
+- [iOS] Fixed issue with missing `CFBundleShortVersionString` in App target if `use_frameworks!` in Podfile.
+> We are working to resolve issues with `use_frameworks!`, however we still recommend set `use_frameworks! :linkage => :static` only in Podfile.
+
+
 # [3.3.1] - 2023-10-06
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.3.1 SDK
 ## Changes

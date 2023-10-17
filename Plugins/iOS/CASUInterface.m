@@ -528,12 +528,18 @@ int CASUGetImpressionNetwork(CASImpressionRef impression) {
     if (internalImp) {
         NSString *network = internalImp.network;
 
-        if (![network isEqualToString:CASNetwork.lastPageAd]) {
-            NSUInteger netIndex = [[CASNetwork values] indexOfObject:network];
+        if ([network isEqualToString:CASNetwork.casExchange]) {
+            return CASNetworkIdCASExchange;
+        }
 
-            if (netIndex != NSNotFound) {
-                return (int)netIndex;
-            }
+        if ([network isEqualToString:CASNetwork.lastPageAd]) {
+            return CASNetworkIdLastPageAd;
+        }
+
+        NSUInteger netIndex = [[CASNetwork values] indexOfObject:network];
+
+        if (netIndex != NSNotFound) {
+            return (int)netIndex;
         }
     }
 

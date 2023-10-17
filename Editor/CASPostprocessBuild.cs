@@ -19,6 +19,10 @@
 
 // Avoid DTExchange issue with lost dSYMs path in XCFramework
 #define UnpackDTExchangeXCFramework
+
+// Yandex Ads not support to place the Resources bundle in UnityFramework, 
+// then we embed the bundle to App target
+#define EmbedYandexAdsResourcesBundle
 #endif
 
 
@@ -75,6 +79,7 @@ namespace CAS.UEditor
                 project.EnableSwiftLibraries(appTargetGuid, frameworkTargetGuid);
                 project.FixLibrariesExecutablePath(appTargetGuid, depManager);
                 project.FixGenerationInfoPlist(frameworkTargetGuid);
+                project.FixGenerationInfoPlist(appTargetGuid);
                 if (initSettings)
                     project.CopyConfigCacheFileForCAS(buildPath, appTargetGuid, initSettings);
             });
@@ -108,8 +113,20 @@ namespace CAS.UEditor
                 project.LocalizeUserTrackingDescription(buildPath, appTargetGuid, editorSettings.userTrackingUsageDescription);
 
 #if EmbedDynamicFrameworks
-                var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
-                project.EmbedDynamicFrameworks(buildPath, appTargetGuid, depManager);
+                if (IsStaticPodInstallUsed(buildPath))
+                {
+                    var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
+                    project.AddEmbedDynamicFrameworks(appTargetGuid, depManager);
+
+#if EmbedYandexAdsResourcesBundle
+                    var yandexDep = depManager.Find(AdNetwork.YandexAds);
+                    if (yandexDep != null && yandexDep.IsInstalled())
+                    {
+                        const string yandexBundlePath = "Pods/YandexMobileAds/YandexMobileAds.xcframework/YandexMobileAdsBundle.bundle";
+                        project.AddEmbedResourcesBundle(appTargetGuid, yandexBundlePath);
+                    }
+#endif
+                }
 #endif
             });
 
@@ -467,8 +484,10 @@ namespace CAS.UEditor
         /// Please find more information about CFBundleShortVersionString
         /// </para>
         /// This happens when some pods want to enable GENERATE_INFOPLIST_FILE, but Unity is not support it.
+        /// - Yandex Ads: https://github.com/CocoaPods/Specs/blob/master/Specs/a/c/5/YandexMobileAds/6.0.0/YandexMobileAds.podspec.json
         /// </summary>
-        private static void FixGenerationInfoPlist(this PBXProject project, string targetGuid){
+        private static void FixGenerationInfoPlist(this PBXProject project, string targetGuid)
+        {
             project.SetBuildProperty(targetGuid, "GENERATE_INFOPLIST_FILE", "NO");
         }
 
@@ -592,7 +611,34 @@ namespace CAS.UEditor
         }
 
 #if EmbedDynamicFrameworks
-        private static void EmbedDynamicFrameworks(this PBXProject project, string buildPath, string targetGuid, DependencyManager deps)
+        private static bool IsStaticPodInstallUsed(string buildPath)
+        {
+            var podPath = Path.Combine(buildPath, "Podfile");
+            if (!File.Exists(podPath))
+            {
+                Debug.LogWarning(CASEditorUtils.logTag + "IsStaticPodInstallUsed Not found path: " + podPath);
+                return true;
+            }
+            try
+            {
+                var content = File.ReadAllText(podPath);
+                // If Podfile have use_frameworks!
+                // at last then DynamicFrameworks will embeded by Cocoapods
+
+                // If Podifle have use_frameworks! :linkage => :static
+                // at last then DynamicFrameworks should be embeded by CAS script
+                var dynamicUsage = content.LastIndexOf("use_frameworks!");
+                var staticUsage = content.LastIndexOf(":linkage => :static");
+                return dynamicUsage < staticUsage;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(CASEditorUtils.logTag + "IsStaticPodInstallUsed: " + e.Message);
+            }
+            return true;
+        }
+
+        private static void AddEmbedDynamicFrameworks(this PBXProject project, string targetGuid, DependencyManager deps)
         {
             for (int i = 0; i < deps.networks.Length; i++)
             {
@@ -606,13 +652,25 @@ namespace CAS.UEditor
                 if (deps.networks[i].name == "DTExchange")
                     frameworkPath = UnpackXCFramework(frameworkPath);
 #endif
-
-                var pathInProject = Path.Combine("Frameworks", Path.GetFileName(frameworkPath));
-                var fileGuid = project.AddFile(frameworkPath, pathInProject);
-                project.AddFileToEmbedFrameworks(targetGuid, fileGuid);
+                project.AddEmbedFramework(targetGuid, frameworkPath);
             }
         }
 #endif
+
+        private static void AddEmbedFramework(this PBXProject project, string targetGuid, string frameworkPath)
+        {
+            var pathInProject = Path.Combine("Frameworks", Path.GetFileName(frameworkPath));
+            var fileGuid = project.AddFile(frameworkPath, pathInProject);
+            project.AddFileToEmbedFrameworks(targetGuid, fileGuid);
+        }
+
+        private static void AddEmbedResourcesBundle(this PBXProject project, string targetGuid, string bundlePath)
+        {
+            var pathInProject = Path.Combine("Frameworks", Path.GetFileName(bundlePath));
+            var resourcesGuid = project.AddFolderReference(bundlePath, pathInProject, PBXSourceTree.Source);
+            var buildPhase = project.GetResourcesBuildPhaseByTarget(targetGuid);
+            project.AddFileToBuildSection(targetGuid, buildPhase, resourcesGuid);
+        }
 
         private static string UnpackXCFramework(string path)
         {
