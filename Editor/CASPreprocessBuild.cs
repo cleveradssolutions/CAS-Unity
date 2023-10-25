@@ -95,12 +95,9 @@ namespace CAS.UEditor
                         "Please use 'Assets > CleverAdsSolutions >Settings' menu to update.", target);
             }
 
-            if (settings.managersCount == 0 || string.IsNullOrEmpty(settings.GetManagerId(0)))
-                StopBuildIDNotFound(target);
+            RemoveDeprecatedAssets();
 
             string admobAppId = UpdateRemoteSettingsAndGetAppId(settings, target, deps);
-
-            RemoveDeprecatedAssets();
 
             if (target == BuildTarget.Android)
                 ConfigureAndroid(settings, editorSettings, admobAppId);
@@ -117,10 +114,9 @@ namespace CAS.UEditor
         private static void RemoveDeprecatedAssets()
         {
 #if UNITY_ANDROID || CASDeveloper
-            var androidRes = Path.GetDirectoryName(Utils.androidResSettingsPath);
-            if (Directory.Exists(androidRes))
+            if (Directory.Exists(Utils.androidResSettingsPath))
             {
-                var androidConfig = Directory.GetFiles(androidRes, "cas_settings*.json", SearchOption.TopDirectoryOnly);
+                var androidConfig = Directory.GetFiles(Utils.androidResSettingsPath, "cas_settings*.json", SearchOption.TopDirectoryOnly);
                 var currentTime = DateTime.Now;
                 for (int i = 0; i < androidConfig.Length; i++)
                 {
@@ -213,8 +209,16 @@ namespace CAS.UEditor
 
         private static string UpdateRemoteSettingsAndGetAppId(CASInitSettings settings, BuildTarget platform, DependencyManager deps)
         {
+            if (settings.managersCount == 0 || string.IsNullOrEmpty(settings.GetManagerId(0)))
+            {
+                Utils.StopBuildWithMessage("Settings not found manager ids for " + platform.ToString() +
+                    " platform. For a successful build, you need to specify at least one ID" +
+                    " that you use in the project. To test integration, you can use test mode with 'demo' manager id.", platform);
+            }
+
             string appId = null;
             string updateSettingsError = "";
+            bool validAppIdOnly = !settings.IsTestAdMode() && deps.Find(AdNetwork.GoogleAds).IsInstalled();
             for (int i = 0; i < settings.managersCount; i++)
             {
                 var managerId = settings.GetManagerId(i);
@@ -222,21 +226,16 @@ namespace CAS.UEditor
                     continue;
                 try
                 {
-                    string newAppId = DownloadRemoteSettings(managerId, platform, settings, deps);
-                    if (!string.IsNullOrEmpty(appId) || string.IsNullOrEmpty(newAppId))
-                        continue;
-                    if (newAppId.Contains('~'))
-                    {
-                        appId = newAppId;
-                        continue;
-                    }
+                    AdRemoteConfig data = DownloadRemoteSettings(managerId, platform, validAppIdOnly);
+                    if (string.IsNullOrEmpty(appId))
+                        appId = data.admob_app_id;
                 }
                 catch (Exception e)
                 {
                     updateSettingsError = e.Message;
                 }
             }
-            if (!string.IsNullOrEmpty(appId) || settings.IsTestAdMode() || !deps.Find(AdNetwork.GoogleAds).IsInstalled())
+            if (!validAppIdOnly || !string.IsNullOrEmpty(appId))
                 return appId;
 
             const string title = "Update CAS remote settings";
@@ -254,9 +253,9 @@ namespace CAS.UEditor
 
             if (dialogResponse == 0)
             {
-                var cachePath = Path.GetFullPath(Utils.GetNativeSettingsPath(platform, targetId));
-                if (File.Exists(cachePath))
-                    return Utils.GetAdmobAppIdFromJson(File.ReadAllText(cachePath));
+                var data = AdRemoteConfig.ReadFor(platform, targetId);
+                if (AdRemoteConfig.IsValid(data, validAppIdOnly))
+                    return data.admob_app_id;
                 return null;
             }
             if (dialogResponse == 1)
@@ -264,7 +263,31 @@ namespace CAS.UEditor
                 Utils.StopBuildWithMessage("Build canceled", BuildTarget.NoTarget);
                 return null;
             }
-            return Utils.SelectSettingsFileAndGetAppId(targetId, platform);
+
+            string openPath = "";
+            try
+            {
+                var fileName = AdRemoteConfig.GetFileName(targetId);
+                openPath = EditorUtility.OpenFilePanelWithFilters(
+                   "Select " + fileName + " file for build", "", new[] { fileName, "json" });
+                if (!string.IsNullOrEmpty(openPath))
+                {
+                    var json = File.ReadAllText(openPath);
+                    var config = AdRemoteConfig.ReadFromJson(json);
+                    if (AdRemoteConfig.IsValid(config, validAppIdOnly))
+                    {
+                        var cachePath = AdRemoteConfig.GetCachePath(platform, targetId);
+                        Utils.WriteToAsset(cachePath, json);
+                        return config.admob_app_id;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            Utils.StopBuildWithMessage("Open invalid config file: " + openPath, BuildTarget.NoTarget);
+            return null;
         }
 
         private static void UpdateAndroidPluginManifest(string admobAppId, HashSet<string> queries, CASEditorSettings settings, Audience audience)
@@ -384,21 +407,19 @@ namespace CAS.UEditor
                 AssetDatabase.ImportAsset(Utils.androidLibFolderPath);
         }
 
-        private static string DownloadRemoteSettings(string managerID, BuildTarget platform, CASInitSettings settings, DependencyManager deps)
+        private static AdRemoteConfig DownloadRemoteSettings(string managerID, BuildTarget platform, bool appIdRequired)
         {
             const string title = "Update CAS remote configuration";
 
-            var editorSettings = CASEditorSettings.Load();
-
-            var cachePath = Utils.GetNativeSettingsPath(platform, managerID);
+            var cachePath = AdRemoteConfig.GetCachePath(platform, managerID);
             try
             {
                 var fullPath = Path.GetFullPath(cachePath);
                 if (File.Exists(fullPath) && File.GetLastWriteTime(fullPath).AddHours(12) > DateTime.Now)
                 {
-                    var content = File.ReadAllText(fullPath);
-                    var data = JsonUtility.FromJson<AdmobAppIdData>(content);
-                    return data.admob_app_id;
+                    var data = AdRemoteConfig.ReadFromFile(fullPath);
+                    if (AdRemoteConfig.IsValid(data, appIdRequired))
+                        return data;
                 }
             }
             catch (Exception e)
@@ -422,17 +443,14 @@ namespace CAS.UEditor
                     throw new Exception("Connect to server for '" + managerID +
                         "' is failed with error: " + request.responseCode + " - " + request.error);
 
-                var data = JsonUtility.FromJson<AdmobAppIdData>(content);
-                Utils.WriteToAsset(cachePath, content);
-                return data.admob_app_id;
+                var data = AdRemoteConfig.ReadFromJson(content);
+                if (AdRemoteConfig.IsValid(data, appIdRequired))
+                {
+                    Utils.WriteToAsset(cachePath, content);
+                    return data;
+                }
             }
-        }
-
-        private static void StopBuildIDNotFound(BuildTarget target)
-        {
-            Utils.StopBuildWithMessage("Settings not found manager ids for " + target.ToString() +
-                " platform. For a successful build, you need to specify at least one ID" +
-                " that you use in the project. To test integration, you can use test mode with 'demo' manager id.", target);
+            throw new Exception("The configuration for '" + managerID + "' is not valid, please contact support for additional information.");
         }
     }
 }

@@ -187,36 +187,25 @@ namespace CAS.UEditor
         private static void SetGADAppIdForCAS(this PlistDocument plist, CASInitSettings initSettings, DependencyManager deps)
         {
             #region Read Admob App ID from CAS Settings
-            bool admobAppIdRequired = deps == null;
-            if (deps != null)
+            bool appIdRequired = false;
+            if (deps != null && !initSettings.IsTestAdMode())
             {
                 var admobDep = deps.Find(AdNetwork.GoogleAds);
                 if (admobDep != null)
-                    admobAppIdRequired = admobDep.IsInstalled();
+                    appIdRequired = admobDep.IsInstalled();
             }
 
             string admobAppId = null;
             if (initSettings.managersCount > 0)
             {
-                string settingsPath = CASEditorUtils.GetNativeSettingsPath(BuildTarget.iOS, initSettings.GetManagerId(0));
-                if (File.Exists(settingsPath))
-                {
-                    try
-                    {
-                        admobAppId = CASEditorUtils.GetAdmobAppIdFromJson(File.ReadAllText(settingsPath));
-                    }
-                    catch (Exception e)
-                    {
-                        if (!initSettings.IsTestAdMode() && admobAppIdRequired)
-                            CASEditorUtils.StopBuildWithMessage(e.ToString(), BuildTarget.iOS);
-                    }
-                }
+                var config = AdRemoteConfig.ReadFor(BuildTarget.iOS, initSettings.GetManagerId(0));
+                if (AdRemoteConfig.IsValid(config, appIdRequired))
+                    admobAppId = config.admob_app_id;
             }
             if (string.IsNullOrEmpty(admobAppId) && initSettings.IsTestAdMode())
             {
                 admobAppId = CASEditorUtils.iosAdmobSampleAppID;
             }
-
             #endregion
 
             if (!string.IsNullOrEmpty(admobAppId))
@@ -365,16 +354,13 @@ namespace CAS.UEditor
             var resourcesBuildPhase = project.GetResourcesBuildPhaseByTarget(targetGuid);
             for (int i = 0; i < casSettings.managersCount; i++)
             {
-                string managerId = casSettings.GetManagerId(i);
-                int managerIdLength = managerId.Length;
-                string suffixChar = char.ToLower(managerId[managerIdLength - 1]).ToString();
-                string fileName = "cas_settings" + managerIdLength.ToString() + suffixChar + ".json";
-                string pathInAssets = CASEditorUtils.GetNativeSettingsPath(BuildTarget.iOS, managerId);
-                if (File.Exists(pathInAssets))
+                string cachePath = AdRemoteConfig.GetCachePath(BuildTarget.iOS, casSettings.GetManagerId(i));
+                if (File.Exists(cachePath))
                 {
                     try
                     {
-                        File.Copy(pathInAssets, Path.Combine(rootPath, fileName), true);
+                        string fileName = AdRemoteConfig.GetFileName(casSettings.GetManagerId(i));
+                        File.Copy(cachePath, Path.Combine(rootPath, fileName), true);
                         var fileGuid = project.AddFile(fileName, fileName, PBXSourceTree.Source);
                         project.AddFileToBuildSection(targetGuid, resourcesBuildPhase, fileGuid);
                     }
@@ -385,7 +371,7 @@ namespace CAS.UEditor
                 }
                 else
                 {
-                    CASEditorUtils.Log("Not found Raw file: " + pathInAssets);
+                    CASEditorUtils.Log("Not found Raw file: " + cachePath);
                 }
             }
         }
