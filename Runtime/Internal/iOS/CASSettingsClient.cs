@@ -12,15 +12,13 @@ namespace CAS.iOS
 {
     internal class CASSettingsClient : IAdsSettings, ITargetingOptions
     {
-        private bool _isDebugMode = false;
-        private bool _isMutedAdSounds = false;
-        private bool _allowInterstitialAdsWhenVideoCostAreLower = true;
-        private bool _trackLocationEnabled = false;
-
-        private Gender _gender = Gender.Unknown;
-        private int _age = 0;
-
         public bool analyticsCollectionEnabled { get; set; }
+
+        public int trialAdFreeInterval
+        {
+            get { return CASExterns.CASUGetTrialAdFreeInterval(); }
+            set { CASExterns.CASUSetTrialAdFreeInterval(value); }
+        }
 
         public int bannerRefreshInterval
         {
@@ -45,34 +43,31 @@ namespace CAS.iOS
             get { return (CCPAStatus)CASExterns.CASUGetCCPAStatus(); }
             set { CASExterns.CASUSetCCPAStatus((int)value); }
         }
+        
         public Audience taggedAudience
         {
             get { return (Audience)CASExterns.CASUGetAudienceTagged(); }
             set { CASExterns.CASUSetAudienceTagged((int)value); }
         }
+
         public bool isDebugMode
         {
-            get { return _isDebugMode; }
-            set
-            {
-                _isDebugMode = value;
-                CASExterns.CASUSetDebugMode(value);
-            }
+            get { return CASExterns.CASUGetDebugMode(); }
+            set { CASExterns.CASUSetDebugMode(value); }
         }
+
         public bool isMutedAdSounds
         {
-            get { return _isMutedAdSounds; }
-            set
-            {
-                _isMutedAdSounds = value;
-                CASExterns.CASUSetMuteAdSoundsTo(value);
-            }
+            get { return CASExterns.CASUGetMuteAdSounds(); }
+            set { CASExterns.CASUSetMuteAdSounds(value); }
         }
+
         public LoadingManagerMode loadingMode
         {
             get { return (LoadingManagerMode)CASExterns.CASUGetLoadingMode(); }
             set { CASExterns.CASUSetLoadingWithMode((int)value); }
         }
+
         public bool iOSAppPauseOnBackground
         {
             get { return CASExterns.CASUGetiOSAppPauseOnBackground(); }
@@ -99,42 +94,26 @@ namespace CAS.iOS
 
         public bool allowInterstitialAdsWhenVideoCostAreLower
         {
-            get { return _allowInterstitialAdsWhenVideoCostAreLower; }
-            set
-            {
-                _allowInterstitialAdsWhenVideoCostAreLower = value;
-                CASExterns.CASUSetInterstitialAdsWhenVideoCostAreLower(value);
-            }
+            get { return CASExterns.CASUGetInterstitialAdsWhenVideoCostAreLower(); }
+            set { CASExterns.CASUSetInterstitialAdsWhenVideoCostAreLower(value); }
         }
 
         public bool trackLocationEnabled
         {
-            get { return _trackLocationEnabled; }
-            set
-            {
-                _trackLocationEnabled = value;
-                CASExterns.CASUSetTrackLocationEnabled(value);
-            }
+            get { return CASExterns.CASUGetTrackLocationEnabled(); }
+            set { CASExterns.CASUSetTrackLocationEnabled(value); }
         }
 
         public Gender gender
         {
-            get { return _gender; }
-            set
-            {
-                _gender = value;
-                CASExterns.CASUSetUserGender((int)value);
-            }
+            get { return (Gender)CASExterns.CASUGetUserGender(); }
+            set { CASExterns.CASUSetUserGender((int)value); }
         }
 
         public int age
         {
-            get { return _age; }
-            set
-            {
-                _age = value;
-                CASExterns.CASUSetUserAge(value);
-            }
+            get { return CASExterns.CASUGetUserAge(); }
+            set { CASExterns.CASUSetUserAge(value); }
         }
     }
 }

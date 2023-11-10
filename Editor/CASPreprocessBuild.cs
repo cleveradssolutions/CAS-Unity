@@ -148,8 +148,7 @@ namespace CAS.UEditor
                         "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.");
             }
 
-            // Unity 2021.3 have minimum iOS version 12
-#if !UNITY_2021_3_OR_NEWER
+
             try
             {
                 var iosVersion = int.Parse(PlayerSettings.iOS.targetOSVersionString.Split('.')[0]);
@@ -164,7 +163,6 @@ namespace CAS.UEditor
             {
                 Debug.LogWarning("Minimum deployment target check failed: " + e.ToString());
             }
-#endif
 #endif
         }
 

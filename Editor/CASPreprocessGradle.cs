@@ -11,15 +11,18 @@
 #define DeclareJavaVersion
 #endif
 
+// Unity 2023.3 use Gradle Wrapper 7.6 and plugin 7.3.1
+// Unity 2022.2 use Gradle Wrapper 7.2 and plugin 7.1.2
+// Unity 2020.1-2022.1 use Gradle Wrapper 6.1.1 and plugin 4.0.1
 #if !UNITY_2022_2_OR_NEWER
 // Many SDKs use the new <queries> element for Android 11 in their bundled Android Manifest files.
 // The Android Gradle plugin version should support new elements, else this will cause build errors:
 // Android resource linking failed
 // error: unexpected element <queries> found in <manifest>.
-#define UpdateGradleToSupportAndroid11
+#define UpdateGradleToolsMinorVersion
 
 // Not Required by default to check wrapper version.
-//#define UpdateGradleForUsedWrapper
+//#define UpdateGradleToolsForUsedWrapper
 
 // Known issue with jCenter repository where repository is not responding
 // and gradle build stops with timeout error.
@@ -52,7 +55,7 @@ namespace CAS.UEditor
 
 #if UNITY_2019_3_OR_NEWER
             const string baseGradlePath = Utils.projectGradlePath;
-#if UpdateGradleToSupportAndroid11 || ReplaceJCenterToMavenCentral
+#if UpdateGradleToolsMinorVersion || ReplaceJCenterToMavenCentral
             var baseGradle = ReadGradleFile("Base Gradle", baseGradlePath);
 #else
             var baseGradle = new List<string>();
@@ -68,7 +71,7 @@ namespace CAS.UEditor
             var launcherGradle = baseGradle;
 #endif
 
-#if UpdateGradleToSupportAndroid11
+#if UpdateGradleToolsMinorVersion
             if (settings.updateGradlePluginVersion
                 && UpdateGradlePluginVersion(baseGradle, baseGradlePath))
                 baseGradleChanged = true;
@@ -564,7 +567,7 @@ namespace CAS.UEditor
 
         private static bool UpdateGradlePluginVersion(List<string> gradle, string filePath)
         {
-#if UpdateGradleToSupportAndroid11 || CASDeveloper
+#if UpdateGradleToolsMinorVersion || CASDeveloper
             const string gradlePluginVersion = "classpath 'com.android.tools.build:gradle:";
             // Find Gradle Plugin Version
             int lineIndex = 0;
@@ -588,7 +591,7 @@ namespace CAS.UEditor
 
                 Version version = new Version(currVerStr);
                 Version target = null;
-#if UpdateGradleForUsedWrapper
+#if UpdateGradleToolsForUsedWrapper
                 // https://developer.android.com/studio/releases/gradle-plugin#updating-gradle
                 Version wrapper = GetGradleWrapperVersion();
                 if (wrapper != null)
@@ -612,14 +615,26 @@ namespace CAS.UEditor
                             target = new Version( 4, 2, 2 );
                     }
                 }
-                else
 #endif
-                if (version.Major == 4)
+                if (target == null && version.Major == 4)
                 {
-                    if (version.Minor == 0 && version.Build < 2)
-                        target = new Version(4, 0, 2);
+                    switch (version.Minor)
+                    {
+                        case 0:
+                            if (version.Build < 2)
+                                target = new Version(4, 0, 2);
+                            break;
+                        case 1:
+                            if (version.Build < 3)
+                                target = new Version(4, 1, 3);
+                            break;
+                        case 2:
+                            if (version.Build < 2)
+                                target = new Version(4, 2, 2);
+                            break;
+                    }
                 }
-                else if (version.Major == 3)
+                else if (target == null && version.Major == 3)
                 {
                     switch (version.Minor)
                     {

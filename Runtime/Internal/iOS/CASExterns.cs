@@ -63,6 +63,12 @@ namespace CAS.iOS
         internal static extern void CASUSetTestDeviceWithIds(string[] testDeviceIDs, int testDeviceIDLength);
 
         [DllImport("__Internal")]
+        internal static extern void CASUSetTrialAdFreeInterval(int interval);
+
+        [DllImport("__Internal")]
+        internal static extern int CASUGetTrialAdFreeInterval();
+
+        [DllImport("__Internal")]
         internal static extern void CASUSetBannerRefreshRate(int interval);
 
         [DllImport("__Internal")]
@@ -99,7 +105,13 @@ namespace CAS.iOS
         internal static extern void CASUSetDebugMode(bool mode);
 
         [DllImport("__Internal")]
-        internal static extern void CASUSetMuteAdSoundsTo(bool muted);
+        internal static extern bool CASUGetDebugMode();
+
+        [DllImport("__Internal")]
+        internal static extern void CASUSetMuteAdSounds(bool muted);
+
+        [DllImport("__Internal")]
+        internal static extern bool CASUGetMuteAdSounds();
 
         [DllImport("__Internal")]
         internal static extern void CASUSetLoadingWithMode(int mode);
@@ -111,7 +123,13 @@ namespace CAS.iOS
         internal static extern void CASUSetInterstitialAdsWhenVideoCostAreLower(bool allow);
 
         [DllImport("__Internal")]
+        internal static extern bool CASUGetInterstitialAdsWhenVideoCostAreLower();
+
+        [DllImport("__Internal")]
         internal static extern void CASUSetTrackLocationEnabled(bool enabled);
+
+        [DllImport("__Internal")]
+        internal static extern bool CASUGetTrackLocationEnabled();
 
         [DllImport("__Internal")]
         internal static extern void CASUSetiOSAppPauseOnBackground(bool pause);
@@ -125,7 +143,13 @@ namespace CAS.iOS
         internal static extern void CASUSetUserGender(int gender);
 
         [DllImport("__Internal")]
+        internal static extern int CASUGetUserGender();
+
+        [DllImport("__Internal")]
         internal static extern void CASUSetUserAge(int age);
+
+        [DllImport("__Internal")]
+        internal static extern int CASUGetUserAge();
         #endregion
 
         #region Utils

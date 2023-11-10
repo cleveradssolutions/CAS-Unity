@@ -42,7 +42,6 @@ namespace CAS.UEditor
         private SerializedProperty updateGradlePluginVersionProp;
 #endif
         private SerializedProperty permissionAdIdProp;
-        private SerializedProperty mostPopularCountryOfUsersProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
         private SerializedProperty includeAdDependencyVersionsProp;
@@ -145,7 +144,6 @@ namespace CAS.UEditor
 #endif
             permissionAdIdProp = editorSettingsObj.FindProperty("permissionAdId");
 
-            mostPopularCountryOfUsersProp = editorSettingsObj.FindProperty("mostPopularCountryOfUsers");
             attributionReportEndpointProp = editorSettingsObj.FindProperty("attributionReportEndpoint");
             includeAdDependencyVersionsProp = editorSettingsObj.FindProperty("includeAdDependencyVersions");
 
@@ -419,6 +417,11 @@ namespace CAS.UEditor
             var enabled = userTrackingUsageDescriptionProp.arraySize > 0;
             iOSLocationDescriptionFoldout.target = GUILayout.Toggle(iOSLocationDescriptionFoldout.target,
                 "User Tracking Usage description: " + (enabled ? "Used" : "Not used"), EditorStyles.foldout);
+
+            if (!enabled && audienceTaggedProp.intValue != (int)Audience.Children)
+            {
+                EditorGUILayout.HelpBox("To use the AppTrackingTransparency framework: Configure NSUserTrackingUsageDescription to display a request to allow access to the device's advertising ID.", MessageType.Warning);
+            }
 
             if (EditorGUILayout.BeginFadeGroup(iOSLocationDescriptionFoldout.faded))
             {

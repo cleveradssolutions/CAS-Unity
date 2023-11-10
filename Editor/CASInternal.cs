@@ -117,7 +117,7 @@ namespace CAS.UEditor
             EditorGUILayout.EndHorizontal();
         }
 
-        private void CheckDependencyUpdates(BuildTarget platform)
+        private void CheckDependencyUpdates()
         {
             bool updatesFound = false;
             for (int i = 0; !updatesFound && i < solutions.Length; i++)
@@ -131,7 +131,7 @@ namespace CAS.UEditor
                 if (HelpStyles.WarningWithButton("Found one or more updates for native dependencies.",
                     "Update all", MessageType.Error))
                 {
-                    UpdateDependencies(platform);
+                    UpdateDependencies();
                 }
             }
         }
@@ -145,7 +145,7 @@ namespace CAS.UEditor
                 otherFoldout = new AnimBool(false, mainWindow.Repaint);
             }
 
-            CheckDependencyUpdates(platform);
+            CheckDependencyUpdates();
 
             columnWidth = GUILayout.MaxWidth(EditorGUIUtility.currentViewWidth * 0.15f);
 

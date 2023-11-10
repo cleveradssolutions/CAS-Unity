@@ -46,12 +46,6 @@
             <para>The reason is for cross promo only.</para>
             </summary>
         </member>
-        <member name="F:CAS.AdError.NotEnoughSpace">
-            <summary>
-            There is not enough space in the current view for the selected <see cref="T:CAS.AdSize"/>.
-            <para>Please make sure that the size of the banner container has enough free space.</para>
-            </summary>
-        </member>
         <member name="F:CAS.AdError.IntervalNotYetPassed">
             <summary>
             The interval between impressions of Interstitial Ad has not yet passed.
@@ -229,7 +223,7 @@
         <member name="F:CAS.CCPAStatus.OptInSale">
             <summary>
             User consents to the sale of his or her personal information in compliance with CCPA.
-            /// </summary>
+            </summary>
         </member>
         <member name="F:CAS.Audience.Mixed">
             <summary>
@@ -280,6 +274,15 @@
             <summary>
             Ad filters by Audience
             <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
+            </summary>
+        </member>
+        <member name="P:CAS.IAdsSettings.trialAdFreeInterval">
+            <summary>
+            Defines the time interval, in seconds, starting from the moment of the initial app installation,
+            during which users can use the application without ads being displayed while still retaining
+            access to the Rewarded Ads format.
+            <para>Within this interval, users enjoy privileged access to the application's features without intrusive advertisements.</para>
+            <para>Default: 0 seconds by default.</para>
             </summary>
         </member>
         <member name="P:CAS.IAdsSettings.bannerRefreshInterval">

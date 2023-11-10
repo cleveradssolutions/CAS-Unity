@@ -1,5 +1,20 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.4.1] - 2023-11-10
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.4.1 SDK
+- A new `CAS.MobileAds.settings.trialAdFreeInterval` property has been introduced to defines the time interval, in seconds, starting from the moment of the initial app installation, during which users can use the application without ads being displayed while still retaining access to the Rewarded Ads and App Open Ads formats.
+  > Within this interval, users enjoy privileged access to the application's features without intrusive advertisements.
+- The `CAS.MobileAds.settings` will be return a more correct Privacy states.
+## Changes
+- [iOS] Updated minimum supported version to iOS 13.
+- The MyTarget has been removed from the Optimal/Families Ads Solutions, as the MyTarget is focused only on the CIS region.
+  > If you want to continue using MyTarget monetization, just include the adapter to your app.
+- The AdColony has been removed from the Optimal/Families Ads Solutions. The AdColony will sunset and migrate to DTExchange on January 3, 2024.
+  > If you want to continue using AdColony monetization, just include the adapter to your app.  
+- Now the Interstitial Ad load callback will only be fired after the interval between impressions has expired.
+## Bug Fixes
+- [iOS] Added `UnityUpdateMuteState()` invoke after closing the fullscreen ad to fix an issue with Unity losing audio.
+
 # [3.3.2] - 2023-10-17
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.3.2 SDK
 - Added `AdNetwork.CASExchange`

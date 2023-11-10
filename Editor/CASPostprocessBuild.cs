@@ -122,7 +122,7 @@ namespace CAS.UEditor
                     var yandexDep = depManager.Find(AdNetwork.YandexAds);
                     if (yandexDep != null && yandexDep.IsInstalled())
                     {
-                        const string yandexBundlePath = "Pods/YandexMobileAds/YandexMobileAds.xcframework/YandexMobileAdsBundle.bundle";
+                        const string yandexBundlePath = "Pods/YandexMobileAds/static/YandexMobileAds.xcframework/MobileAdsBundle.bundle";
                         project.AddEmbedResourcesBundle(appTargetGuid, yandexBundlePath);
                     }
 #endif

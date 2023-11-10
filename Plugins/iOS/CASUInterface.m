@@ -46,6 +46,14 @@ void CASUSetTestDeviceWithIds(const char **testDeviceIDs, int testDeviceIDLength
     [CAS.settings setTestDeviceWithIds:testDeviceIDsArray];
 }
 
+void CASUSetTrialAdFreeInterval(int interval) {
+    CAS.settings.trialAdFreeInterval = interval;
+}
+
+int CASUGetTrialAdFreeInterval(void) {
+    return (int)CAS.settings.trialAdFreeInterval;
+}
+
 void CASUSetBannerRefreshRate(int interval) {
     CAS.settings.bannerRefreshInterval = interval;
 }
@@ -94,8 +102,16 @@ void CASUSetDebugMode(BOOL mode) {
     CAS.settings.debugMode = mode;
 }
 
-void CASUSetMuteAdSoundsTo(BOOL muted) {
+BOOL CASUGetDebugMode(void) {
+    return CAS.settings.debugMode;
+}
+
+void CASUSetMuteAdSounds(BOOL muted) {
     CAS.settings.mutedAdSounds = muted;
+}
+
+BOOL CASUGetMuteAdSounds(void) {
+    return CAS.settings.mutedAdSounds;
 }
 
 void CASUSetLoadingWithMode(int mode) {
@@ -110,6 +126,10 @@ void CASUSetInterstitialAdsWhenVideoCostAreLower(BOOL allow) {
     [CAS.settings setInterstitialAdsWhenVideoCostAreLowerWithAllow:allow];
 }
 
+BOOL CASUGetInterstitialAdsWhenVideoCostAreLower(void) {
+    return [CAS.settings isInterstitialAdsWhenVideoCostAreLowerAllowed];
+}
+
 void CASUSetiOSAppPauseOnBackground(BOOL pause) {
     [CASUPluginUtil setPauseOnBackground:pause];
 }
@@ -122,14 +142,26 @@ void CASUSetTrackLocationEnabled(BOOL enabled) {
     [CAS.settings setTrackLocationWithEnabled:enabled];
 }
 
+BOOL CASUGetTrackLocationEnabled(void) {
+    return [CAS.settings isTrackLocationEnabled];
+}
+
 #pragma mark - User targeting options
 
 void CASUSetUserGender(int gender) {
     [[CAS targetingOptions] setGender:(Gender)gender];
 }
 
+int CASUGetUserGender(void) {
+    return (int)[[CAS targetingOptions] getGender];
+}
+
 void CASUSetUserAge(int age) {
     [[CAS targetingOptions] setAge:age];
+}
+
+int CASUGetUserAge(void) {
+    return (int)[[CAS targetingOptions] getAge];
 }
 
 #pragma mark - Utils
@@ -636,7 +668,7 @@ void CASURequestATT(CASUATTCompletion completion) {
 NSUInteger CASUGetATTStatus(void) {
     NSUInteger status = [CASInternalUtils adTrackingStatus];
 
-    if (status == 4) {
+    if (status > 3) {
         return 0;
     }
 

@@ -42,8 +42,11 @@ namespace CAS.UEditor
         public const string settingsGradlePath = androidPluginsPath + "settingsTemplate.gradle";
         public const string packageManifestPath = "Packages/manifest.json";
 
-        public const int targetAndroidVersion = 21; // Disabled check for UNITY_2021_2_OR_NEWER
-        public const int targetIOSVersion = 12; // Disabled check for UNITY_2021_3_OR_NEWER
+        // UNITY_2021_2_OR_NEWER have minumum API 21
+        public const int targetAndroidVersion = 21;
+        
+        // UNITY_2021_3_OR_NEWER have minimum iOS version 12
+        public const int targetIOSVersion = 13;
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
         public const string websiteURL = "https://cleveradssolutions.com";
