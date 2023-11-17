@@ -31,7 +31,6 @@ namespace CAS.UEditor
     public class CASPreprocessBuild : IPreprocessBuild
 #endif
     {
-        private const string casTitle = "CAS Configure project";
         #region IPreprocessBuild
         public int callbackOrder { get { return -25000; } }
 

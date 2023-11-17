@@ -36,6 +36,20 @@ namespace CAS
         private static List<List<IInternalAdObject>> initCallback = new List<List<IInternalAdObject>>();
         private static Dictionary<string, string> globalExtras;
 
+#if UNITY_EDITOR && UNITY_2019_3_OR_NEWER
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void DomainReloading()
+        {
+            // Read more aboud Domain Reloading in Unity Editor
+            // https://docs.unity3d.com/2023.3/Documentation/Manual/DomainReloading.html
+            executeEventsOnUnityThread = true;
+            settings = null;
+            managers = null;
+            initCallback = new List<List<IInternalAdObject>>();
+            globalExtras = null;
+        }
+#endif
+
         internal static bool isDebug { get { return GetAdsSettings().isDebugMode; } }
 
         internal static IMediationManager GetMainManagerOrNull()
