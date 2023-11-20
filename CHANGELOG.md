@@ -1,5 +1,11 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.4.2] - 2023-11-20
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.4.2 SDK
+- [Editor] Added disabled Unity Editor Domain Reloading support.
+## Bug Fixes
+- [iOS] Fixed rare crash from `AdViewRectCallback`.
+
 # [3.4.1] - 2023-11-10
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.4.1 SDK
 - A new `CAS.MobileAds.settings.trialAdFreeInterval` property has been introduced to defines the time interval, in seconds, starting from the moment of the initial app installation, during which users can use the application without ads being displayed while still retaining access to the Rewarded Ads and App Open Ads formats.

@@ -263,6 +263,14 @@ static const int AD_SIZE_LINE = 7;
 
     view.frame = CGRectMake(horizontalPos, verticalPos, adSize.width, adSize.height);
 
+    extern bool _didResignActive;
+
+    if (_didResignActive) {
+        // We are in the middle of the shutdown sequence, and at this point unity runtime is already destroyed.
+        // We shall not call unity API, and definitely not script callbacks, so nothing to do here
+        return;
+    }
+
     if (_adRectCallback) {
         CGFloat scale = [UIScreen mainScreen].scale;
         _adRectCallback(self.client,
