@@ -11,14 +11,11 @@
 // EDM4U will add `Unity-iPhone` target to Podfile by default
 //#define AddMainTargetToPodfile
 
-// No longer required
-//#define AddApplicationQueriesSchames
-
 #if UNITY_2019_3_OR_NEWER
 #define EmbedDynamicFrameworks
 
 // Avoid DTExchange issue with lost dSYMs path in XCFramework
-#define UnpackDTExchangeXCFramework
+//#define UnpackDTExchangeXCFramework
 
 // Yandex Ads not support to place the Resources bundle in UnityFramework, 
 // then we embed the bundle to App target
@@ -60,16 +57,12 @@ namespace CAS.UEditor
 
             EditPList(buildPath, (plist) =>
             {
-                if (initSettings)
-                    plist.SetGADAppIdForCAS(initSettings, depManager);
+                plist.SetGADAppIdForCAS(initSettings, depManager);
                 plist.SetSDKInitializationDelay(editorSettings.delayAppMeasurementGADInit);
                 plist.SetAppTransportSecuritySettings();
                 plist.SetAttributionReportEndpoint(editorSettings.attributionReportEndpoint);
                 plist.SetDefaultUserTrackingDescription(editorSettings.userTrackingUsageDescription);
                 plist.AddSKAdNetworkItemsForCAS();
-#if AddApplicationQueriesSchames
-                plist.AddApplicationQueriesSchamesForCAS();
-#endif
             });
 
             EditXCProject(buildPath, unityProjectName, (project) =>
@@ -80,8 +73,7 @@ namespace CAS.UEditor
                 project.FixLibrariesExecutablePath(appTargetGuid, depManager);
                 project.FixGenerationInfoPlist(frameworkTargetGuid);
                 project.FixGenerationInfoPlist(appTargetGuid);
-                if (initSettings)
-                    project.CopyConfigCacheFileForCAS(buildPath, appTargetGuid, initSettings);
+                project.AddCASConfigResources(buildPath, appTargetGuid, initSettings);
             });
 
             if (editorSettings.generateIOSDeepLinksForPromo && initSettings)
@@ -186,30 +178,10 @@ namespace CAS.UEditor
 
         private static void SetGADAppIdForCAS(this PlistDocument plist, CASInitSettings initSettings, DependencyManager deps)
         {
-            #region Read Admob App ID from CAS Settings
-            bool appIdRequired = false;
-            if (deps != null && !initSettings.IsTestAdMode())
-            {
-                var admobDep = deps.Find(AdNetwork.GoogleAds);
-                if (admobDep != null)
-                    appIdRequired = admobDep.IsInstalled();
-            }
+            string googleAppId = AdRemoteConfig.FindGADAppId(initSettings, deps);
 
-            string admobAppId = null;
-            if (initSettings.managersCount > 0)
-            {
-                var config = AdRemoteConfig.ReadFor(BuildTarget.iOS, initSettings.GetManagerId(0));
-                if (AdRemoteConfig.IsValid(config, appIdRequired))
-                    admobAppId = config.admob_app_id;
-            }
-            if (string.IsNullOrEmpty(admobAppId) && initSettings.IsTestAdMode())
-            {
-                admobAppId = CASEditorUtils.iosAdmobSampleAppID;
-            }
-            #endregion
-
-            if (!string.IsNullOrEmpty(admobAppId))
-                plist.root.SetString("GADApplicationIdentifier", admobAppId);
+            if (!string.IsNullOrEmpty(googleAppId))
+                plist.root.SetString("GADApplicationIdentifier", googleAppId);
         }
 
         private static void AddSKAdNetworkItemsForCAS(this PlistDocument plist)
@@ -239,34 +211,6 @@ namespace CAS.UEditor
             }
         }
 
-        private static void AddApplicationQueriesSchamesForCAS(this PlistDocument plist)
-        {
-            PlistElementArray schemesList;
-            var applicationQueriesSchemesField = plist.root["LSApplicationQueriesSchemes"];
-            if (applicationQueriesSchemesField == null)
-                schemesList = plist.root.CreateArray("LSApplicationQueriesSchemes");
-            else
-                schemesList = applicationQueriesSchemesField.AsArray();
-            var schemes = new string[] { "fb", "instagram", "tumblr", "twitter" };
-            for (int i = 0; i < schemes.Length; i++)
-            {
-                var scheme = schemes[i];
-                if (string.IsNullOrEmpty(scheme))
-                    continue;
-                var exist = false;
-                for (int findI = 0; findI < schemesList.values.Count; findI++)
-                {
-                    if (schemesList.values[findI].AsString() == scheme)
-                    {
-                        exist = true;
-                        break;
-                    }
-                }
-                if (!exist)
-                    schemesList.AddString(scheme);
-            }
-        }
-
         private static void SetAppTransportSecuritySettings(this PlistDocument plist)
         {
             PlistElement atsRoot;
@@ -279,16 +223,6 @@ namespace CAS.UEditor
                 atsRoot = plist.root.CreateDict("NSAppTransportSecurity");
                 atsRoot.AsDict().SetBoolean("NSAllowsArbitraryLoads", true);
                 return;
-            }
-
-            // Check if both NSAllowsArbitraryLoads and NSAllowsArbitraryLoadsInWebContent are present
-            // and remove NSAllowsArbitraryLoadsInWebContent if both are present.
-            var atsRootDict = atsRoot.AsDict().values;
-            if (atsRootDict.ContainsKey("NSAllowsArbitraryLoads")
-                && atsRootDict.ContainsKey("NSAllowsArbitraryLoadsInWebContent"))
-            {
-                CASEditorUtils.Log("Removing NSAllowsArbitraryLoadsInWebContent");
-                atsRootDict.Remove("NSAllowsArbitraryLoadsInWebContent");
             }
         }
 
@@ -349,8 +283,9 @@ namespace CAS.UEditor
 #endif
         }
 
-        private static void CopyConfigCacheFileForCAS(this PBXProject project, string rootPath, string targetGuid, CASInitSettings casSettings)
+        private static void AddCASConfigResources(this PBXProject project, string rootPath, string targetGuid, CASInitSettings casSettings)
         {
+            if (!casSettings) return;
             var resourcesBuildPhase = project.GetResourcesBuildPhaseByTarget(targetGuid);
             for (int i = 0; i < casSettings.managersCount; i++)
             {
@@ -359,19 +294,19 @@ namespace CAS.UEditor
                 {
                     try
                     {
-                        string fileName = AdRemoteConfig.GetFileName(casSettings.GetManagerId(i));
+                        string fileName = AdRemoteConfig.GetResourcesFileName(casSettings.GetManagerId(i));
                         File.Copy(cachePath, Path.Combine(rootPath, fileName), true);
                         var fileGuid = project.AddFile(fileName, fileName, PBXSourceTree.Source);
                         project.AddFileToBuildSection(targetGuid, resourcesBuildPhase, fileGuid);
                     }
                     catch (Exception e)
                     {
-                        Debug.LogWarning(CASEditorUtils.logTag + "Copy Raw File To XCode Project failed: " + e.ToString());
+                        Debug.LogWarning(CASEditorUtils.logTag + "Copy Config resources to XCode Project failed: " + e.ToString());
                     }
                 }
                 else
                 {
-                    CASEditorUtils.Log("Not found Raw file: " + cachePath);
+                    CASEditorUtils.Log("Not found config file: " + cachePath);
                 }
             }
         }

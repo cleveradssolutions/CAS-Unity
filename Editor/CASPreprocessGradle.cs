@@ -29,13 +29,6 @@
 #define ReplaceJCenterToMavenCentral
 #endif
 
-
-// Exclude `com.google.android.gms:play-services-ads-identifier` from build.
-// Issue: The Advertising ID cannot be used in applications Designed for family.
-// At the same time, many SDKs have the play-services-ads-identifier dependency. 
-// Error: Not every network's SDK supports play-services-ads-identifier dependency exclude from build.
-//#define ExcludeGoogleAdIdDependency
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -62,7 +55,7 @@ namespace CAS.UEditor
 #endif
 
             const string launcherGradlePath = Utils.launcherGradlePath;
-            var launcherGradle = ReadGradleFile("Launcher Gradle", launcherGradlePath, settings.multiDexEnabled);
+            var launcherGradle = ReadGradleFile("Launcher Gradle", launcherGradlePath, false);
 #else
             const string baseGradlePath = Utils.mainGradlePath;
             const string launcherGradlePath = Utils.mainGradlePath;
@@ -103,17 +96,12 @@ namespace CAS.UEditor
 
 #if UNITY_2019_3_OR_NEWER
             List<string> propsFile = ReadGradleFile("Gradle Properties", Utils.propertiesGradlePath);
-
             if (UpdateGradlePropertiesFile(propsFile, gradleProps))
-                Utils.WriteToAsset(Utils.propertiesGradlePath, propsFile.ToArray());
+                File.WriteAllLines(Utils.propertiesGradlePath, propsFile.ToArray());
 #else
             // Unity below version 2019.3 does not have a Gradle Properties file
             // and changes are applied to the base Gradle file.
             if (UpdateGradlePropertiesInMainFile( baseGradle, gradleProps, baseGradlePath ))
-                baseGradleChanged = true;
-
-
-            if (FixGradleCompatibilityUnity2018( baseGradle, baseGradlePath ))
                 baseGradleChanged = true;
 #endif
 
@@ -122,7 +110,7 @@ namespace CAS.UEditor
                 if (UpdateLauncherGradleFile(launcherGradle, settings, launcherGradlePath))
                 {
 #if UNITY_2019_3_OR_NEWER
-                    Utils.WriteToAsset(launcherGradlePath, launcherGradle.ToArray());
+                    File.WriteAllLines(launcherGradlePath, launcherGradle.ToArray());
 #else
                     // Unity below version 2019.3 does not have a Gradle Launcher file
                     // and changes are applied to the base Gradle file.
@@ -132,7 +120,26 @@ namespace CAS.UEditor
             }
 
             if (baseGradleChanged)
-                Utils.WriteToAsset(baseGradlePath, baseGradle.ToArray());
+                File.WriteAllLines(baseGradlePath, baseGradle.ToArray());
+        }
+
+        internal static Version GetAndroidGradlePluginVersion()
+        {
+#if UNITY_2019_3_OR_NEWER
+            const string path = Utils.projectGradlePath;
+#else
+            const string path = Utils.mainGradlePath;
+#endif
+            int lineIndex;
+            var gradle = ReadGradleFile("Base Gradle", path);
+            var version = FindLineWithAndroidGradlePluginVersion(gradle, out lineIndex);
+            if (version != null)
+                return version;
+#if UNITY_2022_3_OR_NEWER
+            return new Version(7, 1, 2);
+#else
+            return new Version(4, 0, 1);
+#endif
         }
 
         internal static void UpdateGradleTemplateIfNeed()
@@ -381,103 +388,25 @@ namespace CAS.UEditor
         {
             int line = 0;
             bool isChanged = false;
-            bool required = settings.multiDexEnabled;
 
-#if ExcludeGoogleAdIdDependency
-            bool appendExcludeAdId = settings.permissionAdIdRemoved;
-            const string excludeAdID = "exclude group: 'com.google.android.gms', module: 'play-services-ads-identifier'";
-            const string excludeAdIDLine = "configurations.implementation{ " + excludeAdID + " } // Added by CAS settings";
-#endif
             // Find dependencies{} scope
             do
             {
-                ++line;
-                if (line >= gradle.Count)
-                {
-                    if (required)
-                        LogWhenGradleLineNotFound("dependencies{} scope", filePath);
+                if (++line >= gradle.Count)
                     return isChanged;
-                }
-#if ExcludeGoogleAdIdDependency
-                if (gradle[line].Contains( excludeAdID ))
-                {
-                    if (appendExcludeAdId)
-                    {
-                        appendExcludeAdId = false;
-                    }
-                    else
-                    {
-                        Utils.Log( "Removed: '" + excludeAdID + "' from: " + filePath );
-                        gradle.RemoveAt( line );
-                        --line;
-                        isChanged = true;
-                    }
-                }
-#endif
             } while (!gradle[line].Contains(" implementation"));
 
-#if ExcludeGoogleAdIdDependency
-            if (appendExcludeAdId)
-            {
-                var lineForExclude = line - 1;
-                while (lineForExclude > 0 && !gradle[lineForExclude].Contains( "dependencies" ))
-                {
-                    --lineForExclude;
-                }
-                if (lineForExclude > 0)
-                {
-                    gradle.Insert( lineForExclude, excludeAdIDLine );
-                    Utils("Appended " + excludeAdID + " to " + filePath);
-                    appendExcludeAdId = false;
-                    isChanged = true;
-                    ++line;
-                }
-                else
-                {
-                    Debug.LogWarning( Utils.logTag + "Dependencies scope not found in " + filePath );
-                }
-            }
-#endif
-
             // Find Multidex dependency in scope
-            bool multidexExist = false;
-            const string depPrefix = "    implementation '";
             const string multidexAndroidSupport = "com.android.support:multidex:";
             const string multidexAndroidX = "androidx.multidex:multidex:";
-            const string miltidexAndroidXLine = depPrefix + multidexAndroidX + "2.0.1' // Added by CAS settings";
-
             const string exoPlayerDep = "com.google.android.exoplayer:exoplayer:";
             do
             {
-                ++line;
-                if (line >= gradle.Count)
-                {
-                    if (required)
-                        LogWhenGradleLineNotFound("dependencies{} scope", filePath);
+                if (++line >= gradle.Count)
                     return isChanged;
-                }
-                var removeLine = false;
-                if (gradle[line].Contains(multidexAndroidSupport))
-                {
-                    removeLine = multidexExist || !settings.multiDexEnabled;
-                    if (!removeLine)
-                    {
-                        gradle[line] = miltidexAndroidXLine;
-                        Utils.Log("Updated " + multidexAndroidSupport +
-                            " to " + multidexAndroidX + " in " + filePath + Utils.logAutoFeature);
-                        isChanged = true;
-                    }
-                    multidexExist = true;
-                }
-                else if (gradle[line].Contains(multidexAndroidX))
-                {
-                    removeLine = multidexExist || !settings.multiDexEnabled;
-                    multidexExist = true;
-                }
-                else if (gradle[line].Contains(exoPlayerDep))
-                {
-                    removeLine = true;
-                }
+                var removeLine = gradle[line].Contains(multidexAndroidSupport)
+                    || gradle[line].Contains(multidexAndroidX)
+                    || gradle[line].Contains(exoPlayerDep);
                 if (removeLine)
                 {
                     Utils.Log("Removed: '" + gradle[line] + "' from: " + filePath);
@@ -487,30 +416,16 @@ namespace CAS.UEditor
                 }
             } while (!gradle[line].Contains('}'));
 
-            if (!multidexExist && settings.multiDexEnabled)
-            {
-                gradle.Insert(line, miltidexAndroidXLine);
-                Utils.Log("Appended " + multidexAndroidX + " to " + filePath + Utils.logAutoFeature);
-                multidexExist = true;
-                isChanged = true;
-                ++line;
-            }
-
 #if DeclareJavaVersion
             const string javaVersion = "JavaVersion.VERSION_1_8";
             var existJavaDeclaration = false;
 #endif
 
-            required = settings.multiDexEnabled;
             do // while defaultConfig scope
             {
-                ++line;
-                if (line >= gradle.Count)
-                {
-                    if (required)
-                        LogWhenGradleLineNotFound("defaultConfig{} scope", filePath);
+                if (++line >= gradle.Count)
                     return isChanged;
-                }
+
 #if DeclareJavaVersion
                 if (!existJavaDeclaration && gradle[line].Contains( javaVersion ))
                     existJavaDeclaration = true;
@@ -534,62 +449,77 @@ namespace CAS.UEditor
             }
 #endif
             // Find multidexEnable in defaultConfig{} scope
-            const string multidexConfig = "multiDexEnabled";
-            if (multidexExist)
+            while (line < gradle.Count && !gradle[line].Contains("buildTypes"))
             {
-                var firstLineInDefaultConfigScope = line + 1;
-                multidexExist = false;
-                while (line < gradle.Count && !gradle[line].Contains("buildTypes"))
+                if (gradle[line].Contains("multiDexEnabled"))
                 {
-                    if (gradle[line].Contains(multidexConfig))
-                    {
-                        if (!required)
-                        {
-                            gradle.RemoveAt(line);
-                            isChanged = true;
-                        }
-                        multidexExist = true;
-                        break;
-                    }
-                    line++;
-                }
-
-                if (!multidexExist && required)
-                {
-                    gradle.Insert(firstLineInDefaultConfigScope,
-                        "        " + multidexConfig + " true // Enabled by CAS settings");
-                    Utils.Log("Enable Multidex in Default Config of " + filePath + Utils.logAutoFeature);
+                    gradle.RemoveAt(line);
                     isChanged = true;
+                    break;
                 }
+                line++;
             }
             return isChanged;
+        }
+
+        private static Version FindLineWithAndroidGradlePluginVersion(List<string> gradle, out int lineIndex)
+        {
+            // Extracts an Android Gradle Plugin version number from the contents of a *.gradle file for
+            // Unity 2022.2+ or 2023.1+.
+            // Example:
+            //   id 'com.android.application' version '7.1.2' apply false
+            const string gradlePluginVersion = "id 'com.android.application' version '";
+
+            // Extracts an Android Gradle Plugin version number from the contents of a *.gradle file.
+            // This should work for Unity 2022.1 and below.
+            // Example:
+            //   classpath 'com.android.tools.build:gradle:4.0.1'
+            const string gradlePluginVersionLegacy = "classpath 'com.android.tools.build:gradle:";
+
+            int beginIndex;
+            lineIndex = 0;
+            try
+            {
+                do
+                {
+                    ++lineIndex;
+                    if (lineIndex >= gradle.Count)
+                    {
+                        LogWhenGradleLineNotFound(gradlePluginVersion, Utils.projectGradlePath);
+                        return null;
+                    }
+                    beginIndex = gradle[lineIndex].IndexOf(gradlePluginVersion);
+                    if (beginIndex < 0)
+                    {
+                        beginIndex = gradle[lineIndex].IndexOf(gradlePluginVersionLegacy);
+                        if (beginIndex > 0)
+                            beginIndex += gradlePluginVersionLegacy.Length;
+                    }
+                    else
+                    {
+                        beginIndex += gradlePluginVersion.Length;
+                    }
+                } while (beginIndex < 0);
+
+                var currVerStr = gradle[lineIndex].Substring(beginIndex,
+                    gradle[lineIndex].IndexOf('\'', beginIndex) - beginIndex);
+
+                return new Version(currVerStr);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            return null;
         }
 
         private static bool UpdateGradlePluginVersion(List<string> gradle, string filePath)
         {
 #if UpdateGradleToolsMinorVersion || CASDeveloper
-            const string gradlePluginVersion = "classpath 'com.android.tools.build:gradle:";
-            // Find Gradle Plugin Version
-            int lineIndex = 0;
-            var beginIndex = -1;
-            do
-            {
-                ++lineIndex;
-                if (lineIndex >= gradle.Count)
-                {
-                    LogWhenGradleLineNotFound("com.android.tools.build:gradle", filePath);
-                    return false;
-                }
-                beginIndex = gradle[lineIndex].IndexOf(gradlePluginVersion);
-            } while (beginIndex < 0);
-
             try
             {
-                beginIndex += gradlePluginVersion.Length;
-                var currVerStr = gradle[lineIndex].Substring(beginIndex,
-                    gradle[lineIndex].IndexOf('\'', beginIndex) - beginIndex);
-
-                Version version = new Version(currVerStr);
+                int lineIndex = 0;
+                Version version = FindLineWithAndroidGradlePluginVersion(gradle, out lineIndex);
                 Version target = null;
 #if UpdateGradleToolsForUsedWrapper
                 // https://developer.android.com/studio/releases/gradle-plugin#updating-gradle
@@ -621,16 +551,13 @@ namespace CAS.UEditor
                     switch (version.Minor)
                     {
                         case 0:
+                        case 2:
                             if (version.Build < 2)
-                                target = new Version(4, 0, 2);
+                                target = new Version(4, version.Minor, 2);
                             break;
                         case 1:
                             if (version.Build < 3)
                                 target = new Version(4, 1, 3);
-                            break;
-                        case 2:
-                            if (version.Build < 2)
-                                target = new Version(4, 2, 2);
                             break;
                     }
                 }
@@ -657,7 +584,7 @@ namespace CAS.UEditor
                     || version.Build < target.Build)
                 {
                     var oldLine = gradle[lineIndex];
-                    gradle[lineIndex] = gradle[lineIndex].Replace(currVerStr, target.ToString());
+                    gradle[lineIndex] = gradle[lineIndex].Replace(version.ToString(), target.ToString());
                     Utils.Log("Updated Gradle Build Tools Plugin version.\n" +
                                 "From: " + oldLine + "\nTo:" + gradle[lineIndex] + Utils.logAutoFeature);
                     return true;
@@ -719,74 +646,6 @@ namespace CAS.UEditor
                 LogWhenGradleLineNotFound("repositories{}", filePath);
 #endif
             return isChanged;
-        }
-
-        private static bool FixGradleCompatibilityUnity2018(List<string> gradle, string filePath)
-        {
-#if !UNITY_2019_3_OR_NEWER || CASDeveloper
-            // New Gradle Wrapper 3.6+ generates a `gradleOut-release.aab`,
-            // but Unity 2018 look for a `gradleOut.aab` instead.
-            // So we create new taskto rename AAB file for Unity build system.
-
-            // Emdedded version does not require fix
-            var requireFix = !IsUsedGradleWrapperEmbeddedInUnity();
-
-            const string message = "Fix Gradle version compatibility by CAS";
-            const string beginContentLine = "// " + message + " Start";
-            const string endContentLine = "// " + message + " End";
-            const string findLine = "**BUILT_APK_LOCATION**";
-            var line = gradle.Count;
-            var endContantLine = -1;
-            do
-            {
-                line--;
-                if (line < 0)
-                {
-                    LogWhenGradleLineNotFound(findLine, filePath);
-                    return false;
-                }
-                if (endContantLine < 0)
-                {
-                    if (gradle[line].Contains(endContentLine))
-                        endContantLine = line;
-                    continue;
-                }
-                if (gradle[line].Contains(beginContentLine))
-                {
-                    if (!requireFix)
-                    {
-                        gradle.RemoveRange(line, endContantLine - line + 1);
-                        return true;
-                    }
-                    return false;
-                }
-            } while (!gradle[line].Contains(findLine));
-
-            if (!requireFix)
-                return false;
-
-            string[] content = {
-                beginContentLine,
-                "tasks.whenTaskAdded { task ->",
-                "    if (task.name.startsWith(\"bundle\")) {",
-                "        def flavor = task.name.substring(\"bundle\".length()).uncapitalize()",
-                "        def newTask = tasks.create(\"fixName\" + task.name.capitalize(), Copy) {",
-                "            from(\"$buildDir/outputs/bundle/$flavor/\")",
-                "            include \"gradleOut-\" + flavor + \".aab\"",
-                "            destinationDir file(\"$buildDir/outputs/bundle/$flavor/\")",
-                "            rename \"gradleOut-\" + flavor + \".aab\", \"gradleOut.aab\"",
-                "        }",
-                "        task.finalizedBy(newTask.name)",
-                "    }",
-                "}",
-                endContentLine
-            };
-            gradle.AddRange(content);
-            Utils.Log(message + " in " + filePath);
-            return true;
-#else
-            return false;
-#endif
         }
         #endregion
 

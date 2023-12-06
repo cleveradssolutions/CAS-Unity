@@ -144,6 +144,21 @@ namespace CAS.Android
             get { return settingsBridge.CallStatic<int>("getUserAge"); }
             set { settingsBridge.CallStatic("setUserAge", value); }
         }
+
+        public string contentURL
+        {
+            get { return settingsBridge.CallStatic<string>("getContentURL"); }
+            set { settingsBridge.CallStatic("setContentURL", value); }
+        }
+
+        public void SetKeywords(IList<string> keywords)
+        {
+            settingsBridge.CallStatic("clearKeywords");
+            for (int i = 0; i < keywords.Count; i++)
+            {
+                settingsBridge.CallStatic("addKeyword", keywords[i]);
+            }
+        }
     }
 }
 #endif

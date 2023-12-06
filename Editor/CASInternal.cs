@@ -39,6 +39,11 @@ namespace CAS.UEditor
         private AnimBool advancedFoldout = null;
         private AnimBool otherFoldout = null;
 
+        internal BuildTarget buildTarget
+        {
+            get { return platform; }
+        }
+
         internal void Init(BuildTarget platform, bool deepInit = true)
         {
             this.platform = platform;

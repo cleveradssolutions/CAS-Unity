@@ -1,5 +1,24 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.5.0] - 2023-12-06
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.5.0 SDK
+- Added new `CAS.MobileAds.targetingOptions.SetKeywords()` to sets a list of keywords, interests, or intents related to your application. Words or phrase describing the current activity of the user for targeting purposes.
+- Added new `CAS.MobileAds.targetingOptions.contentUrl` to sets the content URL for a web site whose content matches the app's primary content. This web site content is used for targeting and brand safety purposes.
+- [Android] Added new Editor Option to Optimize initialization and Google Ad loading. Look for the new option in `CAS Android Settings > Other Settings` window. By default, optimization is active.
+- [Android] Added Editor Options to removing the property tag from the Android Manifest of the Google Mobile Ads Android SDK. This is enabled for projects using Android Gradle Plugin version 4.2.1 and lower. 
+  > GMA Android SDK 22.4.0 and above introduces a property tag in its Android Manifest that is not compatible with lower versions of Android Gradle Plugin (used by Unity 2022.1 and below).
+- [Android] The update to `CASPlugin.androidlib/AndroidManifest.xml` occurs not in Project Assets but in the generated Gradle project.
+- [Editor] Cleaned up scripts by removing redundant code.
+## Changes
+- The Meta Audience Network has been included to the Optimal Ads Solutions. 
+  > Please complete [Additional integration steps](https://github.com/cleveradssolutions/CAS-Unity/wiki/Additional-Meta-AudienceNetwork-steps) to enable Meta monetization. 
+- The Bigo Ads has been included to the Optimal Ads Solutions. 
+- The AdColony network support has been removed. The AdColony will sunset and migrate to DTExchange.
+  > Please remove the AdColony adapter if you are using it.
+- [Android] Now `CASPlugin.androidlib` is placed in `CleverAdsSolution/Plugins/Android` instead of `Assets/Plugins/Android`. The obsolete `CASPlugin.androidlib` will be automatically removed during the application build.
+## New ads networks support in closed beta
+- BidMachine
+
 # [3.4.2] - 2023-11-20
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.4.2 SDK
 - [Editor] Added disabled Unity Editor Domain Reloading support.

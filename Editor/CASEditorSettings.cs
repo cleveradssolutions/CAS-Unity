@@ -15,6 +15,7 @@ namespace CAS.UEditor
     {
         public bool autoCheckForUpdatesEnabled = true;
         public bool delayAppMeasurementGADInit = true;
+        public bool optimizeGADLoading = true;
         public bool buildPreprocessEnabled = true;
         public bool includeAdDependencyVersions = false;
 
@@ -39,15 +40,9 @@ namespace CAS.UEditor
         public bool updateGradlePluginVersion = true;
 #endif
 
-#if MULTIDEX_ENABLED
-        public bool multiDexEnabled = true;
-#else
-        // MultiDEX enable by default for API 21+
+        [Obsolete("MultiDEX enable by default for API 21+")]
         public bool multiDexEnabled { get { return false; } }
-#endif
 
-        [Obsolete("No longer required to work Cross Promo")]
-        public bool generateAndroidQuerriesForPromo { get { return false; } }
         [Obsolete("Exo player used in any case")]
         public bool exoPlayerIncluded { get { return true; } }
         [Obsolete("Starting with Xcode 14, bitcode is no longer required")]

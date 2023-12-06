@@ -150,6 +150,15 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern int CASUGetUserAge();
+        
+        [DllImport("__Internal")]
+        internal static extern void CASUSetContentURL(string contentURL);
+
+        [DllImport("__Internal")]
+        internal static extern string CASUGetContentURL();
+
+        [DllImport("__Internal")]
+        internal static extern void CASUSetKeywords(string[] keywords, int keywordsLength);
         #endregion
 
         #region Utils

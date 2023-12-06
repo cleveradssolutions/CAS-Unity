@@ -164,6 +164,24 @@ int CASUGetUserAge(void) {
     return (int)[[CAS targetingOptions] getAge];
 }
 
+void CASUSetContentURL(const char *contentURL) {
+    [CAS.targetingOptions setContentUrl:CASUStringFromUnity(contentURL)];
+}
+
+const char * CASUGetContentURL(void) {
+    return CASUStringToUnity([CAS.targetingOptions getContentUrl]);
+}
+
+void CASUSetKeywords(const char **keywords, int keywordsLength) {
+    NSMutableArray *keywordsArray = [[NSMutableArray alloc] init];
+
+    for (int i = 0; i < keywordsLength; i++) {
+        [keywordsArray addObject:CASUStringFromUnity(keywords[i])];
+    }
+
+    [CAS.targetingOptions setKeywords:keywordsArray];
+}
+
 #pragma mark - Utils
 
 void CASUValidateIntegration(void) {

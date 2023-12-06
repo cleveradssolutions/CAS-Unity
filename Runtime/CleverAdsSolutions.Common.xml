@@ -782,6 +782,19 @@
             Limitation: 1-99 and 0 is 'unknown'
             </summary>
         </member>
+        <member name="P:CAS.ITargetingOptions.contentURL">
+            <summary>
+            Sets the content URL for a web site whose content matches the app's primary content.
+            This web site content is used for targeting and brand safety purposes.
+            Limitation: max URL length 512
+            </summary>
+        </member>
+        <member name="M:CAS.ITargetingOptions.SetKeywords(System.Collections.Generic.IList{System.String})">
+            <summary>
+            A list of keywords, interests, or intents related to your application.
+            Words or phrase describing the current activity of the user for targeting purposes.
+            </summary>
+        </member>
         <member name="M:CAS.LastPageAdContent.#ctor(System.String,System.String,System.String,System.String,System.String)">
              <summary>
              The latest free ad page for your own promotion.

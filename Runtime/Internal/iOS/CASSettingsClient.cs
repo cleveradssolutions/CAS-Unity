@@ -115,6 +115,19 @@ namespace CAS.iOS
             get { return CASExterns.CASUGetUserAge(); }
             set { CASExterns.CASUSetUserAge(value); }
         }
+
+        public string contentURL
+        {
+            get { return CASExterns.CASUGetContentURL(); }
+            set { CASExterns.CASUSetContentURL(value); }
+        }
+
+        public void SetKeywords(IList<string> keywords)
+        {
+            string[] tempArray = new string[keywords.Count];
+            keywords.CopyTo(tempArray, 0);
+            CASExterns.CASUSetKeywords(tempArray, keywords.Count);
+        }
     }
 }
 #endif
