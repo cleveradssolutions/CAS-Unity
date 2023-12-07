@@ -14,8 +14,8 @@
 #if UNITY_2019_3_OR_NEWER
 #define EmbedDynamicFrameworks
 
-// Avoid DTExchange issue with lost dSYMs path in XCFramework
-//#define UnpackDTExchangeXCFramework
+// Avoid DTExchange issue with: Invalid Signature - A sealed resource is missing or invalid
+#define UnpackDTExchangeXCFramework
 
 // Yandex Ads not support to place the Resources bundle in UnityFramework, 
 // then we embed the bundle to App target
