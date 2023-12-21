@@ -579,7 +579,7 @@ int CASUGetImpressionNetwork(CASImpressionRef impression) {
         NSString *network = internalImp.network;
 
         if ([network isEqualToString:CASNetwork.casExchange]) {
-            return CASNetworkIdCASExchange;
+            return CASNetworkIdDSPExchange;
         }
 
         if ([network isEqualToString:CASNetwork.lastPageAd]) {

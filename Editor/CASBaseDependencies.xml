@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <dependencies>
   <androidPackages>
-    <androidPackage spec="com.cleveradssolutions:cas-sdk:3.5.0" version="3.5.0" />
+    <androidPackage spec="com.cleveradssolutions:cas-sdk:3.5.1" version="3.5.1" />
   </androidPackages>
   <iosPods>
     <sources>
       <source>https://github.com/cleveradssolutions/CAS-Specs.git</source>
     </sources>
-    <iosPod name="CleverAdsSolutions-Base" version="3.5.0" minTargetSdk="13.0" />
+    <iosPod name="CleverAdsSolutions-Base" version="3.5.1" minTargetSdk="13.0" />
   </iosPods>
 </dependencies>

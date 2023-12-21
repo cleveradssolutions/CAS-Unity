@@ -1,5 +1,8 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.5.1] - 2023-12-21
+- Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.5.1 SDK
+
 # [3.5.0] - 2023-12-06
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.5.0 SDK
 - Added new `CAS.MobileAds.targetingOptions.SetKeywords()` to sets a list of keywords, interests, or intents related to your application. Words or phrase describing the current activity of the user for targeting purposes.
