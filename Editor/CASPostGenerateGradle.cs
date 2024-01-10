@@ -1,10 +1,9 @@
-//
-//  Clever Ads Solutions Unity Plugin
-//
-//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
-//
+//  Copyright © 2024 CAS.AI. All rights reserved.
 
 #if UNITY_ANDROID || CASDeveloper
+
+//#define CAS_DISABLE_PACKAGING_OPTIONS
+//#define CAS_DISABLE_VALIDATE_DEPS
 
 using System;
 using System.IO;
@@ -18,6 +17,10 @@ namespace CAS.UEditor
 {
     public class CASPostGenerateGradle : IPostGenerateGradleAndroidProject
     {
+        private const string applyFromPlugin = "apply from: 'CASPlugin.androidlib/";
+        private const string applyPackagingOptions = applyFromPlugin + "packaging_options.gradle'";
+        private const string applyValidateDependencies = applyFromPlugin + "validate_dependencies.gradle'";
+
         public int callbackOrder { get { return 0; } }
 
         public void OnPostGenerateGradleAndroidProject(string path)
@@ -30,10 +33,46 @@ namespace CAS.UEditor
             var editorSettings = CASEditorSettings.Load();
             var depManager = DependencyManager.Create(BuildTarget.Android, Audience.Mixed, true);
 
-            AddCASConfigResources(pluginPath, initSettings);
-            AddGAMValidateGradleIfNeeded(path);
+            var gradlePath = Path.Combine(path, "build.gradle");
+            var mainGradle = File.ReadAllText(gradlePath);
+            var gradleChanged = false;
+#if !CAS_DISABLE_VALIDATE_DEPS
+            if (IsNeedApplyGAMDependenciesValidation(mainGradle))
+            {
+                mainGradle += Environment.NewLine + "gradle.projectsEvaluated {" + Environment.NewLine;
+                mainGradle += "    " + applyValidateDependencies + Environment.NewLine;
+                mainGradle += "}" + Environment.NewLine;
+                gradleChanged = true;
+            }
+#endif
 
+#if !CAS_DISABLE_PACKAGING_OPTIONS
+            if (!mainGradle.Contains(applyPackagingOptions))
+            {
+                mainGradle += Environment.NewLine + applyPackagingOptions + Environment.NewLine;
+                gradleChanged = true;
+            }
+#endif
+
+            if (gradleChanged)
+                File.WriteAllText(gradlePath, mainGradle);
+
+
+            AddCASConfigResources(pluginPath, initSettings);
             UpdatePluginManifest(pluginPath, initSettings, editorSettings, depManager);
+        }
+
+        /// <summary>
+        /// Include `validate_dependencies.gradle` to build tasks 
+        /// if Android Gradle Plugin version is lower then 4.2.2
+        /// </summary>
+        private bool IsNeedApplyGAMDependenciesValidation(string mainGradle)
+        {
+            var gradleVer = CASPreprocessGradle.GetAndroidGradlePluginVersion();
+            var isSupportNewGradleTag = gradleVer.Major > 4
+                    || (gradleVer.Major == 4 && gradleVer.Minor >= 2 && gradleVer.Build >= 2);
+
+            return !isSupportNewGradleTag && !mainGradle.Contains(applyValidateDependencies);
         }
 
         private void AddCASConfigResources(string pluginPath, CASInitSettings initSettings)
@@ -64,33 +103,6 @@ namespace CAS.UEditor
                     Utils.Log("Not found config file: " + cachePath);
                 }
             }
-        }
-
-        /// <summary>
-        /// Include `validate_dependencies.gradle` to build tasks 
-        /// if Android Gradle Plugin version is lower then 4.2.2
-        /// </summary>
-        private void AddGAMValidateGradleIfNeeded(string path)
-        {
-            const string validateDependenciesGradle =
-                "apply from: 'CASPlugin.androidlib/validate_dependencies.gradle'";
-
-            var gradleVer = CASPreprocessGradle.GetAndroidGradlePluginVersion();
-            var isSupportNewGradleTag = gradleVer.Major > 4
-                    || (gradleVer.Major == 4 && gradleVer.Minor >= 2 && gradleVer.Build >= 2);
-            if (isSupportNewGradleTag)
-                return;
-
-            var gradlePath = Path.Combine(path, "build.gradle");
-            var content = File.ReadAllText(gradlePath);
-            if (!content.Contains(validateDependenciesGradle))
-            {
-                content += Environment.NewLine +
-                        "gradle.projectsEvaluated {" + Environment.NewLine +
-                        "    " + validateDependenciesGradle + Environment.NewLine +
-                        "}" + Environment.NewLine;
-            }
-            File.WriteAllText(gradlePath, content);
         }
 
         private static void UpdatePluginManifest(string pluginPath, CASInitSettings initSettings, CASEditorSettings editorSettings, DependencyManager depManager)

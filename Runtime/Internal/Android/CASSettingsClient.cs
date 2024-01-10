@@ -1,8 +1,4 @@
-﻿//
-//  Clever Ads Solutions Unity Plugin
-//
-//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
-//
+﻿//  Copyright © 2024 CAS.AI. All rights reserved.
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
 using System.Collections.Generic;

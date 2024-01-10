@@ -2,7 +2,7 @@
 //  CASUPluginUtil.m
 //  CASUnityPlugin
 //
-//  Copyright © 2023 Clever Ads Solutions. All rights reserved.
+//  Copyright © 2024 CAS.AI. All rights reserved.
 //
 
 #import "CASUPluginUtil.h"
@@ -77,7 +77,10 @@ static BOOL _pauseOnBackground = YES;
 + (void)onAdsDidClosed {
     if (UnityIsPaused()) {
         UnityPause(NO);
-        UnityUpdateMuteState([[AVAudioSession sharedInstance] outputVolume] < 0.01f ? 1 : 0);
+        // need to do this with delay because FMOD restarts audio in AVAudioSessionInterruptionNotification handler
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+            UnityUpdateMuteState([[AVAudioSession sharedInstance] outputVolume] < 0.01f ? 1 : 0);
+        });
     }
 }
 

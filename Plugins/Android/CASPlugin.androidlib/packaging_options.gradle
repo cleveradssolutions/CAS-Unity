@@ -1,0 +1,6 @@
+android {
+    packagingOptions {
+        pickFirst "META-INF/kotlinx_coroutines_core.version"
+        pickFirst "META-INF/core-utils_release.kotlin_module"
+    }
+}

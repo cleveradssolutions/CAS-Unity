@@ -1,6 +1,8 @@
 fileFormatVersion: 2
-guid: 679259c947b314e0b919c0b44a7072c7
-TextScriptImporter:
+guid: 36efaf13a6a3e4d69893a73cb59e82b3
+labels:
+- CleverAdsSolutions
+DefaultImporter:
   externalObjects: {}
   userData: 
   assetBundleName: 

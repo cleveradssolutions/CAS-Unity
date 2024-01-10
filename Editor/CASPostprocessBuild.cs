@@ -1,8 +1,4 @@
-﻿//
-//  Clever Ads Solutions Unity Plugin
-//
-//  Copyright © 2023 CleverAdsSolutions. All rights reserved.
-//
+﻿//  Copyright © 2024 CAS.AI. All rights reserved.
 
 // Bitcode is deprecated in Xcode 14.
 // Unity 2020.3.44f still use Bitcode.

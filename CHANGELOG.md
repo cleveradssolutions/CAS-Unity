@@ -1,5 +1,10 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.5.2] - 2024-01-10
+- Discover the latest features in native 3.5.2 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [Android] Added `packagingOptions` to gradle files to pick the first occurrence of `META-INF/kotlinx_coroutines_core.version` and `META-INF/core-utils_release.kotlin_module` files. This will fix the duplicate issue.
+- [iOS] Added a delay before calling `UnityUpdateMuteState()` to fix an issue with Unity losing audio after closing a fullscreen ad.
+
 # [3.5.1] - 2023-12-21
 - Wraps [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 3.5.1 SDK
 
