@@ -56,6 +56,7 @@ namespace CAS.AdObject
                 OnAdFailedToShow.Invoke(AdError.ManagerIsDisabled.GetMessage());
                 return;
             }
+            OnAdShown.Invoke();
             manager.ShowAd(AdType.Interstitial);
         }
 

@@ -1,8 +1,9 @@
 # CAS.AI Unity Plugin Change Log
 
-
 # [3.5.4] - 2024-02-20
 - Discover the latest features in native 3.5.4 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+## Bug Fixes
+- Fixed invoke of `InterstitialAdObject.OnAdShown` event.
 - [Android] Added workaround to migrate Kotlin 1.8.0 since it no longer supports JVM targets 1.6 and 1.7.
 
 # [3.5.2] - 2024-01-10

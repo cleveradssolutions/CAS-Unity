@@ -160,20 +160,6 @@ namespace CAS.Android
         #region Initialization
         internal CASManagerClient() { }
 
-#if false // Manager store in Static memory and disposed only on application destroed
-        ~CASMediationManager()
-        {
-            try
-            {
-                _managerBridge.Call( "freeManager" );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-        }
-#endif
-
         internal IInternalManager Init(CASInitSettings initData)
         {
             managerID = initData.targetId;
@@ -199,8 +185,10 @@ namespace CAS.Android
                         builder.Call("withConsentFlow", new CASConsentFlowClient(initData.consentFlow).obj);
                 }
 
-                CASJavaBridge.RepeatCall("addExtras", builder, initData.extras, false);
-
+                foreach (var extra in initData.extras)
+                {
+                    builder.Call("addExtras", extra.Key, extra.Value);
+                }
 
                 builder.Call("setCallbacks", _initProxy, _interstitialProxy, _rewardedProxy);
 

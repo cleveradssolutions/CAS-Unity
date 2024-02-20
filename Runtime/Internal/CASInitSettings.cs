@@ -153,6 +153,7 @@ namespace CAS
         public LoadingManagerMode defaultLoadingMode { get { return loadingMode; } }
         public bool defaultDebugModeEnabled { get { return debugMode; } }
         public bool defaultIOSTrackLocationEnabled { get { return trackLocationEnabled; } }
+        public bool defaultLocationCollectionEnabled { get { return trackLocationEnabled; } }
         public bool defaultInterstitialWhenNoRewardedAd { get { return interWhenNoRewardedAd; } }
 
         public int managersCount { get { return managerIds == null ? 0 : managerIds.Length; } }

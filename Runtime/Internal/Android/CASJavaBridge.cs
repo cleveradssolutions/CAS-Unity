@@ -18,35 +18,6 @@ namespace CAS.Android
         internal const string consentFlowClass = pluginPackage + ".CASConsentFlow";
         #endregion
 
-        internal static void RepeatCall(string method, AndroidJavaObject target, Dictionary<string, string> args, bool staticCall)
-        {
-            if (args == null || args.Count == 0)
-                return;
-
-            var tempArgs = new String[] { "String", "String" };
-            var methodID = AndroidJNIHelper.GetMethodID(target.GetRawClass(),
-                        "addExtras", tempArgs, staticCall);
-
-            foreach (var item in args)
-            {
-                tempArgs[0] = item.Key;
-                tempArgs[1] = item.Value;
-                var nativeArgs = AndroidJNIHelper.CreateJNIArgArray(tempArgs);
-                try
-                {
-                    if (staticCall)
-                        AndroidJNI.CallStaticVoidMethod(target.GetRawClass(), methodID, nativeArgs);
-                    else
-                        AndroidJNI.CallVoidMethod(target.GetRawObject(), methodID, nativeArgs);
-                }
-                finally
-                {
-                    AndroidJNIHelper.DeleteJNIArgArray(tempArgs, nativeArgs);
-                }
-            }
-        }
-
-
         internal static void ImpressionEvent(CASEventWithMeta onEvent, AdType adType, AndroidJavaObject impression)
         {
             if (onEvent != null)
@@ -167,7 +138,7 @@ namespace CAS.Android
 
         public void onOpening(AndroidJavaObject impression)
         {
-            CASFactory.UnityLog("Callback Presented " + adTypeName);
+            CASFactory.UnityLog("Callback Show " + adTypeName);
             CASFactory.ExecuteEvent(OnAdShown);
             CASJavaBridge.ImpressionEvent(OnAdOpening, adType, impression);
         }

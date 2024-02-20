@@ -34,7 +34,7 @@ namespace CAS
 
 #if UNITY_EDITOR && UNITY_2019_3_OR_NEWER
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void DomainReloading()
+        private static void OnDomainReload()
         {
             // Read more aboud Domain Reloading in Unity Editor
             // https://docs.unity3d.com/2023.3/Documentation/Manual/DomainReloading.html
@@ -122,6 +122,7 @@ namespace CAS
                 settings.interstitialInterval = initSettings.defaultInterstitialInterval;
                 settings.taggedAudience = initSettings.defaultAudienceTagged;
                 settings.allowInterstitialAdsWhenVideoCostAreLower = initSettings.defaultInterstitialWhenNoRewardedAd;
+                settings.trackLocationEnabled = initSettings.defaultLocationCollectionEnabled;
             }
             return settings;
         }
