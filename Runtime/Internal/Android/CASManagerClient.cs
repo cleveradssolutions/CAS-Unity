@@ -11,7 +11,8 @@ namespace CAS.Android
     {
         private AdEventsProxy _interstitialProxy;
         private AdEventsProxy _rewardedProxy;
-        private AdEventsProxy _returnAdProxy;
+        private AdEventsProxy _appReturnProxy;
+        private AdEventsProxy _appOpenProxy;
         private AndroidJavaObject _managerBridge;
         private LastPageAdContent _lastPageAdContent = null;
 
@@ -127,52 +128,74 @@ namespace CAS.Android
 
         public event Action OnAppReturnAdShown
         {
-            add { _returnAdProxy.OnAdShown += value; }
-            remove { _returnAdProxy.OnAdShown -= value; }
+            add { _appReturnProxy.OnAdShown += value; }
+            remove { _appReturnProxy.OnAdShown -= value; }
         }
         public event CASEventWithMeta OnAppReturnAdOpening
         {
-            add { _returnAdProxy.OnAdOpening += value; }
-            remove { _returnAdProxy.OnAdOpening -= value; }
+            add { _appReturnProxy.OnAdOpening += value; }
+            remove { _appReturnProxy.OnAdOpening -= value; }
         }
         public event CASEventWithMeta OnAppReturnAdImpression
         {
-            add { _returnAdProxy.OnAdImpression += value; }
-            remove { _returnAdProxy.OnAdImpression -= value; }
+            add { _appReturnProxy.OnAdImpression += value; }
+            remove { _appReturnProxy.OnAdImpression -= value; }
         }
         public event CASEventWithError OnAppReturnAdFailedToShow
         {
-            add { _returnAdProxy.OnAdFailedToShow += value; }
-            remove { _returnAdProxy.OnAdFailedToShow -= value; }
+            add { _appReturnProxy.OnAdFailedToShow += value; }
+            remove { _appReturnProxy.OnAdFailedToShow -= value; }
         }
         public event Action OnAppReturnAdClicked
         {
-            add { _returnAdProxy.OnAdClicked += value; }
-            remove { _returnAdProxy.OnAdClicked -= value; }
+            add { _appReturnProxy.OnAdClicked += value; }
+            remove { _appReturnProxy.OnAdClicked -= value; }
         }
         public event Action OnAppReturnAdClosed
         {
-            add { _returnAdProxy.OnAdClosed += value; }
-            remove { _returnAdProxy.OnAdClosed -= value; }
+            add { _appReturnProxy.OnAdClosed += value; }
+            remove { _appReturnProxy.OnAdClosed -= value; }
+        }
+
+        public event Action OnAppOpenAdLoaded
+        {
+            add { _appOpenProxy.OnAdLoaded += value; }
+            remove { _appOpenProxy.OnAdLoaded -= value; }
+        }
+        public event CASEventWithAdError OnAppOpenAdFailedToLoad
+        {
+            add { _appOpenProxy.OnAdFailed += value; }
+            remove { _appOpenProxy.OnAdFailed -= value; }
+        }
+        public event Action OnAppOpenAdShown
+        {
+            add { _appOpenProxy.OnAdShown += value; }
+            remove { _appOpenProxy.OnAdShown -= value; }
+        }
+        public event CASEventWithMeta OnAppOpenAdImpression
+        {
+            add { _appOpenProxy.OnAdImpression += value; }
+            remove { _appOpenProxy.OnAdImpression -= value; }
+        }
+        public event CASEventWithError OnAppOpenAdFailedToShow
+        {
+            add { _appOpenProxy.OnAdFailedToShow += value; }
+            remove { _appOpenProxy.OnAdFailedToShow -= value; }
+        }
+        public event Action OnAppOpenAdClicked
+        {
+            add { _appOpenProxy.OnAdClicked += value; }
+            remove { _appOpenProxy.OnAdClicked -= value; }
+        }
+        public event Action OnAppOpenAdClosed
+        {
+            add { _appOpenProxy.OnAdClosed += value; }
+            remove { _appOpenProxy.OnAdClosed -= value; }
         }
         #endregion
 
         #region Initialization
         internal CASManagerClient() { }
-
-#if false // Manager store in Static memory and disposed only on application destroed
-        ~CASMediationManager()
-        {
-            try
-            {
-                _managerBridge.Call( "freeManager" );
-            }
-            catch (Exception e)
-            {
-                Debug.LogException( e );
-            }
-        }
-#endif
 
         internal IInternalManager Init(CASInitSettings initData)
         {
@@ -181,7 +204,8 @@ namespace CAS.Android
             _initProxy = new InitCallbackProxy(this, initData);
             _interstitialProxy = new AdEventsProxy(AdType.Interstitial);
             _rewardedProxy = new AdEventsProxy(AdType.Rewarded);
-            _returnAdProxy = new AdEventsProxy(AdType.Interstitial);
+            _appReturnProxy = new AdEventsProxy(AdType.Interstitial);
+            _appOpenProxy = new AdEventsProxy(AdType.AppOpen);
 
             using (var builder = new AndroidJavaObject(CASJavaBridge.bridgeBuilderClass))
             {
@@ -199,10 +223,12 @@ namespace CAS.Android
                         builder.Call("withConsentFlow", new CASConsentFlowClient(initData.consentFlow).obj);
                 }
 
-                CASJavaBridge.RepeatCall("addExtras", builder, initData.extras, false);
+                foreach (var extra in initData.extras)
+                {
+                    builder.Call("addExtras", extra.Key, extra.Value);
+                }
 
-
-                builder.Call("setCallbacks", _initProxy, _interstitialProxy, _rewardedProxy);
+                builder.Call("setCallbacks", _initProxy, _interstitialProxy, _rewardedProxy, _appReturnProxy, _appOpenProxy);
 
                 _managerBridge = builder.Call<AndroidJavaObject>("build",
                     initData.targetId, Application.unityVersion, (int)initData.allowedAdFlags);
@@ -237,41 +263,17 @@ namespace CAS.Android
 
         public bool IsReadyAd(AdType adType)
         {
-            switch (adType)
-            {
-                case AdType.Interstitial:
-                    return _managerBridge.Call<bool>("isInterstitialAdReady");
-                case AdType.Rewarded:
-                    return _managerBridge.Call<bool>("isRewardedAdReady");
-                default:
-                    return false;
-            }
+            return _managerBridge.Call<bool>("isAdReady", (int)adType);
         }
 
         public void LoadAd(AdType adType)
         {
-            switch (adType)
-            {
-                case AdType.Interstitial:
-                    _managerBridge.Call("loadInterstitial");
-                    break;
-                case AdType.Rewarded:
-                    _managerBridge.Call("loadRewarded");
-                    break;
-            }
+            _managerBridge.Call("loadAd", (int)adType);
         }
 
         public void ShowAd(AdType adType)
         {
-            switch (adType)
-            {
-                case AdType.Interstitial:
-                    _managerBridge.Call("showInterstitial");
-                    break;
-                case AdType.Rewarded:
-                    _managerBridge.Call("showRewarded");
-                    break;
-            }
+            _managerBridge.Call("showAd", (int)adType);
         }
 
         [UnityEngine.Scripting.Preserve]
@@ -280,12 +282,14 @@ namespace CAS.Android
             return _managerBridge.Call<bool>("tryOpenDebugger");
         }
 
+        public void SetAutoShowAdOnAppReturn(AppReturnAdType type)
+        {
+            _managerBridge.Call("setAutoShowAdOnAppReturn", (int)type);
+        }
+
         public void SetAppReturnAdsEnabled(bool enable)
         {
-            if (enable)
-                _managerBridge.Call("enableReturnAds", _returnAdProxy);
-            else
-                _managerBridge.Call("disableReturnAds");
+            SetAutoShowAdOnAppReturn(enable ? AppReturnAdType.Interstitial : AppReturnAdType.None);
         }
 
         public void SkipNextAppReturnAds()

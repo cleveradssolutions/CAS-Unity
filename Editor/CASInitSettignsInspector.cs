@@ -326,11 +326,9 @@ namespace CAS.UEditor
                 EditorGUILayout.PropertyField(permissionAdIdProp,
                     HelpStyles.GetContent("Advertiser ID permission"));
             }
-            else
-            {
-                trackLocationEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Location collection when user allowed", trackLocationEnabledProp.boolValue);
-            }
+
+            trackLocationEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Location targeting if allowed", trackLocationEnabledProp.boolValue);
 
             OnLoadingModeGUI();
 

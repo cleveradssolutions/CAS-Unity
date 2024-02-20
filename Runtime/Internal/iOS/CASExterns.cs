@@ -146,7 +146,7 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern int CASUGetUserAge();
-        
+
         [DllImport("__Internal")]
         internal static extern void CASUSetContentURL(string contentURL);
 
@@ -236,9 +236,7 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern void CASUSetLastPageAdContent(CASUManagerRef managerRef, string contentJson);
-        #endregion
-
-        #region Interstitial Ads
+      
         [DllImport("__Internal")]
         internal static extern void CASUSetInterstitialDelegate(
             CASUManagerRef managerRef,
@@ -251,17 +249,6 @@ namespace CAS.iOS
             CASUDidClosedAdCallback didClosed
         );
 
-        [DllImport("__Internal")]
-        internal static extern void CASULoadInterstitial(CASUManagerRef managerRef);
-
-        [DllImport("__Internal")]
-        internal static extern bool CASUIsInterstitialReady(CASUManagerRef managerRef);
-
-        [DllImport("__Internal")]
-        internal static extern bool CASUPresentInterstitial(CASUManagerRef managerRef);
-        #endregion
-
-        #region Rewarded Ads
         [DllImport("__Internal")]
         internal static extern void CASUSetRewardedDelegate(
             CASUManagerRef managerRef,
@@ -276,13 +263,25 @@ namespace CAS.iOS
         );
 
         [DllImport("__Internal")]
-        internal static extern void CASULoadReward(CASUManagerRef managerRef);
+        internal static extern void CASUSetAppOpenDelegate(
+            CASUManagerRef managerRef,
+            CASUDidLoadedAdCallback didLoad,
+            CASUDidFailedAdCallback didFaied,
+            CASUWillPresentAdCallback willPresent,
+            CASUWillPresentAdCallback didImpression,
+            CASUDidShowAdFailedWithErrorCallback didShowWithError,
+            CASUDidClickedAdCallback didClick,
+            CASUDidClosedAdCallback didClosed
+        );
 
         [DllImport("__Internal")]
-        internal static extern bool CASUIsRewardedReady(CASUManagerRef managerRef);
+        internal static extern void CASULoadAd(CASUManagerRef managerRef, int type);
 
         [DllImport("__Internal")]
-        internal static extern bool CASUPresentRewarded(CASUManagerRef managerRef);
+        internal static extern bool CASUIsAdReady(CASUManagerRef managerRef, int type);
+
+        [DllImport("__Internal")]
+        internal static extern void CASUShowAd(CASUManagerRef managerRef, int type);
         #endregion
 
         #region AdView
@@ -340,10 +339,7 @@ namespace CAS.iOS
         );
 
         [DllImport("__Internal")]
-        internal static extern void CASUEnableAppReturnAds(CASUManagerRef manager);
-
-        [DllImport("__Internal")]
-        internal static extern void CASUDisableAppReturnAds(CASUManagerRef manager);
+        internal static extern void CASUSetAutoShowAdOnAppReturn(CASUManagerRef manager, int type);
 
         [DllImport("__Internal")]
         internal static extern void CASUSkipNextAppReturnAds(CASUManagerRef manager);

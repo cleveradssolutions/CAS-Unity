@@ -21,6 +21,7 @@ namespace CAS.Unity
         public bool iOSAppPauseOnBackground { get; set; }
         public bool allowInterstitialAdsWhenVideoCostAreLower { get; set; }
         public bool trackLocationEnabled { get; set; }
+        public bool locationCollectionEnabled { get; set; }
 
         public Gender gender { get; set; }
         public int age { get; set; }

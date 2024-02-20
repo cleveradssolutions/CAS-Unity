@@ -96,8 +96,8 @@ namespace CAS.iOS
 
         public bool trackLocationEnabled
         {
-            get { return CASExterns.CASUGetTrackLocationEnabled(); }
-            set { CASExterns.CASUSetTrackLocationEnabled(value); }
+            get { return locationCollectionEnabled; }
+            set { locationCollectionEnabled = value; }
         }
 
         public Gender gender
@@ -110,6 +110,12 @@ namespace CAS.iOS
         {
             get { return CASExterns.CASUGetUserAge(); }
             set { CASExterns.CASUSetUserAge(value); }
+        }
+
+        public bool locationCollectionEnabled
+        {
+            get { return CASExterns.CASUGetTrackLocationEnabled(); }
+            set { CASExterns.CASUSetTrackLocationEnabled(value); }
         }
 
         public string contentURL

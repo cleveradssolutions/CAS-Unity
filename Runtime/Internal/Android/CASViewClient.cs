@@ -51,7 +51,7 @@ namespace CAS.Android
 
             callback.OnAdLoaded += CallbackOnLoaded;
             callback.OnAdFailed += CallbackOnFailed;
-            callback.OnAdOpening += CallbackOnOpen;
+            callback.OnAdImpression += CallbackOnImpression;
             callback.OnAdClicked += CallbackOnClick;
             callback.OnAdRect += CallbackOnRect;
         }
@@ -108,7 +108,7 @@ namespace CAS.Android
                 OnClicked( this );
         }
 
-        private void CallbackOnOpen( AdMetaData meta )
+        private void CallbackOnImpression( AdMetaData meta )
         {
             if (OnImpression != null)
                 OnImpression( this, meta );
