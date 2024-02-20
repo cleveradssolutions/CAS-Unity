@@ -1,12 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <dependencies>
   <androidPackages>
-    <androidPackage spec="com.cleveradssolutions:cas-sdk:3.5.2" version="3.5.2" />
+    <androidPackage spec="com.cleveradssolutions:cas-sdk:3.5.4" version="3.5.4" />
+    <androidPackage spec="org.jetbrains.kotlin:kotlin-stdlib-jdk7:[1.8.0,)" version="1.8.0" />
+    <androidPackage spec="org.jetbrains.kotlin:kotlin-stdlib-jdk8:[1.8.0,)" version="v" />
   </androidPackages>
   <iosPods>
     <sources>
       <source>https://github.com/cleveradssolutions/CAS-Specs.git</source>
     </sources>
-    <iosPod name="CleverAdsSolutions-Base" version="3.5.2" minTargetSdk="13.0" />
+    <iosPod name="CleverAdsSolutions-Base" version="3.5.4" minTargetSdk="13.0" />
   </iosPods>
 </dependencies>
