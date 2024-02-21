@@ -462,7 +462,7 @@ namespace CAS.UEditor
 
         private bool IsAdFormatsNotUsed()
         {
-            if (allowedAdFlagsProp.intValue == 0 || allowedAdFlagsProp.intValue == (int)AdFlags.Native)
+            if (allowedAdFlagsProp.intValue == 0)
             {
                 EditorGUI.indentLevel += 2;
                 EditorGUILayout.HelpBox("Please include the ad formats that you want to use in your game.", MessageType.Error);

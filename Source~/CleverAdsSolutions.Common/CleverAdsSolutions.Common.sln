@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 25.0.1704.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CleverAdsSolutions.Common", "CleverAdsSolutions.Common.csproj", "{D71A3539-A30C-48AD-9B8A-7119F995D2BD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D71A3539-A30C-48AD-9B8A-7119F995D2BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D71A3539-A30C-48AD-9B8A-7119F995D2BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D71A3539-A30C-48AD-9B8A-7119F995D2BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D71A3539-A30C-48AD-9B8A-7119F995D2BD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {770D5CCA-AE1E-4406-B2C7-F4FE0C24A290}
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.DotNetNamingPolicy = $1
+		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
+	EndGlobalSection
+EndGlobal

@@ -2,9 +2,10 @@
     "name": "com.cleversolutions.ads.unity",
     "version": "3.5.4",
     "displayName": "CleverAdsSolutions",
-    "description": "CAS.AI Unity wrapper for mobile ads on platforms Android and iOS.",
+    "description": "CAS.AI Unity plugine to ads monetize apps on Android and iOS platforms.",
     "unity": "2018.4",
     "documentationUrl": "https://github.com/cleveradssolutions/CAS-Unity/wiki",
+    "changelogUrl": "https://github.com/cleveradssolutions/CAS-Unity/releases",
     "keywords": [
         "CAS",
         "Ads",
@@ -15,8 +16,20 @@
         "iOS"
     ],
     "author": {
-        "name": "CAS ai",
+        "name": "CAS AI",
         "email": "support@cleveradssolutions.com",
         "url": "https://cas.ai"
-    }
+    },
+    "samples": [
+        {
+            "displayName": "Sample of C# integration",
+            "description": "This sample showcases the basics of how to use CAS Plugin in C# scripts.",
+            "path": "Samples~/SampleScripts"
+        },
+        {
+            "displayName": "Sample of Components integration",
+            "description": "This sample showcases the basics of how to use in Scene Components.",
+            "path": "Samples~/SampleComponents"
+        }
+    ]
 }

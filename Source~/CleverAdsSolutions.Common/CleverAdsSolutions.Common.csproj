@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configurations>Release;Debug</Configurations>
+    <OutputType>Library</OutputType>
+    <RootNamespace>CAS</RootNamespace>
+    <AssemblyName>CleverAdsSolutions.Common</AssemblyName>
+    <OutputPath>..\..\Runtime</OutputPath>
+    <DocumentationFile>..\..\Runtime\CleverAdsSolutions.Common.xml</DocumentationFile>
+    <DebugType></DebugType>
+    <DebugSymbols>False</DebugSymbols>
+    <NoWarn>CS1591</NoWarn>
+    <Optimize>False</Optimize>
+    <ProjectGuid>{D71A3539-A30C-48AD-9B8A-7119F995D2BD}</ProjectGuid>
+    <LangVersion>4</LangVersion>
+    <WarningLevel>4</WarningLevel>
+    <ErrorReport>prompt</ErrorReport>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="UnityEngine">
+      <HintPath>/Users/stratos/Documents/Environment/UnityEditors/2020.3.44f1/Unity.app/Contents/Managed/UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Source\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Source\AdError.cs" />
+    <Compile Include="Source\AdMetaData.cs" />
+    <Compile Include="Source\AdNetwork.cs" />
+    <Compile Include="Source\AdPosition.cs" />
+    <Compile Include="Source\AdSize.cs" />
+    <Compile Include="Source\AdType.cs" />
+    <Compile Include="Source\AppReturnAdType.cs" />
+    <Compile Include="Source\ConsentFlow.cs" />
+    <Compile Include="Source\IAdsPreset.cs" />
+    <Compile Include="Source\IAdsSettings.cs" />
+    <Compile Include="Source\IAdView.cs" />
+    <Compile Include="Source\IManagerBuilder.cs" />
+    <Compile Include="Source\IMediationManager.cs" />
+    <Compile Include="Source\ITargetingOptions.cs" />
+    <Compile Include="Source\LastPageAdContent.cs" />
+    <Compile Include="Source\LoadingManagerMode.cs" />
+    <Compile Include="Source\PriceAccuracy.cs" />
+    <Compile Include="Source\EventExecutor.cs" />
+    <Compile Include="Source\InitialConfiguration.cs" />
+    <Compile Include="Source\InitializationError.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

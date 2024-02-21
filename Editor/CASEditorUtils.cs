@@ -576,7 +576,7 @@ namespace CAS.UEditor
 
         internal static string GetTemplatePath(string templateFile)
         {
-            return GetPluginComponentPath("Templates/" + templateFile);
+            return GetPluginComponentPath("Editor/BuildConfig/" + templateFile);
         }
 
         internal static string GetPluginComponentPath(string file)
@@ -997,7 +997,6 @@ namespace CAS.UEditor
                 case AdFlags.Banner: iconIndex = 0; break;
                 case AdFlags.Interstitial: iconIndex = 1; break;
                 case AdFlags.Rewarded: iconIndex = 2; break;
-                case AdFlags.Native: iconIndex = 3; break;
                 default: return null;
             }
             return formatIcons[active ? iconIndex : iconIndex + 5];

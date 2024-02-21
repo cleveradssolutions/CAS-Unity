@@ -34,10 +34,12 @@ namespace CAS.AdObject
                 if (_allowReturnToPlayAd != value)
                 {
                     _allowReturnToPlayAd = value;
-                    if (manager != null)
-                        manager.SetAppReturnAdsEnabled(_allowReturnToPlayAd);
-                    else
+                    if (manager == null)
                         CASFactory.TryGetManagerByIndexAsync(this, managerId.index);
+                    else if (_allowReturnToPlayAd)
+                        manager.SetAutoShowAdOnAppReturn(AppReturnAdType.Interstitial);
+                    else
+                        manager.SetAutoShowAdOnAppReturn(AppReturnAdType.None);
                 }
             }
         }
@@ -49,12 +51,14 @@ namespace CAS.AdObject
             if (!CASFactory.TryGetManagerByIndexAsync(this, managerId.index))
                 OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
-        
+
         void IInternalAdObject.OnManagerReady(InitialConfiguration config)
         {
             this.manager = config.manager;
 
-            manager.SetAppReturnAdsEnabled(_allowReturnToPlayAd);
+            if (_allowReturnToPlayAd)
+                manager.SetAutoShowAdOnAppReturn(AppReturnAdType.Interstitial);
+
             manager.OnInterstitialAdLoaded += OnAdLoaded.Invoke;
             manager.OnInterstitialAdFailedToLoad += OnInterstitialAdFailedToLoad;
             manager.OnAppReturnAdFailedToShow += OnInterstitialAdFailedToShow;
