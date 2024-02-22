@@ -60,8 +60,8 @@ namespace CAS.AdObject
                 manager.SetAutoShowAdOnAppReturn(AppReturnAdType.Interstitial);
 
             manager.OnInterstitialAdLoaded += OnAdLoaded.Invoke;
-            manager.OnInterstitialAdFailedToLoad += OnInterstitialAdFailedToLoad;
-            manager.OnAppReturnAdFailedToShow += OnInterstitialAdFailedToShow;
+            manager.OnInterstitialAdFailedToLoad += AdFailedToLoad;
+            manager.OnAppReturnAdFailedToShow += AdFailedToShow;
             manager.OnAppReturnAdShown += OnAdShown.Invoke;
             manager.OnAppReturnAdClicked += OnAdClicked.Invoke;
             manager.OnAppReturnAdClosed += OnAdClosed.Invoke;
@@ -83,8 +83,8 @@ namespace CAS.AdObject
             if (manager != null)
             {
                 manager.OnInterstitialAdLoaded -= OnAdLoaded.Invoke;
-                manager.OnInterstitialAdFailedToLoad -= OnInterstitialAdFailedToLoad;
-                manager.OnAppReturnAdFailedToShow -= OnInterstitialAdFailedToShow;
+                manager.OnInterstitialAdFailedToLoad -= AdFailedToLoad;
+                manager.OnAppReturnAdFailedToShow -= AdFailedToShow;
                 manager.OnAppReturnAdShown -= OnAdShown.Invoke;
                 manager.OnAppReturnAdClicked -= OnAdClicked.Invoke;
                 manager.OnAppReturnAdClosed -= OnAdClosed.Invoke;
@@ -94,11 +94,11 @@ namespace CAS.AdObject
         #endregion
 
         #region Manager Events wrappers
-        private void OnInterstitialAdFailedToLoad(AdError error)
+        private void AdFailedToLoad(AdError error)
         {
             OnAdFailedToLoad.Invoke(error.GetMessage());
         }
-        private void OnInterstitialAdFailedToShow(string error)
+        private void AdFailedToShow(string error)
         {
             OnAdFailedToShow.Invoke(error);
             OnAdClosed.Invoke();

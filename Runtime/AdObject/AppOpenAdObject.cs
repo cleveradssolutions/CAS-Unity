@@ -6,10 +6,10 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
-    [AddComponentMenu("CleverAdsSolutions/Interstitial Ad Object")]
+    [AddComponentMenu("CleverAdsSolutions/AppOpen Ad Object")]
     [DisallowMultipleComponent]
     [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Interstitial-Ad-object")]
-    public sealed class InterstitialAdObject : MonoBehaviour, IInternalAdObject
+    public sealed class AppOpenAdObject : MonoBehaviour, IInternalAdObject
     {
         public ManagerIndex managerId;
 
@@ -30,12 +30,12 @@ namespace CAS.AdObject
         /// </summary>
         public bool isAdReady
         {
-            get { return manager != null && manager.IsReadyAd(AdType.Interstitial); }
+            get { return manager != null && manager.IsReadyAd(AdType.AppOpen); }
         }
 
         /// <summary>
         /// Manual load Ad.
-        /// <para>Please call load before each show ad when active load mode is <see cref="LoadingManagerMode.Manual"/>.</para>
+        /// <para>Please call load before each show ad.</para>
         /// <para>You can get a callback for the successful loading of an ad by subscribe <see cref="OnAdLoaded"/>.</para>
         /// </summary>
         public void LoadAd()
@@ -43,7 +43,7 @@ namespace CAS.AdObject
             if (manager == null)
                 loadAdOnAwake = true;
             else
-                manager.LoadAd(AdType.Interstitial);
+                manager.LoadAd(AdType.AppOpen);
         }
 
         /// <summary>
@@ -57,37 +57,37 @@ namespace CAS.AdObject
                 return;
             }
             OnAdShown.Invoke();
-            manager.ShowAd(AdType.Interstitial);
+            manager.ShowAd(AdType.AppOpen);
         }
 
         #region MonoBehaviour
         private void Start()
         {
             MobileAds.settings.isExecuteEventsOnUnityThread = true;
-            if (!CASFactory.TryGetManagerByIndexAsync(this, managerId.index))
+            if (!CASFactory.TryGetManagerByIndexAsync(this, managerId.index, true))
                 OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
 
         void IInternalAdObject.OnManagerReady(InitialConfiguration config)
         {
             this.manager = config.manager;
-            manager.OnInterstitialAdLoaded += OnAdLoaded.Invoke;
-            manager.OnInterstitialAdFailedToLoad += AdFailedToLoad;
-            manager.OnInterstitialAdFailedToShow += AdFailedToShow;
-            manager.OnInterstitialAdClicked += OnAdClicked.Invoke;
-            manager.OnInterstitialAdClosed += OnAdClosed.Invoke;
-            manager.OnInterstitialAdImpression += OnAdImpression.Invoke;
+            manager.OnAppOpenAdLoaded += OnAdLoaded.Invoke;
+            manager.OnAppOpenAdFailedToLoad += AdFailedToLoad;
+            manager.OnAppOpenAdFailedToShow += AdFailedToShow;
+            manager.OnAppOpenAdClicked += OnAdClicked.Invoke;
+            manager.OnAppOpenAdClosed += OnAdClosed.Invoke;
+            manager.OnAppOpenAdImpression += OnAdImpression.Invoke;
 
             try
             {
-                if (manager.IsReadyAd(AdType.Interstitial))
+                if (manager.IsReadyAd(AdType.AppOpen))
                 {
                     OnAdLoaded.Invoke();
                 }
                 else if (loadAdOnAwake)
                 {
                     loadAdOnAwake = false;
-                    manager.LoadAd(AdType.Interstitial);
+                    manager.LoadAd(AdType.AppOpen);
                 }
             }
             catch (Exception e)
@@ -100,12 +100,12 @@ namespace CAS.AdObject
         {
             if (manager != null)
             {
-                manager.OnInterstitialAdLoaded -= OnAdLoaded.Invoke;
-                manager.OnInterstitialAdFailedToLoad -= AdFailedToLoad;
-                manager.OnInterstitialAdFailedToShow -= AdFailedToShow;
-                manager.OnInterstitialAdClicked -= OnAdClicked.Invoke;
-                manager.OnInterstitialAdClosed -= OnAdClosed.Invoke;
-                manager.OnInterstitialAdImpression -= OnAdImpression.Invoke;
+                manager.OnAppOpenAdLoaded -= OnAdLoaded.Invoke;
+                manager.OnAppOpenAdFailedToLoad -= AdFailedToLoad;
+                manager.OnAppOpenAdFailedToShow -= AdFailedToShow;
+                manager.OnAppOpenAdClicked -= OnAdClicked.Invoke;
+                manager.OnAppOpenAdClosed -= OnAdClosed.Invoke;
+                manager.OnAppOpenAdImpression -= OnAdImpression.Invoke;
             }
             CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
         }

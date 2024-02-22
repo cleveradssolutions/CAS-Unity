@@ -170,10 +170,10 @@ namespace CAS.AdObject
             if (adView == null)
                 return;
 
-            adView.OnLoaded -= OnBannerLoaded;
-            adView.OnFailed -= OnBannerLoadFailed;
-            adView.OnClicked -= OnBannerClicked;
-            adView.OnImpression -= OnBannerImpression;
+            adView.OnLoaded -= AdLoaded;
+            adView.OnFailed -= AdLoadFailed;
+            adView.OnClicked -= AdClicked;
+            adView.OnImpression -= AdImpression;
             adView.SetActive(false);
             adView = null;
         }
@@ -187,10 +187,10 @@ namespace CAS.AdObject
                 return;
             DetachAdView();
 
-            newView.OnLoaded += OnBannerLoaded;
-            newView.OnFailed += OnBannerLoadFailed;
-            newView.OnClicked += OnBannerClicked;
-            newView.OnImpression += OnBannerImpression;
+            newView.OnLoaded += AdLoaded;
+            newView.OnFailed += AdLoadFailed;
+            newView.OnClicked += AdClicked;
+            newView.OnImpression += AdImpression;
 
             adView = newView;
 
@@ -220,7 +220,7 @@ namespace CAS.AdObject
             }
         }
 
-        private void OnBannerLoaded(IAdView ad)
+        private void AdLoaded(IAdView ad)
         {
             if (ad == adView)
             {
@@ -230,7 +230,7 @@ namespace CAS.AdObject
             }
         }
 
-        private void OnBannerLoadFailed(IAdView ad, AdError error)
+        private void AdLoadFailed(IAdView ad, AdError error)
         {
             if (ad != adView)
                 return;
@@ -239,12 +239,12 @@ namespace CAS.AdObject
                 OnAdHidden.Invoke();
         }
 
-        private void OnBannerImpression(IAdView ad, AdMetaData impression)
+        private void AdImpression(IAdView ad, AdMetaData impression)
         {
             OnAdImpression.Invoke(impression);
         }
 
-        private void OnBannerClicked(IAdView view)
+        private void AdClicked(IAdView view)
         {
             if (view == adView)
                 OnAdClicked.Invoke();

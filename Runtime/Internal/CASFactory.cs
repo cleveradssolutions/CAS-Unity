@@ -217,7 +217,7 @@ namespace CAS
             return manager;
         }
 
-        internal static bool TryGetManagerByIndexAsync(IInternalAdObject adObject, int index)
+        internal static bool TryGetManagerByIndexAsync(IInternalAdObject adObject, int index, bool noInit = false)
         {
             if (index < 0)
                 throw new ArgumentOutOfRangeException("index", "Manager index cannot be less than 0");
@@ -225,7 +225,7 @@ namespace CAS
             if (managers != null && index < managers.Count)
             {
                 var readyManager = managers[index];
-                if (readyManager != null && readyManager.initialConfig != null)
+                if (readyManager != null && (noInit || readyManager.initialConfig != null))
                 {
                     adObject.OnManagerReady(readyManager.initialConfig);
                     return true;

@@ -76,11 +76,11 @@ namespace CAS.AdObject
         {
             this.manager = config.manager;
             manager.OnRewardedAdLoaded += OnAdLoaded.Invoke;
-            manager.OnRewardedAdFailedToLoad += OnRewardedAdFailedToLoad;
-            manager.OnRewardedAdFailedToShow += OnRewardedAdFailedToShow;
+            manager.OnRewardedAdFailedToLoad += AdFailedToLoad;
+            manager.OnRewardedAdFailedToShow += AdFailedToShow;
             manager.OnRewardedAdClicked += OnAdClicked.Invoke;
             manager.OnRewardedAdCompleted += OnReward.Invoke;
-            manager.OnRewardedAdClosed += OnRewardedAdClosed;
+            manager.OnRewardedAdClosed += AdClosed;
             manager.OnRewardedAdImpression += OnAdImpression.Invoke;
 
             try
@@ -106,11 +106,11 @@ namespace CAS.AdObject
             if (manager != null)
             {
                 manager.OnRewardedAdLoaded -= OnAdLoaded.Invoke;
-                manager.OnRewardedAdFailedToLoad -= OnRewardedAdFailedToLoad;
-                manager.OnRewardedAdFailedToShow -= OnRewardedAdFailedToShow;
+                manager.OnRewardedAdFailedToLoad -= AdFailedToLoad;
+                manager.OnRewardedAdFailedToShow -= AdFailedToShow;
                 manager.OnRewardedAdClicked -= OnAdClicked.Invoke;
                 manager.OnRewardedAdCompleted -= OnReward.Invoke;
-                manager.OnRewardedAdClosed -= OnRewardedAdClosed;
+                manager.OnRewardedAdClosed -= AdClosed;
                 manager.OnRewardedAdImpression -= OnAdImpression.Invoke;
             }
             CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
@@ -118,18 +118,18 @@ namespace CAS.AdObject
         #endregion
 
         #region Manager Events wrappers
-        private void OnRewardedAdFailedToLoad(AdError error)
+        private void AdFailedToLoad(AdError error)
         {
             OnAdFailedToLoad.Invoke(error.GetMessage());
         }
 
-        private void OnRewardedAdFailedToShow(string error)
+        private void AdFailedToShow(string error)
         {
             OnAdFailedToShow.Invoke(error);
             OnAdClosed.Invoke();
         }
 
-        private void OnRewardedAdClosed()
+        private void AdClosed()
         {
             if (restartInterstitialInterval)
                 CAS.MobileAds.settings.RestartInterstitialInterval();
