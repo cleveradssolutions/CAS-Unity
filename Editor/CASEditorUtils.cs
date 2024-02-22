@@ -20,6 +20,7 @@ namespace CAS.UEditor
         public const string editorFolderPath = rootCASFolderPath + "/Editor";
 
         // UNITY_2021_2_OR_NEWER have minumum API 21
+        // UNITY_2021_3_OR_NEWER have minumum API 22
         public const int targetAndroidVersion = 21;
 
         // UNITY_2021_3_OR_NEWER have minimum iOS version 12
