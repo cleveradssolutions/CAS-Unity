@@ -222,10 +222,12 @@ namespace CAS.Android
                     else
                         builder.Call("withConsentFlow", new CASConsentFlowClient(initData.consentFlow).obj);
                 }
-
-                foreach (var extra in initData.extras)
+                if (initData.extras != null)
                 {
-                    builder.Call("addExtras", extra.Key, extra.Value);
+                    foreach (var extra in initData.extras)
+                    {
+                        builder.Call("addExtras", extra.Key, extra.Value);
+                    }
                 }
 
                 builder.Call("setCallbacks", _initProxy, _interstitialProxy, _rewardedProxy, _appReturnProxy, _appOpenProxy);

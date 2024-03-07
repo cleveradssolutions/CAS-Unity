@@ -1,5 +1,15 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.5.6] - 2024-02-28
+- Discover the latest features in native 3.5.6 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
+# [3.5.5] - 2024-02-22
+- Discover the latest features in native 3.5.5 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+### Bug Fixes
+- [Android] Fixed `NullPointerException` when initializing CAS if `WithMediationExtras()` was not used. (experienced on 3.5.4)
+### New ads networks support in closed beta
+- Madex
+
 # [3.5.4] - 2024-02-20
 - Discover the latest features in native 3.5.4 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 ## Bug Fixes
