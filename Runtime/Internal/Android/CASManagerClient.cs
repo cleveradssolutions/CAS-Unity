@@ -7,16 +7,14 @@ using System.Collections.Generic;
 
 namespace CAS.Android
 {
-    internal sealed class CASManagerClient : IInternalManager
+    internal sealed class CASManagerClient : AndroidJavaProxy, IInternalManager
     {
-        private AdEventsProxy _interstitialProxy;
-        private AdEventsProxy _rewardedProxy;
-        private AdEventsProxy _appReturnProxy;
-        private AdEventsProxy _appOpenProxy;
         private AndroidJavaObject _managerBridge;
         private LastPageAdContent _lastPageAdContent = null;
 
-        internal InitCallbackProxy _initProxy;
+        private CASInitCompleteEvent _initComplete;
+        private InitCompleteAction _initCompleteDeprecated;
+
         private readonly List<IAdView> _adViews = new List<IAdView>();
 
         public string managerID { get; private set; }
@@ -38,174 +36,50 @@ namespace CAS.Android
         }
 
         #region Ad Events
-        public event Action OnInterstitialAdLoaded
-        {
-            add { _interstitialProxy.OnAdLoaded += value; }
-            remove { _interstitialProxy.OnAdLoaded -= value; }
-        }
-        public event CASEventWithAdError OnInterstitialAdFailedToLoad
-        {
-            add { _interstitialProxy.OnAdFailed += value; }
-            remove { _interstitialProxy.OnAdFailed -= value; }
-        }
-        public event Action OnInterstitialAdShown
-        {
-            add { _interstitialProxy.OnAdShown += value; }
-            remove { _interstitialProxy.OnAdShown -= value; }
-        }
-        public event CASEventWithMeta OnInterstitialAdOpening
-        {
-            add { _interstitialProxy.OnAdOpening += value; }
-            remove { _interstitialProxy.OnAdOpening -= value; }
-        }
-        public event CASEventWithMeta OnInterstitialAdImpression
-        {
-            add { _interstitialProxy.OnAdImpression += value; }
-            remove { _interstitialProxy.OnAdImpression -= value; }
-        }
-        public event CASEventWithError OnInterstitialAdFailedToShow
-        {
-            add { _interstitialProxy.OnAdFailedToShow += value; }
-            remove { _interstitialProxy.OnAdFailedToShow -= value; }
-        }
-        public event Action OnInterstitialAdClicked
-        {
-            add { _interstitialProxy.OnAdClicked += value; }
-            remove { _interstitialProxy.OnAdClicked -= value; }
-        }
-        public event Action OnInterstitialAdClosed
-        {
-            add { _interstitialProxy.OnAdClosed += value; }
-            remove { _interstitialProxy.OnAdClosed -= value; }
-        }
+        public event Action OnInterstitialAdLoaded;
+        public event CASEventWithAdError OnInterstitialAdFailedToLoad;
+        public event Action OnInterstitialAdShown;
+        public event CASEventWithMeta OnInterstitialAdOpening;
+        public event CASEventWithMeta OnInterstitialAdImpression;
+        public event CASEventWithError OnInterstitialAdFailedToShow;
+        public event Action OnInterstitialAdClicked;
+        public event Action OnInterstitialAdClosed;
 
+        public event Action OnRewardedAdLoaded;
+        public event CASEventWithAdError OnRewardedAdFailedToLoad;
+        public event Action OnRewardedAdShown;
+        public event CASEventWithMeta OnRewardedAdOpening;
+        public event CASEventWithMeta OnRewardedAdImpression;
+        public event CASEventWithError OnRewardedAdFailedToShow;
+        public event Action OnRewardedAdClicked;
+        public event Action OnRewardedAdCompleted;
+        public event Action OnRewardedAdClosed;
 
-        public event Action OnRewardedAdLoaded
-        {
-            add { _rewardedProxy.OnAdLoaded += value; }
-            remove { _rewardedProxy.OnAdLoaded -= value; }
-        }
-        public event CASEventWithAdError OnRewardedAdFailedToLoad
-        {
-            add { _rewardedProxy.OnAdFailed += value; }
-            remove { _rewardedProxy.OnAdFailed -= value; }
-        }
-        public event Action OnRewardedAdShown
-        {
-            add { _rewardedProxy.OnAdShown += value; }
-            remove { _rewardedProxy.OnAdShown -= value; }
-        }
-        public event CASEventWithMeta OnRewardedAdOpening
-        {
-            add { _rewardedProxy.OnAdOpening += value; }
-            remove { _rewardedProxy.OnAdOpening -= value; }
-        }
-        public event CASEventWithMeta OnRewardedAdImpression
-        {
-            add { _rewardedProxy.OnAdImpression += value; }
-            remove { _rewardedProxy.OnAdImpression -= value; }
-        }
-        public event CASEventWithError OnRewardedAdFailedToShow
-        {
-            add { _rewardedProxy.OnAdFailedToShow += value; }
-            remove { _rewardedProxy.OnAdFailedToShow -= value; }
-        }
-        public event Action OnRewardedAdClicked
-        {
-            add { _rewardedProxy.OnAdClicked += value; }
-            remove { _rewardedProxy.OnAdClicked -= value; }
-        }
-        public event Action OnRewardedAdCompleted
-        {
-            add { _rewardedProxy.OnAdCompleted += value; }
-            remove { _rewardedProxy.OnAdCompleted -= value; }
-        }
-        public event Action OnRewardedAdClosed
-        {
-            add { _rewardedProxy.OnAdClosed += value; }
-            remove { _rewardedProxy.OnAdClosed -= value; }
-        }
+        public event Action OnAppReturnAdShown;
+        public event CASEventWithMeta OnAppReturnAdOpening;
+        public event CASEventWithMeta OnAppReturnAdImpression;
+        public event CASEventWithError OnAppReturnAdFailedToShow;
+        public event Action OnAppReturnAdClicked;
+        public event Action OnAppReturnAdClosed;
 
-        public event Action OnAppReturnAdShown
-        {
-            add { _appReturnProxy.OnAdShown += value; }
-            remove { _appReturnProxy.OnAdShown -= value; }
-        }
-        public event CASEventWithMeta OnAppReturnAdOpening
-        {
-            add { _appReturnProxy.OnAdOpening += value; }
-            remove { _appReturnProxy.OnAdOpening -= value; }
-        }
-        public event CASEventWithMeta OnAppReturnAdImpression
-        {
-            add { _appReturnProxy.OnAdImpression += value; }
-            remove { _appReturnProxy.OnAdImpression -= value; }
-        }
-        public event CASEventWithError OnAppReturnAdFailedToShow
-        {
-            add { _appReturnProxy.OnAdFailedToShow += value; }
-            remove { _appReturnProxy.OnAdFailedToShow -= value; }
-        }
-        public event Action OnAppReturnAdClicked
-        {
-            add { _appReturnProxy.OnAdClicked += value; }
-            remove { _appReturnProxy.OnAdClicked -= value; }
-        }
-        public event Action OnAppReturnAdClosed
-        {
-            add { _appReturnProxy.OnAdClosed += value; }
-            remove { _appReturnProxy.OnAdClosed -= value; }
-        }
-
-        public event Action OnAppOpenAdLoaded
-        {
-            add { _appOpenProxy.OnAdLoaded += value; }
-            remove { _appOpenProxy.OnAdLoaded -= value; }
-        }
-        public event CASEventWithAdError OnAppOpenAdFailedToLoad
-        {
-            add { _appOpenProxy.OnAdFailed += value; }
-            remove { _appOpenProxy.OnAdFailed -= value; }
-        }
-        public event Action OnAppOpenAdShown
-        {
-            add { _appOpenProxy.OnAdShown += value; }
-            remove { _appOpenProxy.OnAdShown -= value; }
-        }
-        public event CASEventWithMeta OnAppOpenAdImpression
-        {
-            add { _appOpenProxy.OnAdImpression += value; }
-            remove { _appOpenProxy.OnAdImpression -= value; }
-        }
-        public event CASEventWithError OnAppOpenAdFailedToShow
-        {
-            add { _appOpenProxy.OnAdFailedToShow += value; }
-            remove { _appOpenProxy.OnAdFailedToShow -= value; }
-        }
-        public event Action OnAppOpenAdClicked
-        {
-            add { _appOpenProxy.OnAdClicked += value; }
-            remove { _appOpenProxy.OnAdClicked -= value; }
-        }
-        public event Action OnAppOpenAdClosed
-        {
-            add { _appOpenProxy.OnAdClosed += value; }
-            remove { _appOpenProxy.OnAdClosed -= value; }
-        }
+        public event Action OnAppOpenAdLoaded;
+        public event CASEventWithAdError OnAppOpenAdFailedToLoad;
+        public event Action OnAppOpenAdShown;
+        public event CASEventWithMeta OnAppOpenAdImpression;
+        public event CASEventWithError OnAppOpenAdFailedToShow;
+        public event Action OnAppOpenAdClicked;
+        public event Action OnAppOpenAdClosed;
         #endregion
 
         #region Initialization
-        internal CASManagerClient() { }
+        internal CASManagerClient() : base(CASJavaBridge.adCallbackClass) { }
 
         internal IInternalManager Init(CASInitSettings initData)
         {
             managerID = initData.targetId;
             isTestAdMode = initData.IsTestAdMode();
-            _initProxy = new InitCallbackProxy(this, initData);
-            _interstitialProxy = new AdEventsProxy(AdType.Interstitial);
-            _rewardedProxy = new AdEventsProxy(AdType.Rewarded);
-            _appReturnProxy = new AdEventsProxy(AdType.Interstitial);
-            _appOpenProxy = new AdEventsProxy(AdType.AppOpen);
+            _initComplete = initData.initListener;
+            _initCompleteDeprecated = initData.initListenerDeprecated;
 
             using (var builder = new AndroidJavaObject(CASJavaBridge.bridgeBuilderClass))
             {
@@ -230,10 +104,8 @@ namespace CAS.Android
                     }
                 }
 
-                builder.Call("setCallbacks", _initProxy, _interstitialProxy, _rewardedProxy, _appReturnProxy, _appOpenProxy);
-
                 _managerBridge = builder.Call<AndroidJavaObject>("build",
-                    initData.targetId, Application.unityVersion, (int)initData.allowedAdFlags);
+                    initData.targetId, Application.unityVersion, this, (int)initData.allowedAdFlags);
             }
             return this;
         }
@@ -248,8 +120,8 @@ namespace CAS.Android
                     initAction(initialConfig.error == null, initialConfig.error);
                 return;
             }
-            _initProxy.complete += initEvent;
-            _initProxy.completeDeprecated += initAction;
+            _initComplete += initEvent;
+            _initCompleteDeprecated += initAction;
         }
         #endregion
 
@@ -308,9 +180,7 @@ namespace CAS.Android
                 if (_adViews[i].size == size)
                     return _adViews[i];
             }
-            var callback = new AdEventsProxy(AdType.Banner);
-            var bridge = _managerBridge.Call<AndroidJavaObject>("createAdView", callback, (int)size);
-            var view = new CASViewClient(this, size, bridge, callback);
+            var view = new CASViewClient(this, size, _managerBridge);
             _adViews.Add(view);
             return view;
         }
@@ -319,6 +189,245 @@ namespace CAS.Android
         {
             _adViews.Remove(view);
         }
+
+        #region Android Native callbacks
+
+        public void onCASInitialized(string error,
+                                string countryCode,
+                                bool isConsentRequired,
+                                bool isTestMode)
+        {
+            if (string.IsNullOrEmpty(error))
+                error = null;
+            if (string.IsNullOrEmpty(countryCode))
+                countryCode = null;
+
+            CASFactory.UnityLog("OnInitialization " + error);
+
+            CASJavaBridge.ExecuteEvent(() =>
+            {
+                isTestAdMode = isTestMode;
+                initialConfig = new InitialConfiguration(error, this, countryCode, isConsentRequired);
+                CASFactory.OnManagerInitialized(this);
+                HandleInitEvent(_initComplete, _initCompleteDeprecated);
+                if (error != InitializationError.NoConnection)
+                {
+                    _initComplete = null;
+                    _initCompleteDeprecated = null;
+                }
+            });
+        }
+
+        public void onAppStateChanged(bool isForeground)
+        {
+            // TODO: 
+        }
+
+        public void onAdLoaded(int type)
+        {
+            CASFactory.UnityLog("Callback Loaded " + type);
+            Action adEvent;
+            switch (type)
+            {
+                case AdTypeCode.INTER:
+                    adEvent = OnInterstitialAdLoaded;
+                    break;
+                case AdTypeCode.REWARD:
+                    adEvent = OnRewardedAdLoaded;
+                    break;
+                case AdTypeCode.APP_OPEN:
+                    adEvent = OnAppOpenAdLoaded;
+                    break;
+                default:
+                    return;
+            }
+            CASJavaBridge.ExecuteEvent(adEvent);
+        }
+
+        public void onAdFailed(int type, int error)
+        {
+            CASFactory.UnityLog("Callback Failed " + type);
+            CASEventWithAdError adEvent;
+            switch (type)
+            {
+                case AdTypeCode.INTER:
+                    adEvent = OnInterstitialAdFailedToLoad;
+                    break;
+                case AdTypeCode.REWARD:
+                    adEvent = OnRewardedAdFailedToLoad;
+                    break;
+                case AdTypeCode.APP_OPEN:
+                    adEvent = OnAppOpenAdFailedToLoad;
+                    break;
+                default:
+                    return;
+            }
+            CASJavaBridge.ExecuteEvent(adEvent, error);
+        }
+
+        public void onAdOpening(int type, AndroidJavaObject impression)
+        {
+            CASFactory.UnityLog("Callback Shown " + type);
+            CASEventWithMeta adEvent;
+            Action shownEvent;
+            AdType adType;
+            switch (type)
+            {
+                case AdTypeCode.INTER:
+                    shownEvent = OnInterstitialAdShown;
+                    adEvent = OnInterstitialAdOpening;
+                    adType = AdType.Interstitial;
+                    break;
+                case AdTypeCode.REWARD:
+                    shownEvent = OnRewardedAdShown;
+                    adEvent = OnRewardedAdOpening;
+                    adType = AdType.Rewarded;
+                    break;
+                case AdTypeCode.APP_OPEN:
+                    shownEvent = OnAppOpenAdShown;
+                    adEvent = null;
+                    adType = AdType.AppOpen;
+                    break;
+                case AdTypeCode.APP_RETURN:
+                    shownEvent = OnAppReturnAdShown;
+                    adEvent = OnAppReturnAdOpening;
+                    adType = AdType.Interstitial;
+                    break;
+                default:
+                    return;
+            }
+            CASJavaBridge.ExecuteEvent(shownEvent);
+            CASJavaBridge.ExecuteEvent(adEvent, adType, impression);
+        }
+
+        public void onAdImpression(int type, AndroidJavaObject impression)
+        {
+            CASFactory.UnityLog("Callback Impression " + type);
+            CASEventWithMeta adEvent;
+            AdType adType;
+            switch (type)
+            {
+                case AdTypeCode.INTER:
+                    adEvent = OnInterstitialAdImpression;
+                    adType = AdType.Interstitial;
+                    break;
+                case AdTypeCode.REWARD:
+                    adEvent = OnRewardedAdImpression;
+                    adType = AdType.Rewarded;
+                    break;
+                case AdTypeCode.APP_OPEN:
+                    adEvent = OnAppOpenAdImpression;
+                    adType = AdType.AppOpen;
+                    break;
+                case AdTypeCode.APP_RETURN:
+                    adEvent = OnAppReturnAdImpression;
+                    adType = AdType.Interstitial;
+                    break;
+                default:
+                    return;
+            }
+            CASJavaBridge.ExecuteEvent(adEvent, adType, impression);
+        }
+
+        public void onAdShowFailed(int type, int error)
+        {
+            CASFactory.UnityLog("Callback Show failed " + type);
+            CASEventWithError adEvent;
+            switch (type)
+            {
+                case AdTypeCode.INTER:
+                    adEvent = OnInterstitialAdFailedToShow;
+                    break;
+                case AdTypeCode.REWARD:
+                    adEvent = OnRewardedAdFailedToShow;
+                    break;
+                case AdTypeCode.APP_OPEN:
+                    adEvent = OnAppOpenAdFailedToShow;
+                    break;
+                case AdTypeCode.APP_RETURN:
+                    adEvent = OnAppReturnAdFailedToShow;
+                    break;
+                default:
+                    return;
+            }
+            if (adEvent == null) return;
+            if (CASJavaBridge.executeEventsOnUnityThread)
+            {
+                EventExecutor.Add(() =>
+                {
+                    AdError adError = (AdError)error;
+                    adEvent(adError.GetMessage());
+                });
+                return;
+            }
+            try
+            {
+                AdError adError = (AdError)error;
+                adEvent(adError.GetMessage());
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+
+        public void onAdClicked(int type)
+        {
+            CASFactory.UnityLog("Callback Clicked " + type);
+            Action adEvent;
+            switch (type)
+            {
+                case AdTypeCode.INTER:
+                    adEvent = OnInterstitialAdClicked;
+                    break;
+                case AdTypeCode.REWARD:
+                    adEvent = OnRewardedAdClicked;
+                    break;
+                case AdTypeCode.APP_OPEN:
+                    adEvent = OnAppOpenAdClicked;
+                    break;
+                case AdTypeCode.APP_RETURN:
+                    adEvent = OnAppReturnAdClicked;
+                    break;
+                default:
+                    return;
+            }
+            CASJavaBridge.ExecuteEvent(adEvent);
+        }
+
+        public void onAdComplete(int type)
+        {
+            CASFactory.UnityLog("Callback Completed " + type);
+            if (type == AdTypeCode.REWARD)
+            {
+                CASJavaBridge.ExecuteEvent(OnRewardedAdCompleted);
+            }
+        }
+
+        public void onAdClosed(int type)
+        {
+            CASFactory.UnityLog("Callback Closed " + type);
+            Action adEvent;
+            switch (type)
+            {
+                case AdTypeCode.INTER:
+                    adEvent = OnInterstitialAdClosed;
+                    break;
+                case AdTypeCode.REWARD:
+                    adEvent = OnRewardedAdClosed;
+                    break;
+                case AdTypeCode.APP_OPEN:
+                    adEvent = OnAppOpenAdClosed;
+                    break;
+                case AdTypeCode.APP_RETURN:
+                    adEvent = OnAppReturnAdClosed;
+                    break;
+                default:
+                    return;
+            }
+            CASJavaBridge.ExecuteEvent(adEvent);
+        }
+        #endregion
     }
 }
 #endif

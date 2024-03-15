@@ -170,9 +170,8 @@ namespace CAS
         LoadingManagerMode loadingMode { get; set; }
 
         /// <summary>
-        /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
-        /// <para>You can use <see cref="EventExecutor.Add(Action)"/> to schedule each calls on the next Update() loop.
-        /// OR enable this property to automatically execute all calls on the next Update() loop.</para>
+        /// Android ads callbacks from CAS.AI can be called not from Unity threat.
+        /// <para>You can disable this propery and use <see cref="EventExecutor.Add(Action)"/> to schedule each calls on the next Update() loop</para>
         /// <para>Enabled by default.</para>
         /// </summary>
         bool isExecuteEventsOnUnityThread { get; set; }

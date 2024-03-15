@@ -10,14 +10,14 @@ namespace CAS
     ///          .WithConsentFlow(new ConsentFlow()
     ///             .WithPrivacyPolicy("https://url_to_privacy_policy")
     ///          )
-    ///          .Initialize();
+    ///          .Build();
     /// </code>
     /// By default, the consent flow will be shown to users who are protected by laws.
     /// You can prevent us from showing the consent dialog to the user ussing followed lines:
     /// <code>
     /// MobileAds.BuildManager()
     ///          .WithConsentFlow(new ConsentFlow(isEnabled: false))
-    ///          .Initialize();
+    ///          .Build();
     /// </code>
     /// </summary>
     public class ConsentFlow

@@ -11,7 +11,7 @@ namespace CAS
     /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
     /// You can use EventExecutor to schedule each calls on the next Update() loop
     /// </summary>
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Other-Options#execute-events-on-unity-thread" )]
+    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Other-Options#execute-events-on-unity-thread")]
     public static class EventExecutor
     {
         private static EventExecutorComponent instance = null;
@@ -29,9 +29,9 @@ namespace CAS
             if (instance)
                 return;
             // Add an invisible game object to the scene
-            GameObject obj = new GameObject( "CASMainThreadExecuter" );
+            GameObject obj = new GameObject("CASMainThreadExecuter");
             obj.hideFlags = HideFlags.HideAndDontSave;
-            UnityEngine.Object.DontDestroyOnLoad( obj );
+            UnityEngine.Object.DontDestroyOnLoad(obj);
             instance = obj.AddComponent<EventExecutorComponent>();
         }
 
@@ -47,11 +47,16 @@ namespace CAS
         /// Schedule action on the next Update() loop in Unity Thread.
         /// <para>Warning! To enable EventExecutor requires call once static <see cref="Initialize"/> method.</para>
         /// </summary>
-        public static void Add( Action action )
+        public static void Add(Action action)
         {
+            if (action == null)
+            {
+                Debug.LogError("Event Executor skip null action");
+                return
+            }
             lock (eventsQueue)
             {
-                eventsQueue.Add( action );
+                eventsQueue.Add(action);
                 eventsQueueEmpty = false;
             }
         }
@@ -66,24 +71,22 @@ namespace CAS
 
                 lock (eventsQueue)
                 {
-                    startedEvents.AddRange( eventsQueue );
+                    startedEvents.AddRange(eventsQueue);
                     eventsQueue.Clear();
                     eventsQueueEmpty = true;
                 }
 
                 for (int i = 0; i < startedEvents.Count; i++)
                 {
-                    var action = startedEvents[i];
                     try
                     {
-                        if (action != null)
+                        var action = startedEvents[i];
+                        if (action.Target != null)
                             action.Invoke();
-                        else
-                            Debug.LogError( "Event Executor skip null event" );
                     }
                     catch (Exception e)
                     {
-                        Debug.LogException( e );
+                        Debug.LogException(e);
                     }
                 }
                 startedEvents.Clear();

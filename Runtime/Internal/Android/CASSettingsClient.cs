@@ -8,7 +8,7 @@ namespace CAS.Android
 {
     internal class CASSettingsClient : IAdsSettings, ITargetingOptions
     {
-        private AndroidJavaClass settingsBridge;
+        private readonly AndroidJavaClass settingsBridge;
 
         public CASSettingsClient()
         {
@@ -107,8 +107,8 @@ namespace CAS.Android
 
         public bool isExecuteEventsOnUnityThread
         {
-            get { return CASFactory.IsExecuteEventsOnUnityThread(); }
-            set { CASFactory.SetExecuteEventsOnUnityThread(value); }
+            get { return CASJavaBridge.executeEventsOnUnityThread; }
+            set { CASJavaBridge.executeEventsOnUnityThread = value; }
         }
 
         public bool iOSAppPauseOnBackground

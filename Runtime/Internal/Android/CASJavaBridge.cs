@@ -14,59 +14,65 @@ namespace CAS.Android
         internal const string bridgeBuilderClass = pluginPackage + ".CASBridgeBuilder";
         internal const string settingsClass = pluginPackage + ".CASBridgeSettings";
         internal const string adCallbackClass = pluginPackage + ".CASCallback";
-        internal const string initCallbackClass = pluginPackage + ".CASInitCallback";
+        internal const string adViewClass = pluginPackage + ".CASView";
+        internal const string adViewCallbackClass = pluginPackage + ".CASViewCallback";
         internal const string consentFlowClass = pluginPackage + ".CASConsentFlow";
         #endregion
 
-        internal static void ImpressionEvent(CASEventWithMeta onEvent, AdType adType, AndroidJavaObject impression)
+        internal static volatile bool executeEventsOnUnityThread = true;
+
+        internal static void ExecuteEvent(CASEventWithMeta adEvent, AdType adType, AndroidJavaObject impression)
         {
-            if (onEvent != null)
+            if (adEvent == null) return;
+            if (executeEventsOnUnityThread)
             {
-                CASFactory.ExecuteEvent(() =>
-                {
-                    if (onEvent != null)
-                        onEvent(new CASImpressionClient(adType, impression));
-                });
+                EventExecutor.Add(() => adEvent(new CASImpressionClient(adType, impression)));
+                return;
+            }
+            try
+            {
+                adEvent(new CASImpressionClient(adType, impression));
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
             }
         }
-    }
 
-    internal class InitCallbackProxy : AndroidJavaProxy
-    {
-        private readonly CASManagerClient manager;
-        internal CASInitCompleteEvent complete;
-        internal InitCompleteAction completeDeprecated;
-
-        public InitCallbackProxy(CASManagerClient manager, CASInitSettings config)
-            : base(CASJavaBridge.initCallbackClass)
+        internal static void ExecuteEvent(Action adEvent)
         {
-            this.manager = manager;
-            complete = config.initListener;
-            completeDeprecated = config.initListenerDeprecated;
+            if (adEvent == null) return;
+            if (executeEventsOnUnityThread)
+            {
+                EventExecutor.Add(adEvent);
+                return;
+            }
+            try
+            {
+                adEvent();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
-        public void onCASInitialized(string error, string countryCode, bool isConsentRequired, bool isTestMode)
+        internal static void ExecuteEvent(CASEventWithAdError adEvent, int error)
         {
-            if (string.IsNullOrEmpty(error))
-                error = null;
-            if (string.IsNullOrEmpty(countryCode))
-                countryCode = null;
-
-            CASFactory.UnityLog("OnInitialization " + error);
-
-            CASFactory.ExecuteEvent(() =>
+            if (adEvent == null) return;
+            if (executeEventsOnUnityThread)
             {
-                manager.isTestAdMode = isTestMode;
-                manager.initialConfig = new InitialConfiguration(error, manager, countryCode, isConsentRequired);
-                CASFactory.OnManagerInitialized(manager);
-                manager.HandleInitEvent(complete, completeDeprecated);
-                if (error != InitializationError.NoConnection)
-                {
-                    manager._initProxy = null;
-                    complete = null;
-                    completeDeprecated = null;
-                }
-            });
+                EventExecutor.Add(() => adEvent((AdError)error));
+                return;
+            }
+            try
+            {
+                adEvent((AdError)error);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
     }
 
@@ -93,107 +99,6 @@ namespace CAS.Android
         public void Dispose()
         {
             obj.Dispose();
-        }
-    }
-
-    internal class AdEventsProxy : AndroidJavaProxy
-    {
-        private readonly AdType adType;
-        private readonly string adTypeName;
-        public Action OnAdLoaded;
-        public CASEventWithAdError OnAdFailed;
-        public Action OnAdShown;
-        public CASEventWithMeta OnAdOpening;
-        public CASEventWithMeta OnAdImpression;
-        public CASEventWithError OnAdFailedToShow;
-        public Action OnAdClicked;
-        public Action OnAdCompleted;
-        public Action OnAdClosed;
-        public Action<Rect> OnAdRect;
-
-        public AdEventsProxy(AdType adType) : base(CASJavaBridge.adCallbackClass)
-        {
-            this.adType = adType;
-            adTypeName = adType.ToString();
-        }
-
-        public void onLoaded()
-        {
-            CASFactory.UnityLog("Callback Loaded " + adTypeName);
-            CASFactory.ExecuteEvent(OnAdLoaded);
-        }
-
-        public void onFailed(int error)
-        {
-            CASFactory.UnityLog("Callback Failed " + adTypeName + " error: " + error);
-            if (OnAdFailed != null)
-            {
-                CASFactory.ExecuteEvent(() =>
-                {
-                    if (OnAdFailed != null)
-                        OnAdFailed((AdError)error);
-                });
-            }
-        }
-
-        public void onOpening(AndroidJavaObject impression)
-        {
-            CASFactory.UnityLog("Callback Show " + adTypeName);
-            CASFactory.ExecuteEvent(OnAdShown);
-            CASJavaBridge.ImpressionEvent(OnAdOpening, adType, impression);
-        }
-
-        public void onImpression(AndroidJavaObject impression)
-        {
-            CASFactory.UnityLog("Callback Impression " + adTypeName);
-            CASJavaBridge.ImpressionEvent(OnAdImpression, adType, impression);
-        }
-
-        public void onShowFailed(int error)
-        {
-            CASFactory.UnityLog("Callback Failed to show " + adTypeName + " with error: " + error);
-            if (OnAdFailedToShow != null)
-            {
-                CASFactory.ExecuteEvent(() =>
-                {
-                    if (OnAdFailedToShow != null)
-                    {
-                        var adError = (AdError)error;
-                        OnAdFailedToShow(adError.GetMessage());
-                    }
-                });
-            }
-        }
-
-        public void onClicked()
-        {
-            CASFactory.UnityLog("Callback Clicked " + adTypeName);
-            CASFactory.ExecuteEvent(OnAdClicked);
-        }
-
-        public void onComplete()
-        {
-            CASFactory.UnityLog("Callback Complete " + adTypeName);
-            CASFactory.ExecuteEvent(OnAdCompleted);
-        }
-
-        public void onClosed()
-        {
-            CASFactory.UnityLog("Callback Closed " + adTypeName);
-            CASFactory.ExecuteEvent(OnAdClosed);
-        }
-
-        public void onRect(int x, int y, int width, int height)
-        {
-            if (OnAdRect != null)
-            {
-                var rect = new Rect(x, y, width, height);
-                CASFactory.ExecuteEvent(() =>
-                {
-                    if (OnAdRect != null)
-                        OnAdRect(rect);
-                });
-            }
         }
     }
 }

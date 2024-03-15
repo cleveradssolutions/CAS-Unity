@@ -10,6 +10,8 @@ namespace CAS
         Interstitial = 1,
         Rewarded = 2,
         AppOpen = 3,
+        [Obsolete("Not supported")]
+        Native = 4,
         None,
     }
 

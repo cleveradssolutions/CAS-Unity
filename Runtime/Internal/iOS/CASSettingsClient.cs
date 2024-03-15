@@ -84,8 +84,8 @@ namespace CAS.iOS
 
         public bool isExecuteEventsOnUnityThread
         {
-            get { return CASFactory.IsExecuteEventsOnUnityThread(); }
-            set { CASFactory.SetExecuteEventsOnUnityThread(value); }
+            get { return false; }
+            set {  }
         }
 
         public bool allowInterstitialAdsWhenVideoCostAreLower

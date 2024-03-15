@@ -63,7 +63,6 @@ namespace CAS.AdObject
         #region MonoBehaviour
         private void Start()
         {
-            MobileAds.settings.isExecuteEventsOnUnityThread = true;
             if (!CASFactory.TryGetManagerByIndexAsync(this, managerId.index, true))
                 OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }

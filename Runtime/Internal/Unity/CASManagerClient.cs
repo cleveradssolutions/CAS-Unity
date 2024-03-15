@@ -295,7 +295,7 @@ namespace CAS.Unity
                     _appOpen.Load();
                     break;
                 default:
-                    throw new NotSupportedException("Load ad function not support AdType: " + adType.ToString());
+                    throw new NotSupportedException("Load ad function not support for AdType: " + adType.ToString());
             }
         }
 
@@ -315,7 +315,7 @@ namespace CAS.Unity
                     Post(_appOpen.Show);
                     break;
                 default:
-                    throw new NotSupportedException("Show ad function not support AdType: " + adType.ToString());
+                    throw new NotSupportedException("Show ad function not support for AdType: " + adType.ToString());
             }
         }
 

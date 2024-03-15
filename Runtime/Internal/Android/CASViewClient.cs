@@ -5,13 +5,10 @@ using UnityEngine;
 
 namespace CAS.Android
 {
-    internal class CASViewClient : IAdView
+    internal class CASViewClient : AndroidJavaProxy, IAdView
     {
         private readonly CASManagerClient _manager;
         private readonly AndroidJavaObject _bridge;
-#pragma warning disable CS0414
-        private AdEventsProxy _callbackProxy;
-#pragma warning restore CS0414
         private AdPosition _position = AdPosition.BottomCenter;
         private int _positionX = 0;
         private int _positionY = 0;
@@ -28,38 +25,32 @@ namespace CAS.Android
         public AdPosition position
         {
             get { return _position; }
-            set { SetPosition( value, 0, 0 ); }
+            set { SetPosition(value, 0, 0); }
         }
 
         public bool isReady
         {
-            get { return _bridge.Call<bool>( "isReady" ); }
+            get { return _bridge.Call<bool>("isReady"); }
         }
 
         public int refreshInterval
         {
-            get { return _bridge.Call<int>( "getRefreshInterval" ); }
-            set { _bridge.Call( "setRefreshInterval", value ); }
+            get { return _bridge.Call<int>("getRefreshInterval"); }
+            set { _bridge.Call("setRefreshInterval", value); }
         }
 
-        internal CASViewClient( CASManagerClient manager, AdSize size, AndroidJavaObject bridge, AdEventsProxy callback )
+        internal CASViewClient(CASManagerClient manager, AdSize size, AndroidJavaObject bridge)
+            : base(CASJavaBridge.adViewCallbackClass)
         {
-            _manager = manager;
             this.size = size;
-            _bridge = bridge;
-            _callbackProxy = callback;
-
-            callback.OnAdLoaded += CallbackOnLoaded;
-            callback.OnAdFailed += CallbackOnFailed;
-            callback.OnAdImpression += CallbackOnImpression;
-            callback.OnAdClicked += CallbackOnClick;
-            callback.OnAdRect += CallbackOnRect;
+            _manager = manager;
+            _bridge = new AndroidJavaObject(CASJavaBridge.adViewClass, (int)size, this, bridge);
         }
 
         public void Dispose()
         {
-            _manager.RemoveAdViewFromFactory( this );
-            _bridge.Call( "destroy" );
+            _manager.RemoveAdViewFromFactory(this);
+            _bridge.Call("destroy");
         }
 
         public void DisableRefresh()
@@ -69,26 +60,26 @@ namespace CAS.Android
 
         public void Load()
         {
-            _bridge.Call( "load" );
+            _bridge.Call("load");
         }
 
-        public void SetActive( bool active )
+        public void SetActive(bool active)
         {
             if (active)
             {
-                _bridge.Call( "show" );
+                _bridge.Call("show");
                 return;
             }
             rectInPixels = Rect.zero;
-            _bridge.Call( "hide" );
+            _bridge.Call("hide");
         }
 
-        public void SetPosition( int x, int y )
+        public void SetPosition(int x, int y)
         {
-            SetPosition( AdPosition.TopLeft, x, y );
+            SetPosition(AdPosition.TopLeft, x, y);
         }
 
-        private void SetPosition( AdPosition position, int x, int y )
+        private void SetPosition(AdPosition position, int x, int y)
         {
             if (position == AdPosition.Undefined)
                 return;
@@ -97,38 +88,66 @@ namespace CAS.Android
                 _position = position;
                 _positionX = x;
                 _positionY = y;
-                _bridge.Call( "setPosition", (int)position, x, y );
+                _bridge.Call("setPosition", (int)position, x, y);
             }
         }
 
-        #region Callbacks
-        private void CallbackOnClick()
+        #region Android Native callbacks
+        public void onAdViewLoaded()
         {
-            if (OnClicked != null)
-                OnClicked( this );
+            CASFactory.UnityLog("Callback Loaded " + size.ToString());
+            if (OnLoaded == null) return;
+            CASJavaBridge.ExecuteEvent(HandleAdLoaded);
         }
 
-        private void CallbackOnImpression( AdMetaData meta )
+        public void onAdViewFailed(int error)
         {
-            if (OnImpression != null)
-                OnImpression( this, meta );
+            CASFactory.UnityLog("Callback Failed " + size.ToString());
+            if (OnFailed == null) return;
+            CASJavaBridge.ExecuteEvent(HandleAdFailed, error);
         }
 
-        private void CallbackOnLoaded()
+        public void onAdViewImpression(AndroidJavaObject impression)
+        {
+            CASFactory.UnityLog("Callback Impression " + size.ToString());
+            if (OnImpression == null) return;
+            CASJavaBridge.ExecuteEvent(HandleAdImpression, AdType.Banner, impression);
+        }
+
+        public void onAdViewClicked()
+        {
+            CASFactory.UnityLog("Callback Clicked " + size.ToString());
+            if (OnClicked == null) return;
+            CASJavaBridge.ExecuteEvent(HandleAdClicked);
+        }
+
+        public void onAdViewRect(int x, int y, int width, int height)
+        {
+            rectInPixels = new Rect(x, y, width, height);
+        }
+        #endregion
+
+        #region Unity thread callbacks
+        private void HandleAdLoaded()
         {
             if (OnLoaded != null)
-                OnLoaded( this );
+                OnLoaded(this);
         }
 
-        private void CallbackOnFailed( AdError error )
+        private void HandleAdFailed(AdError error)
         {
             if (OnFailed != null)
-                OnFailed( this, error );
+                OnFailed(this, error);
         }
-
-        private void CallbackOnRect( Rect rect )
+        private void HandleAdImpression(AdMetaData impression)
         {
-            rectInPixels = rect;
+            if (OnImpression != null)
+                OnImpression(this, impression);
+        }
+        private void HandleAdClicked()
+        {
+            if (OnClicked != null)
+                OnClicked(this);
         }
         #endregion
     }

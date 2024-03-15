@@ -38,8 +38,9 @@ namespace CAS
 
         Smaato = 18,
         Bigo = 19,
-        [Obsolete("No longer supported")]
-        BidMachine = 20,
+        
+        Madex = 21,
+
         Mintegral = 23,
         Pangle = 24,
 
@@ -98,8 +99,6 @@ namespace CAS
                     return "https://www.digitalturbine.com/privacy-policy/";
                 case AdNetwork.Bigo:
                     return "https://www.bigossp.com";
-                case AdNetwork.BidMachine:
-                    return "https://bidmachine.io";
                 default: return null;
             }
         }
@@ -127,7 +126,7 @@ namespace CAS
                 case AdNetwork.HyprMX: return "HMX";
                 case AdNetwork.Smaato: return "Sma";
                 case AdNetwork.Bigo: return "Big";
-                case AdNetwork.BidMachine: return "BM";
+                case AdNetwork.Madex: return "Ma";
                 default: return string.Empty;
             }
         }

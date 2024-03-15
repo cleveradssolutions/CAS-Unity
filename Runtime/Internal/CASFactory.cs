@@ -23,10 +23,17 @@ namespace CAS
         void OnManagerReady(InitialConfiguration config);
     }
 
+    internal static class AdTypeCode
+    {
+        internal const int BANNER = 0;
+        internal const int INTER = 1;
+        internal const int REWARD = 2;
+        internal const int APP_OPEN = 3;
+        internal const int APP_RETURN = 5;
+    }
+
     internal static class CASFactory
     {
-        private static volatile bool executeEventsOnUnityThread = true;
-
         private static IAdsSettings settings;
         private static List<IInternalManager> managers;
         private static List<List<IInternalAdObject>> initCallback = new List<List<IInternalAdObject>>();
@@ -38,7 +45,6 @@ namespace CAS
         {
             // Read more aboud Domain Reloading in Unity Editor
             // https://docs.unity3d.com/2023.3/Documentation/Manual/DomainReloading.html
-            executeEventsOnUnityThread = true;
             settings = null;
             managers = null;
             initCallback = new List<List<IInternalAdObject>>();
@@ -56,18 +62,6 @@ namespace CAS
         internal static void SetGlobalMediationExtras(Dictionary<string, string> extras)
         {
             globalExtras = extras;
-        }
-
-        internal static bool IsExecuteEventsOnUnityThread()
-        {
-            return executeEventsOnUnityThread;
-        }
-
-        internal static void SetExecuteEventsOnUnityThread(bool enable)
-        {
-            executeEventsOnUnityThread = enable;
-            if (enable)
-                EventExecutor.Initialize();
         }
 
         internal static CASInitSettings LoadInitSettingsFromResources()
@@ -193,6 +187,7 @@ namespace CAS
 
             IInternalManager manager = null;
 #if PlatformAndroid
+            EventExecutor.Initialize();
             if (Application.platform == RuntimePlatform.Android)
                 manager = new CAS.Android.CASManagerClient().Init(initSettings);
 #endif
@@ -201,13 +196,11 @@ namespace CAS
                 manager = new CAS.iOS.CASManagerClient().Init(initSettings);
 #endif
 #if UNITY_EDITOR
+            EventExecutor.Initialize();
             manager = CAS.Unity.CASManagerClient.Create(initSettings);
 #endif
             if (manager == null)
                 throw new NotSupportedException("Platform: " + Application.platform.ToString());
-
-            if (executeEventsOnUnityThread)
-                EventExecutor.Initialize();
 
             var managerIndex = initSettings.IndexOfManagerId(manager.managerID);
             if (managerIndex < 0)
@@ -380,25 +373,6 @@ namespace CAS
 #endif
         }
         #endregion
-
-        internal static void ExecuteEvent(Action action)
-        {
-            if (action == null)
-                return;
-            if (executeEventsOnUnityThread)
-            {
-                EventExecutor.Add(action);
-                return;
-            }
-            try
-            {
-                action();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-        }
 
         internal static void UnityLog(string message)
         {
