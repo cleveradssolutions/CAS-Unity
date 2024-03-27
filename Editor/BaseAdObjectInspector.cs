@@ -37,14 +37,14 @@ namespace CAS.AdObject
             EditorGUILayout.PropertyField(managerIdProp);
             OnAdditionalPropertiesGUI();
 
-            loadEventsFoldout = GUILayout.Toggle(loadEventsFoldout, "Load Ad callbacks", EditorStyles.foldout);
+            loadEventsFoldout = GUILayout.Toggle(loadEventsFoldout, "Ad Load events", EditorStyles.foldout);
             if (loadEventsFoldout)
             {
                 EditorGUILayout.PropertyField(onAdLoadedProp);
                 EditorGUILayout.PropertyField(onAdFailedToLoadProp);
             }
 
-            contentEventsFoldout = GUILayout.Toggle(contentEventsFoldout, "Content callbacks", EditorStyles.foldout);
+            contentEventsFoldout = GUILayout.Toggle(contentEventsFoldout, "Ad Content events", EditorStyles.foldout);
             if (contentEventsFoldout)
                 OnCallbacksGUI();
 
@@ -75,6 +75,8 @@ namespace CAS.AdObject
         private SerializedProperty metaAdvertiserTrackingProp;
         private SerializedProperty onInitializedProp;
         private SerializedProperty onInitializationFailedProp;
+        private SerializedProperty consentFlowEnabledProp;
+        private SerializedProperty consentFlowProp;
 
         private void OnEnable()
         {
@@ -86,6 +88,9 @@ namespace CAS.AdObject
 
             onInitializedProp = obj.FindProperty("OnInitialized");
             onInitializationFailedProp = obj.FindProperty("OnInitializationFailed");
+
+            consentFlowEnabledProp = obj.FindProperty("consentFlowEnabled");
+            consentFlowProp = obj.FindProperty("consentFlow");
         }
 
         public override void OnInspectorGUI()
@@ -96,13 +101,21 @@ namespace CAS.AdObject
             EditorGUILayout.PropertyField(initializeOnAwakeProp);
             EditorGUI.indentLevel++;
             if (initializeOnAwakeProp.boolValue)
-                EditorGUILayout.HelpBox("The CAS begin initialization automatically on the component awake", MessageType.None);
+                EditorGUILayout.HelpBox("The CAS begin initialization automatically when the component is awake", MessageType.None);
             else
                 EditorGUILayout.HelpBox("Call `Initialize()` method to begin CAS initialization", MessageType.None);
             EditorGUI.indentLevel--;
 
-            EditorGUILayout.PropertyField(onInitializedProp);
-            EditorGUILayout.PropertyField(onInitializationFailedProp);
+            EditorGUILayout.PropertyField(consentFlowEnabledProp);
+            if (consentFlowEnabledProp.boolValue)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.HelpBox("If desired, select an ConsentFlow Ad Object for additional options or leave it blank", MessageType.None);
+                EditorGUILayout.PropertyField(consentFlowProp);
+                if (consentFlowProp.objectReferenceValue)
+                    EditorGUILayout.HelpBox("The selected component should not be used to manually show the consent flow.", MessageType.None);
+                EditorGUI.indentLevel--;
+            }
 
             metaPrivacyFoldout = GUILayout.Toggle(metaPrivacyFoldout, "Meta Audience Network Privacy", EditorStyles.foldout);
             if (metaPrivacyFoldout)
@@ -136,6 +149,53 @@ namespace CAS.AdObject
                 }
                 EditorGUI.indentLevel--;
             }
+
+            EditorGUILayout.PropertyField(onInitializedProp);
+            EditorGUILayout.PropertyField(onInitializationFailedProp);
+
+            obj.ApplyModifiedProperties();
+        }
+    }
+
+    [CustomEditor(typeof(ConsentFlowAdObject))]
+    internal class ConsentFlowAdObjectInspector : Editor
+    {
+        private SerializedProperty showOnAwakeIfRequiredProp;
+        private SerializedProperty privacyPolicyUrlProp;
+        private SerializedProperty debugGeographyProp;
+        private SerializedProperty OnCompletedProp;
+        private SerializedProperty OnFailedProp;
+
+        private void OnEnable()
+        {
+            var obj = serializedObject;
+            showOnAwakeIfRequiredProp = obj.FindProperty("showOnAwakeIfRequired");
+            privacyPolicyUrlProp = obj.FindProperty("privacyPolicyUrl");
+            debugGeographyProp = obj.FindProperty("debugGeography");
+            OnCompletedProp = obj.FindProperty("OnCompleted");
+            OnFailedProp = obj.FindProperty("OnFailed");
+        }
+
+        public override void OnInspectorGUI()
+        {
+            var obj = serializedObject;
+            obj.UpdateIfRequiredOrScript();
+            EditorGUILayout.PropertyField(showOnAwakeIfRequiredProp);
+            EditorGUI.indentLevel++;
+            if (showOnAwakeIfRequiredProp.boolValue)
+                EditorGUILayout.HelpBox("The CAS Consent flow will be displayed automatically, if it is required, when the component is awake", MessageType.None);
+            else
+                EditorGUILayout.HelpBox("Call `ShowIfRequired()` or `Show()` method to display consent flow", MessageType.None);
+            EditorGUI.indentLevel--;
+
+            EditorGUILayout.PropertyField(debugGeographyProp);
+            EditorGUI.indentLevel++;
+            EditorGUILayout.HelpBox("Note that debug settings only work with Test Ad Mode enabled or for Test devices.", MessageType.None);
+            EditorGUI.indentLevel--;
+            EditorGUILayout.PropertyField(privacyPolicyUrlProp);
+
+            EditorGUILayout.PropertyField(OnCompletedProp);
+            EditorGUILayout.PropertyField(OnFailedProp);
 
             obj.ApplyModifiedProperties();
         }
@@ -250,6 +310,36 @@ namespace CAS.AdObject
         protected override void OnFooterGUI()
         {
             EditorGUILayout.LabelField("Call `Present()` method to show Interstitial Ad.",
+                EditorStyles.wordWrappedMiniLabel);
+        }
+    }
+
+
+    [CustomEditor(typeof(AppOpenAdObject))]
+    [CanEditMultipleObjects]
+    internal class AppOpenAdObjectInspector : BaseAdObjectInspector
+    {
+        private SerializedProperty onAdFailedToShowProp;
+        private SerializedProperty onAdClosedProp;
+
+        private new void OnEnable()
+        {
+            base.OnEnable();
+            var obj = serializedObject;
+            onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
+            onAdClosedProp = obj.FindProperty("OnAdClosed");
+        }
+
+        protected override void OnCallbacksGUI()
+        {
+            EditorGUILayout.PropertyField(onAdFailedToShowProp);
+            base.OnCallbacksGUI();
+            EditorGUILayout.PropertyField(onAdClosedProp);
+        }
+
+        protected override void OnFooterGUI()
+        {
+            EditorGUILayout.LabelField("Call `LoadAd()` and `Present()` methods to show AppOpen Ad.",
                 EditorStyles.wordWrappedMiniLabel);
         }
     }

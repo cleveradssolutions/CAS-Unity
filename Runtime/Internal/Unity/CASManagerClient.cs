@@ -16,12 +16,12 @@ namespace CAS.Unity
         private GUIStyle _btnStyle = null;
 
         [SerializeField]
-        private string casId;
+        private string _casId;
 
-        private bool[] enabledTypes;
+        private bool[] _enabledTypes;
 
         [SerializeField]
-        private List<CASViewClient> adViews = new List<CASViewClient>();
+        private List<CASViewClient> _adViews = new List<CASViewClient>();
         [SerializeField]
         private CASFullscreenView _interstitial;
         [SerializeField]
@@ -29,18 +29,16 @@ namespace CAS.Unity
         [SerializeField]
         private CASFullscreenView _appOpen;
 
-        private CASInitCompleteEvent _initCompleteEvent;
-        private InitCompleteAction _initCompleteAction;
         private LastPageAdContent _lastPageAdContent;
 
         internal CASSettingsClient _settings;
 
-        public string managerID { get { return casId; } }
-        public bool isTestAdMode { get { return true; } }
-        public InitialConfiguration initialConfig
-        {
-            get { return new InitialConfiguration(null, this, "US", true); }
-        }
+        public string managerID { get { return _casId; } }
+        public bool isTestAdMode { get { return true; } set { } }
+
+        public CASInitCompleteEvent initCompleteEvent { get; set; }
+        public InitCompleteAction initCompleteAction { get; set; }
+        public InitialConfiguration initialConfig { get; set; }
 
         public LastPageAdContent lastPageAdContent
         {
@@ -217,25 +215,16 @@ namespace CAS.Unity
             // Set Settings before any other calls.
             _settings = CAS.MobileAds.settings as CASSettingsClient;
 
-            CASFactory.UnityLog("Initialized manager with id: " + initSettings.targetId);
-            casId = initSettings.targetId;
-            enabledTypes = new bool[(int)AdType.None];
-            for (int i = 0; i < enabledTypes.Length; i++)
-                enabledTypes[i] = ((int)initSettings.defaultAllowedFormats & (1 << i)) != 0;
+            _casId = initSettings.targetId;
+            _enabledTypes = new bool[(int)AdType.None];
+            for (int i = 0; i < _enabledTypes.Length; i++)
+                _enabledTypes[i] = ((int)initSettings.defaultAllowedFormats & (1 << i)) != 0;
 
-            _initCompleteEvent = initSettings.initListener;
-            _initCompleteAction = initSettings.initListenerDeprecated;
             _interstitial = new CASFullscreenView(this, AdType.Interstitial);
             _rewarded = new CASFullscreenView(this, AdType.Rewarded);
             _appOpen = new CASFullscreenView(this, AdType.AppOpen);
-        }
 
-        public void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction)
-        {
-            if (initEvent != null)
-                initEvent(initialConfig);
-            if (initAction != null)
-                initAction(true, null);
+            CASFactory.HandleConsentFlow(initSettings.consentFlow, ConsentFlowStatus.Unavailable);
         }
 
         #region IMediationManager implementation
@@ -245,18 +234,18 @@ namespace CAS.Unity
             // App Open disabled processing not supported
             if (adType == AdType.AppOpen)
                 return true;
-            return enabledTypes[(int)adType];
+            return _enabledTypes[(int)adType];
         }
 
         public void SetEnableAd(AdType adType, bool enabled)
         {
-            enabledTypes[(int)adType] = enabled;
+            _enabledTypes[(int)adType] = enabled;
             if (enabled && IsAutoload(adType))
             {
                 if (adType == AdType.Banner)
                 {
-                    for (int i = 0; i < adViews.Count; i++)
-                        adViews[i].Load();
+                    for (int i = 0; i < _adViews.Count; i++)
+                        _adViews[i].Load();
                 }
                 else if (adType != AdType.AppOpen)
                 {
@@ -325,15 +314,10 @@ namespace CAS.Unity
             return false;
         }
 
-        public void SetAutoShowAdOnAppReturn(AppReturnAdType type)
-        {
-            CASFactory.UnityLog("Set auto show ad on App Return for: " + type.ToString() +
-                ". But Auto Show Ad in Editor not supported");
-        }
-
         public void SetAppReturnAdsEnabled(bool enable)
         {
-            SetAutoShowAdOnAppReturn(enable ? AppReturnAdType.Interstitial : AppReturnAdType.None);
+            CASFactory.UnityLog("Set auto show ad on App Return enabled: " + enable +
+                ". But Auto Show Ad in Editor not supported");
         }
 
         public void SkipNextAppReturnAds()
@@ -345,19 +329,19 @@ namespace CAS.Unity
         {
             if (size < AdSize.Banner)
                 throw new ArgumentException("Invalid AdSize " + size.ToString());
-            for (int i = 0; i < adViews.Count; i++)
+            for (int i = 0; i < _adViews.Count; i++)
             {
-                if (adViews[i].size == size)
-                    return adViews[i];
+                if (_adViews[i].size == size)
+                    return _adViews[i];
             }
             var view = new CASViewClient(this, size);
-            adViews.Add(view);
+            _adViews.Add(view);
             return view;
         }
 
         public void RemoveAdViewFromFactory(CASViewClient view)
         {
-            adViews.Remove(view);
+            _adViews.Remove(view);
         }
         #endregion
 
@@ -376,10 +360,7 @@ namespace CAS.Unity
 
         private void CallInitComplete()
         {
-            CASFactory.OnManagerInitialized(this);
-            HandleInitEvent(_initCompleteEvent, _initCompleteAction);
-            _initCompleteEvent = null;
-            _initCompleteAction = null;
+            CASFactory.OnManagerInitialized(this, null, "US", true, true);
         }
 
         public void Update()
@@ -408,9 +389,9 @@ namespace CAS.Unity
                 _btnStyle = new GUIStyle("Button");
             _btnStyle.fontSize = (int)(Math.Min(Screen.width, Screen.height) * 0.035f);
 
-            for (int i = 0; i < adViews.Count; i++)
+            for (int i = 0; i < _adViews.Count; i++)
             {
-                adViews[i].OnGUIAd(_btnStyle);
+                _adViews[i].OnGUIAd(_btnStyle);
             }
             _interstitial.OnGUIAd(_btnStyle);
             _rewarded.OnGUIAd(_btnStyle);

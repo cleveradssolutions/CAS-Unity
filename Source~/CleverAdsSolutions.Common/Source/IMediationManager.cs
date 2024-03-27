@@ -207,7 +207,6 @@ namespace CAS
         /// <para>To minimize the intrusiveness, short time periods are ignored.</para>
         /// <para>Return ads are disabled by default.</para>
         /// </summary>
-        [Obsolete("Use SetAutoShowAdOnAppReturn(AppReturnAdType.Interstitial) instead. And AppReturnAdType.None to disable.")]
         void SetAppReturnAdsEnabled(bool enable);
 
         /// <summary>
@@ -216,12 +215,6 @@ namespace CAS
         /// and do not want them to see ads when they return to your application.</para>
         /// </summary>
         void SkipNextAppReturnAds();
-
-        /// <summary>
-        /// The Ad is displayed once the user returns to your application after a certain period of time.
-        /// <para>Disabled by default <see cref="AppReturnAdType.None"/></para>
-        /// </summary>
-        void SetAutoShowAdOnAppReturn(AppReturnAdType type);
 
         /// <summary>
         /// Set enabled <see cref="AdType"/> to processing.

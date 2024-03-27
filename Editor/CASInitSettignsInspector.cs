@@ -60,7 +60,7 @@ namespace CAS.UEditor
         private bool adsManagerExist = false;
         private int editorRuntimeActiveAdFlags;
 
-        private AnimBool iOSLocationDescriptionFoldout = null;
+        private AnimBool iOSUserTrackDescriptionFoldout = null;
         private AnimBool otherSettingsFoldout = null;
         #endregion
 
@@ -79,7 +79,7 @@ namespace CAS.UEditor
             InitMainProperties(serializedObject);
             InitEditorSettingsProperties();
 
-            iOSLocationDescriptionFoldout = new AnimBool(false, Repaint);
+            iOSUserTrackDescriptionFoldout = new AnimBool(false, Repaint);
             otherSettingsFoldout = new AnimBool(false, Repaint);
 
             allowedPackageUpdate = Utils.IsPackageExist(Utils.packageName);
@@ -417,7 +417,7 @@ namespace CAS.UEditor
                 return;
             HelpStyles.BeginBoxScope();
             var enabled = userTrackingUsageDescriptionProp.arraySize > 0;
-            iOSLocationDescriptionFoldout.target = GUILayout.Toggle(iOSLocationDescriptionFoldout.target,
+            iOSUserTrackDescriptionFoldout.target = GUILayout.Toggle(iOSUserTrackDescriptionFoldout.target,
                 "User Tracking Usage description: " + (enabled ? "Used" : "Not used"), EditorStyles.foldout);
 
             if (!enabled && audienceTaggedProp.intValue != (int)Audience.Children)
@@ -425,7 +425,7 @@ namespace CAS.UEditor
                 EditorGUILayout.HelpBox("To use the AppTrackingTransparency framework: Configure NSUserTrackingUsageDescription to display a request to allow access to the device's advertising ID.", MessageType.Warning);
             }
 
-            if (EditorGUILayout.BeginFadeGroup(iOSLocationDescriptionFoldout.faded))
+            if (EditorGUILayout.BeginFadeGroup(iOSUserTrackDescriptionFoldout.faded))
             {
                 EditorGUILayout.BeginHorizontal();
                 if (enabled != EditorGUILayout.ToggleLeft("Set Usage description in Info.plist", enabled))
@@ -448,8 +448,8 @@ namespace CAS.UEditor
                     {
                         userTrackingUsageDescriptionProp.ClearArray();
                     }
-                    iOSLocationDescriptionFoldout = new AnimBool(false, Repaint);
-                    iOSLocationDescriptionFoldout.target = true;
+                    iOSUserTrackDescriptionFoldout = new AnimBool(false, Repaint);
+                    iOSUserTrackDescriptionFoldout.target = true;
                 }
                 HelpStyles.HelpButton(Utils.gitUnityRepoURL + "/wiki/App-Tracking-Transparency");
                 EditorGUILayout.EndHorizontal();

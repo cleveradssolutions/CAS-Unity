@@ -34,13 +34,13 @@ namespace CAS.iOS
         #region CAS Mediation Manager callbacks
         internal delegate void CASUInitializationCompleteCallback(CASUManagerRef manager, string error, string countryCode, bool withConsent, bool isTestMode);
 
-        internal delegate void CASUDidLoadedAdCallback(CASUManagerRef manager);
-        internal delegate void CASUDidFailedAdCallback(CASUManagerRef manager, int error);
-        internal delegate void CASUWillPresentAdCallback(CASUManagerRef manager, CASImpressionRef impression);
-        internal delegate void CASUDidShowAdFailedWithErrorCallback(CASUManagerRef manager, int error);
-        internal delegate void CASUDidClickedAdCallback(CASUManagerRef manager);
-        internal delegate void CASUDidCompletedAdCallback(CASUManagerRef manager);
-        internal delegate void CASUDidClosedAdCallback(CASUManagerRef manager);
+        internal delegate void CASUDidLoadedAdCallback(CASUManagerRef manager, int type);
+        internal delegate void CASUDidFailedAdCallback(CASUManagerRef manager, int type, int error);
+        internal delegate void CASUWillPresentAdCallback(CASUManagerRef manager, int type, CASImpressionRef impression);
+        internal delegate void CASUDidShowAdFailedWithErrorCallback(CASUManagerRef manager, int type, int error);
+        internal delegate void CASUDidClickedAdCallback(CASUManagerRef manager, int type);
+        internal delegate void CASUDidCompletedAdCallback(CASUManagerRef manager, int type);
+        internal delegate void CASUDidClosedAdCallback(CASUManagerRef manager, int type);
         #endregion
 
         #region CAS AdView callbacks
@@ -51,8 +51,7 @@ namespace CAS.iOS
         internal delegate void CASUViewDidRectCallback(CASUViewRef view, float x, float y, float width, float height);
         #endregion
 
-        internal delegate void CASUConsentFlowCompletion();
-        internal delegate void CASUATTCompletion(int status);
+        internal delegate void CASUConsentFlowCompletion(int status);
 
         #region CAS Settings
         [DllImport("__Internal")]
@@ -187,6 +186,7 @@ namespace CAS.iOS
         internal static extern void CASUSetConsentFlow(
             CASManagerBuilderRef builderRef,
             bool isEnabled,
+            int geography,
             string privacyUrl,
             CASUConsentFlowCompletion completion
         );
@@ -236,21 +236,9 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern void CASUSetLastPageAdContent(CASUManagerRef managerRef, string contentJson);
-      
-        [DllImport("__Internal")]
-        internal static extern void CASUSetInterstitialDelegate(
-            CASUManagerRef managerRef,
-            CASUDidLoadedAdCallback didLoad,
-            CASUDidFailedAdCallback didFaied,
-            CASUWillPresentAdCallback willPresent,
-            CASUWillPresentAdCallback didImpression,
-            CASUDidShowAdFailedWithErrorCallback didShowWithError,
-            CASUDidClickedAdCallback didClick,
-            CASUDidClosedAdCallback didClosed
-        );
 
         [DllImport("__Internal")]
-        internal static extern void CASUSetRewardedDelegate(
+        internal static extern void CASUSetDelegates(
             CASUManagerRef managerRef,
             CASUDidLoadedAdCallback didLoad,
             CASUDidFailedAdCallback didFaied,
@@ -259,18 +247,6 @@ namespace CAS.iOS
             CASUDidShowAdFailedWithErrorCallback didShowWithError,
             CASUDidClickedAdCallback didClick,
             CASUDidCompletedAdCallback didComplete,
-            CASUDidClosedAdCallback didClosed
-        );
-
-        [DllImport("__Internal")]
-        internal static extern void CASUSetAppOpenDelegate(
-            CASUManagerRef managerRef,
-            CASUDidLoadedAdCallback didLoad,
-            CASUDidFailedAdCallback didFaied,
-            CASUWillPresentAdCallback willPresent,
-            CASUWillPresentAdCallback didImpression,
-            CASUDidShowAdFailedWithErrorCallback didShowWithError,
-            CASUDidClickedAdCallback didClick,
             CASUDidClosedAdCallback didClosed
         );
 
@@ -329,17 +305,7 @@ namespace CAS.iOS
         #region App Return Ads
 
         [DllImport("__Internal")]
-        internal static extern void CASUSetAppReturnDelegate(
-            CASUManagerRef manager,
-            CASUWillPresentAdCallback willOpen,
-            CASUWillPresentAdCallback didImpression,
-            CASUDidShowAdFailedWithErrorCallback didShowWithError,
-            CASUDidClickedAdCallback didClick,
-            CASUDidClosedAdCallback didClosed
-        );
-
-        [DllImport("__Internal")]
-        internal static extern void CASUSetAutoShowAdOnAppReturn(CASUManagerRef manager, int type);
+        internal static extern void CASUSetAutoShowAdOnAppReturn(CASUManagerRef manager, bool enabled);
 
         [DllImport("__Internal")]
         internal static extern void CASUSkipNextAppReturnAds(CASUManagerRef manager);
@@ -369,17 +335,24 @@ namespace CAS.iOS
         #endregion
 
         [DllImport("__Internal")]
-        internal static extern void CASUShowConsentFlow(bool enabled, string policy, CASUConsentFlowCompletion completion);
+        internal static extern void CASUShowConsentFlow(
+            bool ifRequired,
+            bool testing,
+            int geography,
+            string policy,
+            CASUConsentFlowCompletion completion
+        );
 
         [DllImport("__Internal")]
-        internal static extern void CASURequestATT(CASUATTCompletion callback);
+        internal static extern void CASURequestATT(CASUConsentFlowCompletion callback);
         [DllImport("__Internal")]
         internal static extern int CASUGetATTStatus();
     }
 
-    internal class CASExternCallbacks
+    internal static class CASExternCallbacks
     {
-        internal static Action consentFlowComplete;
+        internal static Action<ConsentFlowStatus> consentFlowComplete;
+        internal static Action consentFlowSimpleComplete;
         private static ATTrackingStatus.CompleteHandler attTrackingComplete;
 
         internal static void ATTRequest(ATTrackingStatus.CompleteHandler callback)
@@ -399,22 +372,25 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUConsentFlowCompletion))]
-        internal static void OnConsentFlowCompletion()
+        internal static void OnConsentFlowCompletion(int status)
         {
             try
             {
                 // Callback in UI Thread from native side
                 if (consentFlowComplete != null)
-                    consentFlowComplete();
+                    consentFlowComplete((ConsentFlowStatus)status);
+                if (consentFlowSimpleComplete != null)
+                    consentFlowSimpleComplete();
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
             }
             consentFlowComplete = null;
+            consentFlowSimpleComplete = null;
         }
 
-        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUATTCompletion))]
+        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUConsentFlowCompletion))]
         internal static void ATTRequestCompleted(int status)
         {
             try

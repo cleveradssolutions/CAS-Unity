@@ -12,7 +12,7 @@ namespace CAS.Android
 
         public CASSettingsClient()
         {
-            settingsBridge = new AndroidJavaClass(CASJavaBridge.settingsClass);
+            settingsBridge = new AndroidJavaClass(CASJavaBridge.SettingsClass);
         }
 
         public string GetSDKVersion()

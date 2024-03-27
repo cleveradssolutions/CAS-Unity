@@ -168,14 +168,23 @@
                      .WithConsentFlow(new ConsentFlow()
                         .WithPrivacyPolicy("https://url_to_privacy_policy")
                      )
-                     .Initialize();
+                     .Build();
             </code>
             By default, the consent flow will be shown to users who are protected by laws.
             You can prevent us from showing the consent dialog to the user ussing followed lines:
             <code>
             MobileAds.BuildManager()
                      .WithConsentFlow(new ConsentFlow(isEnabled: false))
-                     .Initialize();
+                     .Build();
+            </code>
+            You can also display Consent Flow at any time using the show functions:
+            <code>
+            new ConsentFlow()
+               .WithCompletionListener((status) =>
+               {
+                   Debug.Log("Consent flow completed with status: " + status.ToString());
+               })
+               .ShowIfRequired();
             </code>
             </summary>
         </member>
@@ -183,16 +192,79 @@
             <summary>
             Create Conset flow configuration
             </summary>
-            <param name="isEnabled">If enabled then the consent flow will be shown to users who are protected by laws.</param>
+            <param name="isEnabled">Is enabled auto display consent flow if required on Ads initialization.</param>
         </member>
         <member name="M:CAS.ConsentFlow.WithPrivacyPolicy(System.String)">
             <summary>
             Override a link to the App's Privacy Policy in the consent dialog.
             </summary>
         </member>
+        <member name="M:CAS.ConsentFlow.WithCompletionListener(System.Action{CAS.ConsentFlowStatus})">
+            <summary>
+            Set a listener to be invoked when the dialog is dismissed.
+            The <see cref="T:CAS.ConsentFlowStatus"/> with which the dialog is dismissed will be passed to the listener function.
+            </summary>
+        </member>
         <member name="M:CAS.ConsentFlow.WithCompletionListener(System.Action)">
             <summary>
-            Optional. Set a listener to be invoked when the dialog is dismissed.
+            Set a listener to be invoked when the dialog is dismissed.
+            </summary>
+        </member>
+        <member name="M:CAS.ConsentFlow.WithDebugGeography(CAS.ConsentFlow.DebugGeography)">
+            <summary>
+            Sets the debug geography for testing purposes.
+            Note that debug settings only work with Test Ad Mode enabled or for <see cref="M:CAS.IAdsSettings.SetTestDeviceIds(System.Collections.Generic.IList{System.String})"/>.
+            Default value is <see cref="F:CAS.ConsentFlow.DebugGeography.EEA"/>
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.DebugGeography.Disabled">
+            <summary>
+            Disable geography debugging.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.DebugGeography.EEA">
+            <summary>
+            Geography appears as in European Economic Area for debug devices.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.DebugGeography.NotEEA">
+            <summary>
+            Geography appears as not in European Economic Area.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlowStatus.Obtained">
+            <summary>
+            User consent obtained. Personalized vs non-personalized undefined.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlowStatus.NotRequired">
+            <summary>
+            User consent not required.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlowStatus.Unavailable">
+            <summary>
+            User consent unavailable.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlowStatus.InternalError">
+            <summary>
+            There was an internal error.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlowStatus.InternetError">
+            <summary>
+            There was an error loading data from the network.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlowStatus.ContextInvalid">
+            <summary>
+            There was an error with the UI context is passed in.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlowStatus.FlowStillShowing">
+            <summary>
+            There was an error with another form is still being displayed.
             </summary>
         </member>
         <member name="F:CAS.ConsentStatus.Undefined">
@@ -352,10 +424,15 @@
         </member>
         <member name="P:CAS.IAdsSettings.isExecuteEventsOnUnityThread">
             <summary>
-            Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
-            <para>You can use <see cref="M:CAS.EventExecutor.Add(System.Action)"/> to schedule each calls on the next Update() loop.
-            OR enable this property to automatically execute all calls on the next Update() loop.</para>
-            <para>Enabled by default.</para>
+            <para>Required for Android runtime only. Enabled by default.</para>
+            Advertising events for the Android runtime are queued to be called during the next `Update()` cycle. 
+            This behavior is safe for using UnityEngine components in advertising events. 
+            However, because Unity does not call `Update` while displaying fullscreen ads, 
+            all ad events will only be triggered after closing the fullscreen ad and returning to the Unity game.  
+            <para> If you want to receive callbacks from the ad without waiting for the ad to close, 
+            you can disable the following property in the settings. 
+            You will also need to use `CAS.EventExecutor.Add(Action)` to access Unity Engine components, 
+            where Action will be executed during the next `Update()` cycle.</para>
             </summary>
         </member>
         <member name="P:CAS.IAdsSettings.iOSAppPauseOnBackground">
@@ -530,7 +607,7 @@
         <member name="M:CAS.IManagerBuilder.WithMediationExtras(System.String,System.String)">
             <summary>
             Additional mediation settings.
-            Use constant key from <see cref="!:MediationExtras"/> with values of "1" or "0".
+            Use constant key from <see cref="T:CAS.MediationExtras"/> with values of "1" or "0".
             </summary>
         </member>
         <member name="M:CAS.IManagerBuilder.ClearMediationExtras">
@@ -781,12 +858,6 @@
             and do not want them to see ads when they return to your application.</para>
             </summary>
         </member>
-        <member name="M:CAS.IMediationManager.SetAutoShowAdOnAppReturn(CAS.AppReturnAdType)">
-            <summary>
-            The Ad is displayed once the user returns to your application after a certain period of time.
-            <para>Disabled by default <see cref="F:CAS.AppReturnAdType.None"/></para>
-            </summary>
-        </member>
         <member name="M:CAS.IMediationManager.SetEnableAd(CAS.AdType,System.Boolean)">
             <summary>
             Set enabled <see cref="T:CAS.AdType"/> to processing.
@@ -807,6 +878,51 @@
             <br>This ad page will be displayed when there is no paid ad to show or internet availability.</br>
             <br>By default, this page will not be displayed while the ad content is NULL.</br>
             <para>**Attention!** Impressions and clicks on this ad page don't make money.</para>
+            </summary>
+        </member>
+        <member name="F:CAS.InitialConfiguration.error">
+            <summary>
+            Get the CAS manager initialization error message or NULL if initialization is successful.
+            Check constants from <see cref="T:CAS.InitializationError"/> class.
+            </summary>
+        </member>
+        <member name="F:CAS.InitialConfiguration.manager">
+            <summary>
+            Get the initialized CAS manager.
+            </summary>
+        </member>
+        <member name="F:CAS.InitialConfiguration.countryCode">
+            <summary>
+            Get the user's ISO-2 country code, or NULL if the location fails.
+            </summary>
+        </member>
+        <member name="F:CAS.InitialConfiguration.isConsentRequired">
+            <summary>
+            The consent must be requested from the user.
+            </summary>
+        </member>
+        <member name="F:CAS.InitializationError.NoConnection">
+            <summary>
+            Indicates that device network connection is not stable enough.
+            Your listener is stored in memory and will be called when initialization is successful.
+            </summary>
+        </member>
+        <member name="F:CAS.InitializationError.NotRegisteredID">
+            <summary>
+            Indicates that the CAS ID is not registered in system.
+            Contact support to clarify the reasons.
+            </summary>
+        </member>
+        <member name="F:CAS.InitializationError.VerificationFailed">
+            <summary>
+            Indicates that the SDK version is no longer compatible.
+            Please update to the latest SDK.
+            </summary>
+        </member>
+        <member name="F:CAS.InitializationError.ServerError">
+            <summary>
+            Indicates a temporary problem with the server.
+            If the error could be 100% replicated, please give feedback to us.
             </summary>
         </member>
         <member name="P:CAS.ITargetingOptions.gender">
@@ -935,50 +1051,27 @@
             <para>Warning! To enable EventExecutor requires call once static <see cref="M:CAS.EventExecutor.Initialize"/> method.</para>
             </summary>
         </member>
-        <member name="F:CAS.InitialConfiguration.error">
+        <member name="F:CAS.MediationExtras.facebookAdvertiserTracking">
             <summary>
-            Get the CAS manager initialization error message or NULL if initialization is successful.
-            Check constants from <see cref="T:CAS.InitializationError"/> class.
+            Advertising Tracking Enabled for Audience Network for iOS Only.
+            <para>Set the `FBAdSettings.setAdvertiserTrackingEnabled` flag.</para>
+            <para>Value "1" flag to inform Audience Network to use the data to deliver personalized ads
+            in line with your own legal obligations, platform terms, and commitments you’ve made to your users</para>
+            <para>Value "0" flag to inform Audience Network to not be able to deliver personalized ads.</para>
             </summary>
         </member>
-        <member name="F:CAS.InitialConfiguration.manager">
-            <summary>
-            Get the initialized CAS manager.
-            </summary>
-        </member>
-        <member name="F:CAS.InitialConfiguration.countryCode">
-            <summary>
-            Get the user's ISO-2 country code, or NULL if the location fails.
-            </summary>
-        </member>
-        <member name="F:CAS.InitialConfiguration.isConsentRequired">
-            <summary>
-            The consent must be requested from the user.
-            </summary>
-        </member>
-        <member name="F:CAS.InitializationError.NoConnection">
-            <summary>
-            Indicates that device network connection is not stable enough.
-            Your listener is stored in memory and will be called when initialization is successful.
-            </summary>
-        </member>
-        <member name="F:CAS.InitializationError.NotRegisteredID">
-            <summary>
-            Indicates that the CAS ID is not registered in system.
-            Contact support to clarify the reasons.
-            </summary>
-        </member>
-        <member name="F:CAS.InitializationError.VerificationFailed">
-            <summary>
-            Indicates that the SDK version is no longer compatible.
-            Please update to the latest SDK.
-            </summary>
-        </member>
-        <member name="F:CAS.InitializationError.ServerError">
-            <summary>
-            Indicates a temporary problem with the server.
-            If the error could be 100% replicated, please give feedback to us.
-            </summary>
+        <member name="F:CAS.MediationExtras.facebookDataProcessing">
+             <summary>
+             Facebook Data Processing Options for Users in California
+             <para>Set the `FBAdSettings.setDataProcessingOptions` flag.</para>
+             <para>Values:</para>
+             <para>- ""  - To explicitly not enable Limited Data Use (LDU) mode</para>
+             <para>- "LDU"  - To enable LDU mode using geolocation</para>
+             <para>- "LDU_1_1000"  - To enable LDU for users and specify user geography</para>
+            
+             <para>For information about how to implement Facebook’s Limited Data Use flag in California,
+             visit <a href="https://developers.facebook.com/docs/marketing-apis/data-processing-options">Facebook’s developer documentation</a>.</para>
+             </summary>
         </member>
     </members>
 </doc>

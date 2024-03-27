@@ -52,7 +52,7 @@ namespace CAS
             if (action == null)
             {
                 Debug.LogError("Event Executor skip null action");
-                return
+                return;
             }
             lock (eventsQueue)
             {

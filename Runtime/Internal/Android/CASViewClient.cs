@@ -40,11 +40,11 @@ namespace CAS.Android
         }
 
         internal CASViewClient(CASManagerClient manager, AdSize size, AndroidJavaObject bridge)
-            : base(CASJavaBridge.adViewCallbackClass)
+            : base(CASJavaBridge.AdViewCallbackClass)
         {
             this.size = size;
             _manager = manager;
-            _bridge = new AndroidJavaObject(CASJavaBridge.adViewClass, (int)size, this, bridge);
+            _bridge = new AndroidJavaObject(CASJavaBridge.AdViewClass, (int)size, this, bridge);
         }
 
         public void Dispose()

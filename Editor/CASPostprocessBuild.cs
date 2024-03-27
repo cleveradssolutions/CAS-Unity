@@ -70,6 +70,12 @@ namespace CAS.UEditor
                 project.FixGenerationInfoPlist(frameworkTargetGuid);
                 project.FixGenerationInfoPlist(appTargetGuid);
                 project.AddCASConfigResources(buildPath, appTargetGuid, initSettings);
+
+                if (editorSettings.userTrackingUsageDescription.Length > 0)
+                {
+                    project.AddFrameworkToProject(frameworkTargetGuid, "AdSupport.framework", false);
+                    project.AddFrameworkToProject(frameworkTargetGuid, "AppTrackingTransparency.framework", false);
+                }
             });
 
             if (editorSettings.generateIOSDeepLinksForPromo && initSettings)

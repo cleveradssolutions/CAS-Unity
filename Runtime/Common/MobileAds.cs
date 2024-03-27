@@ -1,10 +1,11 @@
 ﻿//  Copyright © 2024 CAS.AI. All rights reserved.
 
 using System;
+using UnityEngine;
 
 namespace CAS
 {
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK" )]
+    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK")]
     public static class MobileAds
     {
         /// <summary>
@@ -23,7 +24,7 @@ namespace CAS
         /// <summary>
         /// Get first initialized <see cref="IMediationManager"/>
         /// <para>May be NULL before the first initialization in the session.</para>
-        /// <para>We recommend using the <see cref="BuildManager()"/>.WithManagerIdAtIndex().Initialize() method to get a specific manager.</para>
+        /// <para>We recommend using the <see cref="BuildManager()"/>.WithManagerIdAtIndex().Build() method to get a specific manager.</para>
         /// </summary>
         public static IMediationManager manager
         {
@@ -42,6 +43,24 @@ namespace CAS
         }
 
         /// <summary>
+        /// Raised when the application enters the background.
+        /// </summary>
+        public static event Action OnApplicationPaused
+        {
+            add { CASFactory.GetAppStateEventClient().OnApplicationPaused += value; }
+            remove { CASFactory.GetAppStateEventClient().OnApplicationPaused -= value; }
+        }
+
+        /// <summary>
+        /// Raised when the application enters the foreground.
+        /// </summary>
+        public static event Action OnApplicationResumed
+        {
+            add { CASFactory.GetAppStateEventClient().OnApplicationResumed += value; }
+            remove { CASFactory.GetAppStateEventClient().OnApplicationResumed -= value; }
+        }
+
+        /// <summary>
         /// Return Native SDK version else <see cref="wrapperVersion"/> for Unity Editor.
         /// </summary>
         public static string GetSDKVersion()
@@ -51,7 +70,7 @@ namespace CAS
 
         /// <summary>
         /// Create <see cref="IMediationManager"/> builder.
-        /// <para>Don't forget to call the <see cref="IManagerBuilder.Initialize"/> method to create manager instance.</para>
+        /// <para>Don't forget to call the <see cref="IManagerBuilder.Build"/> method to create manager instance.</para>
         /// </summary>
         public static IManagerBuilder BuildManager()
         {
@@ -59,11 +78,14 @@ namespace CAS
         }
 
         /// <summary>
-        /// Reset User consent status and manual start the dialog, and display it on screen.
+        /// Some consent forms require the user to modify their consent at any time. 
+        /// When a user interacts with your UI element, call function to show the form 
+        /// so the user can update their privacy options at any time. 
         /// </summary>
+        [Obsolete("Use ShowIfRequired() or Show() methods for ConsentFlow insntance.")]
         public static void ShowConsentFlow(ConsentFlow flow)
         {
-            CASFactory.ShowConsentFlow(flow);
+            flow.Show();
         }
 
         /// <summary>
@@ -90,9 +112,31 @@ namespace CAS
             return CASFactory.GetActiveNetworks();
         }
 
-        public static bool IsActiveNetwork( AdNetwork network )
+        public static bool IsActiveNetwork(AdNetwork network)
         {
-            return CASFactory.IsActiveNetwork( network );
+            return CASFactory.IsActiveNetwork(network);
         }
+    }
+}
+
+public static class CASImplementationExtensions
+{
+    /// <summary>
+    /// Shows the consent form only if it is required and the user has not responded previously.
+    /// If the consent status is required, the SDK loads a form and immediately presents it.
+    /// </summary>
+    public static void ShowIfRequired(this CAS.ConsentFlow flow)
+    {
+        CAS.CASFactory.ShowConsentFlow(flow, true);
+    }
+
+    /// <summary>
+    /// Force shows the form to modify user  consent at any time.
+    /// When a user interacts with your UI element, call function to show the form 
+    /// so the user can update their privacy options at any time. 
+    /// </summary>
+    public static void Show(this CAS.ConsentFlow flow)
+    {
+        CAS.CASFactory.ShowConsentFlow(flow, false);
     }
 }

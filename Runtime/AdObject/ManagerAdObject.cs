@@ -9,11 +9,15 @@ namespace CAS.AdObject
     [AddComponentMenu("CleverAdsSolutions/Initialize Manager Ad Object")]
     [DisallowMultipleComponent]
     [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Manager-Ad-object")]
-    public class ManagerAdObject : MonoBehaviour, IInternalAdObject
+    public class ManagerAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
         [SerializeField]
         private bool initializeOnAwake = true;
+
+        public bool consentFlowEnabled = true;
+        public ConsentFlowAdObject consentFlow;
+
         public CCPAStatus metaDataProcessing = CCPAStatus.Undefined;
         public ConsentStatus metaAdvertiserTracking = ConsentStatus.Undefined;
 
@@ -22,11 +26,18 @@ namespace CAS.AdObject
 
         public void Initialize()
         {
-            CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
+            CreateBuilder().Build();
+        }
 
+        public IManagerBuilder CreateBuilder()
+        {
             var builder = MobileAds.BuildManager()
-               .WithManagerIdAtIndex(managerId.index)
-               .WithCompletionListener(OnManagerReady);
+                           .WithManagerIdAtIndex(managerId.index);
+
+            if (!consentFlowEnabled)
+                builder.WithConsentFlow(new ConsentFlow(false));
+            else if (consentFlow)
+                builder.WithConsentFlow(consentFlow.CreateFlow());
 
             if (metaDataProcessing != CCPAStatus.Undefined)
             {
@@ -42,27 +53,34 @@ namespace CAS.AdObject
                     metaAdvertiserTracking == ConsentStatus.Accepted ? "1" : "0"
                 );
             }
-
-            builder.Initialize();
+            return builder;
         }
 
 
         #region MonoBehaviour
+        private void Awake()
+        {
+            if (consentFlow)
+                consentFlow.showOnAwakeIfRequired = false;
+        }
+
         private void Start()
         {
+            CASFactory.OnManagerStateChanged += OnManagerReady;
             if (initializeOnAwake)
                 Initialize();
-            else
-                CASFactory.TryGetManagerByIndexAsync(this, managerId.index);
         }
 
         private void OnDestroy()
         {
-            CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
+            CASFactory.OnManagerStateChanged -= OnManagerReady;
         }
 
-        public void OnManagerReady(InitialConfiguration config)
+        private void OnManagerReady(int index, IInternalManager manager)
         {
+            if (!this || index != managerId.index) return;
+            var config = manager.initialConfig;
+            if (config == null) return;
             if (config.error == null)
                 OnInitialized.Invoke();
             else

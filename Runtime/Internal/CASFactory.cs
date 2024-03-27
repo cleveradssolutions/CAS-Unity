@@ -1,4 +1,5 @@
 ﻿//  Copyright © 2024 CAS.AI. All rights reserved.
+
 #if UNITY_ANDROID || ( CASDeveloper && UNITY_EDITOR )
 #define PlatformAndroid
 #endif
@@ -12,15 +13,20 @@ using UnityEngine;
 
 namespace CAS
 {
-    internal interface IInternalManager : IMediationManager
+    internal delegate void ManagerStateChanges(int index, IInternalManager manager);
+
+    internal interface IAppStateEventClient
     {
-        InitialConfiguration initialConfig { get; }
-        void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction);
+        event Action OnApplicationPaused;
+        event Action OnApplicationResumed;
     }
 
-    internal interface IInternalAdObject
+    internal interface IInternalManager : IMediationManager
     {
-        void OnManagerReady(InitialConfiguration config);
+        new bool isTestAdMode { get; set; }
+        CASInitCompleteEvent initCompleteEvent { get; set; }
+        InitCompleteAction initCompleteAction { get; set; }
+        InitialConfiguration initialConfig { get; set; }
     }
 
     internal static class AdTypeCode
@@ -34,10 +40,12 @@ namespace CAS
 
     internal static class CASFactory
     {
+        private static IAppStateEventClient appStateEventClient;
         private static IAdsSettings settings;
         private static List<IInternalManager> managers;
-        private static List<List<IInternalAdObject>> initCallback = new List<List<IInternalAdObject>>();
-        private static Dictionary<string, string> globalExtras;
+
+        internal static event ManagerStateChanges OnManagerStateChanged;
+
 
 #if UNITY_EDITOR && UNITY_2019_3_OR_NEWER
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -45,10 +53,10 @@ namespace CAS
         {
             // Read more aboud Domain Reloading in Unity Editor
             // https://docs.unity3d.com/2023.3/Documentation/Manual/DomainReloading.html
+            appStateEventClient = null;
             settings = null;
             managers = null;
-            initCallback = new List<List<IInternalAdObject>>();
-            globalExtras = null;
+            OnManagerStateChanged = null;
         }
 #endif
 
@@ -56,15 +64,10 @@ namespace CAS
 
         internal static IMediationManager GetMainManagerOrNull()
         {
-            return managers == null || managers.Count < 1 ? null : managers[0];
+            return managers == null || managers.Count == 0 ? null : managers[0];
         }
 
-        internal static void SetGlobalMediationExtras(Dictionary<string, string> extras)
-        {
-            globalExtras = extras;
-        }
-
-        internal static CASInitSettings LoadInitSettingsFromResources()
+        private static CASInitSettings LoadInitSettingsFromResources()
         {
 #if UNITY_ANDROID
             return Resources.Load<CASInitSettings>("CASSettingsAndroid");
@@ -75,26 +78,7 @@ namespace CAS
 #endif
         }
 
-        internal static CASInitSettings LoadDefaultBuiderFromResources()
-        {
-            var builder = LoadInitSettingsFromResources();
-            if (!builder)
-            {
-#if UNITY_ANDROID || UNITY_IOS
-                Debug.LogWarning("[CAS] No settings asset have been created for the target platform yet." +
-                    "\nUse 'Assets > CleverAdsSolutions > Settings' menu to create and modify default settings for each native platform.");
-#else
-                Debug.LogError( "[CAS] The target platform is not supported." +
-                    "\nChoose the target Android or iOS to use CAS." );
-#endif
-                builder = ScriptableObject.CreateInstance<CASInitSettings>();
-                builder.allowedAdFlags = AdFlags.Everything;
-                return builder;
-            }
-            return UnityEngine.Object.Instantiate(builder);
-        }
-
-        internal static IAdsSettings CreateSettigns(CASInitSettings initSettings)
+        private static IAdsSettings CreateSettigns(CASInitSettings initSettings)
         {
             IAdsSettings settings = null;
 #if PlatformAndroid
@@ -119,6 +103,43 @@ namespace CAS
                 ((ITargetingOptions)settings).locationCollectionEnabled = initSettings.defaultLocationCollectionEnabled;
             }
             return settings;
+        }
+
+        internal static CASInitSettings LoadDefaultBuiderFromResources()
+        {
+            var builder = LoadInitSettingsFromResources();
+            if (!builder)
+            {
+#if UNITY_ANDROID || UNITY_IOS
+                Debug.LogWarning("[CAS] No settings asset have been created for the target platform yet." +
+                    "\nUse 'Assets > CleverAdsSolutions > Settings' menu to create and modify default settings for each native platform.");
+#else
+                Debug.LogError( "[CAS] The target platform is not supported." +
+                    "\nChoose the target Android or iOS to use CAS." );
+#endif
+                builder = ScriptableObject.CreateInstance<CASInitSettings>();
+                builder.allowedAdFlags = AdFlags.Everything;
+                return builder;
+            }
+            return UnityEngine.Object.Instantiate(builder);
+        }
+
+        internal static IAppStateEventClient GetAppStateEventClient()
+        {
+            if (appStateEventClient == null)
+            {
+#if PlatformAndroid
+                if (Application.platform == RuntimePlatform.Android)
+                {
+                    appStateEventClient = new CAS.Android.CASAppStateEventClient();
+                }
+                else
+#endif
+                {
+                    appStateEventClient = CAS.Unity.AppStateEventClient.Create();
+                }
+            }
+            return appStateEventClient;
         }
 
         internal static IAdsSettings GetAdsSettings()
@@ -158,7 +179,19 @@ namespace CAS
                     var readyManager = managers[i];
                     if (readyManager != null && readyManager.managerID == initSettings.targetId)
                     {
-                        readyManager.HandleInitEvent(initSettings.initListener, initSettings.initListenerDeprecated);
+                        var initialConfig = readyManager.initialConfig;
+                        if (initialConfig != null)
+                        {
+                            if (initSettings.initListener != null)
+                                initSettings.initListener(initialConfig);
+                            if (initSettings.initListenerDeprecated != null)
+                                initSettings.initListenerDeprecated(initialConfig.error == null, initialConfig.error);
+                        }
+                        else
+                        {
+                            readyManager.initCompleteEvent += initSettings.initListener;
+                            readyManager.initCompleteAction += initSettings.initListenerDeprecated;
+                        }
                         return readyManager;
                     }
                 }
@@ -173,21 +206,8 @@ namespace CAS
             if (settings == null)
                 settings = CreateSettigns(initSettings);
 
-            if (initSettings.extras == null)
-            {
-                initSettings.extras = globalExtras;
-            }
-            else if (globalExtras != null)
-            {
-                var mergeExtras = new Dictionary<string, string>(globalExtras);
-                foreach (var extra in initSettings.extras)
-                    mergeExtras[extra.Key] = extra.Value;
-                initSettings.extras = mergeExtras;
-            }
-
             IInternalManager manager = null;
 #if PlatformAndroid
-            EventExecutor.Initialize();
             if (Application.platform == RuntimePlatform.Android)
                 manager = new CAS.Android.CASManagerClient().Init(initSettings);
 #endif
@@ -196,21 +216,26 @@ namespace CAS
                 manager = new CAS.iOS.CASManagerClient().Init(initSettings);
 #endif
 #if UNITY_EDITOR
-            EventExecutor.Initialize();
             manager = CAS.Unity.CASManagerClient.Create(initSettings);
 #endif
             if (manager == null)
                 throw new NotSupportedException("Platform: " + Application.platform.ToString());
+
+            manager.initCompleteEvent = initSettings.initListener;
+            manager.initCompleteAction = initSettings.initListenerDeprecated;
 
             var managerIndex = initSettings.IndexOfManagerId(manager.managerID);
             if (managerIndex < 0)
                 managers.Add(manager);
             else
                 managers[managerIndex] = manager;
+
+            if (OnManagerStateChanged != null && managerIndex >= 0)
+                OnManagerStateChanged(managerIndex, manager);
             return manager;
         }
 
-        internal static bool TryGetManagerByIndexAsync(IInternalAdObject adObject, int index, bool noInit = false)
+        internal static bool TryGetManagerByIndexAsync(int index, ManagerStateChanges managerStateHandler)
         {
             if (index < 0)
                 throw new ArgumentOutOfRangeException("index", "Manager index cannot be less than 0");
@@ -218,51 +243,48 @@ namespace CAS
             if (managers != null && index < managers.Count)
             {
                 var readyManager = managers[index];
-                if (readyManager != null && (noInit || readyManager.initialConfig != null))
+                if (readyManager != null)
                 {
-                    adObject.OnManagerReady(readyManager.initialConfig);
+                    managerStateHandler(index, readyManager);
                     return true;
                 }
             }
 
-            for (int i = initCallback.Count; i <= index; i++)
-                initCallback.Add(null);
-            if (initCallback[index] == null)
-                initCallback[index] = new List<IInternalAdObject>();
-
-            initCallback[index].Add(adObject);
+            OnManagerStateChanged += managerStateHandler;
             return false;
         }
 
-        internal static void UnsubscribeReadyManagerAsync(IInternalAdObject callback, int index)
+        internal static void OnManagerInitialized(IInternalManager manager, string error, string countryCode, bool isConsentRequired, bool testMode)
         {
-            if (index < initCallback.Count && initCallback[index] != null)
-                initCallback[index].Remove(callback);
-        }
+            UnityLog("Initialized ads with id: " + manager.managerID);
 
-        internal static void OnManagerInitialized(IInternalManager manager)
-        {
-            if (managers == null) return;
-            var managerIndex = managers.IndexOf(manager);
-            if (managerIndex != -1 && managerIndex < initCallback.Count)
+            var initialConfig = new InitialConfiguration(error, manager, countryCode, isConsentRequired);
+
+            manager.isTestAdMode = testMode;
+            manager.initialConfig = initialConfig;
+            try
             {
-                var initList = initCallback[managerIndex];
-                if (initList == null)
-                    return;
-                initCallback[managerIndex] = null;
-                for (int i = 0; i < initList.Count; i++)
-                {
-                    try
-                    {
-                        // Check out MonoBehaviour which is still alive
-                        if ((MonoBehaviour)initList[i])
-                            initList[i].OnManagerReady(manager.initialConfig);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogException(e);
-                    }
-                }
+                if (manager.initCompleteEvent != null)
+                    manager.initCompleteEvent(initialConfig);
+                if (manager.initCompleteAction != null)
+                    manager.initCompleteAction(initialConfig.error == null, initialConfig.error);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+
+            if (error != InitializationError.NoConnection)
+            {
+                manager.initCompleteEvent = null;
+                manager.initCompleteAction = null;
+            }
+
+            if (OnManagerStateChanged != null)
+            {
+                var managerIndex = managers.IndexOf(manager);
+                if (managerIndex >= 0)
+                    OnManagerStateChanged(managerIndex, manager);
             }
         }
 
@@ -283,7 +305,6 @@ namespace CAS
 #endif
         }
 
-        #region Mediation network states
         internal static string GetActiveMediationPattern()
         {
 #if UNITY_EDITOR
@@ -346,33 +367,47 @@ namespace CAS
             return false;
         }
 
-        internal static void ShowConsentFlow(ConsentFlow flow)
+        internal static void ShowConsentFlow(ConsentFlow flow, bool ifRequired)
         {
+            var initSettings = LoadInitSettingsFromResources();
+            var forceTesting = initSettings && initSettings.IsTestAdMode();
 #if UNITY_EDITOR
             UnityLog("Show Consent flow has been called but not supported in Unity Editor.");
+            HandleConsentFlow(flow, ConsentFlowStatus.Unavailable);
 #endif
 #if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
             {
-                using (var androidFlow = new CAS.Android.CASConsentFlowClient(flow))
+                using (var androidFlow = new CAS.Android.CASConsentFlowClient(flow, forceTesting))
                 {
-                    androidFlow.show();
+                    androidFlow.Show(ifRequired);
                 }
             }
 #endif
 #if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
-                CAS.iOS.CASExternCallbacks.consentFlowComplete += flow.OnCompleted;
+                CAS.iOS.CASExternCallbacks.consentFlowComplete += flow.OnResult;
+                CAS.iOS.CASExternCallbacks.consentFlowSimpleComplete += flow.OnCompleted;
                 CAS.iOS.CASExterns.CASUShowConsentFlow(
-                    flow.isEnabled,
+                    ifRequired,
+                    forceTesting,
+                    (int)flow.debugGeography,
                     flow.privacyPolicyUrl,
                     CAS.iOS.CASExternCallbacks.OnConsentFlowCompletion
                 );
             }
 #endif
         }
-        #endregion
+
+        internal static void HandleConsentFlow(ConsentFlow flow, ConsentFlowStatus status)
+        {
+            if (flow == null) return;
+            if (flow.OnResult != null)
+                flow.OnResult(status);
+            if (flow.OnCompleted != null)
+                flow.OnCompleted();
+        }
 
         internal static void UnityLog(string message)
         {

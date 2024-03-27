@@ -8,8 +8,8 @@ namespace CAS.AdObject
 {
     [AddComponentMenu("CleverAdsSolutions/AppOpen Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Interstitial-Ad-object")]
-    public sealed class AppOpenAdObject : MonoBehaviour, IInternalAdObject
+    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/AppOpen-Ad-object")]
+    public sealed class AppOpenAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
 
@@ -63,13 +63,36 @@ namespace CAS.AdObject
         #region MonoBehaviour
         private void Start()
         {
-            if (!CASFactory.TryGetManagerByIndexAsync(this, managerId.index, true))
+            if (!CASFactory.TryGetManagerByIndexAsync(managerId.index, OnManagerReady))
                 OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
 
-        void IInternalAdObject.OnManagerReady(InitialConfiguration config)
+        private void OnDestroy()
         {
-            this.manager = config.manager;
+            if (manager == null)
+            {
+                CASFactory.OnManagerStateChanged -= OnManagerReady;
+            }
+            else
+            {
+                manager.OnAppOpenAdLoaded -= OnAdLoaded.Invoke;
+                manager.OnAppOpenAdFailedToLoad -= AdFailedToLoad;
+                manager.OnAppOpenAdFailedToShow -= AdFailedToShow;
+                manager.OnAppOpenAdClicked -= OnAdClicked.Invoke;
+                manager.OnAppOpenAdClosed -= OnAdClosed.Invoke;
+                manager.OnAppOpenAdImpression -= OnAdImpression.Invoke;
+            }
+
+        }
+        #endregion
+
+        #region Manager Events wrappers
+        private void OnManagerReady(int index, IInternalManager manager)
+        {
+            if (!this || index != managerId.index) return;
+            CASFactory.OnManagerStateChanged -= OnManagerReady;
+
+            this.manager = manager;
             manager.OnAppOpenAdLoaded += OnAdLoaded.Invoke;
             manager.OnAppOpenAdFailedToLoad += AdFailedToLoad;
             manager.OnAppOpenAdFailedToShow += AdFailedToShow;
@@ -95,26 +118,11 @@ namespace CAS.AdObject
             }
         }
 
-        private void OnDestroy()
-        {
-            if (manager != null)
-            {
-                manager.OnAppOpenAdLoaded -= OnAdLoaded.Invoke;
-                manager.OnAppOpenAdFailedToLoad -= AdFailedToLoad;
-                manager.OnAppOpenAdFailedToShow -= AdFailedToShow;
-                manager.OnAppOpenAdClicked -= OnAdClicked.Invoke;
-                manager.OnAppOpenAdClosed -= OnAdClosed.Invoke;
-                manager.OnAppOpenAdImpression -= OnAdImpression.Invoke;
-            }
-            CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
-        }
-        #endregion
-
-        #region Manager Events wrappers
         private void AdFailedToLoad(AdError error)
         {
             OnAdFailedToLoad.Invoke(error.GetMessage());
         }
+
         private void AdFailedToShow(string error)
         {
             OnAdFailedToShow.Invoke(error);

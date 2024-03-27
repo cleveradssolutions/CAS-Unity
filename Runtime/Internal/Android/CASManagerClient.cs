@@ -12,13 +12,12 @@ namespace CAS.Android
         private AndroidJavaObject _managerBridge;
         private LastPageAdContent _lastPageAdContent = null;
 
-        private CASInitCompleteEvent _initComplete;
-        private InitCompleteAction _initCompleteDeprecated;
-
         private readonly List<IAdView> _adViews = new List<IAdView>();
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get; set; }
+        public CASInitCompleteEvent initCompleteEvent { get; set; }
+        public InitCompleteAction initCompleteAction { get; set; }
         public InitialConfiguration initialConfig { get; set; }
 
         public LastPageAdContent lastPageAdContent
@@ -72,18 +71,17 @@ namespace CAS.Android
         #endregion
 
         #region Initialization
-        internal CASManagerClient() : base(CASJavaBridge.adCallbackClass) { }
+        internal CASManagerClient() : base(CASJavaBridge.AdCallbackClass) { }
 
         internal IInternalManager Init(CASInitSettings initData)
         {
             managerID = initData.targetId;
             isTestAdMode = initData.IsTestAdMode();
-            _initComplete = initData.initListener;
-            _initCompleteDeprecated = initData.initListenerDeprecated;
+            EventExecutor.Initialize();
 
-            using (var builder = new AndroidJavaObject(CASJavaBridge.bridgeBuilderClass))
+            using (var builder = new AndroidJavaObject(CASJavaBridge.BridgeBuilderClass))
             {
-                if (initData.IsTestAdMode())
+                if (isTestAdMode)
                     builder.Call("enableTestMode");
 
                 if (!string.IsNullOrEmpty(initData.userID))
@@ -94,7 +92,7 @@ namespace CAS.Android
                     if (!initData.consentFlow.isEnabled)
                         builder.Call("disableConsentFlow");
                     else
-                        builder.Call("withConsentFlow", new CASConsentFlowClient(initData.consentFlow).obj);
+                        builder.Call("withConsentFlow", new CASConsentFlowClient(initData.consentFlow, false));
                 }
                 if (initData.extras != null)
                 {
@@ -108,20 +106,6 @@ namespace CAS.Android
                     initData.targetId, Application.unityVersion, this, (int)initData.allowedAdFlags);
             }
             return this;
-        }
-
-        public void HandleInitEvent(CASInitCompleteEvent initEvent, InitCompleteAction initAction)
-        {
-            if (initialConfig != null)
-            {
-                if (initEvent != null)
-                    initEvent(initialConfig);
-                if (initAction != null)
-                    initAction(initialConfig.error == null, initialConfig.error);
-                return;
-            }
-            _initComplete += initEvent;
-            _initCompleteDeprecated += initAction;
         }
         #endregion
 
@@ -156,14 +140,9 @@ namespace CAS.Android
             return _managerBridge.Call<bool>("tryOpenDebugger");
         }
 
-        public void SetAutoShowAdOnAppReturn(AppReturnAdType type)
-        {
-            _managerBridge.Call("setAutoShowAdOnAppReturn", (int)type);
-        }
-
         public void SetAppReturnAdsEnabled(bool enable)
         {
-            SetAutoShowAdOnAppReturn(enable ? AppReturnAdType.Interstitial : AppReturnAdType.None);
+            _managerBridge.Call("setAutoShowAdOnAppReturn", enable);
         }
 
         public void SkipNextAppReturnAds()
@@ -202,25 +181,10 @@ namespace CAS.Android
             if (string.IsNullOrEmpty(countryCode))
                 countryCode = null;
 
-            CASFactory.UnityLog("OnInitialization " + error);
-
             CASJavaBridge.ExecuteEvent(() =>
             {
-                isTestAdMode = isTestMode;
-                initialConfig = new InitialConfiguration(error, this, countryCode, isConsentRequired);
-                CASFactory.OnManagerInitialized(this);
-                HandleInitEvent(_initComplete, _initCompleteDeprecated);
-                if (error != InitializationError.NoConnection)
-                {
-                    _initComplete = null;
-                    _initCompleteDeprecated = null;
-                }
+                CASFactory.OnManagerInitialized(this, error, countryCode, isConsentRequired, isTestMode);
             });
-        }
-
-        public void onAppStateChanged(bool isForeground)
-        {
-            // TODO: 
         }
 
         public void onAdLoaded(int type)

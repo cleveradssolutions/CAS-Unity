@@ -170,9 +170,15 @@ namespace CAS
         LoadingManagerMode loadingMode { get; set; }
 
         /// <summary>
-        /// Android ads callbacks from CAS.AI can be called not from Unity threat.
-        /// <para>You can disable this propery and use <see cref="EventExecutor.Add(Action)"/> to schedule each calls on the next Update() loop</para>
-        /// <para>Enabled by default.</para>
+        /// <para>Required for Android runtime only. Enabled by default.</para>
+        /// Advertising events for the Android runtime are queued to be called during the next `Update()` cycle. 
+        /// This behavior is safe for using UnityEngine components in advertising events. 
+        /// However, because Unity does not call `Update` while displaying fullscreen ads, 
+        /// all ad events will only be triggered after closing the fullscreen ad and returning to the Unity game.  
+        /// <para> If you want to receive callbacks from the ad without waiting for the ad to close, 
+        /// you can disable the following property in the settings. 
+        /// You will also need to use `CAS.EventExecutor.Add(Action)` to access Unity Engine components, 
+        /// where Action will be executed during the next `Update()` cycle.</para>
         /// </summary>
         bool isExecuteEventsOnUnityThread { get; set; }
 

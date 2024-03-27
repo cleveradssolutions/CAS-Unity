@@ -9,7 +9,7 @@ namespace CAS.AdObject
     [AddComponentMenu("CleverAdsSolutions/Banner Ad Object")]
     [DisallowMultipleComponent]
     [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ad-object")]
-    public sealed class BannerAdObject : MonoBehaviour, IInternalAdObject
+    public sealed class BannerAdObject : MonoBehaviour
     {
         /// <summary>
         /// Last active Banner Ad object. May be is null!
@@ -72,7 +72,7 @@ namespace CAS.AdObject
         public void SetAdSize(AdSize size)
         {
             adSize = size;
-            RefreshLinktWithAdView();
+            RefreshLinkWithAdView();
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace CAS.AdObject
 
         private void Start()
         {
-            if (!CASFactory.TryGetManagerByIndexAsync(this, managerId.index))
+            if (!CASFactory.TryGetManagerByIndexAsync(managerId.index, OnManagerReady))
                 OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
 
@@ -151,17 +151,21 @@ namespace CAS.AdObject
         {
             if (Instance == this)
                 Instance = null;
+            if (manager == null)
+                CASFactory.OnManagerStateChanged -= OnManagerReady;
             DetachAdView();
-            CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
         }
 
         #endregion
 
         #region Manager Events wrappers
-        void IInternalAdObject.OnManagerReady(InitialConfiguration config)
+        private void OnManagerReady(int index, IInternalManager manager)
         {
-            this.manager = config.manager;
-            RefreshLinktWithAdView();
+            if (!this || index != managerId.index) return;
+            CASFactory.OnManagerStateChanged -= OnManagerReady;
+
+            this.manager = manager;
+            RefreshLinkWithAdView();
         }
 
         private void DetachAdView()
@@ -177,7 +181,7 @@ namespace CAS.AdObject
             adView = null;
         }
 
-        private void RefreshLinktWithAdView()
+        private void RefreshLinkWithAdView()
         {
             if (manager == null)
                 return;

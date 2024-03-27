@@ -9,7 +9,7 @@ namespace CAS.AdObject
     [AddComponentMenu("CleverAdsSolutions/Rewarded Ad Object")]
     [DisallowMultipleComponent]
     [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Rewarded-Ad-object")]
-    public sealed class RewardedAdObject : MonoBehaviour, IInternalAdObject
+    public sealed class RewardedAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
 
@@ -67,13 +67,35 @@ namespace CAS.AdObject
         #region MonoBehaviour
         private void Start()
         {
-            if (!CASFactory.TryGetManagerByIndexAsync(this, managerId.index))
+            if (!CASFactory.TryGetManagerByIndexAsync(managerId.index, OnManagerReady))
                 OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
         }
 
-        void IInternalAdObject.OnManagerReady(InitialConfiguration config)
+        private void OnDestroy()
         {
-            this.manager = config.manager;
+            if (manager == null)
+            {
+                CASFactory.OnManagerStateChanged -= OnManagerReady;
+            }
+            else
+            {
+                manager.OnRewardedAdLoaded -= OnAdLoaded.Invoke;
+                manager.OnRewardedAdFailedToLoad -= AdFailedToLoad;
+                manager.OnRewardedAdFailedToShow -= AdFailedToShow;
+                manager.OnRewardedAdClicked -= OnAdClicked.Invoke;
+                manager.OnRewardedAdCompleted -= OnReward.Invoke;
+                manager.OnRewardedAdClosed -= AdClosed;
+                manager.OnRewardedAdImpression -= OnAdImpression.Invoke;
+            }
+        }
+        #endregion
+
+        #region Manager Events wrappers
+        private void OnManagerReady(int index, IInternalManager manager)
+        {
+            if (!this || index != managerId.index) return;
+            CASFactory.OnManagerStateChanged -= OnManagerReady;
+            this.manager = manager;
             manager.OnRewardedAdLoaded += OnAdLoaded.Invoke;
             manager.OnRewardedAdFailedToLoad += AdFailedToLoad;
             manager.OnRewardedAdFailedToShow += AdFailedToShow;
@@ -100,23 +122,6 @@ namespace CAS.AdObject
             }
         }
 
-        private void OnDestroy()
-        {
-            if (manager != null)
-            {
-                manager.OnRewardedAdLoaded -= OnAdLoaded.Invoke;
-                manager.OnRewardedAdFailedToLoad -= AdFailedToLoad;
-                manager.OnRewardedAdFailedToShow -= AdFailedToShow;
-                manager.OnRewardedAdClicked -= OnAdClicked.Invoke;
-                manager.OnRewardedAdCompleted -= OnReward.Invoke;
-                manager.OnRewardedAdClosed -= AdClosed;
-                manager.OnRewardedAdImpression -= OnAdImpression.Invoke;
-            }
-            CASFactory.UnsubscribeReadyManagerAsync(this, managerId.index);
-        }
-        #endregion
-
-        #region Manager Events wrappers
         private void AdFailedToLoad(AdError error)
         {
             OnAdFailedToLoad.Invoke(error.GetMessage());

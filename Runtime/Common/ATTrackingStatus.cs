@@ -4,8 +4,6 @@
 #define NATIVE_REQUEST
 #endif
 
-using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace CAS
