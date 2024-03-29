@@ -36,9 +36,7 @@
     <Compile Include="Source\AdPosition.cs" />
     <Compile Include="Source\AdSize.cs" />
     <Compile Include="Source\AdType.cs" />
-    <Compile Include="Source\AppStateEventNotifier.cs" />
     <Compile Include="Source\ConsentFlow.cs" />
-    <Compile Include="Source\ConsentFlowStatus.cs" />
     <Compile Include="Source\IAdsPreset.cs" />
     <Compile Include="Source\IAdsSettings.cs" />
     <Compile Include="Source\IAdView.cs" />

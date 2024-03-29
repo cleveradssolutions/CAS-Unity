@@ -47,7 +47,7 @@ namespace CAS.AdObject
         }
 
         /// <summary>
-        /// Presetn ad to user
+        /// Present ad to user
         /// </summary>
         public void Present()
         {

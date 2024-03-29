@@ -36,7 +36,7 @@ namespace CAS
         public bool isEnabled;
         public string privacyPolicyUrl = null;
         public Action OnCompleted = null;
-        public Action<ConsentFlowStatus> OnResult = null;
+        public Action<ConsentFlow.Status> OnResult = null;
         public DebugGeography debugGeography = DebugGeography.EEA;
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace CAS
         /// Set a listener to be invoked when the dialog is dismissed.
         /// The <see cref="ConsentFlowStatus"/> with which the dialog is dismissed will be passed to the listener function.
         /// </summary>
-        public ConsentFlow WithCompletionListener(Action<ConsentFlowStatus> result)
+        public ConsentFlow WithCompletionListener(Action<ConsentFlow.Status> result)
         {
             OnResult += result;
             return this;
@@ -85,6 +85,44 @@ namespace CAS
         {
             this.debugGeography = debugGeography;
             return this;
+        }
+
+        public enum Status
+        {
+            /// <summary>
+            /// User consent obtained. Personalized vs non-personalized undefined.
+            /// </summary>
+            Obtained = 3,
+
+            /// <summary>
+            /// User consent not required.
+            /// </summary>
+            NotRequired = 4,
+
+            /// <summary>
+            /// User consent unavailable.
+            /// </summary>
+            Unavailable = 5,
+
+            /// <summary>
+            /// There was an internal error.
+            /// </summary>
+            InternalError = 10,
+
+            /// <summary>
+            /// There was an error loading data from the network.
+            /// </summary>
+            InternetError = 11,
+
+            /// <summary>
+            /// There was an error with the UI context is passed in.
+            /// </summary>
+            ContextInvalid = 12,
+
+            /// <summary>
+            /// There was an error with another form is still being displayed.
+            /// </summary>
+            FlowStillShowing = 13,
         }
 
         public enum DebugGeography

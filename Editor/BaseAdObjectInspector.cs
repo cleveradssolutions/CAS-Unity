@@ -2,6 +2,7 @@
 
 using UnityEngine;
 using UnityEditor;
+using NUnit.Framework.Constraints;
 
 namespace CAS.AdObject
 {
@@ -18,7 +19,7 @@ namespace CAS.AdObject
         protected SerializedProperty onAdClickedProp;
         protected SerializedProperty onAdImpressionProp;
 
-        protected void OnEnable()
+        protected virtual void OnEnable()
         {
             var obj = serializedObject;
             managerIdProp = obj.FindProperty("managerId");
@@ -78,7 +79,7 @@ namespace CAS.AdObject
         private SerializedProperty consentFlowEnabledProp;
         private SerializedProperty consentFlowProp;
 
-        private void OnEnable()
+        protected void OnEnable()
         {
             var obj = serializedObject;
             managerIdProp = obj.FindProperty("managerId");
@@ -166,7 +167,7 @@ namespace CAS.AdObject
         private SerializedProperty OnCompletedProp;
         private SerializedProperty OnFailedProp;
 
-        private void OnEnable()
+        protected void OnEnable()
         {
             var obj = serializedObject;
             showOnAwakeIfRequiredProp = obj.FindProperty("showOnAwakeIfRequired");
@@ -218,7 +219,7 @@ namespace CAS.AdObject
             "Bottom Right"
         };
 
-        private new void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable();
             var obj = serializedObject;
@@ -292,7 +293,7 @@ namespace CAS.AdObject
         private SerializedProperty onAdFailedToShowProp;
         private SerializedProperty onAdClosedProp;
 
-        private new void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable();
             var obj = serializedObject;
@@ -317,67 +318,62 @@ namespace CAS.AdObject
 
     [CustomEditor(typeof(AppOpenAdObject))]
     [CanEditMultipleObjects]
-    internal class AppOpenAdObjectInspector : BaseAdObjectInspector
+    internal class AppOpenAdObjectInspector : InterstitialAdObjectInspector
     {
-        private SerializedProperty onAdFailedToShowProp;
-        private SerializedProperty onAdClosedProp;
+        private SerializedProperty autoshowProp;
 
-        private new void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable();
             var obj = serializedObject;
-            onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
-            onAdClosedProp = obj.FindProperty("OnAdClosed");
+            autoshowProp = obj.FindProperty("autoshow");
         }
 
-        protected override void OnCallbacksGUI()
+        protected override void OnAdditionalPropertiesGUI()
         {
-            EditorGUILayout.PropertyField(onAdFailedToShowProp);
-            base.OnCallbacksGUI();
-            EditorGUILayout.PropertyField(onAdClosedProp);
+            base.OnAdditionalPropertiesGUI();
+            autoshowProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Autoshow loaded Ad when user open the app",
+                autoshowProp.boolValue
+            );
+            if (autoshowProp.boolValue)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.HelpBox("The ad will be shown when the user opens the app. Additionally, the ad must be loaded, and this component must not be destroyed.", MessageType.None);
+                EditorGUI.indentLevel--;
+            }
         }
 
         protected override void OnFooterGUI()
         {
-            EditorGUILayout.LabelField("Call `LoadAd()` and `Present()` methods to show AppOpen Ad.",
+            EditorGUILayout.LabelField("Autoload not supported. Call `Load()` and `Show()` methods to show AppOpen Ad.",
                 EditorStyles.wordWrappedMiniLabel);
         }
     }
 
     [CustomEditor(typeof(RewardedAdObject))]
     [CanEditMultipleObjects]
-    internal class RewardedAdObjectInspector : BaseAdObjectInspector
+    internal class RewardedAdObjectInspector : InterstitialAdObjectInspector
     {
-        private SerializedProperty onAdFailedToShowProp;
-        private SerializedProperty onAdClosedProp;
-
         private SerializedProperty restartInterstitialIntervalProp;
         private SerializedProperty onRewardProp;
 
-        private new void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable();
             var obj = serializedObject;
             restartInterstitialIntervalProp = obj.FindProperty("restartInterstitialInterval");
-            onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
-            onAdClosedProp = obj.FindProperty("OnAdClosed");
             onRewardProp = obj.FindProperty("OnReward");
         }
 
         protected override void OnAdditionalPropertiesGUI()
         {
+            base.OnAdditionalPropertiesGUI();
             restartInterstitialIntervalProp.boolValue = EditorGUILayout.ToggleLeft(
                 "Restart Interstitial Ad interval on rewarded ad closed",
                 restartInterstitialIntervalProp.boolValue
             );
             EditorGUILayout.PropertyField(onRewardProp);
-        }
-
-        protected override void OnCallbacksGUI()
-        {
-            EditorGUILayout.PropertyField(onAdFailedToShowProp);
-            base.OnCallbacksGUI();
-            EditorGUILayout.PropertyField(onAdClosedProp);
         }
 
         protected override void OnFooterGUI()
@@ -388,23 +384,20 @@ namespace CAS.AdObject
     }
 
     [CustomEditor(typeof(ReturnToPlayAdObject))]
-    internal class ReturnToPlayAdObjectInspector : BaseAdObjectInspector
+    internal class ReturnToPlayAdObjectInspector : InterstitialAdObjectInspector
     {
         private SerializedProperty allowAdProp;
-        private SerializedProperty onAdFailedToShowProp;
-        private SerializedProperty onAdClosedProp;
 
-        private new void OnEnable()
+        protected override void OnEnable()
         {
             base.OnEnable();
             var obj = serializedObject;
             allowAdProp = obj.FindProperty("_allowReturnToPlayAd");
-            onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
-            onAdClosedProp = obj.FindProperty("OnAdClosed");
         }
 
         protected override void OnAdditionalPropertiesGUI()
         {
+            base.OnAdditionalPropertiesGUI();
             EditorGUI.BeginChangeCheck();
             allowAdProp.boolValue = EditorGUILayout.ToggleLeft(
                 "Allow ads to show on return to game",
@@ -414,13 +407,6 @@ namespace CAS.AdObject
             {
                 ((ReturnToPlayAdObject)target).allowReturnToPlayAd = allowAdProp.boolValue;
             }
-        }
-
-        protected override void OnCallbacksGUI()
-        {
-            EditorGUILayout.PropertyField(onAdFailedToShowProp);
-            base.OnCallbacksGUI();
-            EditorGUILayout.PropertyField(onAdClosedProp);
         }
     }
 }

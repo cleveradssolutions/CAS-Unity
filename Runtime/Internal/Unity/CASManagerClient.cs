@@ -224,7 +224,7 @@ namespace CAS.Unity
             _rewarded = new CASFullscreenView(this, AdType.Rewarded);
             _appOpen = new CASFullscreenView(this, AdType.AppOpen);
 
-            CASFactory.HandleConsentFlow(initSettings.consentFlow, ConsentFlowStatus.Unavailable);
+            CASFactory.HandleConsentFlow(initSettings.consentFlow, ConsentFlow.Status.Unavailable);
         }
 
         #region IMediationManager implementation

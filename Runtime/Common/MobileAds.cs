@@ -44,20 +44,26 @@ namespace CAS
 
         /// <summary>
         /// Raised when the application enters the background.
+        /// <para>Note that the Android runtime triggers events not from the main Unity thread. 
+        /// However, you can call CAS plugin methods without leaving the current thread.</para>
         /// </summary>
-        public static event Action OnApplicationPaused
+        public static event Action OnApplicationBackground
         {
-            add { CASFactory.GetAppStateEventClient().OnApplicationPaused += value; }
-            remove { CASFactory.GetAppStateEventClient().OnApplicationPaused -= value; }
+            add { CASFactory.GetAppStateEventClient().OnApplicationBackground += value; }
+            remove { CASFactory.GetAppStateEventClient().OnApplicationBackground -= value; }
         }
 
         /// <summary>
         /// Raised when the application enters the foreground.
+        /// It's important to use this event when you want to show ads on user returning to the game.
+        /// 
+        /// <para>Note that the Android runtime triggers events not from the main Unity thread. 
+        /// However, you can call CAS plugin methods without leaving the current thread.</para>
         /// </summary>
-        public static event Action OnApplicationResumed
+        public static event Action OnApplicationForeground
         {
-            add { CASFactory.GetAppStateEventClient().OnApplicationResumed += value; }
-            remove { CASFactory.GetAppStateEventClient().OnApplicationResumed -= value; }
+            add { CASFactory.GetAppStateEventClient().OnApplicationForeground += value; }
+            remove { CASFactory.GetAppStateEventClient().OnApplicationForeground -= value; }
         }
 
         /// <summary>

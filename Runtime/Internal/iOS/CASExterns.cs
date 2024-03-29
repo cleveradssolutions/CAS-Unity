@@ -351,7 +351,7 @@ namespace CAS.iOS
 
     internal static class CASExternCallbacks
     {
-        internal static Action<ConsentFlowStatus> consentFlowComplete;
+        internal static Action<ConsentFlow.Status> consentFlowComplete;
         internal static Action consentFlowSimpleComplete;
         private static ATTrackingStatus.CompleteHandler attTrackingComplete;
 
@@ -378,7 +378,7 @@ namespace CAS.iOS
             {
                 // Callback in UI Thread from native side
                 if (consentFlowComplete != null)
-                    consentFlowComplete((ConsentFlowStatus)status);
+                    consentFlowComplete((ConsentFlow.Status)status);
                 if (consentFlowSimpleComplete != null)
                     consentFlowSimpleComplete();
             }

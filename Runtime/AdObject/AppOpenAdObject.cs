@@ -13,6 +13,9 @@ namespace CAS.AdObject
     {
         public ManagerIndex managerId;
 
+        [SerializeField]
+        private bool autoshow = false;
+
         public UnityEvent OnAdLoaded;
         public CASUEventWithError OnAdFailedToLoad;
         public CASUEventWithError OnAdFailedToShow;
@@ -26,19 +29,11 @@ namespace CAS.AdObject
         private bool loadAdOnAwake = false;
 
         /// <summary>
-        /// Check ready ad to present.
-        /// </summary>
-        public bool isAdReady
-        {
-            get { return manager != null && manager.IsReadyAd(AdType.AppOpen); }
-        }
-
-        /// <summary>
         /// Manual load Ad.
-        /// <para>Please call load before each show ad.</para>
+        /// <para>Please call load method before each show ad.</para>
         /// <para>You can get a callback for the successful loading of an ad by subscribe <see cref="OnAdLoaded"/>.</para>
         /// </summary>
-        public void LoadAd()
+        public void Load()
         {
             if (manager == null)
                 loadAdOnAwake = true;
@@ -47,9 +42,17 @@ namespace CAS.AdObject
         }
 
         /// <summary>
-        /// Presetn ad to user
+        /// Check ready ad to present.
         /// </summary>
-        public void Present()
+        public bool IsLoaded()
+        {
+            return manager != null && manager.IsReadyAd(AdType.AppOpen);
+        }
+
+        /// <summary>
+        /// Present ad to user
+        /// </summary>
+        public void Show()
         {
             if (manager == null)
             {
@@ -81,6 +84,10 @@ namespace CAS.AdObject
                 manager.OnAppOpenAdClicked -= OnAdClicked.Invoke;
                 manager.OnAppOpenAdClosed -= OnAdClosed.Invoke;
                 manager.OnAppOpenAdImpression -= OnAdImpression.Invoke;
+                if (autoshow)
+                {
+                    MobileAds.OnApplicationForeground -= AppForeground;
+                }
             }
 
         }
@@ -100,6 +107,11 @@ namespace CAS.AdObject
             manager.OnAppOpenAdClosed += OnAdClosed.Invoke;
             manager.OnAppOpenAdImpression += OnAdImpression.Invoke;
 
+            if (autoshow)
+            {
+                MobileAds.OnApplicationForeground += AppForeground;
+            }
+
             try
             {
                 if (manager.IsReadyAd(AdType.AppOpen))
@@ -110,6 +122,10 @@ namespace CAS.AdObject
                 {
                     loadAdOnAwake = false;
                     manager.LoadAd(AdType.AppOpen);
+                }
+                else
+                {
+                    OnAdFailedToLoad.Invoke(AdError.NotReady.GetMessage());
                 }
             }
             catch (Exception e)
@@ -127,6 +143,12 @@ namespace CAS.AdObject
         {
             OnAdFailedToShow.Invoke(error);
             OnAdClosed.Invoke();
+        }
+
+        private void AppForeground()
+        {
+            if (IsLoaded())
+                Show();
         }
         #endregion
     }

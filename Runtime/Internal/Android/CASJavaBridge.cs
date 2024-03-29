@@ -80,8 +80,8 @@ namespace CAS.Android
 
     internal class CASAppStateEventClient : AndroidJavaProxy, IAppStateEventClient
     {
-        public event Action OnApplicationPaused;
-        public event Action OnApplicationResumed;
+        public event Action OnApplicationBackground;
+        public event Action OnApplicationForeground;
 
 #pragma warning disable IDE0052
         private readonly AndroidJavaObject _bridge;
@@ -96,13 +96,13 @@ namespace CAS.Android
         {
             if (status == 1)
             {
-                if (OnApplicationResumed != null)
-                    OnApplicationResumed();
+                if (OnApplicationForeground != null)
+                    OnApplicationForeground();
             }
             else
             {
-                if (OnApplicationPaused != null)
-                    OnApplicationPaused();
+                if (OnApplicationBackground != null)
+                    OnApplicationBackground();
             }
         }
     }
@@ -110,9 +110,9 @@ namespace CAS.Android
     internal class CASConsentFlowCallback : AndroidJavaProxy
     {
         private Action OnCompleted;
-        private Action<ConsentFlowStatus> OnResult;
+        private Action<ConsentFlow.Status> OnResult;
 
-        internal CASConsentFlowCallback(Action<ConsentFlowStatus> OnResult, Action OnCompleted) : base(CASJavaBridge.SimpleCallbackClass)
+        internal CASConsentFlowCallback(Action<ConsentFlow.Status> OnResult, Action OnCompleted) : base(CASJavaBridge.SimpleCallbackClass)
         {
             EventExecutor.Initialize();
             this.OnCompleted = OnCompleted;
@@ -128,13 +128,13 @@ namespace CAS.Android
 
                 if (CASJavaBridge.executeEventsOnUnityThread)
                 {
-                    EventExecutor.Add(() => callback((ConsentFlowStatus)status));
+                    EventExecutor.Add(() => callback((ConsentFlow.Status)status));
                 }
                 else
                 {
                     try
                     {
-                        callback((ConsentFlowStatus)status);
+                        callback((ConsentFlow.Status)status);
                     }
                     catch (Exception e)
                     {

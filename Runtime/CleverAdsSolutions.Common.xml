@@ -199,10 +199,10 @@
             Override a link to the App's Privacy Policy in the consent dialog.
             </summary>
         </member>
-        <member name="M:CAS.ConsentFlow.WithCompletionListener(System.Action{CAS.ConsentFlowStatus})">
+        <member name="M:CAS.ConsentFlow.WithCompletionListener(System.Action{CAS.ConsentFlow.Status})">
             <summary>
             Set a listener to be invoked when the dialog is dismissed.
-            The <see cref="T:CAS.ConsentFlowStatus"/> with which the dialog is dismissed will be passed to the listener function.
+            The <see cref="!:ConsentFlowStatus"/> with which the dialog is dismissed will be passed to the listener function.
             </summary>
         </member>
         <member name="M:CAS.ConsentFlow.WithCompletionListener(System.Action)">
@@ -215,6 +215,41 @@
             Sets the debug geography for testing purposes.
             Note that debug settings only work with Test Ad Mode enabled or for <see cref="M:CAS.IAdsSettings.SetTestDeviceIds(System.Collections.Generic.IList{System.String})"/>.
             Default value is <see cref="F:CAS.ConsentFlow.DebugGeography.EEA"/>
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.Status.Obtained">
+            <summary>
+            User consent obtained. Personalized vs non-personalized undefined.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.Status.NotRequired">
+            <summary>
+            User consent not required.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.Status.Unavailable">
+            <summary>
+            User consent unavailable.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.Status.InternalError">
+            <summary>
+            There was an internal error.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.Status.InternetError">
+            <summary>
+            There was an error loading data from the network.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.Status.ContextInvalid">
+            <summary>
+            There was an error with the UI context is passed in.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.Status.FlowStillShowing">
+            <summary>
+            There was an error with another form is still being displayed.
             </summary>
         </member>
         <member name="F:CAS.ConsentFlow.DebugGeography.Disabled">
@@ -230,41 +265,6 @@
         <member name="F:CAS.ConsentFlow.DebugGeography.NotEEA">
             <summary>
             Geography appears as not in European Economic Area.
-            </summary>
-        </member>
-        <member name="F:CAS.ConsentFlowStatus.Obtained">
-            <summary>
-            User consent obtained. Personalized vs non-personalized undefined.
-            </summary>
-        </member>
-        <member name="F:CAS.ConsentFlowStatus.NotRequired">
-            <summary>
-            User consent not required.
-            </summary>
-        </member>
-        <member name="F:CAS.ConsentFlowStatus.Unavailable">
-            <summary>
-            User consent unavailable.
-            </summary>
-        </member>
-        <member name="F:CAS.ConsentFlowStatus.InternalError">
-            <summary>
-            There was an internal error.
-            </summary>
-        </member>
-        <member name="F:CAS.ConsentFlowStatus.InternetError">
-            <summary>
-            There was an error loading data from the network.
-            </summary>
-        </member>
-        <member name="F:CAS.ConsentFlowStatus.ContextInvalid">
-            <summary>
-            There was an error with the UI context is passed in.
-            </summary>
-        </member>
-        <member name="F:CAS.ConsentFlowStatus.FlowStillShowing">
-            <summary>
-            There was an error with another form is still being displayed.
             </summary>
         </member>
         <member name="F:CAS.ConsentStatus.Undefined">

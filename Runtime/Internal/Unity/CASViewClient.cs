@@ -60,7 +60,7 @@ namespace CAS.Unity
         {
             refreshInterval = 0;
         }
-
+        
         public void Load()
         {
             if (_manager.IsEnabledAd(AdType.Banner))
@@ -134,7 +134,7 @@ namespace CAS.Unity
                 var rect = new Rect(rectInPixels);
                 var totalHeight = rect.height;
                 rect.height = totalHeight * 0.65f;
-                if (GUI.Button(rect, "CAS " + size.ToString() + " Ad", style))
+                if (GUI.Button(rect, "CAS.AI " + size.ToString() + " Ad", style))
                     _manager.Post(CallAdClicked);
 
                 rect.y += rect.height;
@@ -336,37 +336,29 @@ namespace CAS.Unity
             if (!active)
                 return;
 
+            string header = "CAS.AI " + _type.ToString() + " Ad. Nice job!\nClick to Close";
             if (_type == AdType.Rewarded)
             {
                 float width = Screen.width;
                 float halfHeight = Screen.height * 0.5f;
-                GUI.enabled = loaded;
-                bool isClosed = GUI.Button(new Rect(0, 0, width, halfHeight),
-                    "Close\nCAS Rewarded Video Ad", style);
+                bool isClosed = GUI.Button(new Rect(0, 0, width, halfHeight), header, style);
                 bool isCompleted = GUI.Button(new Rect(0, halfHeight, width, halfHeight),
-                    "Complete\nCAS Rewarded Video Ad", style);
+                    "Click to earn Reward", style);
                 if (isClosed || isCompleted)
                 {
                     if (isCompleted)
                     {
                         _manager.Post(OnAdClicked);
                         _manager.Post(OnAdCompleted);
-                        // Delayed OnAdClosed after OnAdComplete to simulate real behaviour.
-                        _manager.Post(CallAdClosed, UnityEngine.Random.Range(0.3f, 1.0f));
                     }
-                    else
-                    {
-                        _manager.Post(CallAdClosed);
-                    }
+                    _manager.Post(CallAdClosed);
                 }
-                GUI.enabled = true;
             }
-            else if (GUI.Button(new Rect(0, 0, Screen.width, Screen.height), "Close\n\nCAS " + _type.ToString() + " Ad", style))
+            else if (GUI.Button(new Rect(0, 0, Screen.width, Screen.height), header, style))
             {
-                _manager.Post(OnAdClicked);
                 if (_type == AdType.Interstitial)
                     _manager._settings.lastInterImpressionTimestamp = Time.time;
-                active = false;
+                _manager.Post(OnAdClicked);
                 _manager.Post(CallAdClosed);
             }
         }

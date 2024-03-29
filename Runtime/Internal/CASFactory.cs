@@ -17,8 +17,8 @@ namespace CAS
 
     internal interface IAppStateEventClient
     {
-        event Action OnApplicationPaused;
-        event Action OnApplicationResumed;
+        event Action OnApplicationBackground;
+        event Action OnApplicationForeground;
     }
 
     internal interface IInternalManager : IMediationManager
@@ -136,7 +136,7 @@ namespace CAS
                 else
 #endif
                 {
-                    appStateEventClient = CAS.Unity.AppStateEventClient.Create();
+                    appStateEventClient = CAS.Unity.CASAppStateEventClient.Create();
                 }
             }
             return appStateEventClient;
@@ -373,7 +373,7 @@ namespace CAS
             var forceTesting = initSettings && initSettings.IsTestAdMode();
 #if UNITY_EDITOR
             UnityLog("Show Consent flow has been called but not supported in Unity Editor.");
-            HandleConsentFlow(flow, ConsentFlowStatus.Unavailable);
+            HandleConsentFlow(flow, ConsentFlow.Status.Unavailable);
 #endif
 #if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
@@ -400,7 +400,7 @@ namespace CAS
 #endif
         }
 
-        internal static void HandleConsentFlow(ConsentFlow flow, ConsentFlowStatus status)
+        internal static void HandleConsentFlow(ConsentFlow flow, ConsentFlow.Status status)
         {
             if (flow == null) return;
             if (flow.OnResult != null)

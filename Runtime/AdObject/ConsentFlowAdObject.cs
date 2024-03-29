@@ -52,11 +52,11 @@ namespace CAS.AdObject
                 CreateFlow().ShowIfRequired();
         }
 
-        private void HandleFlowResult(ConsentFlowStatus status)
+        private void HandleFlowResult(ConsentFlow.Status status)
         {
-            if (status == ConsentFlowStatus.Obtained
-                || status == ConsentFlowStatus.NotRequired
-                || status == ConsentFlowStatus.Unavailable)
+            if (status == ConsentFlow.Status.Obtained
+                || status == ConsentFlow.Status.NotRequired
+                || status == ConsentFlow.Status.Unavailable)
                 OnCompleted.Invoke();
             else
                 OnFailed.Invoke(status.ToString());
