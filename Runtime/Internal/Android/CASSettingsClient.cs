@@ -119,8 +119,8 @@ namespace CAS.Android
 
         public bool trackLocationEnabled
         {
-            get { return false; }
-            set {  /*Only for iOS*/ }
+            get { return locationCollectionEnabled; }
+            set { locationCollectionEnabled = value; }
         }
 
         public bool allowInterstitialAdsWhenVideoCostAreLower
@@ -147,6 +147,11 @@ namespace CAS.Android
             set { settingsBridge.CallStatic("setContentURL", value); }
         }
 
+        public bool locationCollectionEnabled
+        {
+            get { return settingsBridge.CallStatic<bool>("getLocationCollectionEnabled"); }
+            set { settingsBridge.CallStatic("setLocationCollectionEnabled", value); }
+        }
         public void SetKeywords(IList<string> keywords)
         {
             settingsBridge.CallStatic("clearKeywords");

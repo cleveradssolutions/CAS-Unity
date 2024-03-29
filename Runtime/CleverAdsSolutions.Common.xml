@@ -368,7 +368,6 @@
         <member name="P:CAS.IAdsSettings.trackLocationEnabled">
             <summary>
             The SDK automatically collects location data if the user allowed the app to track the location.
-            <para>iOS supported only right now.</para>
             <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
             </summary>
         </member>
@@ -780,6 +779,15 @@
             <summary>
             The user’s age
             Limitation: 1-99 and 0 is 'unknown'
+            </summary>
+        </member>
+        <member name="P:CAS.ITargetingOptions.locationCollectionEnabled">
+            <summary>
+            Collect from the device the latitude and longitude coordinated truncated to the
+            hundredths decimal place.
+            <para>Collect only if your application already has the relevant end-user permissions.</para>
+            <para>Does not collect if the target audience is children.</para>
+            <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
             </summary>
         </member>
         <member name="P:CAS.ITargetingOptions.contentURL">

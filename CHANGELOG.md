@@ -1,5 +1,15 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.6.0] - 2024-04-29
+- Discover the latest features in native 3.6.0 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [iOS] The minimum supported Xcode version has been increased to 15.1.
+- [iOS] Added support for the Apple Privacy Manifest update to ensure publisher compliance with new App Store submission requirements.
+- [iOS] Added required `AdSupport` and `AppTrackingTransparency` frameworks if `UserTrackingUsageDescription` defined in settings window.
+- Added `CAS.MobileAds.targetingOptions.locationCollectionEnabled` property to collect from the device the latitude and longitude coordinated truncated to the hundredths decimal place. And `Location targeting if allowed` default value for both platforms to settings window. Collect occurs only if your application already has the relevant end-user permissions and if the target audience is not children.
+- Make `CAS.MobileAds.settings.trackLocationEnabled` obsolete in favor of locationCollectionEnabled in targetingOptions for both platforms.
+### Bug Fixes
+- Fixed the mapping of `AdNetwork.DTExchange` to the native CAS for the `AdMetaData` structure.
+
 # [3.5.6] - 2024-02-28
 - Discover the latest features in native 3.5.6 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 

@@ -10,7 +10,7 @@ namespace CAS
         /// <summary>
         /// CAS Unity wrapper version
         /// </summary>
-        public const string wrapperVersion = "3.5.6";
+        public const string wrapperVersion = "3.6.0";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -23,7 +23,7 @@ namespace CAS
         /// <summary>
         /// Get first initialized <see cref="IMediationManager"/>
         /// <para>May be NULL before the first initialization in the session.</para>
-        /// <para>We recommend using the <see cref="BuildManager()"/>.WithManagerIdAtIndex().Initialize() method to get a specific manager.</para>
+        /// <para>We recommend using the <see cref="BuildManager()"/>.WithManagerIdAtIndex().Build() method to get a specific manager.</para>
         /// </summary>
         public static IMediationManager manager
         {
@@ -51,7 +51,7 @@ namespace CAS
 
         /// <summary>
         /// Create <see cref="IMediationManager"/> builder.
-        /// <para>Don't forget to call the <see cref="IManagerBuilder.Initialize"/> method to create manager instance.</para>
+        /// <para>Don't forget to call the <see cref="IManagerBuilder.Build"/> method to create manager instance.</para>
         /// </summary>
         public static IManagerBuilder BuildManager()
         {

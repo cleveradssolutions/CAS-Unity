@@ -21,6 +21,8 @@ namespace CAS.Unity
         public bool iOSAppPauseOnBackground { get; set; }
         public bool allowInterstitialAdsWhenVideoCostAreLower { get; set; }
         public bool trackLocationEnabled { get; set; }
+        public bool locationCollectionEnabled { get; set; }
+        public bool isExecuteEventsOnUnityThread { get; set; }
 
         public Gender gender { get; set; }
         public int age { get; set; }
@@ -42,12 +44,6 @@ namespace CAS.Unity
 
         public void SetTestDeviceIds(IList<string> testDeviceIds)
         {
-        }
-
-        public bool isExecuteEventsOnUnityThread
-        {
-            get { return CASFactory.IsExecuteEventsOnUnityThread(); }
-            set { CASFactory.SetExecuteEventsOnUnityThread(value); }
         }
 
         public void SetKeywords(IList<string> keywords) { }
