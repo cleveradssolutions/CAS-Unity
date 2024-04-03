@@ -71,7 +71,6 @@ namespace CAS
                 case AdError.NotReady: return "Ad are not ready";
                 case AdError.ManagerIsDisabled: return "Manager is disabled";
                 case AdError.ReachedCap: return "Reached cap for user";
-                case AdError.NotEnoughSpace: return "Not enough space to display ads";
                 case AdError.IntervalNotYetPassed: return "The interval between Ad impressions has not yet passed";
                 case AdError.AlreadyDisplayed: return "Ad already displayed";
                 case AdError.AppIsPaused: return "Application is paused";

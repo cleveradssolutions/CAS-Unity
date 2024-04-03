@@ -24,12 +24,11 @@ namespace CAS
         UnityAds = 4,
         AppLovin = 5,
         SuperAwesome = 6,
-        DTExchange = 7,
         [Obsolete("No longer supported")]
         AdColony = 8,
         AudienceNetwork = 9,
         InMobi = 10,
-
+        DTExchange = 11,
         MyTarget = 12,
         CrossPromotion = 13,
         IronSource = 14,
@@ -134,34 +133,7 @@ namespace CAS
         [Obsolete("Use .GetTag() instead")]
         public static string[] GetListOfTags()
         {
-            return new string[]
-            {
-                "AM",
-                "V",
-                "K",
-                "CB",
-                "U",
-                "AL",
-                "SuA",
-                string.Empty,
-                string.Empty,
-                "FB",
-                "IM",
-                "Fy",
-                "MT",
-                "P",
-                "IS",
-                "Ya",
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                "MB",
-                "Pa"
-            };
+            return new string[0];
         }
     }
 }

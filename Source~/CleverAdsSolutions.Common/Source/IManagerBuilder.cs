@@ -8,7 +8,7 @@ namespace CAS
     public interface IManagerBuilder : IAdsPreset
     {
         /// <summary>
-        /// Initialize new <see cref="IMediationManager"/> and save to <see cref="MobileAds.manager"/> field.
+        /// Initialize new <see cref="IMediationManager"/> and save to CAS.MobileAds.manager field.
         /// Can be called for different identifiers to create different managers.
         /// <para>Attention! Do not initialize mediated advertising SDKs (CAS does that for you).
         /// Not following this step will result in noticeable integration issues.</para>

@@ -202,7 +202,7 @@
         <member name="M:CAS.ConsentFlow.WithCompletionListener(System.Action{CAS.ConsentFlow.Status})">
             <summary>
             Set a listener to be invoked when the dialog is dismissed.
-            The <see cref="!:ConsentFlowStatus"/> with which the dialog is dismissed will be passed to the listener function.
+            The <see cref="T:CAS.ConsentFlow.Status"/> with which the dialog is dismissed will be passed to the listener function.
             </summary>
         </member>
         <member name="M:CAS.ConsentFlow.WithCompletionListener(System.Action)">
@@ -538,7 +538,7 @@
         </member>
         <member name="M:CAS.IManagerBuilder.Build">
             <summary>
-            Initialize new <see cref="T:CAS.IMediationManager"/> and save to <see cref="!:MobileAds.manager"/> field.
+            Initialize new <see cref="T:CAS.IMediationManager"/> and save to CAS.MobileAds.manager field.
             Can be called for different identifiers to create different managers.
             <para>Attention! Do not initialize mediated advertising SDKs (CAS does that for you).
             Not following this step will result in noticeable integration issues.</para>
@@ -649,7 +649,7 @@
         <member name="T:CAS.IMediationManager">
             <summary>
             Interface for managing CAS mediation.
-            Get instance using the <see cref="!:MobileAds.BuildManager"/> builder.
+            Get instance using the CAS.MobileAds.BuildManager() builder.
             </summary>
         </member>
         <member name="E:CAS.IMediationManager.OnInterstitialAdLoaded">
@@ -786,7 +786,7 @@
             <summary>
             Manual load <see cref="T:CAS.AdType"/> Ad.
             <para>Please call load before each show ad whe active load mode is <see cref="F:CAS.LoadingManagerMode.Manual"/>.</para>
-            <para>You can get a callback for the successful loading of an ad by subscribe <see cref="!:OnLoadedAd"/>.</para>
+            <para>You can get a callback for the successful loading of an ad by subscribe OnLoadedAd events</para>
             <para>Please for <see cref="F:CAS.AdType.Banner"/> use new ad size api <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.Load() instead.</para>
             </summary>
         </member>
@@ -945,15 +945,6 @@
             <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
             </summary>
         </member>
-        <member name="P:CAS.ITargetingOptions.locationCollectionEnabled">
-            <summary>
-            Collect from the device the latitude and longitude coordinated truncated to the
-            hundredths decimal place.
-            <para>Collect only if your application already has the relevant end-user permissions.</para>
-            <para>Does not collect if the target audience is children.</para>
-            <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
-            </summary>
-        </member>
         <member name="P:CAS.ITargetingOptions.contentURL">
             <summary>
             Sets the content URL for a web site whose content matches the app's primary content.
@@ -1013,7 +1004,15 @@
             <para>Reduces memory reservations for advertising content.</para>
             </summary>
         </member>
-        <!-- Badly formed XML comment ignored for member "F:CAS.LoadingManagerMode.HighestPerformance" -->
+        <member name="F:CAS.LoadingManagerMode.HighestPerformance">
+            <summary>
+            Automatic control loading mediation ads.
+            <para>Provides slow polling of mediation networks for advertising content.</para>
+            <para>This helps to reduce the impact of background processes on the application.</para>
+            <para>At the same time, do not lose much of the relevance of the high cost of advertising content.</para>
+            <para>Reduces memory reservations for advertising content.</para>
+            </summary>
+        </member>
         <member name="F:CAS.LoadingManagerMode.Manual">
             <summary>
             Manual control loading mediation ads.

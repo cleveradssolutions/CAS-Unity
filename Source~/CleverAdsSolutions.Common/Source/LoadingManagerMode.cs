@@ -43,6 +43,7 @@ namespace CAS
         /// <para>This helps to reduce the impact of background processes on the application.</para>
         /// <para>At the same time, do not lose much of the relevance of the high cost of advertising content.</para>
         /// <para>Reduces memory reservations for advertising content.</para>
+        /// </summary>
         HighestPerformance = 4,
 
         /// <summary>

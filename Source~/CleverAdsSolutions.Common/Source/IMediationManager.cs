@@ -20,7 +20,7 @@ namespace CAS
 
     /// <summary>
     /// Interface for managing CAS mediation.
-    /// Get instance using the <see cref="MobileAds.BuildManager"/> builder.
+    /// Get instance using the CAS.MobileAds.BuildManager() builder.
     /// </summary>
     [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK")]
     public interface IMediationManager
@@ -145,7 +145,7 @@ namespace CAS
         /// <summary>
         /// Manual load <see cref="AdType"/> Ad.
         /// <para>Please call load before each show ad whe active load mode is <see cref="LoadingManagerMode.Manual"/>.</para>
-        /// <para>You can get a callback for the successful loading of an ad by subscribe <see cref="OnLoadedAd"/>.</para>
+        /// <para>You can get a callback for the successful loading of an ad by subscribe OnLoadedAd events</para>
         /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.Load() instead.</para>
         /// </summary>
         void LoadAd(AdType adType);

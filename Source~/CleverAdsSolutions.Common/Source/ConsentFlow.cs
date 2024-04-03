@@ -59,7 +59,7 @@ namespace CAS
 
         /// <summary>
         /// Set a listener to be invoked when the dialog is dismissed.
-        /// The <see cref="ConsentFlowStatus"/> with which the dialog is dismissed will be passed to the listener function.
+        /// The <see cref="ConsentFlow.Status"/> with which the dialog is dismissed will be passed to the listener function.
         /// </summary>
         public ConsentFlow WithCompletionListener(Action<ConsentFlow.Status> result)
         {
