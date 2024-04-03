@@ -7,10 +7,11 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
-using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
 {
+    using Utils = CASEditorUtils;
+    
     public partial class DependencyManager
     {
         #region Internal implementation

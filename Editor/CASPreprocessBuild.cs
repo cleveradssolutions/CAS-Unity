@@ -9,7 +9,6 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
 using UnityEngine.Networking;
-using Utils = CAS.UEditor.CASEditorUtils;
 
 #if UNITY_2018_1_OR_NEWER
 using UnityEditor.Build.Reporting;
@@ -17,6 +16,8 @@ using UnityEditor.Build.Reporting;
 
 namespace CAS.UEditor
 {
+    using Utils = CASEditorUtils;
+
 #if UNITY_2018_1_OR_NEWER
     public class CASPreprocessBuild : IPreprocessBuildWithReport
 #else
