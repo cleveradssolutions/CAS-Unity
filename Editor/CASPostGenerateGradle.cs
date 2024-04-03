@@ -11,10 +11,11 @@ using System.Xml.Linq;
 using UnityEngine;
 using UnityEditor.Android;
 using UnityEditor;
-using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
 {
+    using Utils = CASEditorUtils;
+
     public class CASPostGenerateGradle : IPostGenerateGradleAndroidProject
     {
         private const string applyFromPlugin = "apply from: 'CASPlugin.androidlib/";

@@ -139,11 +139,11 @@ BOOL CASUGetiOSAppPauseOnBackground(void) {
 }
 
 void CASUSetTrackLocationEnabled(BOOL enabled) {
-    [CAS.settings setTrackLocationWithEnabled:enabled];
+    [CAS.targetingOptions setLocationCollectionEnabled:enabled];
 }
 
 BOOL CASUGetTrackLocationEnabled(void) {
-    return [CAS.settings isTrackLocationEnabled];
+    return [CAS.targetingOptions getLocationCollectionEnabled];
 }
 
 #pragma mark - User targeting options

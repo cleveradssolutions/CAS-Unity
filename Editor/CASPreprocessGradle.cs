@@ -32,10 +32,11 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
 {
+    using Utils = CASEditorUtils;
+    
     internal static class CASPreprocessGradle
     {
         internal static void Configure(CASEditorSettings settings)

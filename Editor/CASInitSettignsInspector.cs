@@ -8,10 +8,11 @@ using UnityEditor;
 using UnityEditor.AnimatedValues;
 using UnityEditorInternal;
 using UnityEngine;
-using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
 {
+    using Utils = CASEditorUtils;
+
     [CustomEditor(typeof(CASInitSettings))]
     internal class CASInitSettignsInspector : Editor
     {

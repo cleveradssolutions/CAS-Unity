@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using Utils = CAS.UEditor.CASEditorUtils;
 
 namespace CAS.UEditor
 {
@@ -24,7 +23,7 @@ namespace CAS.UEditor
 
         public static DependencyManager Create(BuildTarget platform, Audience audience, bool deepInit)
         {
-            string listPath = Utils.GetTemplatePath("CAS" + platform.ToString() + "Mediation.list");
+            string listPath = CASEditorUtils.GetTemplatePath("CAS" + platform.ToString() + "Mediation.list");
             if (listPath == null)
                 return null;
 

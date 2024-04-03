@@ -945,6 +945,15 @@
             <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
             </summary>
         </member>
+        <member name="P:CAS.ITargetingOptions.locationCollectionEnabled">
+            <summary>
+            Collect from the device the latitude and longitude coordinated truncated to the
+            hundredths decimal place.
+            <para>Collect only if your application already has the relevant end-user permissions.</para>
+            <para>Does not collect if the target audience is children.</para>
+            <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
+            </summary>
+        </member>
         <member name="P:CAS.ITargetingOptions.contentURL">
             <summary>
             Sets the content URL for a web site whose content matches the app's primary content.
