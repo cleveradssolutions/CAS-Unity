@@ -328,9 +328,6 @@ namespace CAS.UEditor
                     HelpStyles.GetContent("Advertiser ID permission"));
             }
 
-            trackLocationEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Location targeting if allowed", trackLocationEnabledProp.boolValue);
-
             OnLoadingModeGUI();
 
             debugModeProp.boolValue = EditorGUILayout.ToggleLeft(
@@ -344,6 +341,9 @@ namespace CAS.UEditor
                     MessageType.Warning);
                 EditorGUI.indentLevel--;
             }
+
+            trackLocationEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Location targeting if allowed", trackLocationEnabledProp.boolValue);
 
             if (platform == BuildTarget.Android)
             {

@@ -5,9 +5,12 @@
 //  Copyright © 2024 CleverAdsSolutions LTD, CAS.AI. All rights reserved.
 //
 
+#ifndef CASUPluginUtils_h
+#define CASUPluginUtils_h
+
+#import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-@import CleverAdsSolutions;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -25,3 +28,5 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
+
+#endif /* ifndef CASUPluginUtils_h */

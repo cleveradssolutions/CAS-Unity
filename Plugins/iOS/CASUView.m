@@ -8,20 +8,6 @@
 #import "CASUPluginUtil.h"
 #import "CASUView.h"
 
-static const int AD_POSITION_TOP_CENTER = 0;
-static const int AD_POSITION_TOP_LEFT = 1;
-static const int AD_POSITION_TOP_RIGHT = 2;
-static const int AD_POSITION_BOTTOM_CENTER = 3;
-static const int AD_POSITION_BOTTOM_LEFT = 4;
-static const int AD_POSITION_BOTTOM_RIGHT = 5;
-
-static const int AD_SIZE_BANNER = 1;
-static const int AD_SIZE_ADAPTIVE = 2;
-static const int AD_SIZE_SMART = 3;
-static const int AD_SIZE_LEADER = 4;
-static const int AD_SIZE_MREC = 5;
-static const int AD_SIZE_FULL_WIDTH = 6;
-static const int AD_SIZE_LINE = 7;
 
 @interface CASUView () <CASBannerDelegate>
 @end
@@ -46,7 +32,7 @@ static const int AD_SIZE_LINE = 7;
         _client = adViewClient;
         _horizontalOffset = 0;
         _verticalOffset = 0;
-        _activePos = AD_POSITION_BOTTOM_CENTER;
+        _activePos = kCASUPosition_BOTTOM_CENTER;
         _activeSizeId = size;
 
         if (size > 0) {
@@ -68,26 +54,26 @@ static const int AD_SIZE_LINE = 7;
 
 - (CASSize *)getSizeByCode:(int)sizeId with:(UIViewController *)controller {
     switch (sizeId) {
-        case AD_SIZE_BANNER: return CASSize.banner;
+        case kCASUSize_BANNER: return CASSize.banner;
 
-        case AD_SIZE_ADAPTIVE: {
+        case kCASUSize_ADAPTIVE: {
             CGSize screenSize = [self getSafeBoundsView:controller.view].size;
             CGFloat width = MIN(screenSize.width, CASSize.leaderboard.width);
             return [CASSize getAdaptiveBannerForMaxWidth:width];
         }
 
-        case AD_SIZE_SMART: return [CASSize getSmartBanner];
+        case kCASUSize_SMART: return [CASSize getSmartBanner];
 
-        case AD_SIZE_LEADER: return CASSize.leaderboard;
+        case kCASUSize_LEADER: return CASSize.leaderboard;
 
-        case AD_SIZE_MREC: return CASSize.mediumRectangle;
+        case kCASUSize_MREC: return CASSize.mediumRectangle;
 
-        case AD_SIZE_FULL_WIDTH:{
+        case kCASUSize_FULL_WIDTH:{
             CGSize screenSize = [self getSafeBoundsView:controller.view].size;
             return [CASSize getAdaptiveBannerForMaxWidth:screenSize.width];
         }
 
-        case AD_SIZE_LINE:{
+        case kCASUSize_LINE:{
             CGSize screenSize = [self getSafeBoundsView:controller.view].size;
             BOOL inLandscape = screenSize.height < screenSize.width;
             CGFloat bannerHeight;
@@ -143,7 +129,7 @@ static const int AD_SIZE_LINE = 7;
 
     // Ignore changes in device orientation if unknown, face up, or face down.
     if (UIDeviceOrientationIsValidInterfaceOrientation([[UIDevice currentDevice] orientation])) {
-        if (_activeSizeId == AD_SIZE_ADAPTIVE || _activeSizeId == AD_SIZE_FULL_WIDTH || _activeSizeId == AD_SIZE_LINE) {
+        if (_activeSizeId == kCASUSize_ADAPTIVE || _activeSizeId == kCASUSize_FULL_WIDTH || _activeSizeId == kCASUSize_LINE) {
             UIViewController *unityController = [CASUPluginUtil unityGLViewController];
             self.bannerView.adSize = [self getSizeByCode:_activeSizeId with:unityController];
         }
@@ -186,8 +172,8 @@ static const int AD_SIZE_LINE = 7;
 }
 
 - (void)setPositionCode:(int)code withX:(int)x withY:(int)y {
-    if (code < AD_POSITION_TOP_CENTER || code > AD_POSITION_BOTTOM_RIGHT) {
-        _activePos = AD_POSITION_BOTTOM_CENTER;
+    if (code < kCASUPosition_TOP_CENTER || code > kCASUPosition_BOTTOM_RIGHT) {
+        _activePos = kCASUPosition_BOTTOM_CENTER;
     } else {
         _activePos = code;
     }
@@ -232,9 +218,9 @@ static const int AD_SIZE_LINE = 7;
     CGFloat verticalPos;
     CGFloat bottom = CGRectGetMaxY(parentBounds) - adSize.height;
     switch (_activePos) {
-        case AD_POSITION_TOP_CENTER:
-        case AD_POSITION_TOP_LEFT:
-        case AD_POSITION_TOP_RIGHT:
+        case kCASUPosition_TOP_CENTER:
+        case kCASUPosition_TOP_LEFT:
+        case kCASUPosition_TOP_RIGHT:
             verticalPos = MIN(CGRectGetMinY(parentBounds) + _verticalOffset, bottom);
             break;
 
@@ -246,13 +232,13 @@ static const int AD_SIZE_LINE = 7;
     CGFloat horizontalPos;
     CGFloat right = CGRectGetMaxX(parentBounds) - adSize.width;
     switch (_activePos) {
-        case AD_POSITION_TOP_LEFT:
-        case AD_POSITION_BOTTOM_LEFT:
+        case kCASUPosition_TOP_LEFT:
+        case kCASUPosition_BOTTOM_LEFT:
             horizontalPos = MIN(CGRectGetMinX(parentBounds) + _horizontalOffset, right);
             break;
 
-        case AD_POSITION_TOP_RIGHT:
-        case AD_POSITION_BOTTOM_RIGHT:
+        case kCASUPosition_TOP_RIGHT:
+        case kCASUPosition_BOTTOM_RIGHT:
             horizontalPos = right;
             break;
 

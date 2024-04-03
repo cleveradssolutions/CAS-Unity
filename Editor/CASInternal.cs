@@ -11,10 +11,9 @@ using UnityEngine;
 namespace CAS.UEditor
 {
     using Utils = CASEditorUtils;
-    
+
     public partial class DependencyManager
     {
-        #region Internal implementation
 #pragma warning disable CS0414
         [SerializeField]
         private string version;
@@ -266,12 +265,10 @@ namespace CAS.UEditor
                 EditorGUI.indentLevel--;
             }
         }
-        #endregion
     }
 
     public partial class Dependency
     {
-        #region Internal implementation
         internal void Reset()
         {
             isNewer = false;
@@ -389,11 +386,11 @@ namespace CAS.UEditor
             EditorGUILayout.BeginHorizontal();
 
             string sdkVersion = null;
-            for (int i = 0; i < depsSDK.Count; i++)
+            for (int i = 0; i < libs.Count; i++)
             {
-                if (depsSDK[i].version != version)
+                if (libs[i].version != version)
                 {
-                    sdkVersion = depsSDK[i].version;
+                    sdkVersion = libs[i].version;
                     break;
                 }
             }
@@ -446,7 +443,7 @@ namespace CAS.UEditor
             }
             else
             {
-                EditorGUI.BeginDisabledGroup(notSupported || (dependency.Length == 0 && depsSDK.Count == 0));
+                EditorGUI.BeginDisabledGroup(notSupported || libs.Count == 0);
 
                 if (GUILayout.Toggle(false, netTitle, GUILayout.ExpandWidth(false)))
                 {
@@ -533,7 +530,7 @@ namespace CAS.UEditor
 
         public void ActivateDependencies(BuildTarget platform, DependencyManager mediation = null)
         {
-            if (dependency.Length == 0 && depsSDK.Count == 0)
+            if (libs.Count == 0)
             {
                 Debug.LogError(Utils.logTag + name + " have no dependencies. Please try reimport CAS package.");
                 return;
@@ -567,14 +564,15 @@ namespace CAS.UEditor
                     builder.Append("    </").Append(sourcesTagName).Append('>').AppendLine();
                 }
 
-                if (dependency.Length > 0)
-                    AppendDependency(mediation, new SDK(dependency, version), platform, builder);
-
                 // EDM4U have a bug.
                 // Dependencies that will be added For All Targets must be at the end of the list of dependencies.
                 // Otherwise, those dependencies that should not be for all targets will be tagged for all targets.
                 if (includeVersions)
                     AppendSDK(platform, mediation, builder, false);
+
+                if (libs.Count > 0)
+                    AppendDependency(mediation, libs[0], platform, builder);
+
                 AppendSDK(platform, mediation, builder, true);
 
                 builder.Append("  </").Append(depTagName).Append("s>").AppendLine()
@@ -604,10 +602,10 @@ namespace CAS.UEditor
 
         private void AppendSDK(BuildTarget platform, DependencyManager mediation, StringBuilder builder, bool allowAllTargets)
         {
-            for (int i = 0; i < depsSDK.Count; i++)
+            for (int i = 1; i < libs.Count; i++)
             {
-                if (allowAllTargets == depsSDK[i].embed)
-                    AppendDependency(mediation, depsSDK[i], platform, builder);
+                if (allowAllTargets == libs[i].embed)
+                    AppendDependency(mediation, libs[i], platform, builder);
             }
 
             if (mediation == null)
@@ -658,6 +656,5 @@ namespace CAS.UEditor
                 }
             }
         }
-        #endregion
     }
 }

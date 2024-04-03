@@ -5,12 +5,13 @@
 //  Copyright © 2024 CleverAdsSolutions LTD, CAS.AI. All rights reserved.
 //
 
+#import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
+#import <CleverAdsSolutions/CleverAdsSolutions.h>
 #import <Foundation/Foundation.h>
 #import "CASUManager.h"
 #import "CASUPluginUtil.h"
 #import "CASUTypes.h"
 #import "CASUView.h"
-@import CleverAdsSolutions;
 
 
 /// Returns an NSString copying the characters from |bytes|, a C array of UTF8-encoded bytes.
@@ -149,15 +150,15 @@ BOOL CASUGetTrackLocationEnabled(void) {
 #pragma mark - User targeting options
 
 void CASUSetUserGender(int gender) {
-    [[CAS targetingOptions] setGender:(Gender)gender];
+    [CAS.targetingOptions setGender:(CASGender)gender];
 }
 
 int CASUGetUserGender(void) {
-    return (int)[[CAS targetingOptions] getGender];
+    return (int)[CAS.targetingOptions getGender];
 }
 
 void CASUSetUserAge(int age) {
-    [[CAS targetingOptions] setAge:age];
+    [CAS.targetingOptions setAge:age];
 }
 
 int CASUGetUserAge(void) {
@@ -291,6 +292,7 @@ void CASUSetMediationExtras(CASManagerBuilderRef builderRef,
 
 void CASUSetConsentFlow(CASManagerBuilderRef      builderRef,
                         BOOL                      isEnabled,
+                        int                       geography,
                         const char                *policyUrl,
                         CASUConsentFlowCompletion completion) {
     CASManagerBuilder *builder = (__bridge CASManagerBuilder *)builderRef;
@@ -298,10 +300,11 @@ void CASUSetConsentFlow(CASManagerBuilderRef      builderRef,
     CASConsentFlow *flow = [[CASConsentFlow alloc] initWithEnabled:isEnabled];
 
     flow.privacyPolicyUrl = CASUStringFromUnity(policyUrl);
+    flow.debugGeography = (CASUserDebugGeography)geography;
 
     if (completion) {
         flow.completionHandler = ^(enum CASConsentFlowStatus status) {
-            completion();
+            completion((int)status);
         };
     }
 
@@ -336,7 +339,7 @@ CASUManagerRef CASUInitializeManager(CASManagerBuilderRef               builderR
     }
 
     CASMediationManager *manager = [builder createWithCasId:nsIdentifier];
-    CASUManager *wrapper = [[CASUManager alloc] initWithManager:manager forClient:client];
+    CASUManager *wrapper = [[CASUManager alloc] initWithManager:manager client:client];
     [cache removeObjectWithKey:@"lastBuilder"];
     [cache saveObject:wrapper withKey:nsIdentifier];
     return (__bridge CASUManagerRef)wrapper;
@@ -346,10 +349,7 @@ void CASUFreeManager(CASUManagerRef managerRef) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
 
     manager.casManager.adLoadDelegate = nil;
-    manager.interCallback = nil;
-    manager.rewardCallback = nil;
-    manager.appReturnDelegate = nil;
-    [manager disableReturnAds];
+    [manager setAutoShowAdOnAppReturn:0];
     CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
     [cache removeObjectWithKey:manager.casManager.managerID];
 }
@@ -373,84 +373,43 @@ void CASUSetLastPageAdContent(CASUManagerRef managerRef, const char *contentJson
     [manager setLastPageAdFor:CASUStringFromUnity(contentJson)];
 }
 
-#pragma mark - Interstitial Ads
-
-void CASUSetInterstitialDelegate(CASUManagerRef                       managerRef,
-                                 CASUDidLoadedAdCallback              didLoaded,
-                                 CASUDidFailedAdCallback              didFailed,
-                                 CASUWillPresentAdCallback            willPresent,
-                                 CASUWillPresentAdCallback            didImpression,
-                                 CASUDidShowAdFailedWithErrorCallback didShowWithError,
-                                 CASUDidClickedAdCallback             didClick,
-                                 CASUDidClosedAdCallback              didClosed) {
+void CASUSetDelegates(CASUManagerRef                       managerRef,
+                      CASUDidLoadedAdCallback              didLoaded,
+                      CASUDidFailedAdCallback              didFailed,
+                      CASUWillPresentAdCallback            willPresent,
+                      CASUWillPresentAdCallback            didImpression,
+                      CASUDidShowAdFailedWithErrorCallback didShowWithError,
+                      CASUDidClickedAdCallback             didClick,
+                      CASUDidCompletedAdCallback           didComplete,
+                      CASUDidClosedAdCallback              didClosed) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
 
-    manager.interCallback.didLoadedCallback = didLoaded;
-    manager.interCallback.didFailedCallback = didFailed;
-    manager.interCallback.willOpeningCallback = willPresent;
-    manager.interCallback.didImpressionCallback = didImpression;
-    manager.interCallback.didShowFailedCallback = didShowWithError;
-    manager.interCallback.didClickCallback = didClick;
-    manager.interCallback.didClosedCallback = didClosed;
+    manager.didLoadedCallback = didLoaded;
+    manager.didFailedCallback = didFailed;
+    manager.willOpeningCallback = willPresent;
+    manager.didImpressionCallback = didImpression;
+    manager.didShowFailedCallback = didShowWithError;
+    manager.didClickCallback = didClick;
+    manager.didCompleteCallback = didComplete;
+    manager.didClosedCallback = didClosed;
 }
 
-void CASULoadInterstitial(CASUManagerRef managerRef) {
+void CASUShowAd(CASUManagerRef managerRef, int type) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
 
-    [manager.casManager loadInterstitial];
+    [manager showAd:type];
 }
 
-BOOL CASUIsInterstitialReady(CASUManagerRef managerRef) {
+void CASULoadAd(CASUManagerRef managerRef, int type) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
 
-    return manager.casManager.isInterstitialReady;
+    [manager loadAd:type];
 }
 
-void CASUPresentInterstitial(CASUManagerRef managerRef) {
+BOOL CASUIsAdReady(CASUManagerRef managerRef, int type) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
 
-    [manager presentInter];
-}
-
-#pragma mark - Rewarded Ads
-
-void CASUSetRewardedDelegate(CASUManagerRef                       managerRef,
-                             CASUDidLoadedAdCallback              didLoaded,
-                             CASUDidFailedAdCallback              didFailed,
-                             CASUWillPresentAdCallback            willPresent,
-                             CASUWillPresentAdCallback            didImpression,
-                             CASUDidShowAdFailedWithErrorCallback didShowWithError,
-                             CASUDidClickedAdCallback             didClick,
-                             CASUDidCompletedAdCallback           didComplete,
-                             CASUDidClosedAdCallback              didClosed) {
-    CASUManager *manager = (__bridge CASUManager *)managerRef;
-
-    manager.rewardCallback.didLoadedCallback = didLoaded;
-    manager.rewardCallback.didFailedCallback = didFailed;
-    manager.rewardCallback.willOpeningCallback = willPresent;
-    manager.rewardCallback.didImpressionCallback = didImpression;
-    manager.rewardCallback.didShowFailedCallback = didShowWithError;
-    manager.rewardCallback.didClickCallback = didClick;
-    manager.rewardCallback.didCompleteCallback = didComplete;
-    manager.rewardCallback.didClosedCallback = didClosed;
-}
-
-void CASULoadReward(CASUManagerRef managerRef) {
-    CASUManager *manager = (__bridge CASUManager *)managerRef;
-
-    [manager.casManager loadRewardedAd];
-}
-
-BOOL CASUIsRewardedReady(CASUManagerRef managerRef) {
-    CASUManager *manager = (__bridge CASUManager *)managerRef;
-
-    return manager.casManager.isRewardedAdReady;
-}
-
-void CASUPresentRewarded(CASUManagerRef managerRef) {
-    CASUManager *manager = (__bridge CASUManager *)managerRef;
-
-    [manager presentReward];
+    return [manager isAdReady:type];
 }
 
 #pragma mark - AdView
@@ -537,31 +496,10 @@ int CASUGetAdViewRefreshInterval(CASUViewRef viewRef) {
 
 #pragma mark - App Return Ads
 
-void CASUSetAppReturnDelegate(CASUManagerRef                       managerRef,
-                              CASUWillPresentAdCallback            willPresent,
-                              CASUWillPresentAdCallback            didImpression,
-                              CASUDidShowAdFailedWithErrorCallback didShowWithError,
-                              CASUDidClickedAdCallback             didClick,
-                              CASUDidClosedAdCallback              didClosed) {
-    CASUManager *manager = (__bridge CASUManager *)managerRef;
-
-    manager.appReturnDelegate.willOpeningCallback = willPresent;
-    manager.appReturnDelegate.didImpressionCallback = didImpression;
-    manager.appReturnDelegate.didShowFailedCallback = didShowWithError;
-    manager.appReturnDelegate.didClickCallback = didClick;
-    manager.appReturnDelegate.didClosedCallback = didClosed;
-}
-
-void CASUEnableAppReturnAds(CASUManagerRef manager) {
+void CASUSetAutoShowAdOnAppReturn(CASUManagerRef manager, BOOL enabled) {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
 
-    [internalManager enableReturnAds];
-}
-
-void CASUDisableAppReturnAds(CASUManagerRef manager) {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
-
-    [internalManager disableReturnAds];
+    [internalManager setAutoShowAdOnAppReturn:enabled];
 }
 
 void CASUSkipNextAppReturnAds(CASUManagerRef manager) {
@@ -658,26 +596,35 @@ double CASUGetImpressionLifetimeRevenue(CASImpressionRef impression) {
 
 #pragma mark - Consent Flow
 
-void CASUShowConsentFlow(BOOL                      enabled,
+void CASUShowConsentFlow(BOOL                      ifRequired,
+                         BOOL                      testing,
+                         int                       geography,
                          const char                *policy,
                          CASUConsentFlowCompletion completion) {
-    CASConsentFlow *flow = [[CASConsentFlow alloc] initWithEnabled:enabled];
+    CASConsentFlow *flow = [[CASConsentFlow alloc] init];
 
     flow.privacyPolicyUrl = CASUStringFromUnity(policy);
+    flow.debugGeography = (CASUserDebugGeography)geography;
+    flow.forceTesting = testing;
 
     if (completion) {
         flow.completionHandler = ^(enum CASConsentFlowStatus status) {
-            completion();
+            completion((int)status);
         };
     }
 
     flow.viewControllerToPresent = [CASUPluginUtil unityGLViewController];
-    [flow present];
+
+    if (ifRequired) {
+        [flow presentIfRequired];
+    } else {
+        [flow present];
+    }
 }
 
 #pragma mark - ATT API
 
-void CASURequestATT(CASUATTCompletion completion) {
+void CASURequestATT(CASUConsentFlowCompletion completion) {
     [CASInternalUtils trackingAuthorizationRequest:^(NSUInteger status) {
         completion(status);
     }];

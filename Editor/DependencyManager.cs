@@ -220,7 +220,7 @@ namespace CAS.UEditor
             {
                 this.name = name;
                 this.version = version;
-                this.embed = addToAllTargets;
+                embed = addToAllTargets;
             }
         }
 
@@ -230,9 +230,8 @@ namespace CAS.UEditor
         public string version = string.Empty;
         public AdNetwork require = noNetwork;
         public Filter filter;
-        public string dependency = string.Empty;
-        public string embedLib = string.Empty;
-        public List<SDK> depsSDK = new List<SDK>();
+        public List<SDK> libs = new List<SDK>();
+        public string[] embedPath = new string[0];
         public string[] contains = new string[0];
         public string source = string.Empty;
         public string comment;

@@ -10,8 +10,8 @@
 #if UNITY_2019_3_OR_NEWER
 #define EmbedDynamicFrameworks
 
-// Avoid DTExchange issue with: Invalid Signature - A sealed resource is missing or invalid
-//#define UnpackDTExchangeXCFramework
+// Avoid XCFrameworks issue with: Invalid Signature - A sealed resource is missing or invalid
+#define CAS_UNPACK_XCFRAMEWORKS
 
 // Yandex Ads not support to place the Resources bundle in UnityFramework, 
 // then we embed the bundle to App target
@@ -565,27 +565,30 @@ namespace CAS.UEditor
         {
             for (int i = 0; i < deps.networks.Length; i++)
             {
-                var frameworkPath = deps.networks[i].embedLib;
-                if (string.IsNullOrEmpty(frameworkPath) || !deps.networks[i].IsInstalled())
+                if (deps.networks[i].embedPath.Length == 0 || !deps.networks[i].IsInstalled())
                     continue;
 
-                frameworkPath = Path.Combine("Pods", frameworkPath);
-
-#if UnpackDTExchangeXCFramework
-                if (deps.networks[i].name == "DTExchange")
-                    frameworkPath = UnpackXCFramework(frameworkPath);
+                foreach (var embedPath in deps.networks[i].embedPath)
+                {
+                    var path = Path.Combine("Pods", embedPath);
+#if CAS_UNPACK_XCFRAMEWORKS
+                    if (path.EndsWith(".xcframework"))
+                    {
+                        var frameworkName = Path.GetFileNameWithoutExtension(path) + ".framework";
+                        var arch = Path.Combine(path, "ios-arm64");
+                        if (PlayerSettings.iOS.sdkVersion == iOSSdkVersion.SimulatorSDK)
+                            arch += "_x86_64-simulator";
+                        path = Path.Combine(arch, frameworkName);
+                    }
 #endif
-                project.AddEmbedFramework(targetGuid, frameworkPath);
+                    var pathInProject = Path.Combine("Frameworks", Path.GetFileName(path));
+
+                    var fileGuid = project.AddFile(path, pathInProject);
+                    project.AddFileToEmbedFrameworks(targetGuid, fileGuid);
+                }
             }
         }
 #endif
-
-        private static void AddEmbedFramework(this PBXProject project, string targetGuid, string frameworkPath)
-        {
-            var pathInProject = Path.Combine("Frameworks", Path.GetFileName(frameworkPath));
-            var fileGuid = project.AddFile(frameworkPath, pathInProject);
-            project.AddFileToEmbedFrameworks(targetGuid, fileGuid);
-        }
 
         private static void AddEmbedResourcesBundle(this PBXProject project, string targetGuid, string bundlePath)
         {
@@ -593,15 +596,6 @@ namespace CAS.UEditor
             var resourcesGuid = project.AddFolderReference(bundlePath, pathInProject, PBXSourceTree.Source);
             var buildPhase = project.GetResourcesBuildPhaseByTarget(targetGuid);
             project.AddFileToBuildSection(targetGuid, buildPhase, resourcesGuid);
-        }
-
-        private static string UnpackXCFramework(string path)
-        {
-            var frameworkName = Path.GetFileNameWithoutExtension(path) + ".framework";
-            var sdkDir = Path.Combine(path, "ios-arm64");
-            if (PlayerSettings.iOS.sdkVersion == iOSSdkVersion.SimulatorSDK)
-                sdkDir += "_x86_64-simulator";
-            return Path.Combine(sdkDir, frameworkName);
         }
         #endregion
     }

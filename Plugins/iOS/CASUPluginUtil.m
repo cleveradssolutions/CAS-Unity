@@ -5,9 +5,9 @@
 //  Copyright © 2024 CleverAdsSolutions LTD, CAS.AI. All rights reserved.
 //
 
+#import <AVFoundation/AVFoundation.h>
 #import "CASUPluginUtil.h"
 #import "UnityInterface.h"
-#import <AVFoundation/AVFoundation.h>
 
 @interface CASUPluginUtil ()
 /// References to objects Google Mobile ads objects created from Unity.
@@ -64,8 +64,8 @@ static BOOL _pauseOnBackground = YES;
 
 + (UIViewController *)unityGLViewController {
     return UnityGetGLViewController()
-            ? : UnityGetMainWindow().rootViewController
-            ? : [[UIApplication sharedApplication].keyWindow rootViewController];
+            ? : [UIApplication sharedApplication].delegate.window.rootViewController
+            ? : UnityGetMainWindow().rootViewController;
 }
 
 + (void)onAdsWillPressent {
