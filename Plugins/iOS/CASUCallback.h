@@ -16,9 +16,12 @@
 
 @interface CASUCallback : NSObject<CASAppReturnDelegate, CASPaidCallback>
 
-- (nonnull instancetype)initWithType:(int)type;
+- (nonnull instancetype)initWithType:(int)type
+                              client:(_Nonnull CASManagerClientRef *_Nonnull)client;
 
-@property (nonatomic, weak) CASUManager *_Nullable manager;
+@property (nonatomic, assign) _Nonnull CASManagerClientRef *_Nonnull client;
+@property (nonatomic, assign, nullable) CASUActionCallback actionCallback;
+@property (nonatomic, assign, nullable) CASUImpressionCallback impressionCallback;
 @property (nonatomic, strong, nullable) NSObject<CASStatusHandler> *impression;
 
 - (void)didAdLoaded;

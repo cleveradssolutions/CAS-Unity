@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CASUPluginUtil : NSObject
 + (nonnull instancetype)sharedInstance;
 
+@property (nonatomic, strong, nullable) CASManagerBuilder *builder;
 - (void)saveObject:(nullable id)obj withKey:(nonnull NSString *)key;
 - (void)removeObjectWithKey:(nonnull NSString *)key;
 

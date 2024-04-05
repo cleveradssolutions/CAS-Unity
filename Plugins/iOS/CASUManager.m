@@ -9,6 +9,11 @@
 #import "CASUManager.h"
 #import "CASUPluginUtil.h"
 
+@interface CASUManager ()
+@property (nonatomic, strong) NSMutableDictionary *viewReferences;
+
+@end
+
 @implementation CASUManager
 
 - (instancetype)initWithManager:(CASMediationManager *)manager
@@ -17,17 +22,13 @@
 
     if (self) {
         _casManager = manager;
-        _client = client;
-        _interCallback = [[CASUCallback alloc] initWithType:kCASUType_INTER];
-        _rewardCallback = [[CASUCallback alloc] initWithType:kCASUType_REWARD];
-        _appReturnDelegate = [[CASUCallback alloc] initWithType:kCASUType_APP_RETURN];
-        _appOpenCallback = [[CASUCallback alloc] initWithType:kCASUType_APP_OPEN];
+        _viewReferences = [[NSMutableDictionary alloc] init];
+        _interCallback = [[CASUCallback alloc] initWithType:kCASUType_INTER client:client];
+        _rewardCallback = [[CASUCallback alloc] initWithType:kCASUType_REWARD client:client];
+        _appReturnDelegate = [[CASUCallback alloc] initWithType:kCASUType_APP_RETURN client:client];
+        _appOpenCallback = [[CASUCallback alloc] initWithType:kCASUType_APP_OPEN client:client];
         _appOpenAd = [CASAppOpen createWithManager:manager];
 
-        _interCallback.manager = self;
-        _rewardCallback.manager = self;
-        _appReturnDelegate.manager = self;
-        _appOpenCallback.manager = self;
         manager.adLoadDelegate = self;
     }
 
@@ -106,6 +107,13 @@
         default:
             break;
     }
+}
+
+- (CASUView *)createViewWithSize:(int)adSize client:(CASViewClientRef  _Nullable *)adViewClient{
+    CASUView *view = [[CASUView alloc] initWithManager:self.casManager forClient:adViewClient size:adSize];
+
+    self.viewReferences[[NSString stringWithFormat:@"%d", adSize]] = view;
+    return view;
 }
 
 - (void)setLastPageAdFor:(NSString *)content {

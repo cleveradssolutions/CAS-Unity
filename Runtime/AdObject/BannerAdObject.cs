@@ -159,7 +159,7 @@ namespace CAS.AdObject
         #endregion
 
         #region Manager Events wrappers
-        private void OnManagerReady(int index, IInternalManager manager)
+        private void OnManagerReady(int index, CASManagerBase manager)
         {
             if (!this || index != managerId.index) return;
             CASFactory.OnManagerStateChanged -= OnManagerReady;

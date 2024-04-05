@@ -34,9 +34,6 @@ static const char * CASUStringToUnity(NSString *str) {
 
 #pragma mark - CAS Settings
 
-void CASUSetAnalyticsCollectionWithEnabled(BOOL enabled) {
-}
-
 void CASUSetTestDeviceWithIds(const char **testDeviceIDs, int testDeviceIDLength) {
     NSMutableArray *testDeviceIDsArray = [[NSMutableArray alloc] init];
 
@@ -262,10 +259,10 @@ const char * CASUGetSDKVersion(void) {
 
 #pragma mark - CAS Manager
 
-CASManagerBuilderRef CASUCreateBuilder(NSInteger  enableAd,
-                                       BOOL       demoAd,
-                                       const char *unityVersion,
-                                       const char *userID) {
+void CASUCreateBuilder(NSInteger  enableAd,
+                       BOOL       demoAd,
+                       const char *unityVersion,
+                       const char *userID) {
     CASManagerBuilder *builder = [CAS buildManager];
 
     [builder withAdFlags:(CASTypeFlags)enableAd];
@@ -273,16 +270,13 @@ CASManagerBuilderRef CASUCreateBuilder(NSInteger  enableAd,
     [builder withFramework:@"Unity" version:CASUStringFromUnity(unityVersion)];
     [builder withUserID:CASUStringFromUnity(userID)];
 
-    [[CASUPluginUtil sharedInstance] saveObject:builder withKey:@"lastBuilder"];
-
-    return (__bridge CASManagerBuilderRef)builder;
+    [CASUPluginUtil sharedInstance].builder = builder;
 }
 
-void CASUSetMediationExtras(CASManagerBuilderRef builderRef,
-                            const char           **extraKeys,
-                            const char           **extraValues,
-                            NSInteger            extrasCount) {
-    CASManagerBuilder *builder = (__bridge CASManagerBuilder *)builderRef;
+void CASUSetMediationExtras(const char **extraKeys,
+                            const char **extraValues,
+                            NSInteger  extrasCount) {
+    CASManagerBuilder *builder = [CASUPluginUtil sharedInstance].builder;
 
     for (int i = 0; i < extrasCount; i++) {
         [builder withMediationExtras:CASUStringFromUnity(extraValues[i])
@@ -290,12 +284,11 @@ void CASUSetMediationExtras(CASManagerBuilderRef builderRef,
     }
 }
 
-void CASUSetConsentFlow(CASManagerBuilderRef      builderRef,
-                        BOOL                      isEnabled,
+void CASUSetConsentFlow(BOOL                      isEnabled,
                         int                       geography,
                         const char                *policyUrl,
                         CASUConsentFlowCompletion completion) {
-    CASManagerBuilder *builder = (__bridge CASManagerBuilder *)builderRef;
+    CASManagerBuilder *builder = [CASUPluginUtil sharedInstance].builder;
 
     CASConsentFlow *flow = [[CASConsentFlow alloc] initWithEnabled:isEnabled];
 
@@ -312,21 +305,18 @@ void CASUSetConsentFlow(CASManagerBuilderRef      builderRef,
     [builder withConsentFlow:flow];
 }
 
-void CASUDisableConsentFlow(CASManagerBuilderRef builderRef) {
-    CASManagerBuilder *builder = (__bridge CASManagerBuilder *)builderRef;
+void CASUDisableConsentFlow(void) {
+    CASManagerBuilder *builder = [CASUPluginUtil sharedInstance].builder;
 
     [builder withConsentFlow:[[CASConsentFlow alloc]initWithEnabled:false]];
 }
 
-CASUManagerRef CASUInitializeManager(CASManagerBuilderRef               builderRef,
-                                     CASManagerClientRef                *client,
-                                     CASUInitializationCompleteCallback onInit,
-                                     const char                         *identifier) {
+CASUManagerRef CASUBuildManager(CASManagerClientRef                *client,
+                                CASUInitializationCompleteCallback onInit,
+                                const char                         *identifier) {
     NSString *nsIdentifier = CASUStringFromUnity(identifier);
 
-    CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
-
-    CASManagerBuilder *builder = (__bridge CASManagerBuilder *)builderRef;
+    CASManagerBuilder *builder = [CASUPluginUtil sharedInstance].builder;
 
     if (onInit) {
         [builder withCompletionHandler:^(CASInitialConfig *config) {
@@ -340,18 +330,10 @@ CASUManagerRef CASUInitializeManager(CASManagerBuilderRef               builderR
 
     CASMediationManager *manager = [builder createWithCasId:nsIdentifier];
     CASUManager *wrapper = [[CASUManager alloc] initWithManager:manager client:client];
-    [cache removeObjectWithKey:@"lastBuilder"];
+    CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
+    cache.builder = nil;
     [cache saveObject:wrapper withKey:nsIdentifier];
     return (__bridge CASUManagerRef)wrapper;
-}
-
-void CASUFreeManager(CASUManagerRef managerRef) {
-    CASUManager *manager = (__bridge CASUManager *)managerRef;
-
-    manager.casManager.adLoadDelegate = nil;
-    [manager setAutoShowAdOnAppReturn:0];
-    CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
-    [cache removeObjectWithKey:manager.casManager.managerID];
 }
 
 #pragma mark - General Ads functions
@@ -373,25 +355,22 @@ void CASUSetLastPageAdContent(CASUManagerRef managerRef, const char *contentJson
     [manager setLastPageAdFor:CASUStringFromUnity(contentJson)];
 }
 
-void CASUSetDelegates(CASUManagerRef                       managerRef,
-                      CASUDidLoadedAdCallback              didLoaded,
-                      CASUDidFailedAdCallback              didFailed,
-                      CASUWillPresentAdCallback            willPresent,
-                      CASUWillPresentAdCallback            didImpression,
-                      CASUDidShowAdFailedWithErrorCallback didShowWithError,
-                      CASUDidClickedAdCallback             didClick,
-                      CASUDidCompletedAdCallback           didComplete,
-                      CASUDidClosedAdCallback              didClosed) {
+void CASUSetDelegates(CASUManagerRef         managerRef,
+                      CASUActionCallback     actionCallback,
+                      CASUImpressionCallback impressionCallback) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
 
-    manager.didLoadedCallback = didLoaded;
-    manager.didFailedCallback = didFailed;
-    manager.willOpeningCallback = willPresent;
-    manager.didImpressionCallback = didImpression;
-    manager.didShowFailedCallback = didShowWithError;
-    manager.didClickCallback = didClick;
-    manager.didCompleteCallback = didComplete;
-    manager.didClosedCallback = didClosed;
+    manager.interCallback.actionCallback = actionCallback;
+    manager.interCallback.impressionCallback = impressionCallback;
+
+    manager.rewardCallback.actionCallback = actionCallback;
+    manager.rewardCallback.impressionCallback = impressionCallback;
+
+    manager.appOpenCallback.actionCallback = actionCallback;
+    manager.appOpenCallback.impressionCallback = impressionCallback;
+
+    manager.appReturnDelegate.actionCallback = actionCallback;
+    manager.appReturnDelegate.impressionCallback = impressionCallback;
 }
 
 void CASUShowAd(CASUManagerRef managerRef, int type) {
@@ -418,37 +397,30 @@ CASUViewRef CASUCreateAdView(CASUManagerRef   managerRef,
                              CASViewClientRef *client,
                              int              adSizeCode) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
-    CASUView *view = [[CASUView alloc] initWithManager:manager.casManager forClient:client size:adSizeCode];
-    CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
+    CASUView *view = [manager createViewWithSize:adSizeCode client:client];
 
-    [cache saveObject:view withKey:[NSString stringWithFormat:@"%@_%d", manager.casManager.managerID, adSizeCode]];
     return (__bridge CASUViewRef)view;
 }
 
-void CASUDestroyAdView(CASUViewRef viewRef, const char *key) {
+void CASUDestroyAdView(CASUViewRef viewRef) {
     CASUView *view = (__bridge CASUView *)viewRef;
 
     if (view) {
-        [view destroy];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [view destroy];
+        });
     }
-
-    CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
-    [cache removeObjectWithKey:CASUStringFromUnity(key)];
 }
 
-void CASUAttachAdViewDelegate(CASUViewRef                 viewRef,
-                              CASUViewDidLoadCallback     didLoad,
-                              CASUViewDidFailedCallback   didFailed,
-                              CASUViewWillPresentCallback willPresent,
-                              CASUViewDidClickedCallback  didClicked,
-                              CASUViewDidRectCallback     didRect) {
+void CASUAttachAdViewDelegate(CASUViewRef                viewRef,
+                              CASUViewActionCallback     actionCallback,
+                              CASUViewImpressionCallback impressionCallback,
+                              CASUViewRectCallback       rectCallback) {
     CASUView *view = (__bridge CASUView *)viewRef;
 
-    view.adLoadedCallback = didLoad;
-    view.adFailedCallback = didFailed;
-    view.adPresentedCallback = willPresent;
-    view.adClickedCallback = didClicked;
-    view.adRectCallback = didRect;
+    view.actionCallback = actionCallback;
+    view.impressionCallback = impressionCallback;
+    view.rectCallback = rectCallback;
     [view attach];
 }
 
@@ -626,7 +598,7 @@ void CASUShowConsentFlow(BOOL                      ifRequired,
 
 void CASURequestATT(CASUConsentFlowCompletion completion) {
     [CASInternalUtils trackingAuthorizationRequest:^(NSUInteger status) {
-        completion(status);
+        completion((int)status);
     }];
 }
 

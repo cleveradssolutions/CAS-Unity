@@ -22,11 +22,9 @@
 
 @property (nonatomic, strong) CASBannerView *_Nullable bannerView;
 @property (nonatomic, assign) CASViewClientRef _Nullable *_Nullable client;
-@property (nonatomic, assign, nullable) CASUViewDidLoadCallback adLoadedCallback;
-@property (nonatomic, assign, nullable) CASUViewDidFailedCallback adFailedCallback;
-@property (nonatomic, assign, nullable) CASUViewWillPresentCallback adPresentedCallback;
-@property (nonatomic, assign, nullable) CASUViewDidClickedCallback adClickedCallback;
-@property (nonatomic, assign, nullable) CASUViewDidRectCallback adRectCallback;
+@property (nonatomic, assign, nullable) CASUViewActionCallback actionCallback;
+@property (nonatomic, assign, nullable) CASUViewImpressionCallback impressionCallback;
+@property (nonatomic, assign, nullable) CASUViewRectCallback rectCallback;
 
 - (void)present;
 - (void)hide;

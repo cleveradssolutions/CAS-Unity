@@ -10,13 +10,11 @@
 #import "UnityInterface.h"
 
 @interface CASUPluginUtil ()
-/// References to objects Google Mobile ads objects created from Unity.
 @property (nonatomic, strong) NSMutableDictionary *internalReferences;
 
 @end
 
 @implementation CASUPluginUtil{
-    dispatch_queue_t _lockQueue;
 }
 
 + (instancetype)sharedInstance {
@@ -34,22 +32,17 @@
 
     if (self) {
         _internalReferences = [[NSMutableDictionary alloc] init];
-        _lockQueue = dispatch_queue_create("CASUObjectCache lock queue", DISPATCH_QUEUE_SERIAL);
     }
 
     return self;
 }
 
 - (void)saveObject:(id)obj withKey:(NSString *)key {
-    dispatch_async(_lockQueue, ^{
-        self->_internalReferences[key] = obj;
-    });
+    self->_internalReferences[key] = obj;
 }
 
 - (void)removeObjectWithKey:(NSString *)key {
-    dispatch_async(_lockQueue, ^{
-        [self->_internalReferences removeObjectForKey:key];
-    });
+    [self->_internalReferences removeObjectForKey:key];
 }
 
 static BOOL _pauseOnBackground = YES;

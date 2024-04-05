@@ -3,52 +3,39 @@
 #if UNITY_IOS || (CASDeveloper && UNITY_EDITOR)
 using System.Runtime.InteropServices;
 using System;
-
-// Type representing a CASManagerBuilder type
-using CASManagerBuilderRef = System.IntPtr;
-
-// Type representing a CASMediationManager type
-using CASUManagerRef = System.IntPtr;
-
-// Type representing a CASUView type
-using CASUViewRef = System.IntPtr;
-
-// Type representing a Unity AdView ad client.
-using CASViewClientRef = System.IntPtr;
-
-// Type representing a Unity MediationManager ad client.
-using CASManagerClientRef = System.IntPtr;
-
-// Type representing a NSObject<CASStatusHandler> type
-using CASImpressionRef = System.IntPtr;
-
-// Type representing a CASConsentFlow
-using CASConsentFlowRef = System.IntPtr;
 using UnityEngine;
 
 namespace CAS.iOS
 {
+    // Type representing a CASMediationManager type
+    using CASUManagerRef = IntPtr;
+
+    // Type representing a CASUView type
+    using CASUViewRef = IntPtr;
+
+    // Type representing a Unity AdView ad client.
+    using CASViewClientRef = IntPtr;
+
+    // Type representing a Unity MediationManager ad client.
+    using CASManagerClientRef = IntPtr;
+
+    // Type representing a NSObject<CASStatusHandler> type
+    using CASImpressionRef = IntPtr;
+
     // Externs used by the iOS component.
     internal class CASExterns
     {
         #region CAS Mediation Manager callbacks
-        internal delegate void CASUInitializationCompleteCallback(CASUManagerRef manager, string error, string countryCode, bool withConsent, bool isTestMode);
+        internal delegate void CASUInitializationCompleteCallback(CASManagerClientRef manager, string error, string countryCode, bool withConsent, bool isTestMode);
 
-        internal delegate void CASUDidLoadedAdCallback(CASUManagerRef manager, int type);
-        internal delegate void CASUDidFailedAdCallback(CASUManagerRef manager, int type, int error);
-        internal delegate void CASUWillPresentAdCallback(CASUManagerRef manager, int type, CASImpressionRef impression);
-        internal delegate void CASUDidShowAdFailedWithErrorCallback(CASUManagerRef manager, int type, int error);
-        internal delegate void CASUDidClickedAdCallback(CASUManagerRef manager, int type);
-        internal delegate void CASUDidCompletedAdCallback(CASUManagerRef manager, int type);
-        internal delegate void CASUDidClosedAdCallback(CASUManagerRef manager, int type);
+        internal delegate void CASUActionCallback(CASManagerClientRef manager, int action, int type, int error);
+        internal delegate void CASUImpressionCallback(CASManagerClientRef manager, int action, int type, CASImpressionRef impression);
         #endregion
 
         #region CAS AdView callbacks
-        internal delegate void CASUViewDidLoadCallback(CASUViewRef view);
-        internal delegate void CASUViewDidFailedCallback(CASUViewRef view, int error);
-        internal delegate void CASUViewWillPresentCallback(CASUViewRef view, CASImpressionRef impression);
-        internal delegate void CASUViewDidClickedCallback(CASUViewRef view);
-        internal delegate void CASUViewDidRectCallback(CASUViewRef view, float x, float y, float width, float height);
+        internal delegate void CASUViewActionCallback(CASViewClientRef view, int action, int error);
+        internal delegate void CASUViewImpressionCallback(CASViewClientRef view, CASImpressionRef impression);
+        internal delegate void CASUViewRectCallback(CASViewClientRef view, float x, float y, float width, float height);
         #endregion
 
         internal delegate void CASUConsentFlowCompletion(int status);
@@ -175,7 +162,7 @@ namespace CAS.iOS
 
         #region CAS Manager
         [DllImport("__Internal")]
-        internal static extern CASManagerBuilderRef CASUCreateBuilder(
+        internal static extern void CASUCreateBuilder(
             int enableAd,
             bool demoAd,
             string unityVersion,
@@ -184,7 +171,6 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern void CASUSetConsentFlow(
-            CASManagerBuilderRef builderRef,
             bool isEnabled,
             int geography,
             string privacyUrl,
@@ -192,7 +178,7 @@ namespace CAS.iOS
         );
 
         [DllImport("__Internal")]
-        internal static extern void CASUDisableConsentFlow(CASManagerBuilderRef builderRef);
+        internal static extern void CASUDisableConsentFlow();
 
         /// <summary>
         /// Set Mediation Extras to manager Builder
@@ -203,7 +189,6 @@ namespace CAS.iOS
         /// <param name="extrasCount">Count of extras</param>
         [DllImport("__Internal")]
         internal static extern void CASUSetMediationExtras(
-            CASManagerBuilderRef builderRef,
             string[] extraKeys,
             string[] extraValues,
             int extrasCount
@@ -216,15 +201,11 @@ namespace CAS.iOS
         /// <param name="client">C# CASMediationManager client ref</param>
         /// <returns>CASUTypeManagerRef</returns>
         [DllImport("__Internal")]
-        internal static extern CASUManagerRef CASUInitializeManager(
-            CASManagerBuilderRef builderRef,
+        internal static extern CASUManagerRef CASUBuildManager(
             CASManagerClientRef client,
             CASUInitializationCompleteCallback onInit,
             string identifier
         );
-
-        [DllImport("__Internal")]
-        internal static extern void CASUFreeManager(CASUManagerRef managerRef);
         #endregion
 
         #region General Ads functions
@@ -240,14 +221,8 @@ namespace CAS.iOS
         [DllImport("__Internal")]
         internal static extern void CASUSetDelegates(
             CASUManagerRef managerRef,
-            CASUDidLoadedAdCallback didLoad,
-            CASUDidFailedAdCallback didFaied,
-            CASUWillPresentAdCallback willPresent,
-            CASUWillPresentAdCallback didImpression,
-            CASUDidShowAdFailedWithErrorCallback didShowWithError,
-            CASUDidClickedAdCallback didClick,
-            CASUDidCompletedAdCallback didComplete,
-            CASUDidClosedAdCallback didClosed
+            CASUActionCallback actionCallback,
+            CASUImpressionCallback impressionCallback
         );
 
         [DllImport("__Internal")]
@@ -269,16 +244,14 @@ namespace CAS.iOS
         );
 
         [DllImport("__Internal")]
-        internal static extern void CASUDestroyAdView(CASUViewRef viewRef, string key);
+        internal static extern void CASUDestroyAdView(CASUViewRef viewRef);
 
         [DllImport("__Internal")]
         internal static extern void CASUAttachAdViewDelegate(
             CASUViewRef viewRef,
-            CASUViewDidLoadCallback didLoad,
-            CASUViewDidFailedCallback didFailed,
-            CASUViewWillPresentCallback willPresent,
-            CASUViewDidClickedCallback didClicked,
-            CASUViewDidRectCallback didRect);
+            CASUViewActionCallback actionCallback,
+            CASUViewImpressionCallback impressionCallback,
+            CASUViewRectCallback rectCallback);
 
         [DllImport("__Internal")]
         internal static extern void CASUPresentAdView(CASUViewRef viewRef);

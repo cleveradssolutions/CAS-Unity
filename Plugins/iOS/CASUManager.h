@@ -14,6 +14,7 @@
 #import <UIKit/UIKit.h>
 #import "CASUCallback.h"
 #import "CASUTypes.h"
+#import "CASUView.h"
 
 @interface CASUManager : NSObject<CASLoadDelegate>
 
@@ -27,19 +28,12 @@
 @property (nonatomic, strong, nonnull) CASUCallback *appReturnDelegate;
 @property (nonatomic, strong, nonnull) CASUCallback *appOpenCallback;
 
-@property (nonatomic, assign) _Nonnull CASManagerClientRef *_Nonnull client;
-@property (nonatomic, assign, nullable) CASUDidLoadedAdCallback didLoadedCallback;
-@property (nonatomic, assign, nullable) CASUDidFailedAdCallback didFailedCallback;
-@property (nonatomic, assign, nullable) CASUWillPresentAdCallback willOpeningCallback;
-@property (nonatomic, assign, nullable) CASUWillPresentAdCallback didImpressionCallback;
-@property (nonatomic, assign, nullable) CASUDidShowAdFailedWithErrorCallback didShowFailedCallback;
-@property (nonatomic, assign, nullable) CASUDidCompletedAdCallback didCompleteCallback;
-@property (nonatomic, assign, nullable) CASUDidClickedAdCallback didClickCallback;
-@property (nonatomic, assign, nullable) CASUDidClosedAdCallback didClosedCallback;
-
 - (void)loadAd:(int)type;
 - (BOOL)isAdReady:(int)type;
 - (void)showAd:(int)type;
+- (CASUView *_Nonnull)createViewWithSize:(int)adSize 
+                                  client:(CASViewClientRef _Nullable *_Nullable)adViewClient;
+- (void)destroyViewWithSize:(int)adSize;
 
 - (void)setLastPageAdFor:(NSString *_Nullable)content;
 - (void)setAutoShowAdOnAppReturn:(BOOL)enabled;

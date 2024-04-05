@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace CAS
 {
-    internal delegate void ManagerStateChanges(int index, IInternalManager manager);
+    internal delegate void ManagerStateChanges(int index, CASManagerBase manager);
 
     internal interface IAppStateEventClient
     {
@@ -21,28 +21,11 @@ namespace CAS
         event Action OnApplicationForeground;
     }
 
-    internal interface IInternalManager : IMediationManager
-    {
-        new bool isTestAdMode { get; set; }
-        CASInitCompleteEvent initCompleteEvent { get; set; }
-        InitCompleteAction initCompleteAction { get; set; }
-        InitialConfiguration initialConfig { get; set; }
-    }
-
-    internal static class AdTypeCode
-    {
-        internal const int BANNER = 0;
-        internal const int INTER = 1;
-        internal const int REWARD = 2;
-        internal const int APP_OPEN = 3;
-        internal const int APP_RETURN = 5;
-    }
-
     internal static class CASFactory
     {
         private static IAppStateEventClient appStateEventClient;
         private static IAdsSettings settings;
-        private static List<IInternalManager> managers;
+        private static List<CASManagerBase> managers;
 
         internal static event ManagerStateChanges OnManagerStateChanged;
 
@@ -132,12 +115,12 @@ namespace CAS
                 if (Application.platform == RuntimePlatform.Android)
                 {
                     appStateEventClient = new CAS.Android.CASAppStateEventClient();
+                    return appStateEventClient;
                 }
-                else
 #endif
-                {
-                    appStateEventClient = CAS.Unity.CASAppStateEventClient.Create();
-                }
+#if UNITY_EDITOR || PlatformIOS
+                appStateEventClient = CAS.Unity.CASAppStateEventClient.Create();
+#endif
             }
             return appStateEventClient;
         }
@@ -198,7 +181,7 @@ namespace CAS
             }
             else
             {
-                managers = new List<IInternalManager>(initSettings.managersCount);
+                managers = new List<CASManagerBase>(initSettings.managersCount);
                 for (int i = 0; i < initSettings.managersCount; i++)
                     managers.Add(null);
             }
@@ -206,23 +189,22 @@ namespace CAS
             if (settings == null)
                 settings = CreateSettigns(initSettings);
 
-            IInternalManager manager = null;
+            CASManagerBase manager = null;
 #if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
-                manager = new CAS.Android.CASManagerClient().Init(initSettings);
+                manager = new CAS.Android.CASManagerClient();
 #endif
 #if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
-                manager = new CAS.iOS.CASManagerClient().Init(initSettings);
+                manager = new CAS.iOS.CASManagerClient();
 #endif
 #if UNITY_EDITOR
-            manager = CAS.Unity.CASManagerClient.Create(initSettings);
+            manager = new CAS.Unity.CASManagerClient();
 #endif
             if (manager == null)
                 throw new NotSupportedException("Platform: " + Application.platform.ToString());
 
-            manager.initCompleteEvent = initSettings.initListener;
-            manager.initCompleteAction = initSettings.initListenerDeprecated;
+            manager.Init(initSettings);
 
             var managerIndex = initSettings.IndexOfManagerId(manager.managerID);
             if (managerIndex < 0)
@@ -254,31 +236,9 @@ namespace CAS
             return false;
         }
 
-        internal static void OnManagerInitialized(IInternalManager manager, string error, string countryCode, bool isConsentRequired, bool testMode)
+        internal static void OnManagerInitialized(CASManagerBase manager)
         {
             UnityLog("Initialized ads with id: " + manager.managerID);
-
-            var initialConfig = new InitialConfiguration(error, manager, countryCode, isConsentRequired);
-
-            manager.isTestAdMode = testMode;
-            manager.initialConfig = initialConfig;
-            try
-            {
-                if (manager.initCompleteEvent != null)
-                    manager.initCompleteEvent(initialConfig);
-                if (manager.initCompleteAction != null)
-                    manager.initCompleteAction(initialConfig.error == null, initialConfig.error);
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-
-            if (error != InitializationError.NoConnection)
-            {
-                manager.initCompleteEvent = null;
-                manager.initCompleteAction = null;
-            }
 
             if (OnManagerStateChanged != null)
             {
@@ -415,10 +375,19 @@ namespace CAS
                 Debug.Log("[CAS.AI] " + message);
         }
 
-        internal static void UnityLogException(Exception e)
+        internal static void RuntimeLog(int adType, string message)
         {
-#if CASDeveloper
-            Debug.LogException(e);
+#if !UNITY_EDITOR || CASDeveloper
+            if (GetAdsSettings().isDebugMode)
+                Debug.Log("[CAS.AI] " + ((AdType)adType).ToString() + " " + message);
+#endif
+        }
+
+        internal static void RuntimeLog(AdSize adSize, string message)
+        {
+#if !UNITY_EDITOR || CASDeveloper
+            if (GetAdsSettings().isDebugMode)
+                Debug.Log("[CAS.AI] " + adSize.ToString() + " " + message);
 #endif
         }
     }

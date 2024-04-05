@@ -15,31 +15,12 @@ namespace CAS.Android
         internal const string SettingsClass = PluginPackage + ".CASBridgeSettings";
         internal const string AdCallbackClass = PluginPackage + ".CASCallback";
         internal const string AdViewClass = PluginPackage + ".CASView";
-        internal const string AdViewCallbackClass = PluginPackage + ".CASViewCallback";
         internal const string ConsentFlowClass = PluginPackage + ".CASConsentFlow";
         internal const string SimpleCallbackClass = PluginPackage + ".CASSimpleCallback";
         internal const string AppStateEventNotifierClass = PluginPackage + ".AppStateEventNotifier";
         #endregion
 
         internal static volatile bool executeEventsOnUnityThread = true;
-
-        internal static void ExecuteEvent(CASEventWithMeta adEvent, AdType adType, AndroidJavaObject impression)
-        {
-            if (adEvent == null) return;
-            if (executeEventsOnUnityThread)
-            {
-                EventExecutor.Add(() => adEvent(new CASImpressionClient(adType, impression)));
-                return;
-            }
-            try
-            {
-                adEvent(new CASImpressionClient(adType, impression));
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-        }
 
         internal static void ExecuteEvent(Action adEvent)
         {
@@ -58,23 +39,78 @@ namespace CAS.Android
                 Debug.LogException(e);
             }
         }
+    }
 
-        internal static void ExecuteEvent(CASEventWithAdError adEvent, int error)
+    internal class CASCallback : AndroidJavaProxy
+    {
+        internal interface Handler
         {
-            if (adEvent == null) return;
-            if (executeEventsOnUnityThread)
+            void HandleCallback(int action, int type, int error, object impression);
+        }
+
+        private readonly Handler _client;
+        internal CASCallback(Handler client) : base(CASJavaBridge.AdCallbackClass)
+        {
+            _client = client;
+        }
+
+        public override AndroidJavaObject Invoke(string methodName, object[] args)
+        {
+            int action = (int)args[0];
+
+            switch (action)
             {
-                EventExecutor.Add(() => adEvent((AdError)error));
-                return;
+                case AdActionCode.INIT:
+                    string initError;
+                    string countryCode;
+                    bool isConsentRequired;
+                    bool isTestMode;
+                    try
+                    {
+                        initError = args[1] as string;
+                        countryCode = args[2] as string;
+                        isConsentRequired = (bool)args[3];
+                        isTestMode = (bool)args[4];
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ArgumentException("[CAS.AI] Initialization", e);
+                    }
+                    CASJavaBridge.ExecuteEvent(() =>
+                    {
+                        ((CASManagerClient)_client).OnInitialized(initError, countryCode, isConsentRequired, isTestMode);
+                    });
+                    break;
+                case AdActionCode.VIEW_RECT:
+                    try
+                    {
+                        ((CASViewClient)_client).rectInPixels =
+                            new Rect((int)args[1], (int)args[2], (int)args[3], (int)args[4]);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ArgumentException("[CAS.AI] View rect", e);
+                    }
+                    break;
+                default:
+                    int type;
+                    int error;
+                    AndroidJavaObject impression;
+                    try
+                    {
+                        action = (int)args[0];
+                        type = (int)args[1];
+                        error = (int)args[2];
+                        impression = args[3] as AndroidJavaObject;
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ArgumentException("[CAS.AI] Action " + action, e);
+                    }
+                    CASJavaBridge.ExecuteEvent(() => _client.HandleCallback(action, type, error, impression));
+                    break;
             }
-            try
-            {
-                adEvent((AdError)error);
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
+            return null;
         }
     }
 
@@ -92,8 +128,10 @@ namespace CAS.Android
             _bridge = new AndroidJavaObject(CASJavaBridge.AppStateEventNotifierClass, this);
         }
 
-        public void onNativeCallback(int status)
+        public override AndroidJavaObject Invoke(string methodName, object[] args)
         {
+            int status = (int)args[0];
+            CASFactory.UnityLog("Callback App State " + status);
             if (status == 1)
             {
                 if (OnApplicationForeground != null)
@@ -104,6 +142,7 @@ namespace CAS.Android
                 if (OnApplicationBackground != null)
                     OnApplicationBackground();
             }
+            return null;
         }
     }
 
@@ -119,8 +158,10 @@ namespace CAS.Android
             this.OnResult = OnResult;
         }
 
-        public void onNativeCallback(int status)
+        public override AndroidJavaObject Invoke(string methodName, object[] args)
         {
+            int status = (int)args[0];
+            CASFactory.UnityLog("Callback Consent Flow status " + status);
             if (OnResult != null)
             {
                 var callback = OnResult; // Use local variable for lambda
@@ -144,6 +185,7 @@ namespace CAS.Android
             }
             CASJavaBridge.ExecuteEvent(OnCompleted);
             OnCompleted = null;
+            return null;
         }
     }
 
@@ -164,7 +206,7 @@ namespace CAS.Android
 
         internal void Show(bool ifRequired)
         {
-            Call(ifRequired ? "showIfRequired" : "show");
+            Call("show", ifRequired);
         }
     }
 }

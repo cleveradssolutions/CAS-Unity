@@ -76,7 +76,7 @@ namespace CAS.AdObject
             CASFactory.OnManagerStateChanged -= OnManagerReady;
         }
 
-        private void OnManagerReady(int index, IInternalManager manager)
+        private void OnManagerReady(int index, CASManagerBase manager)
         {
             if (!this || index != managerId.index) return;
             var config = manager.initialConfig;

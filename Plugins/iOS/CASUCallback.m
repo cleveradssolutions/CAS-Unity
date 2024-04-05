@@ -13,11 +13,13 @@
     int _adType;
 }
 
-- (instancetype)initWithType:(int)type {
+- (instancetype)initWithType:(int)type
+                      client:(CASManagerClientRef _Nonnull *)client {
     self = [super init];
 
     if (self) {
         _adType = type;
+        _client = client;
     }
 
     return self;
@@ -26,38 +28,38 @@
 - (void)willShownWithAd:(id<CASStatusHandler>)adStatus {
     [CASUPluginUtil onAdsWillPressent];
 
-    if (self.manager.willOpeningCallback) {
+    if (self.impressionCallback) {
         self.impression = (NSObject<CASStatusHandler> *)adStatus;
-        self.manager.willOpeningCallback(self.manager.client, _adType, (__bridge CASImpressionRef)self.impression);
+        self.impressionCallback(self.client, kCASUAction_SHOWN, _adType, (__bridge CASImpressionRef)self.impression);
     }
 }
 
 - (void)didPayRevenueFor:(id<CASStatusHandler>)ad {
-    if (self.manager.didImpressionCallback) {
+    if (self.impressionCallback) {
         self.impression = (NSObject<CASStatusHandler> *)ad;
-        self.manager.didImpressionCallback(self.manager.client, _adType, (__bridge CASImpressionRef)self.impression);
+        self.impressionCallback(self.client, kCASUAction_IMPRESSION, _adType, (__bridge CASImpressionRef)self.impression);
     }
 }
 
 - (void)didShowAdFailedWithError:(NSString *)error {
     [CASUPluginUtil onAdsDidClosed];
 
-    if (self.manager.didShowFailedCallback) {
-        self.manager.didShowFailedCallback(self.manager.client, _adType, (int)[CAS getErrorFor:error]);
+    if (self.actionCallback) {
+        self.actionCallback(self.client, kCASUAction_SHOW_FAILED, _adType, (int)[CAS getErrorFor:error]);
     }
 }
 
 - (void)didCompletedAd {
     if (_adType == kCASUType_REWARD) {
-        if (self.manager.didCompleteCallback) {
-            self.manager.didCompleteCallback(self.manager.client, _adType);
+        if (self.actionCallback) {
+            self.actionCallback(self.client, kCASUAction_COMPLETED, _adType, 0);
         }
     }
 }
 
 - (void)didClickedAd {
-    if (self.manager.didClickCallback) {
-        self.manager.didClickCallback(self.manager.client, _adType);
+    if (self.actionCallback) {
+        self.actionCallback(self.client, kCASUAction_CLICKED, _adType, 0);
     }
 }
 
@@ -72,8 +74,8 @@
 
     [CASUPluginUtil onAdsDidClosed];
 
-    if (self.manager.didClosedCallback) {
-        self.manager.didClosedCallback(self.manager.client, _adType);
+    if (self.actionCallback) {
+        self.actionCallback(self.client, kCASUAction_CLOSED, _adType, 0);
     }
 }
 
@@ -82,28 +84,25 @@
 }
 
 - (void)didAdLoaded {
-    if (self.manager.didLoadedCallback) {
-        int adType = _adType;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (self.manager.didLoadedCallback) {
-                self.manager.didLoadedCallback(self.manager.client, adType);
-            }
-        });
-    }
+    int adType = _adType;
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self.actionCallback) {
+            self.actionCallback(self.client, kCASUAction_LOADED, adType, 0);
+        }
+    });
 }
 
 - (void)didAdFailedToLoadWithErrorCode:(int)error {
-    if (self.manager.didFailedCallback) {
-        self.manager.didFailedCallback(self.manager.client, _adType, error);
+    if (self.actionCallback) {
+        self.actionCallback(self.client, kCASUAction_FAILED, _adType, error);
     }
 }
 
 - (void)didAdFailedToLoadWithError:(NSString *)error {
-    if (self.manager) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self didAdFailedToLoadWithErrorCode:(int)[CAS getErrorFor:error]];
-        });
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self didAdFailedToLoadWithErrorCode:(int)[CAS getErrorFor:error]];
+    });
 }
 
 @end

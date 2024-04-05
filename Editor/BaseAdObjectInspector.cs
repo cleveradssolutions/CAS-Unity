@@ -181,7 +181,10 @@ namespace CAS.AdObject
         {
             var obj = serializedObject;
             obj.UpdateIfRequiredOrScript();
-            EditorGUILayout.PropertyField(showOnAwakeIfRequiredProp);
+            showOnAwakeIfRequiredProp.boolValue = EditorGUILayout.ToggleLeft(
+                "Show On Awake If Required",
+                showOnAwakeIfRequiredProp.boolValue
+            );
             EditorGUI.indentLevel++;
             if (showOnAwakeIfRequiredProp.boolValue)
                 EditorGUILayout.HelpBox("The CAS Consent flow will be displayed automatically, if it is required, when the component is awake", MessageType.None);

@@ -11,7 +11,7 @@
 #define EmbedDynamicFrameworks
 
 // Avoid XCFrameworks issue with: Invalid Signature - A sealed resource is missing or invalid
-#define CAS_UNPACK_XCFRAMEWORKS
+//#define CAS_UNPACK_XCFRAMEWORKS
 
 // Yandex Ads not support to place the Resources bundle in UnityFramework, 
 // then we embed the bundle to App target
@@ -110,14 +110,14 @@ namespace CAS.UEditor
                 if (IsStaticPodInstallUsed(buildPath))
                 {
                     var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
-                    project.AddEmbedDynamicFrameworks(appTargetGuid, depManager);
+                    project.AddEmbeddablePaths(appTargetGuid, depManager);
 
 #if EmbedYandexAdsResourcesBundle
                     var yandexDep = depManager.Find(AdNetwork.YandexAds);
                     if (yandexDep != null && yandexDep.IsInstalled())
                     {
                         const string yandexBundlePath = "Pods/YandexMobileAds/static/YandexMobileAds.xcframework/MobileAdsBundle.bundle";
-                        project.AddEmbedResourcesBundle(appTargetGuid, yandexBundlePath);
+                        project.AddEmbeddableResources(appTargetGuid, yandexBundlePath);
                     }
 #endif
                 }
@@ -561,7 +561,7 @@ namespace CAS.UEditor
             return true;
         }
 
-        private static void AddEmbedDynamicFrameworks(this PBXProject project, string targetGuid, DependencyManager deps)
+        private static void AddEmbeddablePaths(this PBXProject project, string targetGuid, DependencyManager deps)
         {
             for (int i = 0; i < deps.networks.Length; i++)
             {
@@ -590,7 +590,7 @@ namespace CAS.UEditor
         }
 #endif
 
-        private static void AddEmbedResourcesBundle(this PBXProject project, string targetGuid, string bundlePath)
+        private static void AddEmbeddableResources(this PBXProject project, string targetGuid, string bundlePath)
         {
             var pathInProject = Path.Combine("Frameworks", Path.GetFileName(bundlePath));
             var resourcesGuid = project.AddFolderReference(bundlePath, pathInProject, PBXSourceTree.Source);

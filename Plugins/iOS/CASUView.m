@@ -28,7 +28,6 @@
     self = [super init];
 
     if (self) {
-        UIViewController *unityVC = [CASUPluginUtil unityGLViewController];
         _client = adViewClient;
         _horizontalOffset = 0;
         _verticalOffset = 0;
@@ -36,10 +35,11 @@
         _activeSizeId = size;
 
         if (size > 0) {
-            _bannerView = [[CASBannerView alloc] initWithAdSize:[self getSizeByCode:size with:unityVC] manager:manager];
+            _bannerView = [[CASBannerView alloc] initWithAdSize:[self getSizeByCode:size] 
+                                                        manager:manager];
             _bannerView.hidden = YES;
             _bannerView.adDelegate = self;
-            _bannerView.rootViewController = unityVC;
+            _bannerView.rootViewController = [CASUPluginUtil unityGLViewController];
         }
     }
 
@@ -52,12 +52,12 @@
     }
 }
 
-- (CASSize *)getSizeByCode:(int)sizeId with:(UIViewController *)controller {
+- (CASSize *)getSizeByCode:(int)sizeId {
     switch (sizeId) {
         case kCASUSize_BANNER: return CASSize.banner;
 
         case kCASUSize_ADAPTIVE: {
-            CGSize screenSize = [self getSafeBoundsView:controller.view].size;
+            CGSize screenSize = [self getSafeAreaSize];
             CGFloat width = MIN(screenSize.width, CASSize.leaderboard.width);
             return [CASSize getAdaptiveBannerForMaxWidth:width];
         }
@@ -69,12 +69,12 @@
         case kCASUSize_MREC: return CASSize.mediumRectangle;
 
         case kCASUSize_FULL_WIDTH:{
-            CGSize screenSize = [self getSafeBoundsView:controller.view].size;
+            CGSize screenSize = [self getSafeAreaSize];
             return [CASSize getAdaptiveBannerForMaxWidth:screenSize.width];
         }
 
         case kCASUSize_LINE:{
-            CGSize screenSize = [self getSafeBoundsView:controller.view].size;
+            CGSize screenSize = [self getSafeAreaSize];
             BOOL inLandscape = screenSize.height < screenSize.width;
             CGFloat bannerHeight;
 
@@ -130,8 +130,7 @@
     // Ignore changes in device orientation if unknown, face up, or face down.
     if (UIDeviceOrientationIsValidInterfaceOrientation([[UIDevice currentDevice] orientation])) {
         if (_activeSizeId == kCASUSize_ADAPTIVE || _activeSizeId == kCASUSize_FULL_WIDTH || _activeSizeId == kCASUSize_LINE) {
-            UIViewController *unityController = [CASUPluginUtil unityGLViewController];
-            self.bannerView.adSize = [self getSizeByCode:_activeSizeId with:unityController];
+            self.bannerView.adSize = [self getSizeByCode:_activeSizeId];
         }
 
         [self refreshPosition];
@@ -183,45 +182,31 @@
     [self refreshPosition];
 }
 
+- (CGSize)getSafeAreaSize{
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    return window.safeAreaLayoutGuide.layoutFrame.size;
+}
+
 - (void)refreshPosition {
-    if (self.bannerView && !self.bannerView.isHidden) {
-        /// Align the bannerView in the Unity view bounds.
-        UIView *unityView = [CASUPluginUtil unityGLViewController].view;
-
-        if (unityView) {
-            [self positionView:self.bannerView inParentView:unityView];
-        }
-    }
-}
-
-- (CGRect)getSafeBoundsView:(UIView *)view {
-    if (@available(iOS 11, *)) {
-        CGRect safeAreaFrame = view.safeAreaLayoutGuide.layoutFrame;
-
-        if (!CGSizeEqualToSize(CGSizeZero, safeAreaFrame.size)) {
-            return safeAreaFrame;
-        }
+    if (!self.bannerView || self.bannerView.isHidden) {
+        return;
     }
 
-    return view.bounds;
-}
-
-- (void)positionView:(UIView *)view
-        inParentView:(UIView *)parentView {
-    CGRect parentBounds = [self getSafeBoundsView:parentView];
-    CGSize adSize = view.intrinsicContentSize;
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    CGRect safeAreaFrame = window.safeAreaLayoutGuide.layoutFrame;
+    CGSize adSize = self.bannerView.intrinsicContentSize;
 
     if (CGSizeEqualToSize(CGSizeZero, adSize)) {
         adSize = [self.bannerView.adSize toCGSize];
     }
 
     CGFloat verticalPos;
-    CGFloat bottom = CGRectGetMaxY(parentBounds) - adSize.height;
+    CGFloat bottom = CGRectGetMaxY(safeAreaFrame) - adSize.height;
     switch (_activePos) {
         case kCASUPosition_TOP_CENTER:
         case kCASUPosition_TOP_LEFT:
         case kCASUPosition_TOP_RIGHT:
-            verticalPos = MIN(CGRectGetMinY(parentBounds) + _verticalOffset, bottom);
+            verticalPos = MIN(CGRectGetMinY(safeAreaFrame) + _verticalOffset, bottom);
             break;
 
         default:
@@ -230,11 +215,11 @@
     }
 
     CGFloat horizontalPos;
-    CGFloat right = CGRectGetMaxX(parentBounds) - adSize.width;
+    CGFloat right = CGRectGetMaxX(safeAreaFrame) - adSize.width;
     switch (_activePos) {
         case kCASUPosition_TOP_LEFT:
         case kCASUPosition_BOTTOM_LEFT:
-            horizontalPos = MIN(CGRectGetMinX(parentBounds) + _horizontalOffset, right);
+            horizontalPos = MIN(CGRectGetMinX(safeAreaFrame) + _horizontalOffset, right);
             break;
 
         case kCASUPosition_TOP_RIGHT:
@@ -243,11 +228,11 @@
             break;
 
         default:
-            horizontalPos = CGRectGetMidX(parentView.bounds) - adSize.width * 0.5;
+            horizontalPos = CGRectGetMidX(window.bounds) - adSize.width * 0.5;
             break;
     }
 
-    view.frame = CGRectMake(horizontalPos, verticalPos, adSize.width, adSize.height);
+    self.bannerView.frame = CGRectMake(horizontalPos, verticalPos, adSize.width, adSize.height);
 
     extern bool _didResignActive;
 
@@ -257,28 +242,28 @@
         return;
     }
 
-    if (_adRectCallback) {
+    if (self.rectCallback) {
         CGFloat scale = [UIScreen mainScreen].scale;
-        _adRectCallback(self.client,
-                        horizontalPos * scale,
-                        verticalPos * scale,
-                        adSize.width * scale,
-                        adSize.height * scale);
+        self.rectCallback(self.client,
+                          horizontalPos * scale,
+                          verticalPos * scale,
+                          adSize.width * scale,
+                          adSize.height * scale);
     }
 }
 
     #pragma mark - CASBannerDelegate
 - (void)bannerAdView:(CASBannerView *_Nonnull)adView didFailToLoadWith:(enum CASError)error {
-    if (self.adFailedCallback) {
-        self.adFailedCallback(self.client, (int)error);
+    if (self.actionCallback) {
+        self.actionCallback(self.client, kCASUAction_FAILED, (int)error);
     }
 }
 
 - (void)bannerAdViewDidLoad:(CASBannerView *_Nonnull)view {
     [self refreshPosition];
 
-    if (self.adLoadedCallback) {
-        self.adLoadedCallback(self.client);
+    if (self.actionCallback) {
+        self.actionCallback(self.client, kCASUAction_LOADED, 0);
     }
 }
 
@@ -292,15 +277,15 @@
         return;
     }
 
-    if (self.adPresentedCallback) {
+    if (self.impressionCallback) {
         _lastImpression = (NSObject<CASStatusHandler> *)impression;
-        self.adPresentedCallback(self.client, (__bridge CASImpressionRef)_lastImpression);
+        self.impressionCallback(self.client, (__bridge CASImpressionRef)_lastImpression);
     }
 }
 
 - (void)bannerAdViewDidRecordClick:(CASBannerView *)adView {
-    if (self.adClickedCallback) {
-        self.adClickedCallback(self.client);
+    if (self.actionCallback) {
+        self.actionCallback(self.client, kCASUAction_CLICKED, 0);
     }
 }
 
