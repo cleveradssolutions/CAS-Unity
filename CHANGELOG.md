@@ -1,5 +1,13 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.6.1] - 2024-05-11
+- Discover the latest features in native 3.6.1 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+### Bug Fixes
+- [iOS] Fixex Banner ads moving after full screen due to a safe area bug in Unity Engine.
+- [Editor] The Utils class alias has been hidden to avoid conflict with the global namespace.
+### New ads networks support in closed beta
+- StartIO
+
 # [3.6.0] - 2024-04-29
 - Discover the latest features in native 3.6.0 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - [iOS] The minimum supported Xcode version has been increased to 15.1.
