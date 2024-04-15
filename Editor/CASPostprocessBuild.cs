@@ -54,7 +54,7 @@ namespace CAS.UEditor
             EditPList(buildPath, (plist) =>
             {
                 plist.SetGADAppIdForCAS(initSettings, depManager);
-                plist.SetSDKInitializationDelay(editorSettings.delayAppMeasurementGADInit);
+                plist.SetSDKInitializationDelay();
                 plist.SetAppTransportSecuritySettings();
                 plist.SetAttributionReportEndpoint(editorSettings.attributionReportEndpoint);
                 plist.SetDefaultUserTrackingDescription(editorSettings.userTrackingUsageDescription);
@@ -172,10 +172,10 @@ namespace CAS.UEditor
             File.WriteAllText(path, plist.WriteToString());
         }
 
-        private static void SetSDKInitializationDelay(this PlistDocument plist, bool delayInit)
+        private static void SetSDKInitializationDelay(this PlistDocument plist)
         {
-            plist.root.SetBoolean("GADDelayAppMeasurementInit", delayInit);
-            plist.root.SetBoolean("MyTargetSDKAutoInitMode", !delayInit);
+            plist.root.SetBoolean("GADDelayAppMeasurementInit", true);
+            plist.root.SetBoolean("MyTargetSDKAutoInitMode", !false);
         }
 
         private static void SetGADAppIdForCAS(this PlistDocument plist, CASInitSettings initSettings, DependencyManager deps)

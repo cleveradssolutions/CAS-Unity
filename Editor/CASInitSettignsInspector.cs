@@ -34,7 +34,6 @@ namespace CAS.UEditor
         private SerializedObject editorSettingsObj;
         private SerializedProperty autoCheckForUpdatesEnabledProp;
         private SerializedProperty buildPreprocessEnabledProp;
-        private SerializedProperty delayAppMeasurementGADInitProp;
         private SerializedProperty optimizeGADLoadingProp;
 #if !UNITY_2022_2_OR_NEWER
         private SerializedProperty updateGradlePluginVersionProp;
@@ -131,7 +130,6 @@ namespace CAS.UEditor
         {
             editorSettingsObj = new SerializedObject(CASEditorSettings.Load(true));
             autoCheckForUpdatesEnabledProp = editorSettingsObj.FindProperty("autoCheckForUpdatesEnabled");
-            delayAppMeasurementGADInitProp = editorSettingsObj.FindProperty("delayAppMeasurementGADInit");
             optimizeGADLoadingProp = editorSettingsObj.FindProperty("optimizeGADLoading");
             buildPreprocessEnabledProp = editorSettingsObj.FindProperty("buildPreprocessEnabled");
 #if !UNITY_2022_2_OR_NEWER
@@ -232,6 +230,7 @@ namespace CAS.UEditor
                 DrawInterstitialScope();
             if (DrawAdFlagToggle(AdFlags.Rewarded))
                 DrawRewardedScope(inter);
+            DrawAppOpenScope();
 
             IsAdFormatsNotUsed();
             DrawSeparator();
@@ -398,12 +397,6 @@ namespace CAS.UEditor
                 "Auto check for CAS updates enabled",
                 autoCheckForUpdatesEnabledProp.boolValue);
 
-            delayAppMeasurementGADInitProp.boolValue = EditorGUILayout.ToggleLeft(
-                HelpStyles.GetContent("Delay measurement of the Ad SDK initialization", null,
-                    "By default, some Mediated Ads SDK initializes app measurement and begins sending user-level event data immediately when the app starts. " +
-                    "This can lead to prolonged app loading times and improper use of user data before obtaining their consent"),
-                delayAppMeasurementGADInitProp.boolValue);
-
             includeAdDependencyVersionsProp.boolValue = EditorGUILayout.ToggleLeft(
                 "Include Ads dependency versions",
                 includeAdDependencyVersionsProp.boolValue);
@@ -545,7 +538,6 @@ namespace CAS.UEditor
             var enabled = (allowedAdFlagsProp.intValue & flagInt) == flagInt;
             var icon = HelpStyles.GetFormatIcon(flag, enabled);
             var content = HelpStyles.GetContent("", icon);
-            var toggleStyle = EditorStyles.toggle;
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             var changed = GUILayout.Toggle(enabled, "", GUILayout.ExpandWidth(false));
@@ -561,6 +553,23 @@ namespace CAS.UEditor
             }
             EditorGUILayout.EndHorizontal();
             return enabled;
+        }
+
+        private void DrawAppOpenScope()
+        {
+            var icon = HelpStyles.GetFormatIcon(AdType.AppOpen, true);
+            var content = HelpStyles.GetContent("", icon);
+
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.Toggle(true, "", GUILayout.ExpandWidth(false));
+            GUILayout.Toggle(true, "AppOpen ad format", EditorStyles.toolbarButton);
+            GUILayout.Label(content, EditorStyles.toolbar, GUILayout.ExpandWidth(false));
+            EditorGUILayout.EndHorizontal();
+            EditorGUI.EndDisabledGroup();
+            EditorGUI.indentLevel += 2;
+            EditorGUILayout.HelpBox("The AppOpen Ad format does not support auto preloading. Please use the LoadAd() method before each ShowAd().", MessageType.None);
+            EditorGUI.indentLevel -= 2;
         }
 
         private void DrawSeparator()

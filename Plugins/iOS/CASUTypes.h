@@ -12,8 +12,6 @@
 typedef const void * CASManagerClientRef;
 /// Type representing a CASMediationManager type
 typedef const void * CASUManagerRef;
-/// Type representing a CASManagerBuilder type
-typedef const void * CASManagerBuilderRef;
 
 /// Type representing a Unity AdView ad client.
 typedef const void * CASViewClientRef;

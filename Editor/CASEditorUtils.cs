@@ -1003,6 +1003,20 @@ namespace CAS.UEditor
             return formatIcons[active ? iconIndex : iconIndex + 5];
         }
 
+        public static Texture GetFormatIcon(AdType format, bool active)
+        {
+            int iconIndex;
+            switch (format)
+            {
+                case AdType.Banner: iconIndex = 0; break;
+                case AdType.Interstitial: iconIndex = 1; break;
+                case AdType.Rewarded: iconIndex = 2; break;
+                case AdType.AppOpen: iconIndex = 4; break;
+                default: return null;
+            }
+            return formatIcons[active ? iconIndex : iconIndex + 5];
+        }
+
         public static void BeginBoxScope()
         {
             EditorGUILayout.BeginVertical(boxScopeStyle);

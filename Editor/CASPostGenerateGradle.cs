@@ -144,13 +144,6 @@ namespace CAS.UEditor
                             new XAttribute(valueAttribute, googleAppId)));
                 }
 
-                if (editorSettings.delayAppMeasurementGADInit)
-                {
-                    elemApplication.Add(new XElement("meta-data",
-                        new XAttribute(nameAttribute, "com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT"),
-                        new XAttribute(valueAttribute, "true")));
-                }
-
                 if (editorSettings.optimizeGADLoading)
                 {
                     elemApplication.Add(new XElement("meta-data",

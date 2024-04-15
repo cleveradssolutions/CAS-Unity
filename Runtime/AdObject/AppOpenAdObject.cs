@@ -148,7 +148,10 @@ namespace CAS.AdObject
         private void AppForeground()
         {
             if (IsLoaded())
+            {
+                CASFactory.UnityLog("AppOpen ad are shown because the app has come to the foreground.");
                 Show();
+            }
         }
         #endregion
     }

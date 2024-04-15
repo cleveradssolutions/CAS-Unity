@@ -10,7 +10,6 @@ namespace CAS.UEditor
     public class CASEditorSettings : ScriptableObject
     {
         public bool autoCheckForUpdatesEnabled = true;
-        public bool delayAppMeasurementGADInit = true;
         public bool optimizeGADLoading = true;
         public bool buildPreprocessEnabled = true;
         public bool includeAdDependencyVersions = false;
@@ -41,8 +40,12 @@ namespace CAS.UEditor
 
         [Obsolete("Exo player used in any case")]
         public bool exoPlayerIncluded { get { return true; } }
+
         [Obsolete("Starting with Xcode 14, bitcode is no longer required")]
         public bool bitcodeIOSDisabled { get { return true; } }
+
+        [Obsolete("Lazy app measurement is applied in any case to properly process user consent.")]
+        public bool delayAppMeasurementGADInit { get { return true; } }
 
         public static CASEditorSettings Load(bool createAsset = false)
         {
