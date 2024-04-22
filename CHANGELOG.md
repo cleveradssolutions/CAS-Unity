@@ -1,5 +1,36 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.7.0] - 2024-05-22
+- Discover the latest features in native 3.6.1 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added support `AdType.AppOpen`. Read integration guides for [UnityEditor](https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Open-Ad-object) or [Script C#](https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Open-Ads)
+- Added new static events in `CAS.MobileAds` class: `OnApplicationBackground` and `OnApplicationForeground`. It's important to use new events when you want to show AppOpen ads on user returning to the game.  
+- Added `ConsentFlowAdObject` component.
+- Added option to disable `ConsentFlow` via `ManagerAdObject` component.  
+- Added `ConsentFlowAdObject` optional field for `ManagerAdObject` to configure `ConsentFlow` on Ads initialization.  
+- Added `ConsentFlow.Status` enum and new event for `ConsentFlow.WithCompletionListener(Action<ConsentFlow.Status>)`.  
+- Added `ConsentFlow.DebugGeography` enum and `ConsentFlow.WithDebugGeography()` method to sets debug geography for testing purposes.  
+- Added `ShowIfRequired()` method for `ConsentFlow` instance to show the consent form only if it is required and the user has not responded previously.  
+- Added `Show()` method for `ConsentFlow` instance with the same functionality as the `CAS.MobileAds.ShowConsentFlow(ConsentFlow)` but easier to use.  
+```c#
+new ConsentFlow()
+    .WithDebugGeography(ConsentFlow.DebugGeography.EEA)
+    .WithCompletionListener((status) =>
+    {
+        if (status == ConsentFlow.Status.Obtained)
+        {
+            // User consent obtained.
+        }
+    })
+    .ShowIfRequired();
+```
+- Made `CAS.MobileAds.ShowConsentFlow()` obsolete in favor of new `ShowIfRequired()` or `Show()` methods for `ConsentFlow` instance.  
+- Made `OnAdOpening` events obsolete. Please use `OnAdImpression` event to collect `AdMetaData` about the ad impression or `OnAdShown` event if `AdMetaData` is not used.
+- Performance improvements when forwarding native callbacks.
+- In manual ad loading mode, the SDK will no longer trigger `OnAdFailedToLoad` events before closing the Interstitial and Rewarded ads.
+- [Android] Added `androidx.lifecycle:lifecycle-process:2.6.2` dependency.
+- [Editor] Added `ConsentFlow` completion events implementation to testing in editor.
+- [Editor] Removed `Delay measurement of the Ad SDK initialization` option, which applies in any case.
+
 # [3.6.1] - 2024-05-11
 - Discover the latest features in native 3.6.1 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 ### Bug Fixes
