@@ -277,7 +277,7 @@ namespace CAS.UEditor
                 .StartSync())
             {
                 if (request.responseCode == 204)
-                    throw new Exception("'" + casId + "' is not registered in CAS.");
+                    throw new Exception("'" + casId + "' is not registered in CAS for " + platform.ToString());
 
                 var content = request.ReadContent();
                 if (string.IsNullOrEmpty(content))

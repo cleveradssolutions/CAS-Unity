@@ -20,7 +20,7 @@ namespace CAS.UEditor
     {
         private const string applyFromPlugin = "apply from: 'CASPlugin.androidlib/";
         private const string applyPackagingOptions = applyFromPlugin + "packaging_options.gradle'";
-        private const string applyValidateDependencies = applyFromPlugin + "validate_dependencies.gradle'";
+        private const string applyValidateDependencies = "gradle.projectsEvaluated { " + applyFromPlugin + "validate_dependencies.gradle' }";
 
         public int callbackOrder { get { return 0; } }
 
@@ -40,9 +40,7 @@ namespace CAS.UEditor
 #if !CAS_DISABLE_VALIDATE_DEPS
             if (IsNeedApplyGAMDependenciesValidation(mainGradle))
             {
-                mainGradle += Environment.NewLine + "gradle.projectsEvaluated {" + Environment.NewLine;
-                mainGradle += "    " + applyValidateDependencies + Environment.NewLine;
-                mainGradle += "}" + Environment.NewLine;
+                mainGradle += Environment.NewLine + applyValidateDependencies;
                 gradleChanged = true;
             }
 #endif
@@ -50,7 +48,7 @@ namespace CAS.UEditor
 #if !CAS_DISABLE_PACKAGING_OPTIONS
             if (!mainGradle.Contains(applyPackagingOptions))
             {
-                mainGradle += Environment.NewLine + applyPackagingOptions + Environment.NewLine;
+                mainGradle += Environment.NewLine + applyPackagingOptions;
                 gradleChanged = true;
             }
 #endif

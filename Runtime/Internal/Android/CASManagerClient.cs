@@ -30,9 +30,16 @@ namespace CAS.Android
                 if (initSettings.consentFlow != null)
                 {
                     if (!initSettings.consentFlow.isEnabled)
+                    {
                         builder.Call("disableConsentFlow");
+                    }
                     else
-                        builder.Call("withConsentFlow", new CASConsentFlowClient(initSettings.consentFlow, false));
+                    {
+                        using (var consent = new CASConsentFlowClient(initSettings.consentFlow, false))
+                        {
+                            builder.Call("withConsentFlow", consent.obj);
+                        }
+                    }
                 }
                 if (initSettings.extras != null)
                 {

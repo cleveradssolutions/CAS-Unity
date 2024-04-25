@@ -1,5 +1,10 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.7.1] - 2024-05-25
+- The native SDK remains version 3.7.0.
+### Bug Fixes
+- [Android] Fixed `Exception: JNI: Unknown signature for type 'CAS.Android.CASConsentFlowClient'`.
+
 # [3.7.0] - 2024-05-22
 - Discover the latest features in native 3.6.1 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added support `AdType.AppOpen`. Read integration guides for [UnityEditor](https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Open-Ad-object) or [Script C#](https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Open-Ads)

@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace CAS.Android
 {
+    // Attention: AndroidJavaObject cannot be used for inheritance.
     internal static class CASJavaBridge
     {
         #region Clever Ads Solutions SDK class names
@@ -189,24 +190,30 @@ namespace CAS.Android
         }
     }
 
-    internal class CASConsentFlowClient : AndroidJavaObject
+    internal class CASConsentFlowClient : IDisposable
     {
+        public AndroidJavaObject obj;
         internal CASConsentFlowClient(ConsentFlow flow, bool forceTesting)
-            : base(CASJavaBridge.ConsentFlowClass, (int)flow.debugGeography)
         {
+            obj = new AndroidJavaObject(CASJavaBridge.ConsentFlowClass, (int)flow.debugGeography);
             if (!flow.isEnabled)
-                Call("disable");
+                obj.Call("disable");
             if (forceTesting)
-                Call("forceTesting");
+                obj.Call("forceTesting");
             if (!string.IsNullOrEmpty(flow.privacyPolicyUrl))
-                Call("withPrivacyPolicy", flow.privacyPolicyUrl);
+                obj.Call("withPrivacyPolicy", flow.privacyPolicyUrl);
             if (flow.OnResult != null || flow.OnCompleted != null)
-                Call("withDismissListener", new CASConsentFlowCallback(flow.OnResult, flow.OnCompleted));
+                obj.Call("withDismissListener", new CASConsentFlowCallback(flow.OnResult, flow.OnCompleted));
         }
 
         internal void Show(bool ifRequired)
         {
-            Call("show", ifRequired);
+            obj.Call("show", ifRequired);
+        }
+
+        public void Dispose()
+        {
+            obj.Dispose();
         }
     }
 }
