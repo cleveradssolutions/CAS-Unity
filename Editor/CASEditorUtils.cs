@@ -304,7 +304,8 @@ namespace CAS.UEditor
                 if (string.IsNullOrEmpty(remoteVersion))
                     return RequestLatestVersion(repo, currVersion, asyncResult);
 
-                return GetNewVersionOrNull(currVersion, remoteVersion);
+                if (IsVersionNewer(currVersion, remoteVersion))
+                    return remoteVersion;
             }
             catch (Exception e)
             {
@@ -313,36 +314,29 @@ namespace CAS.UEditor
             return null;
         }
 
-        private static string GetNewVersionOrNull(string local, string remote)
+        private static bool IsVersionNewer(string current, string target)
         {
-            if (remote != local && ParseVersionToCompare(local) < ParseVersionToCompare(remote))
-                return remote;
-            return null;
-        }
-
-        private static System.Version ParseVersionToCompare(string versionName)
-        {
-            try
+            if (current == target) return false;
+            int currentBeta = current.IndexOf('-');
+            int targetBeta = target.IndexOf('-');
+            string[] currentParts = currentBeta < 0 ? current.Split('.') : current.Substring(0, currentBeta).Split('.');
+            string[] targetParts = targetBeta < 0 ? target.Split('.') : target.Substring(0, targetBeta).Split('.');
+            int minLength = Math.Min(currentParts.Length, targetParts.Length);
+            for (int i = 0; i < minLength; i++)
             {
-                int separator = versionName.IndexOf('-');
-                // Append Revision version for pre release
-                // And 9 Revision for release
-                if (separator > 0)
-                    versionName = versionName.Substring(0, versionName.Length - separator + 1) +
-                        "." + versionName[versionName.Length - 1];
-                else
-                    versionName += ".9";
-                return new System.Version(versionName);
+                int v1, v2;
+                if (!int.TryParse(currentParts[i], out v1)) return true;
+                if (!int.TryParse(targetParts[i], out v2)) return false;
+                if (v1 < v2) return true;
+                else if (v1 > v2) return false;
             }
-#if CASDeveloper
-            catch (Exception e)
+            if (currentParts.Length == targetParts.Length)
             {
-                Debug.LogException(e);
+                if (currentBeta > 0 && targetBeta > 0)
+                    return IsVersionNewer(current[current.Length - 1].ToString(), target[target.Length - 1].ToString());
+                return currentBeta < targetBeta;
             }
-#else
-            catch {}
-#endif
-            return new System.Version(0, 1);
+            return currentParts.Length < targetParts.Length;
         }
 
         public static bool IsPackageExist(string package, string manifest = null)
@@ -538,7 +532,7 @@ namespace CAS.UEditor
 
         internal static EditorWebRequest InstallUnityPackagePlugin(string url)
         {
-            string cacheFile = Path.GetFullPath("Library/" + Path.GetFileName(url));
+            string cacheFile = Path.GetFullPath(Path.Combine("Library", Path.GetFileName(url)));
             var request = new EditorWebRequest(url)
                 .ToFile(cacheFile);
             request.StartAsync((response) =>
@@ -575,24 +569,17 @@ namespace CAS.UEditor
             return null;
         }
 
-        internal static string GetTemplatePath(string templateFile)
-        {
-            return GetPluginComponentPath("Editor/BuildConfig/" + templateFile);
-        }
-
         internal static string GetPluginComponentPath(string file)
         {
-            string path = Path.Combine("Packages/" + packageName, file);
-            if (!File.Exists(path))
+            var fileName = Path.GetFileNameWithoutExtension(file);
+            foreach (var asset in AssetDatabase.FindAssets(fileName))
             {
-                path = Path.Combine(rootCASFolderPath, file);
-                if (!File.Exists(path))
-                {
-                    Debug.LogError(logTag + file + " file not found. Try reimport CAS.AI Unity Package.");
-                    return null;
-                }
+                var path = AssetDatabase.GUIDToAssetPath(asset);
+                if (path.EndsWith(file))
+                    return Path.GetFullPath(path);
             }
-            return Path.GetFullPath(path);
+            Debug.LogError(logTag + file + " file not found. Try reimport CAS.AI Unity Package.");
+            return null;
         }
 
         internal static void WriteToAsset(string path, params string[] data)
@@ -705,7 +692,8 @@ namespace CAS.UEditor
                 else
                 {
                     SaveLatestRepoVersion(repo, remoteVersion);
-                    remoteVersion = GetNewVersionOrNull(currVersion, remoteVersion);
+                    if (!IsVersionNewer(currVersion, remoteVersion))
+                        remoteVersion = null;
                 }
                 response.Dispose();
 

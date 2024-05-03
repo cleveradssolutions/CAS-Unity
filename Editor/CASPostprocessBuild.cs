@@ -188,7 +188,7 @@ namespace CAS.UEditor
 
         private static void AddSKAdNetworkItemsForCAS(this PlistDocument plist)
         {
-            var templateFile = CASEditorUtils.GetTemplatePath(CASEditorUtils.iosSKAdNetworksTemplateFile);
+            var templateFile = CASEditorUtils.GetPluginComponentPath(CASEditorUtils.iosSKAdNetworksTemplateFile);
             if (string.IsNullOrEmpty(templateFile))
             {
                 Debug.LogError(CASEditorUtils.logTag + "Not found SKAdNetworkItems. Try reimport CAS package.");
