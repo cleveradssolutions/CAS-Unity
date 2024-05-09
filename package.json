@@ -1,6 +1,6 @@
 {
     "name": "com.cleversolutions.ads.unity",
-    "version": "3.7.1",
+    "version": "3.7.2",
     "displayName": "CleverAdsSolutions",
     "description": "CAS.AI Unity plugine to ads monetize apps on Android and iOS platforms.",
     "unity": "2018.4",

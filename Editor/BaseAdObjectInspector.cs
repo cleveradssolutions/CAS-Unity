@@ -2,7 +2,6 @@
 
 using UnityEngine;
 using UnityEditor;
-using NUnit.Framework.Constraints;
 
 namespace CAS.AdObject
 {

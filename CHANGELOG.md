@@ -1,5 +1,15 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.7.2] - 2024-06-09
+- Discover the native 3.7.2 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Introduced automatic collect impression level data to Tenjin Analytics. (Closed beta)
+### Bug Fixes
+- [iOS] Fixed an issue where the AppReturn ads events could be raised from outside the Unity Mein Thread.
+- [iOS] Fixed the Privacy Info invalid API reason declaration for `UnityFramework` in the UserDefaults category. The issue stemmed from the SuperAwesome framework, which received an update with the fix.
+- [Editor] Fixed the compilation error `The type or namespace name 'NUnit' could not be found`.
+- [Editor] Fixed an error when the plugin component was not found after the unitypackage integration.
+- [Editor] Fixed plugin version checking given Revision part.
+
 # [3.7.1] - 2024-05-25
 - The native SDK remains version 3.7.0.
 ### Bug Fixes
