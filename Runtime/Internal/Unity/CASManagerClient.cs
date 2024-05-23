@@ -32,7 +32,7 @@ namespace CAS.Unity
             for (int i = 0; i < _enabledTypes.Length; i++)
                 _enabledTypes[i] = ((int)initSettings.defaultAllowedFormats & (1 << i)) != 0;
 
-            CASFactory.HandleConsentFlow(initSettings.consentFlow, ConsentFlow.Status.Unavailable);
+            CASFactory.HandleConsentFlow(initSettings.consentFlow, ConsentFlow.Status.Obtained);
         }
 
         protected override void SetLastPageAdContentNative(string json)

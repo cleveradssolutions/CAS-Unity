@@ -165,6 +165,8 @@ namespace CAS.AdObject
         private SerializedProperty debugGeographyProp;
         private SerializedProperty OnCompletedProp;
         private SerializedProperty OnFailedProp;
+        private SerializedProperty EnableOptionsButtonProp;
+        
 
         protected void OnEnable()
         {
@@ -174,6 +176,7 @@ namespace CAS.AdObject
             debugGeographyProp = obj.FindProperty("debugGeography");
             OnCompletedProp = obj.FindProperty("OnCompleted");
             OnFailedProp = obj.FindProperty("OnFailed");
+            EnableOptionsButtonProp = obj.FindProperty("EnableOptionsButton");
         }
 
         public override void OnInspectorGUI()
@@ -199,7 +202,8 @@ namespace CAS.AdObject
 
             EditorGUILayout.PropertyField(OnCompletedProp);
             EditorGUILayout.PropertyField(OnFailedProp);
-
+            EditorGUILayout.PropertyField(EnableOptionsButtonProp);
+            
             obj.ApplyModifiedProperties();
         }
     }

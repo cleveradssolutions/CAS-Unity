@@ -394,7 +394,9 @@ namespace CAS.UEditor
             }
 
             autoCheckForUpdatesEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Auto check for CAS updates enabled",
+                HelpStyles.GetContent(
+                    "Auto check for CAS updates enabled",
+                    tooltip: "Checks for CAS plugin updates and notifies you when an update is available"),
                 autoCheckForUpdatesEnabledProp.boolValue);
 
             includeAdDependencyVersionsProp.boolValue = EditorGUILayout.ToggleLeft(

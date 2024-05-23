@@ -154,15 +154,14 @@ namespace CAS.Android
 
         internal CASConsentFlowCallback(Action<ConsentFlow.Status> OnResult, Action OnCompleted) : base(CASJavaBridge.SimpleCallbackClass)
         {
-            EventExecutor.Initialize();
             this.OnCompleted = OnCompleted;
             this.OnResult = OnResult;
         }
 
         public override AndroidJavaObject Invoke(string methodName, object[] args)
         {
-            int status = (int)args[0];
-            CASFactory.UnityLog("Callback Consent Flow status " + status);
+            var status = (ConsentFlow.Status)(int)args[0];
+            CASFactory.HandleConsentFlow(null, status);
             if (OnResult != null)
             {
                 var callback = OnResult; // Use local variable for lambda
@@ -170,13 +169,13 @@ namespace CAS.Android
 
                 if (CASJavaBridge.executeEventsOnUnityThread)
                 {
-                    EventExecutor.Add(() => callback((ConsentFlow.Status)status));
+                    EventExecutor.Add(() => callback(status));
                 }
                 else
                 {
                     try
                     {
-                        callback((ConsentFlow.Status)status);
+                        callback(status);
                     }
                     catch (Exception e)
                     {
@@ -208,6 +207,7 @@ namespace CAS.Android
 
         internal void Show(bool ifRequired)
         {
+            EventExecutor.Initialize(); // Required for callbacks
             obj.Call("show", ifRequired);
         }
 

@@ -17,6 +17,7 @@ namespace CAS.AdObject
 
         public UnityEvent OnCompleted;
         public CASUEventWithError OnFailed;
+        public CASUToggleEvent EnableOptionsButton;
 
         /// <summary>
         /// Shows the consent form only if it is required and the user has not responded previously.
@@ -25,6 +26,7 @@ namespace CAS.AdObject
         public void ShowIfRequired()
         {
             CreateFlow().ShowIfRequired();
+
         }
 
         /// <summary>
@@ -48,12 +50,30 @@ namespace CAS.AdObject
 
         private void Start()
         {
+            EnableOptionsButton.Invoke(CASFactory.consentFlowStatus == ConsentFlow.Status.Obtained);
+            CASFactory.OnManagerStateChanged += OnManagerStateChanged;
+
             if (showOnAwakeIfRequired)
-                CreateFlow().ShowIfRequired();
+                ShowIfRequired();
+        }
+
+        private void OnDestroy()
+        {
+            CASFactory.OnManagerStateChanged -= OnManagerStateChanged;
+        }
+
+        private void OnManagerStateChanged(int index, CASManagerBase manager)
+        {
+            if (!this) return;
+            var config = manager.initialConfig;
+            if (config == null) return;
+            EnableOptionsButton.Invoke(CASFactory.consentFlowStatus == ConsentFlow.Status.Obtained);
         }
 
         private void HandleFlowResult(ConsentFlow.Status status)
         {
+            EnableOptionsButton.Invoke(status == ConsentFlow.Status.Obtained);
+
             if (status == ConsentFlow.Status.Obtained
                 || status == ConsentFlow.Status.NotRequired
                 || status == ConsentFlow.Status.Unavailable)

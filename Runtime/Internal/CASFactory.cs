@@ -28,6 +28,7 @@ namespace CAS
         private static List<CASManagerBase> managers;
 
         internal static event ManagerStateChanges OnManagerStateChanged;
+        internal static ConsentFlow.Status consentFlowStatus = ConsentFlow.Status.Obtained;
 
 
 #if UNITY_EDITOR && UNITY_2019_3_OR_NEWER
@@ -40,6 +41,7 @@ namespace CAS
             settings = null;
             managers = null;
             OnManagerStateChanged = null;
+            consentFlowStatus = ConsentFlow.Status.Obtained;
         }
 #endif
 
@@ -333,7 +335,7 @@ namespace CAS
             var forceTesting = initSettings && initSettings.IsTestAdMode();
 #if UNITY_EDITOR
             UnityLog("Show Consent flow has been called but not supported in Unity Editor.");
-            HandleConsentFlow(flow, ConsentFlow.Status.Unavailable);
+            HandleConsentFlow(flow, ConsentFlow.Status.Obtained);
 #endif
 #if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)
@@ -347,14 +349,13 @@ namespace CAS
 #if PlatformIOS
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
-                CAS.iOS.CASExternCallbacks.consentFlowComplete += flow.OnResult;
-                CAS.iOS.CASExternCallbacks.consentFlowSimpleComplete += flow.OnCompleted;
+                CAS.iOS.CASExternCallbacks.ConsentFlow(flow);
                 CAS.iOS.CASExterns.CASUShowConsentFlow(
                     ifRequired,
                     forceTesting,
                     (int)flow.debugGeography,
                     flow.privacyPolicyUrl,
-                    CAS.iOS.CASExternCallbacks.OnConsentFlowCompletion
+                    CAS.iOS.CASExternCallbacks.ConsentFlowCompletion
                 );
             }
 #endif
@@ -362,11 +363,20 @@ namespace CAS
 
         internal static void HandleConsentFlow(ConsentFlow flow, ConsentFlow.Status status)
         {
+            UnityLog("Callback Consent Flow status " + status.ToString());
+            consentFlowStatus = status;
             if (flow == null) return;
-            if (flow.OnResult != null)
-                flow.OnResult(status);
-            if (flow.OnCompleted != null)
-                flow.OnCompleted();
+            try
+            {
+                if (flow.OnResult != null)
+                    flow.OnResult(status);
+                if (flow.OnCompleted != null)
+                    flow.OnCompleted();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         internal static void UnityLog(string message)

@@ -1,5 +1,14 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.7.3] - 2024-06-23
+- Discover the native 3.7.3 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added new `EnableOptionsButton` event for `ConsentFlowAdObject` to enable/disable Consent option button.
+### Bug Fixes
+- [iOS] Fixed `EXC_BAD_ACCESS` crash from `didCloseAd` callback.
+## Changes
+- The MyTarget network support has been removed. Our team considers MyTarget to be ineffective and excludes it from CAS mediation.
+  > Please remove the MyTarget adapter if you are using it.
+
 # [3.7.2] - 2024-06-09
 - Discover the native 3.7.2 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Introduced automatic collect impression level data to Tenjin Analytics. (Closed beta)

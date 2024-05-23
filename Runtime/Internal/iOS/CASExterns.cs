@@ -324,9 +324,25 @@ namespace CAS.iOS
 
     internal static class CASExternCallbacks
     {
-        internal static Action<ConsentFlow.Status> consentFlowComplete;
-        internal static Action consentFlowSimpleComplete;
+        internal static ConsentFlow consentFlow = null;
         private static ATTrackingStatus.CompleteHandler attTrackingComplete;
+
+        internal static void ConsentFlow(ConsentFlow flow)
+        {
+            if (consentFlow == null)
+                consentFlow = new ConsentFlow();
+
+            consentFlow.OnResult += flow.OnResult;
+            consentFlow.OnCompleted += flow.OnCompleted;
+        }
+
+        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUConsentFlowCompletion))]
+        internal static void ConsentFlowCompletion(int status)
+        {
+            var flow = consentFlow;
+            consentFlow = null;
+            CASFactory.HandleConsentFlow(flow, (ConsentFlow.Status)status);
+        }
 
         internal static void ATTRequest(ATTrackingStatus.CompleteHandler callback)
         {
@@ -342,25 +358,6 @@ namespace CAS.iOS
                 attTrackingComplete = callback;
 
             CASExterns.CASURequestATT(ATTRequestCompleted);
-        }
-
-        [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUConsentFlowCompletion))]
-        internal static void OnConsentFlowCompletion(int status)
-        {
-            try
-            {
-                // Callback in UI Thread from native side
-                if (consentFlowComplete != null)
-                    consentFlowComplete((ConsentFlow.Status)status);
-                if (consentFlowSimpleComplete != null)
-                    consentFlowSimpleComplete();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-            consentFlowComplete = null;
-            consentFlowSimpleComplete = null;
         }
 
         [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUConsentFlowCompletion))]

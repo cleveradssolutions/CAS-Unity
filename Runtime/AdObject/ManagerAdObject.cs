@@ -96,6 +96,9 @@ namespace CAS.AdObject
     public class CASUEventWithMeta : UnityEvent<AdMetaData> { }
 
     [Serializable]
+    public class CASUToggleEvent : UnityEvent<bool> { }
+
+    [Serializable]
     public struct ManagerIndex
     {
 #pragma warning disable 649

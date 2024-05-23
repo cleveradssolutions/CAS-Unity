@@ -45,14 +45,12 @@ namespace CAS.iOS
             {
                 if (consentFlow.isEnabled)
                 {
-                    CASExternCallbacks.consentFlowComplete += consentFlow.OnResult;
-                    CASExternCallbacks.consentFlowSimpleComplete += consentFlow.OnCompleted;
-
+                    CASExternCallbacks.ConsentFlow(consentFlow);
                     CASExterns.CASUSetConsentFlow(
                         consentFlow.isEnabled,
                         (int)consentFlow.debugGeography,
                         consentFlow.privacyPolicyUrl,
-                        CASExternCallbacks.OnConsentFlowCompletion);
+                        CASExternCallbacks.ConsentFlowCompletion);
                 }
                 else
                 {
