@@ -333,6 +333,8 @@ namespace CAS
         {
             var initSettings = LoadInitSettingsFromResources();
             var forceTesting = initSettings && initSettings.IsTestAdMode();
+            if (settings == null)
+                settings = CreateSettigns(initSettings);
 #if UNITY_EDITOR
             UnityLog("Show Consent flow has been called but not supported in Unity Editor.");
             HandleConsentFlow(flow, ConsentFlow.Status.Obtained);
@@ -381,14 +383,14 @@ namespace CAS
 
         internal static void UnityLog(string message)
         {
-            if (GetAdsSettings().isDebugMode)
+            if (settings != null && settings.isDebugMode)
                 Debug.Log("[CAS.AI] " + message);
         }
 
         internal static void RuntimeLog(int adType, string message)
         {
 #if !UNITY_EDITOR || CASDeveloper
-            if (GetAdsSettings().isDebugMode)
+            if (settings != null && settings.isDebugMode)
                 Debug.Log("[CAS.AI] " + ((AdType)adType).ToString() + " " + message);
 #endif
         }
@@ -396,7 +398,7 @@ namespace CAS
         internal static void RuntimeLog(AdSize adSize, string message)
         {
 #if !UNITY_EDITOR || CASDeveloper
-            if (GetAdsSettings().isDebugMode)
+            if (settings != null && settings.isDebugMode)
                 Debug.Log("[CAS.AI] " + adSize.ToString() + " " + message);
 #endif
         }
