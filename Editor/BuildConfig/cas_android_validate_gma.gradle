@@ -29,7 +29,7 @@ configurations {
  * unityLibrary/build.gradle in an Android project to use this script:
  * <pre>{@code
  * gradle.projectsEvaluated {
- *     apply from: 'CASPlugin.androidlib/validate_dependencies.gradle'
+ *     apply from: 'validate_dependencies.gradle'
  *     //apply from: 'GoogleMobileAdsPlugin.androidlib/validate_dependencies.gradle'
  * }
  * }</pre>
@@ -92,9 +92,8 @@ task validateDependencies {
 }
 
 // Run the update task before unityLibrary project is built.
-project(':unityLibrary:CASPlugin.androidlib') {
-//project(':unityLibrary:GoogleMobileAdsPlugin.androidlib') {
-    tasks.named('preBuild') {
-        dependsOn validateDependencies
-    }
+//project(':unityLibrary') {
+tasks.named('preBuild') {
+    dependsOn validateDependencies
 }
+//}

@@ -14,8 +14,6 @@ namespace CAS
         FacebookAN = AudienceNetwork,
         [Obsolete("Renamed to LiftoffMonetize")]
         Vungle = LiftoffMonetize,
-        [Obsolete("Renamed to DSPExchange")]
-        CASExchange = DSPExchange,
 
         GoogleAds = 0,
         LiftoffMonetize = 1,
@@ -24,11 +22,12 @@ namespace CAS
         UnityAds = 4,
         AppLovin = 5,
         SuperAwesome = 6,
-        [Obsolete("No longer supported")]
-        AdColony = 8,
+        StartIO = 7,
+        CASExchange = 8,
         AudienceNetwork = 9,
         InMobi = 10,
         DTExchange = 11,
+        [Obsolete("No longer supported")]
         MyTarget = 12,
         CrossPromotion = 13,
         IronSource = 14,
@@ -37,9 +36,9 @@ namespace CAS
 
         Smaato = 18,
         Bigo = 19,
-        
+        Ogury = 20,
         Madex = 21,
-
+        LoopMe = 22,
         Mintegral = 23,
         Pangle = 24,
 
@@ -48,6 +47,8 @@ namespace CAS
 
         [Obsolete("No longer supported")]
         Tapjoy = 32,
+        [Obsolete("No longer supported")]
+        AdColony = 33,
     }
 
     public static class AdNetworkExtension
@@ -82,8 +83,6 @@ namespace CAS
                     return "https://developers.facebook.com/docs/audience-network/policy/";
                 case AdNetwork.InMobi:
                     return "https://www.inmobi.com/privacy-policy/";
-                case AdNetwork.MyTarget:
-                    return "https://legal.my.com/us/mytarget/privacy/";
                 case AdNetwork.IronSource:
                     return "https://developers.is.com/ironsource-mobile/air/ironsource-mobile-privacy-policy/";
                 case AdNetwork.YandexAds:
@@ -97,7 +96,13 @@ namespace CAS
                 case AdNetwork.DTExchange:
                     return "https://www.digitalturbine.com/privacy-policy/";
                 case AdNetwork.Bigo:
-                    return "https://www.bigossp.com";
+                    return "https://www.adsbigo.com/privacy.html";
+                case AdNetwork.StartIO:
+                    return "https://www.start.io/policy/privacy-policy-site/";
+                case AdNetwork.Ogury:
+                    return "https://ogury.com/ogury-advertising-privacy-policy/";
+                case AdNetwork.LoopMe:
+                    return "https://legal.loopme.com/privacy-center";
                 default: return null;
             }
         }
@@ -115,7 +120,6 @@ namespace CAS
                 case AdNetwork.SuperAwesome: return "SuA";
                 case AdNetwork.AudienceNetwork: return "FB";
                 case AdNetwork.InMobi: return "IM";
-                case AdNetwork.MyTarget: return "MT";
                 case AdNetwork.CrossPromotion: return "P";
                 case AdNetwork.IronSource: return "IS";
                 case AdNetwork.YandexAds: return "Ya";
@@ -126,6 +130,10 @@ namespace CAS
                 case AdNetwork.Smaato: return "Sma";
                 case AdNetwork.Bigo: return "Big";
                 case AdNetwork.Madex: return "Ma";
+                case AdNetwork.StartIO: return "SIO";
+                case AdNetwork.Ogury: return "Og";
+                case AdNetwork.LoopMe: return "LM";
+                case AdNetwork.CASExchange: return "Ex";
                 default: return string.Empty;
             }
         }

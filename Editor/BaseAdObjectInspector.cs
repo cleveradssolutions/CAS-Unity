@@ -166,7 +166,7 @@ namespace CAS.AdObject
         private SerializedProperty OnCompletedProp;
         private SerializedProperty OnFailedProp;
         private SerializedProperty EnableOptionsButtonProp;
-        
+
 
         protected void OnEnable()
         {
@@ -203,7 +203,7 @@ namespace CAS.AdObject
             EditorGUILayout.PropertyField(OnCompletedProp);
             EditorGUILayout.PropertyField(OnFailedProp);
             EditorGUILayout.PropertyField(EnableOptionsButtonProp);
-            
+
             obj.ApplyModifiedProperties();
         }
     }
@@ -216,14 +216,6 @@ namespace CAS.AdObject
         private SerializedProperty adOffsetProp;
         private SerializedProperty onAdHiddenProp;
         private BannerAdObject adView;
-        private readonly string[] allowedPositions = new string[]{
-            "Top Center",
-            "Top Left",
-            "Top Right",
-            "Bottom Center",
-            "Bottom Left",
-            "Bottom Right"
-        };
 
         protected override void OnEnable()
         {
@@ -241,36 +233,21 @@ namespace CAS.AdObject
         {
             var isPlaying = Application.isPlaying;
             EditorGUI.BeginChangeCheck();
-            adPositionProp.intValue = EditorGUILayout.Popup("Ad Position", adPositionProp.intValue, allowedPositions);
-            if (EditorGUI.EndChangeCheck())
-            {
-                adOffsetProp.vector2IntValue = Vector2Int.zero;
-                if (isPlaying)
-                    adView.SetAdPositionEnumIndex(adPositionProp.intValue);
-            }
-
+            EditorGUILayout.PropertyField(adPositionProp);
+            
             EditorGUI.indentLevel++;
-            EditorGUI.BeginDisabledGroup(adPositionProp.intValue != (int)AdPosition.TopLeft);
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(adOffsetProp);
-            GUILayout.Label("DP", GUILayout.ExpandWidth(false));
-            EditorGUILayout.EndHorizontal();
+            adOffsetProp.vector2IntValue = EditorGUILayout.Vector2IntField("Offset Points", adOffsetProp.vector2IntValue);
             if (EditorGUI.EndChangeCheck() && isPlaying)
             {
                 var newPos = adOffsetProp.vector2IntValue;
-                adView.SetAdPosition(newPos.x, newPos.y);
+                adView.SetAdPosition(newPos.x, newPos.y, (AdPosition)adPositionProp.intValue);
             }
-            EditorGUI.EndDisabledGroup();
-            EditorGUILayout.LabelField("Screen positioning coordinates are only available for the TopLeft position.", EditorStyles.wordWrappedMiniLabel);
-            // Calling the calculation in the Editor results in incorrect data
-            // because getting the screen size returns the size of the inspector.
-            //if (isPlaying)
-            //{
-            //    EditorGUI.BeginDisabledGroup( true );
-            //    EditorGUILayout.RectField( "Rect in pixels", adView.rectInPixels );
-            //    EditorGUI.EndDisabledGroup();
-            //}
+            if (isPlaying)
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.RectField("Rect Pixels", adView.rectInPixels);
+                EditorGUI.EndDisabledGroup();
+            }
             EditorGUI.indentLevel--;
 
             EditorGUI.BeginChangeCheck();

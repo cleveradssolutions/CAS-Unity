@@ -1,11 +1,36 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.8.0] - 2024-07-21
+- Discover the native 3.8.0 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added a log with useful information about ad impression with disabled verbose logs.
+### Update Banner Ad Position
+  - Added support new `AdPosition`: `MiddleCenter`, `MiddleLeft`, `MiddleRight`.
+  - Added support for offset (X, Y) position from any `AdPosition`. Previously, only `TopLeft` was supported.
+  - Added optional parameter `AdPosition` to method `SetPosition(int x, int y, AdPosition position = AdPosition.TopLeft)` method.
+  - Added new method `SetPositionPx(int x, int y, AdPosition position = AdPosition.TopLeft)` to set (X, Y) offset in pixels.
+  - Added new method `float CAS.MobileAds.GetDeviceScreenScale()` to retrieve the device screen scale in independent pixels (DP). Use this scale to convert pixels to DP and vice versa.
+  - The `rectInPixels` is now available immediately in the `OnLoaded` event.
+  - The `rectInPixels` will not be reset when the banner is hidden, the values ​​remain from the last display on the screen.
+### Bug Fixes
+- [iOS] Fixed the position of banner ads after changing the device orientation.
+- [Android] Removed gradle property `enableDexingArtifactTransform` for Unity 2022.2+ as deprecated with newest gradle versions.
+### Changes
+- The `ConsentFlowAdObject.showOnAwakeIfRequired` changed to `False` by default.
+- The `ManagerAdObject.initializeOnAwake` changed to `False` by default.
+- [Android] The `CASPlugin.androidlib` has been replaced by `CASUnityBridge.aar` for compatibility with Unity 6.
+- [Android] Now Gradle file modifications will be performed in temporary build files instead of project assets.
+- [iOS] The `Info.plist` configuration post-process was moved to `int.MaxValue - 10` order to workaround the issue when other plugins were overriding parameters, such as SKAdNetowkrIDs.
+### New ads networks support in closed beta
+- CASExchange - is a cutting-edge exchange platform designed to extend our SDK, enabling integration with Demand Side Platforms (DSPs).
+- Ogury
+- LoopMe
+
 # [3.7.3] - 2024-06-23
 - Discover the native 3.7.3 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added new `EnableOptionsButton` event for `ConsentFlowAdObject` to enable/disable Consent option button.
 ### Bug Fixes
 - [iOS] Fixed `EXC_BAD_ACCESS` crash from `didCloseAd` callback.
-## Changes
+### Changes
 - The MyTarget network support has been removed. Our team considers MyTarget to be ineffective and excludes it from CAS mediation.
   > Please remove the MyTarget adapter if you are using it.
 

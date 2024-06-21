@@ -155,6 +155,26 @@ namespace CAS
             return MobileAds.wrapperVersion;
         }
 
+        internal static float GetDeviceScreenScale()
+        {
+#if PlatformAndroid
+            if (Application.platform == RuntimePlatform.Android)
+            {
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
+                return androidSettings.GetDeviceScreenScale();
+            }
+#endif
+#if PlatformIOS
+            if (Application.platform == RuntimePlatform.IPhonePlayer)
+                return CAS.iOS.CASExterns.CASUGetDeviceScreenScale();
+#endif
+#if UNITY_EDITOR
+            return Mathf.Max(Screen.width, Screen.height) / (CAS.Unity.CASViewClient.emulateTabletScreen ? 1024 : 640);
+#else
+            return 0;
+#endif
+        }
+
         internal static IMediationManager CreateManager(CASInitSettings initSettings)
         {
             if (managers != null)

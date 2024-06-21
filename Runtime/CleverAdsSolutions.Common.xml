@@ -111,6 +111,20 @@
             The total revenue in USD from impressions of all ad formats to the current user for all sessions.
             </summary>
         </member>
+        <member name="T:CAS.AdPosition">
+            <summary>
+            Ad Position on screen.
+                    ___Left____Center____Right__
+            Top     |   1    |   0    |    2   |
+            Middle  |   7    |   6    |    8   |
+            Bottom  |   4    |   3    |    5   |
+            </summary>
+        </member>
+        <member name="F:CAS.AdPosition.Undefined">
+            <summary>
+            Service value to continue use previously Ad Position.
+            </summary>
+        </member>
         <member name="F:CAS.AdSize.Banner">
             <summary>
             Standard banner size 320dp width and 50dp height
@@ -511,17 +525,25 @@
             <para>Default: <see cref="F:CAS.AdPosition.BottomCenter"/></para>
             </summary>
         </member>
-        <member name="M:CAS.IAdView.SetPosition(System.Int32,System.Int32)">
+        <member name="M:CAS.IAdView.SetPosition(System.Int32,System.Int32,CAS.AdPosition)">
             <summary>
-            For greater control over where a AdView is placed on screen than what's offered by <see cref="T:CAS.AdPosition"/> values.
-            <para>The top-left corner of the AdView will be positioned
-            at the <paramref name="x"/> and <paramref name="y"/> values passed to the method,
-            where the origin is the top-left of the screen.</para>
+            The AdView will be positioned at the X and Y values passed to the method,
+            where the origin is the selected <see cref="T:CAS.AdPosition"/> corner of the screen.
             <para>The coordinates on the screen are determined not in pixels, but in Density-independent Pixels(DP)!</para>
-            <para>Screen positioning coordinates are only available for the <see cref="F:CAS.AdPosition.TopLeft"/>.</para>
             </summary>
             <param name="x">X-coordinate on screen in DP.</param>
             <param name="y">Y-coordinate on screen in DP.</param>
+            <param name="position">The corner of the screen.</param>
+        </member>
+        <member name="M:CAS.IAdView.SetPositionPx(System.Int32,System.Int32,CAS.AdPosition)">
+            <summary>
+            The AdView will be positioned at the X and Y values passed to the method,
+            where the origin is the selected <see cref="T:CAS.AdPosition"/> corner of the screen.
+            <para>The coordinates on the screen are determined in pixels.</para>
+            </summary>
+            <param name="x">X-coordinate on screen in pixels.</param>
+            <param name="y">Y-coordinate on screen in pixels.</param>
+            <param name="position">The corner of the screen.</param>
         </member>
         <member name="M:CAS.IAdView.Load">
             <summary>

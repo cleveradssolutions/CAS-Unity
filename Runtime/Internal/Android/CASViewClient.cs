@@ -47,13 +47,17 @@ namespace CAS.Android
                 _bridge.Call("show");
                 return;
             }
-            rectInPixels = Rect.zero;
             _bridge.Call("hide");
         }
 
         protected override void SetPositionNative(int position, int x, int y)
         {
             _bridge.Call("setPosition", position, x, y);
+        }
+
+        protected override void SetPositionPxNative(int position, int x, int y)
+        {
+            _bridge.Call("setPositionPx", position, x, y);
         }
     }
 }

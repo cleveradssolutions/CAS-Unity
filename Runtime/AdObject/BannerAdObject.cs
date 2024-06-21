@@ -20,8 +20,7 @@ namespace CAS.AdObject
 
         [SerializeField]
         private AdPosition adPosition = AdPosition.BottomCenter;
-        [Tooltip("For greater control over where a AdView is placed on screen, make sure to select AdPosition.TopLeft.\n" +
-            "Use Density-independent Pixels (DP).")]
+        [Tooltip("For greater control over where a AdView is placed on screen. Use Density-independent Pixels (DP).")]
         [SerializeField]
         private Vector2Int adOffset = Vector2Int.zero;
         [SerializeField]
@@ -52,21 +51,19 @@ namespace CAS.AdObject
         }
 
         /// <summary>
-        /// For greater control over where a AdView is placed on screen than what's offered by <see cref="AdPosition"/> values.
-        /// <para>The top-left corner of the AdView will be positioned
-        /// at the <paramref name="x"/> and <paramref name="y"/> values passed to the method,
-        /// where the origin is the top-left of the screen.</para>
+        /// The AdView will be positioned at the X and Y values passed to the method,
+        /// where the origin is the selected <see cref="AdPosition"/> corner of the screen.
         /// <para>The coordinates on the screen are determined not in pixels, but in Density-independent Pixels(DP)!</para>
-        /// <para>Screen positioning coordinates are only available for the <see cref="AdPosition.TopLeft"/>.</para>
         /// </summary>
         /// <param name="x">X-coordinate on screen in DP.</param>
         /// <param name="y">Y-coordinate on screen in DP.</param>
-        public void SetAdPosition(int x, int y)
+        /// <param name="position">The corner of the screen.</param>
+        public void SetAdPosition(int x, int y, AdPosition position = AdPosition.TopLeft)
         {
             adOffset = new Vector2Int(x, y);
-            adPosition = AdPosition.TopLeft;
+            adPosition = position;
             if (adView != null)
-                adView.SetPosition(x, y);
+                adView.SetPosition(x, y, position);
         }
 
         public void SetAdSize(AdSize size)
@@ -128,10 +125,7 @@ namespace CAS.AdObject
         {
             if (adView != null)
             {
-                if (adPosition == AdPosition.TopLeft)
-                    adView.SetPosition(adOffset.x, adOffset.y);
-                else
-                    adView.position = adPosition;
+                adView.SetPosition(adOffset.x, adOffset.y, adPosition);
                 adView.SetActive(true);
                 if (adView.isReady)
                     OnAdShown.Invoke();
@@ -209,10 +203,7 @@ namespace CAS.AdObject
 
             if (isActiveAndEnabled)
             {
-                if (adPosition == AdPosition.TopLeft)
-                    adView.SetPosition(adOffset.x, adOffset.y);
-                else
-                    adView.position = adPosition;
+                adView.SetPosition(adOffset.x, adOffset.y, adPosition);
                 adView.SetActive(true);
             }
 

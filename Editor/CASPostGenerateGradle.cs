@@ -2,15 +2,29 @@
 
 #if UNITY_ANDROID || CASDeveloper
 
+// Unity 2023.3 use Gradle Wrapper 7.6 and plugin 7.3.1
+// Unity 2022.2 use Gradle Wrapper 7.2 and plugin 7.1.2
+// Unity 2020.1-2022.1 use Gradle Wrapper 6.1.1 and plugin 4.0.1
+
 //#define CAS_DISABLE_PACKAGING_OPTIONS
 //#define CAS_DISABLE_VALIDATE_DEPS
 
+#if !UNITY_2022_2_OR_NEWER
+// Known issue with jCenter repository where repository is not responding
+// and gradle build stops with timeout error.
+#define CAS_REMOVE_JCENTER
+#endif
+
 using System;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor.Android;
 using UnityEditor;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CAS.UEditor
 {
@@ -18,67 +32,257 @@ namespace CAS.UEditor
 
     public class CASPostGenerateGradle : IPostGenerateGradleAndroidProject
     {
-        private const string applyFromPlugin = "apply from: 'CASPlugin.androidlib/";
-        private const string applyPackagingOptions = applyFromPlugin + "packaging_options.gradle'";
-        private const string applyValidateDependencies = "gradle.projectsEvaluated { " + applyFromPlugin + "validate_dependencies.gradle' }";
+        private const string buildOptionsFile = "cas_android_build_options.gradle";
+        private const string validateGMAFile = "cas_android_validate_gma.gradle";
 
-        public int callbackOrder { get { return 0; } }
+        private readonly XNamespace androidNamespace = "http://schemas.android.com/apk/res/android";
+        private readonly Regex versionRegex = new Regex("\\b\\d+(?:\\.\\d+){1,2}\\b");
+
+#if UNITY_2022_3_OR_NEWER
+        private Version gradlePluginVersion = new Version(7, 1, 2);
+#else
+        private Version gradlePluginVersion = new Version(4, 0, 1);
+#endif
+
+        public int callbackOrder { get { return 1000; } }
 
         public void OnPostGenerateGradleAndroidProject(string path)
         {
             // Path is 'root/unityLibrary/' with 'build.gradle' for Unity 2019.3+
             // Path is 'root/' with 'build.gradle' for Unity 2018
 
-            var pluginPath = Path.Combine(path, Utils.androidLibName);
             var initSettings = Utils.GetSettingsAsset(BuildTarget.Android, false);
             var editorSettings = CASEditorSettings.Load();
             var depManager = DependencyManager.Create(BuildTarget.Android, Audience.Mixed, true);
 
+            UpdateGradleWrapper(path, editorSettings);
+            UpdateRootGradleBuild(path, editorSettings);
+            UpdateGradleBuild(path, gradlePluginVersion);
+            UpdateGradleProperties(path);
+            UpdateAppManifest(path, initSettings, editorSettings, depManager);
+            AddCASConfigResources(path, initSettings);
+        }
+
+        private void UpdateGradleWrapper(string path, CASEditorSettings editorSettings)
+        {
+            if (string.IsNullOrEmpty(editorSettings.overrideGradleWrapperVersion))
+                return;
+
+#if UNITY_2019_3_OR_NEWER
+            path = Path.Combine(path, "..");
+#endif
+            var propertiesPath = Path.Combine(path, "gradle/wrapper/gradle-wrapper.properties");
+            if (!File.Exists(propertiesPath))
+            {
+                Debug.LogError(Utils.logTag + "Required file is missied: " + propertiesPath);
+                return;
+            }
+            var lines = File.ReadAllLines(propertiesPath);
+            for (var i = 0; i < lines.Length; i++)
+            {
+                if (lines[i].StartsWith("distributionUrl="))
+                {
+                    if (editorSettings.overrideGradleWrapperVersion.StartsWith("http"))
+                    {
+                        lines[i] = editorSettings.overrideGradleWrapperVersion;
+                    }
+                    else
+                    {
+                        lines[i] = versionRegex.Replace(lines[i], editorSettings.overrideGradleWrapperVersion);
+                    }
+                    Utils.Log("Android Gradle Wrapper distribution url set to: " + lines[i] + "\nIn file: " + propertiesPath + Utils.logAutoFeature);
+                }
+            }
+            File.WriteAllLines(propertiesPath, lines);
+        }
+
+        private void UpdateRootGradleBuild(string path, CASEditorSettings editorSettings)
+        {
+            // Extracts an Android Gradle Plugin version number from the contents of a *.gradle file for
+            // Unity 2022.2+ or 2023.1+.
+            // Example:
+            //   id 'com.android.application' version '7.1.2' apply false
+            //   id 'com.android.library' version '7.1.2' apply false
+            const string pluginVersionLine = "id 'com.android.application' version '";
+
+            // Extracts an Android Gradle Plugin version number from the contents of a *.gradle file.
+            // This should work for Unity 2022.1 and below.
+            // Example:
+            //   classpath 'com.android.tools.build:gradle:4.0.1'
+            const string pluginVersionLineLegacy = "classpath 'com.android.tools.build:gradle:";
+
+#if UNITY_2019_3_OR_NEWER
+            path = Path.Combine(path, "..");
+#endif
             var gradlePath = Path.Combine(path, "build.gradle");
+            if (!File.Exists(gradlePath))
+            {
+                Debug.LogError(Utils.logTag + "Required file is missied: " + gradlePath);
+                return;
+            }
+
+            var lines = File.ReadAllLines(gradlePath);
+            var updated = false;
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (lines[i].Contains(pluginVersionLine) || lines[i].Contains(pluginVersionLineLegacy))
+                {
+                    try
+                    {
+                        gradlePluginVersion = new Version(versionRegex.Match(lines[i]).Value);
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogException(e);
+                    }
+                }
+            }
+
+            Version newVersion = null;
+            if (!string.IsNullOrEmpty(editorSettings.overrideGradlePluginVersion))
+            {
+                try
+                {
+                    newVersion = new Version(editorSettings.overrideGradlePluginVersion);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                }
+            }
+
+            if (newVersion == null)
+                newVersion = GetFixedGradlePluginVersion(gradlePluginVersion);
+            if (newVersion != null)
+            {
+                Utils.Log("Updated Android Gradle Plugin version to: " + newVersion.ToString() +
+                                   " from: " + gradlePluginVersion.ToString() + "\nIn file: " + gradlePath);
+                gradlePluginVersion = newVersion;
+            }
+
+            for (var i = 0; i < lines.Length; i++)
+            {
+                if (newVersion != null && lines[i].Contains(" 'com.android."))
+                {
+                    lines[i] = versionRegex.Replace(lines[i], newVersion.ToString());
+                    updated = true;
+                }
+#if CAS_REMOVE_JCENTER
+                else if (lines[i].Contains("jcenter()"))
+                {
+                    lines[i] = lines[i].Replace("jcenter()", "mavenCentral()");
+                    updated = true;
+                }
+#endif
+            }
+
+            if (updated)
+                File.WriteAllLines(gradlePath, lines);
+        }
+
+        private void UpdateGradleBuild(string path, Version gradlePluginVersion)
+        {
+            var gradlePath = Path.Combine(path, "build.gradle");
+            if (!File.Exists(gradlePath))
+            {
+                Debug.LogError(Utils.logTag + "Required file is missied: " + gradlePath);
+                return;
+            }
             var mainGradle = File.ReadAllText(gradlePath);
             var gradleChanged = false;
-#if !CAS_DISABLE_VALIDATE_DEPS
-            if (IsNeedApplyGAMDependenciesValidation(mainGradle))
+
+#if !CAS_DISABLE_PACKAGING_OPTIONS
+            const string applyBuildOptions = "apply from: '" + buildOptionsFile + "'";
+            if (!mainGradle.Contains(applyBuildOptions))
             {
-                mainGradle += Environment.NewLine + applyValidateDependencies;
-                gradleChanged = true;
+                var optionsPath = Utils.GetPluginComponentPath(buildOptionsFile);
+                if (optionsPath != null)
+                {
+                    File.Copy(optionsPath, Path.Combine(path, buildOptionsFile), true);
+                    mainGradle += applyBuildOptions + Environment.NewLine;
+                    gradleChanged = true;
+                }
             }
 #endif
 
-#if !CAS_DISABLE_PACKAGING_OPTIONS
-            if (!mainGradle.Contains(applyPackagingOptions))
+#if !CAS_DISABLE_VALIDATE_DEPS
+            const string applyValidateGMA = "gradle.projectsEvaluated { apply from: '" + validateGMAFile + "' }";
+
+            // if Android Gradle Plugin version is 4.2.2+
+            var isSupportNewGradleTag = gradlePluginVersion.Major > 4
+                    || (gradlePluginVersion.Major == 4 && gradlePluginVersion.Minor >= 2 && gradlePluginVersion.Build >= 2);
+
+            if (!isSupportNewGradleTag && !mainGradle.Contains(applyValidateGMA))
             {
-                mainGradle += Environment.NewLine + applyPackagingOptions;
-                gradleChanged = true;
+                var validationPath = Utils.GetPluginComponentPath(validateGMAFile);
+                if (validationPath != null)
+                {
+                    File.Copy(validationPath, Path.Combine(path, validateGMAFile), true);
+                    mainGradle += applyValidateGMA + Environment.NewLine;
+                    gradleChanged = true;
+                }
             }
 #endif
 
             if (gradleChanged)
                 File.WriteAllText(gradlePath, mainGradle);
-
-
-            AddCASConfigResources(pluginPath, initSettings);
-            UpdatePluginManifest(pluginPath, initSettings, editorSettings, depManager);
         }
 
-        /// <summary>
-        /// Include `validate_dependencies.gradle` to build tasks 
-        /// if Android Gradle Plugin version is lower then 4.2.2
-        /// </summary>
-        private bool IsNeedApplyGAMDependenciesValidation(string mainGradle)
+        private void UpdateGradleProperties(string path)
         {
-            var gradleVer = CASPreprocessGradle.GetAndroidGradlePluginVersion();
-            var isSupportNewGradleTag = gradleVer.Major > 4
-                    || (gradleVer.Major == 4 && gradleVer.Minor >= 2 && gradleVer.Build >= 2);
+#if UNITY_2019_3_OR_NEWER
+            path = Path.Combine(path, "..");
+#endif
+            var propertiesPath = Path.Combine(path, "gradle.properties");
+            var properties = new Dictionary<string, string>();
+            if (File.Exists(propertiesPath))
+            {
+                var file = File.ReadAllLines(propertiesPath);
+                foreach (var line in file)
+                {
+                    var parts = line.Split('=');
+                    if (parts.Length == 1)
+                        properties[line] = "";
+                    else
+                        properties[parts[0]] = parts[1];
+                }
+            }
 
-            return !isSupportNewGradleTag && !mainGradle.Contains(applyValidateDependencies);
+            properties["android.useAndroidX"] = "true";
+            properties["android.enableJetifier"] = "true";
+#if !UNITY_2022_2_OR_NEWER
+            // Unity 6 uses Gradle version 8.4, but enableDexingArtifactTransform was removed in version 8.2.
+            // Enabled by default Dexing artifact transform causes issues for ExoPlayer with Gradle plugin 3.5.0+
+            properties["android.enableDexingArtifactTransform"] = "false";
+#endif
+
+            var fileContent = new StringBuilder();
+            foreach (var prop in properties)
+            {
+                fileContent.Append(prop.Key);
+                if (prop.Value.Length > 0)
+                    fileContent.Append('=');
+                fileContent.AppendLine(prop.Value);
+            }
+
+            try
+            {
+                File.WriteAllText(propertiesPath, fileContent.ToString());
+            }
+            catch
+            {
+                Debug.LogError(Utils.logTag + "Failed to update file: " + propertiesPath);
+            }
         }
 
-        private void AddCASConfigResources(string pluginPath, CASInitSettings initSettings)
+
+        private void AddCASConfigResources(string path, CASInitSettings initSettings)
         {
             if (!initSettings) return;
 
-            var rootPath = Path.Combine(pluginPath, "res/raw");
+            var rootPath = Path.Combine(path, "src/main/res/raw");
             if (!Directory.Exists(rootPath))
                 Directory.CreateDirectory(rootPath);
 
@@ -104,73 +308,146 @@ namespace CAS.UEditor
             }
         }
 
-        private static void UpdatePluginManifest(string pluginPath, CASInitSettings initSettings, CASEditorSettings editorSettings, DependencyManager depManager)
+        private void UpdateAppManifest(string path, CASInitSettings initSettings, CASEditorSettings editorSettings, DependencyManager depManager)
         {
-            string manifestPath = Path.Combine(pluginPath, "AndroidManifest.xml");
+            string manifestPath = Path.Combine(path, "src/main/AndroidManifest.xml");
             if (!File.Exists(manifestPath))
             {
-                Debug.LogError(Utils.logTag + "Plugin AndroidManifest.xml is missing. Try re-importing the plugin.");
+                Debug.LogError(Utils.logTag + "Application AndroidManifest.xml is missing in path: " + manifestPath);
                 return;
             }
 
-            try
+            XDocument manifest = XDocument.Load(manifestPath);
+            var manifestElem = manifest.Element("manifest");
+            if (manifestElem == null)
             {
-                XNamespace ns = "http://schemas.android.com/apk/res/android";
-                XNamespace nsTools = "http://schemas.android.com/tools";
-                XName nameAttribute = ns + "name";
-                XName valueAttribute = ns + "value";
-
-                var document = new XDocument(
-                    new XDeclaration("1.0", "utf-8", null),
-                    new XComment("This file is automatically generated by CAS Unity plugin from `Assets > CleverAdsSolutions > Android Settings`"),
-                    new XComment("Do not modify this file. YOUR CHANGES WILL BE ERASED!"));
-                var elemManifest = new XElement("manifest",
-                    new XAttribute(XNamespace.Xmlns + "android", ns),
-                    new XAttribute(XNamespace.Xmlns + "tools", nsTools),
-                    new XAttribute("package", Utils.packageName),
-                    new XAttribute(ns + "versionName", MobileAds.wrapperVersion),
-                    new XAttribute(ns + "versionCode", 1));
-                document.Add(elemManifest);
-
-                var elemApplication = new XElement("application");
-
-                var googleAppId = AdRemoteConfig.FindGADAppId(initSettings, depManager);
-                if (!string.IsNullOrEmpty(googleAppId))
-                {
-                    elemApplication.Add(new XElement("meta-data",
-                            new XAttribute(nameAttribute, "com.google.android.gms.ads.APPLICATION_ID"),
-                            new XAttribute(valueAttribute, googleAppId)));
-                }
-
-                if (editorSettings.optimizeGADLoading)
-                {
-                    elemApplication.Add(new XElement("meta-data",
-                        new XAttribute(nameAttribute, "com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"),
-                        new XAttribute(valueAttribute, "true")));
-                    elemApplication.Add(new XElement("meta-data",
-                        new XAttribute(nameAttribute, "com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"),
-                        new XAttribute(valueAttribute, "true")));
-                }
-
-                elemApplication.Add(new XElement("uses-library",
-                    new XAttribute(ns + "required", "false"),
-                    new XAttribute(nameAttribute, "org.apache.http.legacy")));
-
-                elemManifest.Add(elemApplication);
-
-                var elemAdIDPermission = new XElement("uses-permission",
-                    new XAttribute(nameAttribute, "com.google.android.gms.permission.AD_ID"));
-                if (editorSettings.isUseAdvertiserIdLimited(initSettings.defaultAudienceTagged))
-                    elemAdIDPermission.SetAttributeValue(nsTools + "node", "remove");
-                elemManifest.Add(elemAdIDPermission);
-
-                // XDocument required absolute path
-                document.Save(manifestPath);
+                Debug.LogError(Utils.logTag + "Application AndroidManifest.xml is invalid, <manifest> tag not found.");
+                return;
             }
-            catch (Exception e)
+
+            var appElem = manifestElem.Element("application");
+            if (appElem == null)
             {
-                Debug.LogException(e);
+                Debug.LogError(Utils.logTag + "Application AndroidManifest.xml is invalid, <application> tag not found.");
+                return;
             }
+
+            // elemApplication.Add(new XElement("uses-library",
+            //         new XAttribute(ns + "required", "false"),
+            //         new XAttribute(nameAttribute, "org.apache.http.legacy")));
+
+
+            const string permission_AD_ID = "com.google.android.gms.permission.AD_ID";
+            XNamespace nsTools = "http://schemas.android.com/tools";
+            XName toolsNode = nsTools + "node";
+            var permissionAdIdElem = manifestElem.Descendants()
+                .FirstOrDefault(element => element.Name.LocalName.Equals("uses-permission")
+                    && IsElementName(element, permission_AD_ID));
+            if (permissionAdIdElem == null)
+            {
+                permissionAdIdElem = new XElement("uses-permission",
+                    new XAttribute(androidNamespace + "name", permission_AD_ID));
+                manifestElem.Add(permissionAdIdElem);
+            }
+
+            if (editorSettings.isUseAdvertiserIdLimited(initSettings.defaultAudienceTagged))
+            {
+                manifestElem.SetAttributeValue(XNamespace.Xmlns + "tools", nsTools);
+                permissionAdIdElem.SetAttributeValue(toolsNode, "remove");
+            }
+            else
+            {
+                permissionAdIdElem.SetAttributeValue(toolsNode, null);
+            }
+
+            var metaDataElems = appElem.Descendants()
+                .Where(element => element.Name.LocalName.Equals("meta-data"));
+
+            var googleAppId = AdRemoteConfig.FindGADAppId(initSettings, depManager);
+            if (!string.IsNullOrEmpty(googleAppId))
+            {
+                UpdateMetaData(appElem, metaDataElems, "com.google.android.gms.ads.APPLICATION_ID", googleAppId);
+            }
+
+            if (editorSettings.optimizeGADLoading)
+            {
+                UpdateMetaData(appElem, metaDataElems, "com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION", "true");
+                UpdateMetaData(appElem, metaDataElems, "com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING", "true");
+            }
+
+            manifest.Save(manifestPath);
+        }
+
+        private bool IsElementName(XElement element, string name)
+        {
+            var attribute = element.Attribute(androidNamespace + "name");
+            return attribute != null && attribute.Value == name;
+        }
+
+        private void UpdateMetaData(XElement appElem, IEnumerable<XElement> metaDataElements, string name, string value)
+        {
+            foreach (var element in metaDataElements)
+            {
+                if (IsElementName(element, name))
+                {
+                    element.SetAttributeValue(androidNamespace + "value", value);
+                    return;
+                }
+            }
+            appElem.Add(
+                new XElement("meta-data",
+                    new XAttribute(androidNamespace + "name", name),
+                    new XAttribute(androidNamespace + "value", value))
+            );
+        }
+
+
+        private Version GetFixedGradlePluginVersion(Version current)
+        {
+#if UpdateGradleToolsMinorVersion || CASDeveloper
+            Version target = null;
+
+            if (current.Major == 4)
+            {
+                switch (current.Minor)
+                {
+                    case 0:
+                    case 2:
+                        if (current.Build < 2)
+                            target = new Version(4, current.Minor, 2);
+                        break;
+                    case 1:
+                        if (current.Build < 3)
+                            target = new Version(4, 1, 3);
+                        break;
+                }
+            }
+            else if (current.Major == 3)
+            {
+                switch (current.Minor)
+                {
+                    case 3:
+                    case 4:
+                        target = new Version(3, current.Minor, 3);
+                        break;
+                    case 5:
+                    case 6:
+                        target = new Version(3, current.Minor, 4);
+                        break;
+                }
+            }
+
+            if (target != null)
+            {
+                if (current.Major != target.Major
+                    || current.Minor != target.Minor
+                    || current.Build < target.Build)
+                {
+                    return target;
+                }
+            }
+#endif
+            return null;
         }
     }
 }

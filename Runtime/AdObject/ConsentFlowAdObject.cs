@@ -11,7 +11,7 @@ namespace CAS.AdObject
     public class ConsentFlowAdObject : MonoBehaviour
     {
         [SerializeField]
-        internal bool showOnAwakeIfRequired = true;
+        internal bool showOnAwakeIfRequired = false;
         public ConsentFlow.DebugGeography debugGeography = ConsentFlow.DebugGeography.EEA;
         public string privacyPolicyUrl = "";
 

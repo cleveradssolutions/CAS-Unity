@@ -1,5 +1,8 @@
 ﻿//  Copyright © 2024 CAS.AI. All rights reserved.
 
+// Overriding Gradle Wrapper and Android Gradle Plugin versions during development.
+//#define CAS_GRADLE_VERSIONS
+
 #pragma warning disable 649
 using System;
 using System.IO;
@@ -42,6 +45,12 @@ namespace CAS.UEditor
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
         private SerializedProperty includeAdDependencyVersionsProp;
+
+#if CAS_GRADLE_VERSIONS
+        private SerializedProperty overrideGradleWrapperVersionProp;
+        private SerializedProperty overrideGradlePluginVersionProp;
+#endif
+
         #endregion
 
         #region Utility fields
@@ -135,10 +144,16 @@ namespace CAS.UEditor
 #if !UNITY_2022_2_OR_NEWER
             updateGradlePluginVersionProp = editorSettingsObj.FindProperty("updateGradlePluginVersion");
 #endif
+
             permissionAdIdProp = editorSettingsObj.FindProperty("permissionAdId");
 
             attributionReportEndpointProp = editorSettingsObj.FindProperty("attributionReportEndpoint");
             includeAdDependencyVersionsProp = editorSettingsObj.FindProperty("includeAdDependencyVersions");
+
+#if CAS_GRADLE_VERSIONS
+            overrideGradleWrapperVersionProp = editorSettingsObj.FindProperty("overrideGradleWrapperVersion");
+            overrideGradlePluginVersionProp = editorSettingsObj.FindProperty("overrideGradlePluginVersion");
+#endif
 
             userTrackingUsageDescriptionProp = editorSettingsObj.FindProperty("userTrackingUsageDescription");
 
@@ -173,7 +188,7 @@ namespace CAS.UEditor
                             .Append(Application.platform).Append("; ");
             if (edmVersion != null)
                 environmentBuilder.Append("EDM4U ").Append(edmVersion).Append("; ");
-#if UNITY_ANDROID || CASDeveloper
+
             if (platform == BuildTarget.Android)
             {
                 var gradleWrapperVersion = CASPreprocessGradle.GetGradleWrapperVersion();
@@ -185,7 +200,7 @@ namespace CAS.UEditor
                 else
                     environmentBuilder.Append("Target API ").Append(targetSDK).Append("; ");
             }
-#endif
+
             if (platform == BuildTarget.iOS)
             {
                 environmentBuilder.Append("Target iOS ").Append(PlayerSettings.iOS.targetOSVersionString);
@@ -353,6 +368,36 @@ namespace CAS.UEditor
                        "for the current Gradle Wrapper version."),
                     updateGradlePluginVersionProp.boolValue);
 #endif
+#if CAS_GRADLE_VERSIONS
+                Version gradleVer;
+                var gradleVersion = EditorGUILayout.TextField(
+                    "Override Gradle Wrapper Version/URL",
+                    overrideGradleWrapperVersionProp.stringValue);
+                overrideGradleWrapperVersionProp.stringValue = gradleVersion;
+                
+                if (!string.IsNullOrEmpty(gradleVersion) && !gradleVersion.StartsWith("https\\://") && !Version.TryParse(gradleVersion, out gradleVer))
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.HelpBox("Supported strings with full Gradle Distribution URL started with 'https\\://' or just version number, for example 7.2", MessageType.Error);
+                    EditorGUI.indentLevel--;
+                }
+
+                EditorGUILayout.PropertyField(overrideGradlePluginVersionProp);
+                var gradlePluginVersion = overrideGradlePluginVersionProp.stringValue;
+                if (!string.IsNullOrEmpty(gradlePluginVersion))
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.HelpBox("If you are override the Android Gradle Plugin version, make sure it is compatible with the Gradle Wrapper version. See official Gradle and Android Gradle Plugin compatibility table.", MessageType.None);
+                    HelpStyles.HelpButton("https://developer.android.com/build/releases/gradle-plugin#updating-gradle");
+                    EditorGUILayout.EndHorizontal();
+
+                    if (!Version.TryParse(gradlePluginVersion, out gradleVer))
+                        EditorGUILayout.HelpBox("Supported version string only, for example 4.2.2", MessageType.Error);
+                    EditorGUI.indentLevel--;
+                }
+#endif
+
                 optimizeGADLoadingProp.boolValue = EditorGUILayout.ToggleLeft(
                     HelpStyles.GetContent("Optimize Google Ad loading", null,
                         "Google Ad loading tasks will be offloaded to a background thread"),
@@ -400,7 +445,7 @@ namespace CAS.UEditor
                 autoCheckForUpdatesEnabledProp.boolValue);
 
             includeAdDependencyVersionsProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Include Ads dependency versions",
+                "Include Ads SDK versions to Gradle/Podfile (not recomended)",
                 includeAdDependencyVersionsProp.boolValue);
 
             EditorGUILayout.EndFadeGroup();
@@ -623,14 +668,12 @@ namespace CAS.UEditor
             {
 #if UNITY_2019_3_OR_NEWER
                 OnGradleTemplateDisabledGUI("Main Gradle", Utils.mainGradlePath);
-                OnGradleTemplateDisabledGUI("Gradle Properties", Utils.propertiesGradlePath);
 #else
                 OnGradleTemplateDisabledGUI("Gradle", Utils.mainGradlePath);
 #endif
 #if UNITY_2022_2_OR_NEWER
                 OnGradleTemplateDisabledGUI("Settings Gradle", Utils.settingsGradlePath);
-#endif
-#if UNITY_2019_3_OR_NEWER && !UNITY_2022_2_OR_NEWER
+#elif UNITY_2019_3_OR_NEWER
                 OnGradleTemplateDisabledGUI("Base Gradle", Utils.projectGradlePath);
 #endif
             }
@@ -678,12 +721,11 @@ namespace CAS.UEditor
         {
             if (File.Exists(path))
                 return;
-#if UNITY_ANDROID || CASDeveloper
+
             var msg = prefix + " template feature is disabled!\n" +
                 "A successful build requires do modifications to " + prefix + " template.";
             if (HelpStyles.WarningWithButton(msg, "Enable", MessageType.Error))
                 CASPreprocessGradle.TryEnableGradleTemplate(path);
-#endif
         }
 
         private void OnManagerIDVerificationGUI()

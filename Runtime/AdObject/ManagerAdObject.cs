@@ -13,7 +13,7 @@ namespace CAS.AdObject
     {
         public ManagerIndex managerId;
         [SerializeField]
-        private bool initializeOnAwake = true;
+        private bool initializeOnAwake = false;
 
         public bool consentFlowEnabled = true;
         public ConsentFlowAdObject consentFlow;

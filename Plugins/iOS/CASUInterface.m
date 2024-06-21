@@ -257,6 +257,10 @@ const char * CASUGetSDKVersion(void) {
     return CASUStringToUnity([CAS getSDKVersion]);
 }
 
+float CASUGetDeviceScreenScale(void) {
+    return [UIScreen mainScreen].scale;
+}
+
 #pragma mark - CAS Manager
 
 void CASUCreateBuilder(NSInteger  enableAd,
@@ -440,6 +444,18 @@ void CASUSetAdViewPosition(CASUViewRef viewRef, int posCode, int x, int y) {
     CASUView *view = (__bridge CASUView *)viewRef;
 
     [view setPositionCode:posCode withX:x withY:y];
+}
+
+void CASUSetAdViewPositionPx(CASUViewRef viewRef, int posCode, int x, int y) {
+    CASUView *view = (__bridge CASUView *)viewRef;
+
+    if (x == 0 && y == 0) {
+        [view setPositionCode:posCode withX:0 withY:0];
+        return;
+    }
+
+    CGFloat scale = [UIScreen mainScreen].scale;
+    [view setPositionCode:posCode withX:(x / scale) withY:(y / scale)];
 }
 
 void CASUSetAdViewRefreshInterval(CASUViewRef viewRef, int interval) {

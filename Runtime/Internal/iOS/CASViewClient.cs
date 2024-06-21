@@ -71,8 +71,12 @@ namespace CAS.iOS
                 return;
             }
 
-            rectInPixels = Rect.zero;
             CASExterns.CASUHideAdView(_viewRef);
+        }
+
+        protected override void SetPositionPxNative(int position, int x, int y)
+        {
+            CASExterns.CASUSetAdViewPositionPx(_viewRef, position, x, y);
         }
 
         protected override void SetPositionNative(int position, int x, int y)

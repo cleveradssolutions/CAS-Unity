@@ -18,6 +18,23 @@ namespace CAS.UEditor
 
         public bool generateIOSDeepLinksForPromo = true;
         public string attributionReportEndpoint = null;
+        
+        /// <summary>
+        /// Override Gradle Wrapper propery.
+        /// <para>distributionUrl=https\://services.gradle.org/distributions/gradle-7.2-bin.zip</para>
+        /// Supported strings with full https url or just version number, for example "7.2".
+        /// </summary>
+        public string overrideGradleWrapperVersion = "";
+        /// <summary>
+        /// Override Android Gradle Plugin version (Gradle Build Tools).
+        /// <para>plugin id 'com.android.application' version '7.1.2'</para>
+        /// or
+        /// <para>classpath 'com.android.tools.build:gradle:4.0.1'</para>
+        /// Supported version strings only, for example "4.0.1".
+        /// If you are override the Android Gradle Plugin version, make sure it is compatible with the Gradle Wrapper version.
+        /// See official Gradle and Android Gradle Plugin compatibility table here https://developer.android.com/build/releases/gradle-plugin#updating-gradle
+        /// </summary>
+        public string overrideGradlePluginVersion = "";
 
         /// <summary>
         /// {key}.lproj Language code (ISO-639)
@@ -29,7 +46,7 @@ namespace CAS.UEditor
 
 
 #if UNITY_2022_2_OR_NEWER
-        // Unity 2022.2 migrate to valid gradle 7.1.2
+        // Unity 2022.2 migrated to valid gradle 7.1.2
         public bool updateGradlePluginVersion { get { return false; } }
 #else
         public bool updateGradlePluginVersion = true;

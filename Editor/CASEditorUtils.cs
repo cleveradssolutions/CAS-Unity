@@ -19,11 +19,11 @@ namespace CAS.UEditor
         public const string rootCASFolderPath = "Assets/CleverAdsSolutions";
         public const string editorFolderPath = rootCASFolderPath + "/Editor";
 
-        // UNITY_2021_2_OR_NEWER have minumum API 21
-        // UNITY_2021_3_OR_NEWER have minumum API 22
+        // UNITY_2021_2_OR_NEWER use minumum API 21
+        // UNITY_2021_3_OR_NEWER use minumum API 22
         public const int targetAndroidVersion = 21;
 
-        // UNITY_2021_3_OR_NEWER have minimum iOS version 12
+        // UNITY_2021_3_OR_NEWER use minimum iOS version 12
         public const int targetIOSVersion = 13;
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
@@ -31,9 +31,6 @@ namespace CAS.UEditor
 
         public const string androidAdmobSampleAppID = "ca-app-pub-3940256099942544~3347511713";
         public const string iosAdmobSampleAppID = "ca-app-pub-3940256099942544~1458002511";
-
-        internal const string androidLibName = "CASPlugin.androidlib";
-        public const string androidLibFolderPath = "Plugins/Android/" + androidLibName;
 
         public const string configResourcesCacheRoot = "Library/";
 
@@ -49,15 +46,14 @@ namespace CAS.UEditor
 
         public static System.Version minEDM4UVersion
         {
-#if UNITY_2022_2_OR_NEWER
             get { return new System.Version(1, 2, 176); }
-#else
-            get { return new System.Version(1, 2, 174); }
-#endif
         }
+
 
         [Obsolete("No longer used")]
         public const string iosResSettingsPath = "Library/ios_";
+        [Obsolete("No longer used")]
+        public const string androidLibFolderPath = "Plugins/Android/CASPlugin.androidlib";
         [Obsolete("No longer used")]
         public const string androidLibManifestPath = androidLibFolderPath + "/AndroidManifest.xml";
         [Obsolete("No longer used")]
@@ -447,9 +443,7 @@ namespace CAS.UEditor
                 return false;
             }
 
-#if UNITY_ANDROID
             CASPreprocessGradle.UpdateGradleTemplateIfNeed();
-#endif
 
             bool success = false;
             var resolverType = GetAndroidDependenciesResolverType();

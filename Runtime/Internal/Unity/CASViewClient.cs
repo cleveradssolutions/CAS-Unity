@@ -2,6 +2,7 @@
 
 #if UNITY_EDITOR
 using System;
+using System.Linq.Expressions;
 using UnityEngine;
 
 namespace CAS.Unity
@@ -9,8 +10,8 @@ namespace CAS.Unity
     [Serializable]
     internal sealed class CASViewClient : CASViewBase
     {
-        private static bool emulateTabletScreen = false;
-        
+        internal static bool emulateTabletScreen = false;
+
         private CASManagerBehaviour _behaviour;
         private bool _waitImpressionEvent = false;
 
@@ -61,11 +62,22 @@ namespace CAS.Unity
                     return;
                 }
             }
+            this.active = active;
+        }
+
+        protected override void SetPositionPxNative(int position, int x, int y)
+        {
+            if (x == 0 && y == 0)
+            {
+                SetPositionNative(position, x, y);
+            }
             else
             {
-                rectInPixels = Rect.zero;
+                float scale = MobileAds.GetDeviceScreenScale();
+                _positionX = (int)(x / scale);
+                _positionY = (int)(y / scale);
+                SetPositionNative(position, _positionX, _positionY);
             }
-            this.active = active;
         }
 
         protected override void SetPositionNative(int position, int x, int y)
@@ -82,7 +94,7 @@ namespace CAS.Unity
                     _waitImpressionEvent = false;
                     CallAdAction(AdActionCode.IMPRESSION);
                 }
-                rectInPixels = CalculateAdRectOnScreen();
+                CalculateAdRectOnScreen();
                 var rect = new Rect(rectInPixels);
                 var totalHeight = rect.height;
                 rect.height = totalHeight * 0.65f;
@@ -103,21 +115,21 @@ namespace CAS.Unity
             {
                 if (action == AdActionCode.LOADED)
                 {
+                    CalculateAdRectOnScreen();
                     loaded = true;
                     _waitImpressionEvent = true;
+
                 }
                 HandleCallback(action, 0, (int)lastError, null);
             }, delay);
         }
 
-        private Rect CalculateAdRectOnScreen()
+        private void CalculateAdRectOnScreen()
         {
             var screenWidth = Screen.width;
             var screenHeight = Screen.height;
             var safeArea = Screen.safeArea;
-            const float phoneScale = 640;
-            const float tabletScale = 1024;
-            float scale = Mathf.Max(screenWidth, screenHeight) / (emulateTabletScreen ? tabletScale : phoneScale);
+            float scale = MobileAds.GetDeviceScreenScale();
             bool isPortrait = screenWidth < screenHeight;
 
             AdSize targetSize;
@@ -158,44 +170,49 @@ namespace CAS.Unity
                     break;
             }
 
-            var maxYPos = screenHeight - result.height - (screenHeight - safeArea.yMax);
-            var maxXPos = screenWidth - result.width - (screenWidth - safeArea.xMax);
             switch (_position)
             {
                 case AdPosition.TopCenter:
                 case AdPosition.TopLeft:
                 case AdPosition.TopRight:
                     result.y = _positionY * scale;
-                    if (maxYPos < result.y)
-                        result.y = maxYPos;
-                    if (result.y < safeArea.y)
-                        result.y = safeArea.y;
-                    else if (isPortrait) // For Portrait orientation add offset to simulate Safe area
-                        result.y = Math.Max(result.y, scale * 20.0f);
-                    break;
-                default:
-                    result.y = maxYPos;
-                    break;
-            }
-            switch (_position)
-            {
-                case AdPosition.BottomLeft:
-                case AdPosition.TopLeft:
-                    result.x = _positionX * scale;
-                    if (result.x < safeArea.x)
-                        result.x = safeArea.x;
-                    if (maxXPos < result.x)
-                        result.x = maxXPos;
                     break;
                 case AdPosition.BottomCenter:
-                case AdPosition.TopCenter:
-                    result.x = safeArea.width * 0.5f + safeArea.x - result.width * 0.5f;
+                case AdPosition.BottomLeft:
+                case AdPosition.BottomRight:
+                    result.y = screenHeight - result.height - (_positionY * scale);
                     break;
                 default:
-                    result.x = maxXPos;
+                    result.y = safeArea.height * 0.5f + safeArea.y - result.height * 0.5f;
                     break;
             }
-            return result;
+
+            switch (_position)
+            {
+                case AdPosition.TopLeft:
+                case AdPosition.BottomLeft:
+                case AdPosition.MiddleLeft:
+                    result.x = _positionX * scale;
+                    break;
+                case AdPosition.TopRight:
+                case AdPosition.BottomRight:
+                case AdPosition.MiddleRight:
+                    result.x = screenWidth - result.width - (_positionX * scale);
+                    break;
+                default:
+                    result.x = safeArea.width * 0.5f + safeArea.x - result.width * 0.5f;
+                    break;
+            }
+
+            result.y = Mathf.Clamp(result.y,
+                min: safeArea.y,
+                max: screenHeight - result.height - (screenHeight - safeArea.yMax));
+
+            result.x = Mathf.Clamp(result.x,
+                min: safeArea.x,
+                max: screenWidth - result.width - (screenWidth - safeArea.xMax));
+
+            rectInPixels = result;
         }
     }
 

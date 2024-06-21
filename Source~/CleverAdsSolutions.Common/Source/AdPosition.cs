@@ -4,6 +4,13 @@ using System;
 
 namespace CAS
 {
+    /// <summary>
+    /// Ad Position on screen.
+    ///         ___Left____Center____Right__
+    /// Top     |   1    |   0    |    2   |
+    /// Middle  |   7    |   6    |    8   |
+    /// Bottom  |   4    |   3    |    5   |
+    /// </summary>
     public enum AdPosition
     {
         TopCenter,
@@ -12,6 +19,13 @@ namespace CAS
         BottomCenter,
         BottomLeft,
         BottomRight,
-        Undefined = 7,
+        MiddleCenter,
+        MiddleLeft,
+        MiddleRight,
+
+        /// <summary>
+        /// Service value to continue use previously Ad Position.
+        /// </summary>
+        Undefined,
     }
 }

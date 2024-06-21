@@ -62,6 +62,9 @@ typedef void (*CASUConsentFlowCompletion)(int status);
 #define kCASUPosition_BOTTOM_CENTER 3
 #define kCASUPosition_BOTTOM_LEFT   4
 #define kCASUPosition_BOTTOM_RIGHT  5
+#define kCASUPosition_MIDDLE_CENTER 6
+#define kCASUPosition_MIDDLE_LEFT   7
+#define kCASUPosition_MIDDLE_RIGHT  8
 
 // C# Enum AdSize
 #define kCASUSize_BANNER            1

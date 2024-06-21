@@ -148,6 +148,9 @@ namespace CAS.iOS
         internal static extern string CASUGetSDKVersion();
 
         [DllImport("__Internal")]
+        internal static extern float CASUGetDeviceScreenScale();
+
+        [DllImport("__Internal")]
         internal static extern string CASUValidateIntegration();
 
         [DllImport("__Internal")]
@@ -261,6 +264,9 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern void CASUSetAdViewPosition(CASUViewRef viewRef, int posCode, int x, int y);
+
+        [DllImport("__Internal")]
+        internal static extern void CASUSetAdViewPositionPx(CASUViewRef viewRef, int posCode, int x, int y);
 
         [DllImport("__Internal")]
         internal static extern void CASUSetAdViewRefreshInterval(CASUViewRef viewRef, int interval);

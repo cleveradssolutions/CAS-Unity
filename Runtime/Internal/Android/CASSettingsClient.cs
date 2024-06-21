@@ -161,6 +161,11 @@ namespace CAS.Android
                 settingsBridge.CallStatic("addKeyword", keywords[i]);
             }
         }
+
+        public float GetDeviceScreenScale()
+        {
+            return settingsBridge.CallStatic<float>("getDeviceScale");
+        }
     }
 }
 #endif

@@ -73,16 +73,24 @@ namespace CAS
         AdPosition position { get; set; }
 
         /// <summary>
-        /// For greater control over where a AdView is placed on screen than what's offered by <see cref="AdPosition"/> values.
-        /// <para>The top-left corner of the AdView will be positioned
-        /// at the <paramref name="x"/> and <paramref name="y"/> values passed to the method,
-        /// where the origin is the top-left of the screen.</para>
+        /// The AdView will be positioned at the X and Y values passed to the method,
+        /// where the origin is the selected <see cref="AdPosition"/> corner of the screen.
         /// <para>The coordinates on the screen are determined not in pixels, but in Density-independent Pixels(DP)!</para>
-        /// <para>Screen positioning coordinates are only available for the <see cref="AdPosition.TopLeft"/>.</para>
         /// </summary>
         /// <param name="x">X-coordinate on screen in DP.</param>
         /// <param name="y">Y-coordinate on screen in DP.</param>
-        void SetPosition( int x, int y );
+        /// <param name="position">The corner of the screen.</param>
+        void SetPosition( int x, int y, AdPosition position = AdPosition.TopLeft );
+
+        /// <summary>
+        /// The AdView will be positioned at the X and Y values passed to the method,
+        /// where the origin is the selected <see cref="AdPosition"/> corner of the screen.
+        /// <para>The coordinates on the screen are determined in pixels.</para>
+        /// </summary>
+        /// <param name="x">X-coordinate on screen in pixels.</param>
+        /// <param name="y">Y-coordinate on screen in pixels.</param>
+        /// <param name="position">The corner of the screen.</param>
+        void SetPositionPx( int x, int y, AdPosition position = AdPosition.TopLeft );
 
         /// <summary>
         /// Manual load the Ad or reload current loaded Ad to skip impression.

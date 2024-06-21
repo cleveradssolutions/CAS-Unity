@@ -9,7 +9,7 @@ namespace CAS
     public static class MobileAds
     {
         /// <summary>
-        /// CAS Unity wrapper version
+        /// The CAS Unity plugin wrapper version.
         /// </summary>
         public const string wrapperVersion = "3.7.3";
 
@@ -44,6 +44,7 @@ namespace CAS
 
         /// <summary>
         /// Raised when the application enters the background.
+        /// 
         /// <para>Note that the Android runtime triggers events not from the main Unity thread. 
         /// However, you can call CAS plugin methods without leaving the current thread.</para>
         /// </summary>
@@ -67,11 +68,19 @@ namespace CAS
         }
 
         /// <summary>
-        /// Return Native SDK version else <see cref="wrapperVersion"/> for Unity Editor.
+        /// The Native SDK version else <see cref="wrapperVersion"/> for Unity Editor.
         /// </summary>
         public static string GetSDKVersion()
         {
             return CASFactory.GetSDKVersion();
+        }
+
+        /// <summary>
+        /// The scale of the device screen in density independent pixels.
+        /// </summary>
+        public static float GetDeviceScreenScale()
+        {
+            return CASFactory.GetDeviceScreenScale();
         }
 
         /// <summary>
@@ -81,17 +90,6 @@ namespace CAS
         public static IManagerBuilder BuildManager()
         {
             return CASFactory.LoadDefaultBuiderFromResources();
-        }
-
-        /// <summary>
-        /// Some consent forms require the user to modify their consent at any time. 
-        /// When a user interacts with your UI element, call function to show the form 
-        /// so the user can update their privacy options at any time. 
-        /// </summary>
-        [Obsolete("Use ShowIfRequired() or Show() methods for ConsentFlow insntance.")]
-        public static void ShowConsentFlow(ConsentFlow flow)
-        {
-            flow.Show();
         }
 
         /// <summary>
@@ -121,6 +119,12 @@ namespace CAS
         public static bool IsActiveNetwork(AdNetwork network)
         {
             return CASFactory.IsActiveNetwork(network);
+        }
+
+        [Obsolete("Use ShowIfRequired() or Show() methods for ConsentFlow insntance.")]
+        public static void ShowConsentFlow(ConsentFlow flow)
+        {
+            flow.Show();
         }
     }
 }

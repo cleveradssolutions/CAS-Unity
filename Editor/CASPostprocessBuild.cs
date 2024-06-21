@@ -51,16 +51,6 @@ namespace CAS.UEditor
             var editorSettings = CASEditorSettings.Load();
             var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
 
-            EditPList(buildPath, (plist) =>
-            {
-                plist.SetGADAppIdForCAS(initSettings, depManager);
-                plist.SetSDKInitializationDelay();
-                plist.SetAppTransportSecuritySettings();
-                plist.SetAttributionReportEndpoint(editorSettings.attributionReportEndpoint);
-                plist.SetDefaultUserTrackingDescription(editorSettings.userTrackingUsageDescription);
-                plist.AddSKAdNetworkItemsForCAS();
-            });
-
             EditXCProject(buildPath, unityProjectName, (project) =>
             {
                 var appTargetGuid = project.GetAppGUID();
@@ -87,13 +77,26 @@ namespace CAS.UEditor
             CASEditorUtils.Log("Postrocess Build done: " + MobileAds.wrapperVersion);
         }
 
-        [PostProcessBuild(int.MaxValue - 2)]
+        [PostProcessBuild(int.MaxValue - 10)]
         public static void OnCocoaPodsReady(BuildTarget buildTarget, string buildPath)
         {
             if (buildTarget != BuildTarget.iOS)
                 return;
 
+            // Init Settings can be null
+            var initSettings = CASEditorUtils.GetSettingsAsset(BuildTarget.iOS, false);
             var editorSettings = CASEditorSettings.Load();
+            var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
+
+            EditPList(buildPath, (plist) =>
+            {
+                plist.SetGADAppIdForCAS(initSettings, depManager);
+                plist.SetSDKInitializationDelay();
+                plist.SetAppTransportSecuritySettings();
+                plist.SetAttributionReportEndpoint(editorSettings.attributionReportEndpoint);
+                plist.SetDefaultUserTrackingDescription(editorSettings.userTrackingUsageDescription);
+                plist.AddSKAdNetworkItemsForCAS();
+            });
 
             EditXCProject(buildPath, unityProjectName, (project) =>
             {

@@ -369,7 +369,7 @@ namespace CAS
         public AdPosition position
         {
             get { return _position; }
-            set { SetPosition(value, 0, 0); }
+            set { SetPosition(0, 0, value); }
         }
 
         public abstract void Load();
@@ -379,29 +379,43 @@ namespace CAS
         public abstract bool isReady { get; }
 
         protected abstract void SetPositionNative(int position, int x, int y);
+        protected abstract void SetPositionPxNative(int position, int x, int y);
 
         public void DisableRefresh()
         {
             refreshInterval = 0;
         }
 
-        public void SetPosition(int x, int y)
+        public void SetPosition(int x, int y, AdPosition position)
         {
-            SetPosition(AdPosition.TopLeft, x, y);
+            if (IsValidPosition(x, y, position))
+                SetPositionNative((int)position, _positionX, _positionY);
         }
 
-        private void SetPosition(AdPosition position, int x, int y)
+        public void SetPositionPx(int x, int y, AdPosition position)
         {
-            if (position == AdPosition.Undefined)
-                return;
-            if (position != _position || x != _positionX || y != _positionY)
-            {
-                _position = position;
-                _positionX = x;
-                _positionY = y;
-                SetPositionNative((int)position, x, y);
-            }
+            if (IsValidPosition(x, y, position))
+                SetPositionPxNative((int)position, _positionX, _positionY);
         }
+
+        private bool IsValidPosition(int x, int y, AdPosition position)
+        {
+            bool isChanged = false;
+            if (position < AdPosition.Undefined && position != _position){
+                _position = position;
+                isChanged = true;
+            }
+            var absX = Math.Abs(x);
+            var absY = Math.Abs(y);
+            if (absX != _positionX || absY != _positionY)
+            {
+                _positionX = absX;
+                _positionY = absY;
+                isChanged = true;
+            }
+            return isChanged;
+        }
+
 
         public void HandleCallback(int action, int type, int error, object impression)
         {

@@ -111,9 +111,19 @@ namespace CAS.UEditor
 #if UNITY_ANDROID || CASDeveloper
             // CASPlugin.androidlib migrate from Assets/Plugins to Assets/CleverAdsSolutions/Plugins
             // with CAS 3.5.0 update.
+#pragma warning disable CS0618 // Type or member is obsolete
             string plguinInAssets = "Assets/" + Utils.androidLibFolderPath;
+#pragma warning restore CS0618 // Type or member is obsolete
             if (Directory.Exists(plguinInAssets))
                 AssetDatabase.DeleteAsset(plguinInAssets);
+                
+            // CASPlugin.androidlib has been removed from Assets/CleverAdsSolutions/Plugins
+            // with CAS 3.8.0 update.
+#pragma warning disable CS0618 // Type or member is obsolete
+            string plguinInCASAssets = Utils.rootCASFolderPath + "/" + Utils.androidLibFolderPath;
+#pragma warning restore CS0618 // Type or member is obsolete
+            if (Directory.Exists(plguinInCASAssets))
+                AssetDatabase.DeleteAsset(plguinInCASAssets);
 #endif
         }
 
@@ -168,7 +178,6 @@ namespace CAS.UEditor
                 EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
             }
 #endif
-            CASPreprocessGradle.Configure(editorSettings);
 #endif
         }
 
