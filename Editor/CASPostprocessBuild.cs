@@ -58,8 +58,6 @@ namespace CAS.UEditor
                 var frameworkTargetGuid = project.GetFrameworkGUID();
                 project.EnableSwiftLibraries(appTargetGuid, frameworkTargetGuid);
                 project.FixLibrariesExecutablePath(appTargetGuid, depManager);
-                project.FixGenerationInfoPlist(frameworkTargetGuid);
-                project.FixGenerationInfoPlist(appTargetGuid);
                 project.AddCASConfigResources(buildPath, appTargetGuid, initSettings);
 
                 if (editorSettings.userTrackingUsageDescription.Length > 0)
@@ -193,11 +191,7 @@ namespace CAS.UEditor
         private static void AddSKAdNetworkItemsForCAS(this PlistDocument plist)
         {
             var templateFile = CASEditorUtils.GetPluginComponentPath(CASEditorUtils.iosSKAdNetworksTemplateFile);
-            if (string.IsNullOrEmpty(templateFile))
-            {
-                Debug.LogError(CASEditorUtils.logTag + "Not found SKAdNetworkItems. Try reimport CAS package.");
-                return;
-            }
+            if (string.IsNullOrEmpty(templateFile)) return;
             var networksLines = File.ReadAllLines(templateFile);
 
             PlistElementArray adNetworkItems;
@@ -367,31 +361,15 @@ namespace CAS.UEditor
             }
         }
 
-        /// <summary>
-        /// Known issue with failed validation by Apple:
-        /// <para>
-        /// The bundle 'Payload/Cubes World.app/Frameworks/UnityFramework.framework' is missing plist key. 
-        /// The Info.plist file is missing the required key: CFBundleShortVersionString. 
-        /// Please find more information about CFBundleShortVersionString
-        /// </para>
-        /// This happens when some pods want to enable GENERATE_INFOPLIST_FILE, but Unity is not support it.
-        /// - Yandex Ads: https://github.com/CocoaPods/Specs/blob/master/Specs/a/c/5/YandexMobileAds/6.0.0/YandexMobileAds.podspec.json
-        /// </summary>
-        private static void FixGenerationInfoPlist(this PBXProject project, string targetGuid)
-        {
-            project.SetBuildProperty(targetGuid, "GENERATE_INFOPLIST_FILE", "NO");
-        }
-
         private static void FixLibrariesExecutablePath(this PBXProject project, string targetGuid, DependencyManager deps)
         {
 #if !UNITY_2019_3_OR_NEWER
             string runpathSearchPaths = project.GetBuildPropertyForAnyConfig(targetGuid, "LD_RUNPATH_SEARCH_PATHS");
 
-            // Check if runtime search paths already contains the required search paths for dynamic libraries.
             const string pathToFrameworks = "@executable_path/Frameworks";
-            if (!runpathSearchPaths.Contains(pathToFrameworks))
+            if (string.IsNullOrEmpty(runpathSearchPaths) || !runpathSearchPaths.Contains(pathToFrameworks))
             {
-                if (runpathSearchPaths == null)
+                if (string.IsNullOrEmpty(runpathSearchPaths))
                     runpathSearchPaths = pathToFrameworks;
                 else
                     runpathSearchPaths += " " + pathToFrameworks;
