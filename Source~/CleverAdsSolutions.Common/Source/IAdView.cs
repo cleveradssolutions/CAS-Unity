@@ -43,7 +43,6 @@ namespace CAS
 
         /// <summary>
         /// Get the real AdView rect with position and size in pixels on screen.
-        /// <para>Return <see cref="Rect.zero"/> when ad view is not active.</para>
         /// <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>
         /// </summary>
         Rect rectInPixels { get; }

@@ -17,7 +17,7 @@ namespace CAS
         /// <para>The height of adaptive banners cannot be less than 50 dp and more than 250 dp.</para>
         /// <para>This results in banner ads that occupy a more consistent portion
         /// of the screen across devices and provide opportunities for improved performance.</para>
-        /// <para>Use <see cref="AdaptiveFullWidth"/> to select full screen width</para>
+        /// <para>For full width banners, you can use the <see cref="AdaptiveFullWidth"/>.</para>
         /// </summary>
         AdaptiveBanner = 2,
         /// <summary>

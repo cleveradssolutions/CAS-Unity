@@ -8,7 +8,7 @@ namespace CAS.AdObject
 {
     [AddComponentMenu("CleverAdsSolutions/AppOpen Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/AppOpen-Ad-object")]
+    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Open-Ad-object")]
     public sealed class AppOpenAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
