@@ -1,5 +1,13 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.8.1] - 2024-07-28
+- Discover the native 3.8.0 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+### Bug Fixes
+- [iOS] Fixed a critical issue related to the position of Banner ads.
+- [iOS] Fixed `NSUserTrackingUsageDescription` localization with `com.unity.localization` package.
+- [iOS] Fixed XCode build error `CASResources no such file or directory` when the unity project was compiled on Windows.
+- [iOS] Fixed an issue where the UIViewController is invalid for the Consent Flow.
+
 # [3.8.0] - 2024-07-21
 - Discover the native 3.8.0 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added a log with useful information about ad impression with disabled verbose logs.
