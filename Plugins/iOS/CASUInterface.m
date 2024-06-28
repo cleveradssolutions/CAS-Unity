@@ -305,7 +305,6 @@ void CASUSetConsentFlow(BOOL                      isEnabled,
         };
     }
 
-    flow.viewControllerToPresent = [CASUPluginUtil unityGLViewController];
     [builder withConsentFlow:flow];
 }
 
@@ -600,8 +599,6 @@ void CASUShowConsentFlow(BOOL                      ifRequired,
             completion((int)status);
         };
     }
-
-    flow.viewControllerToPresent = [CASUPluginUtil unityGLViewController];
 
     if (ifRequired) {
         [flow presentIfRequired];

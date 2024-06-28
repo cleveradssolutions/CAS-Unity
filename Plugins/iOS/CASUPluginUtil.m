@@ -57,8 +57,8 @@ static BOOL _pauseOnBackground = YES;
 
 + (UIViewController *)unityGLViewController {
     return UnityGetGLViewController()
-            ? : [UIApplication sharedApplication].delegate.window.rootViewController
-            ? : UnityGetMainWindow().rootViewController;
+        ?: UnityGetMainWindow().rootViewController
+        ?: [UIApplication sharedApplication].delegate.window.rootViewController;
 }
 
 + (void)onAdsWillPressent {

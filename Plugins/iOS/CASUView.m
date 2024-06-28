@@ -39,7 +39,6 @@
         if (size > 0) {
             _bannerView = [[CASBannerView alloc] initWithAdSize:[self getSizeByCode:size]
                                                         manager:manager];
-            _bannerView.translatesAutoresizingMaskIntoConstraints = NO;
             _bannerView.hidden = YES;
             _bannerView.adDelegate = self;
             _bannerView.rootViewController = [CASUPluginUtil unityGLViewController];
@@ -70,19 +69,10 @@
 
     UIViewController *unityController = [CASUPluginUtil unityGLViewController];
     UIView *unityView = unityController.view;
+    self.bannerView.translatesAutoresizingMaskIntoConstraints = NO;
     [unityView addSubview:self.bannerView];
 
-    UIInterfaceOrientationMask orientation = [unityController supportedInterfaceOrientations];
-
-    if ((orientation & UIInterfaceOrientationMaskPortrait) != 0
-        && (orientation & UIInterfaceOrientationMaskLandscape) != 0) {
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(orientationChangedNotification:)
-                                                     name:UIDeviceOrientationDidChangeNotification
-                                                   object:nil];
-    }
-
-    UILayoutGuide *safeArea = [self getWindow].safeAreaLayoutGuide;
+    UILayoutGuide *safeArea = unityView.safeAreaLayoutGuide;
 
     [NSLayoutConstraint activateConstraints:@[
          [NSLayoutConstraint constraintWithItem:self.bannerView
@@ -114,6 +104,19 @@
                                      multiplier:1.0
                                        constant:0.0]
     ]];
+
+    [self refreshPositionInSafeArea:safeArea];
+
+
+    UIInterfaceOrientationMask orientation = [unityController supportedInterfaceOrientations];
+
+    if ((orientation & UIInterfaceOrientationMaskPortrait) != 0
+        && (orientation & UIInterfaceOrientationMaskLandscape) != 0) {
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(orientationChangedNotification:)
+                                                     name:UIDeviceOrientationDidChangeNotification
+                                                   object:nil];
+    }
 }
 
 - (void)destroy {
@@ -156,7 +159,11 @@
     _activePos = code;
     _horizontalOffset = x;
     _verticalOffset = y;
-    [self refreshPosition];
+
+    if (self.bannerView) {
+        UILayoutGuide *safeArea = self.bannerView.superview.safeAreaLayoutGuide;
+        [self refreshPositionInSafeArea:safeArea];
+    }
 }
 
 - (void)orientationChangedNotification:(NSNotification *)notification {
@@ -293,11 +300,21 @@
 }
 
 - (CGSize)getSafeAreaSize {
-    return [self getWindow].safeAreaLayoutGuide.layoutFrame.size;
+    CGRect screenBounds;
+    CGRect safeFrame = [self getWindow].safeAreaLayoutGuide.layoutFrame;
+
+    if (CGSizeEqualToSize(safeFrame.size, CGSizeZero)) {
+        screenBounds = [UIScreen mainScreen].bounds;
+    } else {
+        screenBounds = safeFrame;
+    }
+
+    return CGSizeMake(CGRectGetWidth(screenBounds), CGRectGetHeight(screenBounds));
 }
 
-- (void)refreshPosition {
-    if (!self.bannerView) {
+/// Attention. NSLayoutConstraint with `[self getWindow].safeAreaLayoutGuide` can be lost (removed) after Window refreshed (Interstitial ad), use `superview.safeAreaLayoutGuide` instead.
+- (void)refreshPositionInSafeArea:(UILayoutGuide *)safeArea {
+    if (!safeArea) {
         return;
     }
 
@@ -305,7 +322,6 @@
         [NSLayoutConstraint deactivateConstraints:@[self.constraintX, self.constraintY]];
     }
 
-    UILayoutGuide *safeArea = [self getWindow].safeAreaLayoutGuide;
     switch (_activePos) {
         case kCASUPosition_TOP_CENTER:
         case kCASUPosition_TOP_LEFT:
@@ -352,9 +368,13 @@
         return CGRectZero;
     }
 
-    UIWindow *window = [self getWindow];
-    CGRect safeAreaRect = window.safeAreaLayoutGuide.layoutFrame;
-    CGRect screenRect = window.bounds;
+    CGRect screenRect = [self getWindow].bounds;
+    CGRect safeAreaRect = self.bannerView.superview.safeAreaLayoutGuide.layoutFrame;
+
+    if (CGSizeEqualToSize(safeAreaRect.size, CGSizeZero)) {
+        safeAreaRect = screenRect;
+    }
+
     CGSize adSize = self.bannerView.intrinsicContentSize;
 
     if (CGSizeEqualToSize(CGSizeZero, adSize)) {
