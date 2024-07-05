@@ -201,7 +201,7 @@ namespace CAS.UEditor
                 if (optionsPath != null)
                 {
                     File.Copy(optionsPath, Path.Combine(path, buildOptionsFile), true);
-                    mainGradle += applyBuildOptions + Environment.NewLine;
+                    mainGradle += Environment.NewLine + applyBuildOptions + Environment.NewLine;
                     gradleChanged = true;
                 }
             }
