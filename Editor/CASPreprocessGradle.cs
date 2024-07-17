@@ -89,16 +89,12 @@ namespace CAS.UEditor
             if (!Directory.Exists(gradleLibPath))
                 return null;
 
-            const string wrapperName = "gradle-wrapper-";
-            const string wrapeprExtension = ".jar";
-            foreach (var file in Directory.GetFiles(gradleLibPath, wrapperName + "*" + wrapeprExtension))
+            foreach (var file in Directory.GetFiles(gradleLibPath, "gradle-wrapper-*.jar"))
             {
                 try
                 {
-                    var prefixLength = Path.Combine(gradleLibPath, wrapperName).Length;
-                    var version = file.Substring(prefixLength, file.Length - prefixLength - wrapeprExtension.Length);
-                    if (version.Length > 0)
-                        return new Version(version);
+                    var fileName = Path.GetFileNameWithoutExtension(file);
+                    return new Version(fileName.Substring(fileName.LastIndexOf('-') + 1));
                 }
                 catch (Exception e)
                 {

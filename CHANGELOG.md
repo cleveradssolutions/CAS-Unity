@@ -1,14 +1,20 @@
 # CAS.AI Unity Plugin Change Log
 
-# [3.8.1] - 2024-07-28
-- Discover the native 3.8.0 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+# [3.9.0] - 2024-07-17
+- Discover the native 3.9.0 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+### Bug Fixes
+- [Android] Fixed gradle build error `Could not find method apply()` in Unity 2022+.
+- [Editor] Fixed exception log when detecting Gradle version in Unity 6.
+
+# [3.8.1] - 2024-06-28
+- Discover the native 3.8.1 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 ### Bug Fixes
 - [iOS] Fixed a critical issue related to the position of Banner ads.
 - [iOS] Fixed `NSUserTrackingUsageDescription` localization with `com.unity.localization` package.
 - [iOS] Fixed XCode build error `CASResources no such file or directory` when the unity project was compiled on Windows.
 - [iOS] Fixed an issue where the UIViewController is invalid for the Consent Flow.
 
-# [3.8.0] - 2024-07-21
+# [3.8.0] - 2024-06-21
 - Discover the native 3.8.0 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added a log with useful information about ad impression with disabled verbose logs.
 ### Update Banner Ad Position
@@ -33,7 +39,7 @@
 - Ogury
 - LoopMe
 
-# [3.7.3] - 2024-06-23
+# [3.7.3] - 2024-05-23
 - Discover the native 3.7.3 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added new `EnableOptionsButton` event for `ConsentFlowAdObject` to enable/disable Consent option button.
 ### Bug Fixes
@@ -42,7 +48,7 @@
 - The MyTarget network support has been removed. Our team considers MyTarget to be ineffective and excludes it from CAS mediation.
   > Please remove the MyTarget adapter if you are using it.
 
-# [3.7.2] - 2024-06-09
+# [3.7.2] - 2024-05-09
 - Discover the native 3.7.2 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Introduced automatic collect impression level data to Tenjin Analytics. (Closed beta)
 ### Bug Fixes
@@ -52,12 +58,12 @@
 - [Editor] Fixed an error when the plugin component was not found after the unitypackage integration.
 - [Editor] Fixed plugin version checking given Revision part.
 
-# [3.7.1] - 2024-05-25
+# [3.7.1] - 2024-04-25
 - The native SDK remains version 3.7.0.
 ### Bug Fixes
 - [Android] Fixed `Exception: JNI: Unknown signature for type 'CAS.Android.CASConsentFlowClient'`.
 
-# [3.7.0] - 2024-05-22
+# [3.7.0] - 2024-04-22
 - Discover the latest features in native 3.6.1 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added support `AdType.AppOpen`. Read integration guides for [UnityEditor](https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Open-Ad-object) or [Script C#](https://github.com/cleveradssolutions/CAS-Unity/wiki/App-Open-Ads)
 - Added new static events in `CAS.MobileAds` class: `OnApplicationBackground` and `OnApplicationForeground`. It's important to use new events when you want to show AppOpen ads on user returning to the game.  
@@ -88,7 +94,7 @@ new ConsentFlow()
 - [Editor] Added `ConsentFlow` completion events implementation to testing in editor.
 - [Editor] Removed `Delay measurement of the Ad SDK initialization` option, which applies in any case.
 
-# [3.6.1] - 2024-05-11
+# [3.6.1] - 2024-04-11
 - Discover the latest features in native 3.6.1 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 ### Bug Fixes
 - [iOS] Fixex Banner ads moving after full screen due to a safe area bug in Unity Engine.
@@ -96,7 +102,7 @@ new ConsentFlow()
 ### New ads networks support in closed beta
 - StartIO
 
-# [3.6.0] - 2024-04-29
+# [3.6.0] - 2024-03-29
 - Discover the latest features in native 3.6.0 SDKs for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - [iOS] The minimum supported Xcode version has been increased to 15.1.
 - [iOS] Added support for the Apple Privacy Manifest update to ensure publisher compliance with new App Store submission requirements.

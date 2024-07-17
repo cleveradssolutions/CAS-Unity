@@ -184,7 +184,8 @@ namespace CAS.UEditor
         private void InitEnvironmentDetails()
         {
             var environmentBuilder = new StringBuilder("Environment Details: ")
-                            .Append("Unity ").Append(Application.unityVersion).Append("; ")
+                            .Append("CAS ").Append(MobileAds.wrapperVersion)
+                            .Append("; Unity ").Append(Application.unityVersion).Append("; ")
                             .Append(Application.platform).Append("; ");
             if (edmVersion != null)
                 environmentBuilder.Append("EDM4U ").Append(edmVersion).Append("; ");

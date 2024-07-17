@@ -220,7 +220,7 @@ namespace CAS.UEditor
                 if (validationPath != null)
                 {
                     File.Copy(validationPath, Path.Combine(path, validateGMAFile), true);
-                    mainGradle += applyValidateGMA + Environment.NewLine;
+                    mainGradle += Environment.NewLine + applyValidateGMA + Environment.NewLine;
                     gradleChanged = true;
                 }
             }
