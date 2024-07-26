@@ -96,7 +96,17 @@ namespace CAS.UEditor
             File.WriteAllLines(propertiesPath, lines);
         }
 
-        private void UpdateRootGradleBuild(string path, CASEditorSettings editorSettings)
+        internal System.Version FindGradlePluginVersion()
+        {
+            if (File.Exists(Utils.projectGradlePath))
+            {
+                var lines = File.ReadAllLines(Utils.projectGradlePath);
+                return FindGradlePluginVersion(lines);
+            }
+            return gradlePluginVersion;
+        }
+
+        private System.Version FindGradlePluginVersion(string[] fileLines)
         {
             // Extracts an Android Gradle Plugin version number from the contents of a *.gradle file for
             // Unity 2022.2+ or 2023.1+.
@@ -111,6 +121,26 @@ namespace CAS.UEditor
             //   classpath 'com.android.tools.build:gradle:4.0.1'
             const string pluginVersionLineLegacy = "classpath 'com.android.tools.build:gradle:";
 
+            for (int i = 0; i < fileLines.Length; i++)
+            {
+                if (fileLines[i].Contains(pluginVersionLine) || fileLines[i].Contains(pluginVersionLineLegacy))
+                {
+                    try
+                    {
+                        gradlePluginVersion = new System.Version(versionRegex.Match(fileLines[i]).Value);
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogException(e);
+                    }
+                }
+            }
+            return gradlePluginVersion;
+        }
+
+        private void UpdateRootGradleBuild(string path, CASEditorSettings editorSettings)
+        {
 #if UNITY_2019_3_OR_NEWER
             path = Path.Combine(path, "..");
 #endif
@@ -124,28 +154,14 @@ namespace CAS.UEditor
             var lines = File.ReadAllLines(gradlePath);
             var updated = false;
 
-            for (int i = 0; i < lines.Length; i++)
-            {
-                if (lines[i].Contains(pluginVersionLine) || lines[i].Contains(pluginVersionLineLegacy))
-                {
-                    try
-                    {
-                        gradlePluginVersion = new Version(versionRegex.Match(lines[i]).Value);
-                        break;
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogException(e);
-                    }
-                }
-            }
+            var currVersion = FindGradlePluginVersion(lines);
 
-            Version newVersion = null;
+            System.Version newVersion = null;
             if (!string.IsNullOrEmpty(editorSettings.overrideGradlePluginVersion))
             {
                 try
                 {
-                    newVersion = new Version(editorSettings.overrideGradlePluginVersion);
+                    newVersion = new System.Version(editorSettings.overrideGradlePluginVersion);
                 }
                 catch (Exception e)
                 {
@@ -154,11 +170,11 @@ namespace CAS.UEditor
             }
 
             if (newVersion == null)
-                newVersion = GetFixedGradlePluginVersion(gradlePluginVersion);
+                newVersion = GetFixedGradlePluginVersion(currVersion);
             if (newVersion != null)
             {
                 Utils.Log("Updated Android Gradle Plugin version to: " + newVersion.ToString() +
-                                   " from: " + gradlePluginVersion.ToString() + "\nIn file: " + gradlePath);
+                                   " from: " + currVersion.ToString() + "\nIn file: " + gradlePath);
                 gradlePluginVersion = newVersion;
             }
 

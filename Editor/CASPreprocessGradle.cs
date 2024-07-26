@@ -16,37 +16,36 @@ namespace CAS.UEditor
         [Obsolete("No longer used")]
         internal static void Configure(CASEditorSettings settings)
         {
+            Configure();
         }
 
-        internal static void UpdateGradleTemplateIfNeed()
+        internal static void Configure()
         {
-#if UNITY_2019_3_OR_NEWER
-            var needUpdate = true;
-#else
-            var needUpdate = false;
+#if UNITY_2022_3_OR_NEWER
+            UpdateGradleTemplateIfNeed(Utils.mainGradlePath, "sourceCompatibility JavaVersion.VERSION_11");
+            UpdateGradleTemplateIfNeed(Utils.projectGradlePath, "id 'com.android.application' version");
 #endif
+        }
 
-            if (!needUpdate || !File.Exists(Utils.mainGradlePath))
+        internal static void UpdateGradleTemplateIfNeed(string path, string requiredLine)
+        {
+            if (!File.Exists(path))
                 return;
 
             try
             {
-                needUpdate = false;
-                using (var reader = new StreamReader(Utils.mainGradlePath))
+                using (var reader = new StreamReader(path))
                 {
                     string line = reader.ReadLine();
                     while (line != null)
                     {
-                        if (line.Contains("classpath 'com.android.tools.build:gradle:"))
-                        {
-                            needUpdate = true;
-                            break;
-                        }
+                        if (line.Contains(requiredLine))
+                            return;
+
                         line = reader.ReadLine();
                     }
                 }
-                if (needUpdate)
-                    TryEnableGradleTemplate(Utils.mainGradlePath);
+                TryEnableGradleTemplate(path);
             }
             catch (Exception e)
             {
@@ -101,31 +100,6 @@ namespace CAS.UEditor
                     Debug.LogException(e);
                 }
             }
-            return null;
-        }
-
-        private static List<string> ReadGradleFile(string prefix, string path, bool required = true)
-        {
-            try
-            {
-                if (File.Exists(path))
-                    return new List<string>(File.ReadAllLines(path));
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-
-            if (!required)
-                return null;
-
-            var message = "A successful build requires do modifications to " + prefix + " template. " +
-                "But the template is not activated now.";
-            Utils.DialogOrCancelBuild(message + "\nClick Сontinue to activate.", BuildTarget.NoTarget);
-            var fileLines = TryEnableGradleTemplate(path);
-            if (fileLines != null)
-                return new List<string>(fileLines);
-            Utils.StopBuildWithMessage(message, BuildTarget.NoTarget);
             return null;
         }
 

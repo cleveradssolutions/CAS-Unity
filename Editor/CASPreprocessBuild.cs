@@ -102,8 +102,8 @@ namespace CAS.UEditor
             if (settings.IsTestAdMode() && !EditorUserBuildSettings.development)
                 Debug.LogWarning(Utils.logTag + "Test Ads Mode enabled! Make sure the build is for testing purposes only!\n" +
                     "Use 'Assets > CleverAdsSolutions > Settings' menu to disable Test Ad Mode.");
-            else
-                Utils.Log("Project configuration completed: " + MobileAds.wrapperVersion);
+
+            Utils.Log(Utils.GetEnvironmentDetails(target));
         }
 
         private static void RemoveDeprecatedAssets()
@@ -116,7 +116,7 @@ namespace CAS.UEditor
 #pragma warning restore CS0618 // Type or member is obsolete
             if (Directory.Exists(plguinInAssets))
                 AssetDatabase.DeleteAsset(plguinInAssets);
-                
+
             // CASPlugin.androidlib has been removed from Assets/CleverAdsSolutions/Plugins
             // with CAS 3.8.0 update.
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -158,16 +158,21 @@ namespace CAS.UEditor
         private static void ConfigureAndroid(CASInitSettings settings, CASEditorSettings editorSettings)
         {
 #if UNITY_ANDROID || CASDeveloper
-
-            // Unity 2021.2 have minimum API 21
-#if !UNITY_2021_2_OR_NEWER
-            if (PlayerSettings.Android.minSdkVersion < (AndroidSdkVersions)Utils.targetAndroidVersion)
+            var minSDK = (int)PlayerSettings.Android.minSdkVersion;
+            if (minSDK > 0 && minSDK < Utils.minAndroidVersion)
             {
-                Utils.DialogOrCancelBuild("CAS required a higher minimum SDK API level. Set SDK level " +
-                    Utils.targetAndroidVersion + " and continue?", BuildTarget.NoTarget);
-                PlayerSettings.Android.minSdkVersion = (AndroidSdkVersions)Utils.targetAndroidVersion;
+                Utils.DialogOrCancelBuild("CAS required a higher minimum SDK API level. Set Mininum SDK level " +
+                    Utils.minAndroidVersion + " and continue?", BuildTarget.NoTarget);
+                PlayerSettings.Android.minSdkVersion = (AndroidSdkVersions)Utils.minAndroidVersion;
             }
-#endif
+
+            var targetSDK = (int)PlayerSettings.Android.targetSdkVersion;
+            if (targetSDK > 0 && targetSDK < Utils.targetAndroidVersion)
+            {
+                Utils.DialogOrCancelBuild("CAS required a higher target SDK API level. Set Target SDK level " +
+                    Utils.targetAndroidVersion + " and continue?", BuildTarget.NoTarget);
+                PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions)Utils.targetAndroidVersion;
+            }
 
 #if !UNITY_2019_1_OR_NEWER
             // 0 = AndroidBuildSystem.Internal
@@ -178,6 +183,8 @@ namespace CAS.UEditor
                 EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
             }
 #endif
+
+            CASPreprocessGradle.Configure();
 #endif
         }
 

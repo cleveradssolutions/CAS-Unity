@@ -60,7 +60,6 @@ namespace CAS.UEditor
         private ReorderableList userTrackingList;
         private BuildTarget platform = BuildTarget.NoTarget;
         private string newCASVersion = null;
-        private Version edmVersion;
         private string environmentDetails;
         private bool allowedPackageUpdate;
         private bool legacyUnityAdsPackageInstalled;
@@ -95,9 +94,11 @@ namespace CAS.UEditor
             legacyUnityAdsPackageInstalled = Utils.IsPackageExist(Utils.legacyUnityAdsPackageName);
 
             dependencyManager = DependencyManager.Create(platform, (Audience)audienceTaggedProp.enumValueIndex, true);
-
-            InitEDM4U();
-            InitEnvironmentDetails();
+            
+            var edmVersion = Utils.GetEDM4UVersion(platform);
+            if (edmVersion != null)
+                edmRequiredNewer = edmVersion < Utils.minEDM4UVersion;
+            environmentDetails = Utils.GetEnvironmentDetails(platform);
 
             newCASVersion = Utils.GetNewVersionOrNull(Utils.gitUnityRepo, MobileAds.wrapperVersion, false, OnRemoteCASVersionRecieved);
         }
@@ -174,40 +175,6 @@ namespace CAS.UEditor
                 platform = BuildTarget.iOS;
         }
 
-        private void InitEDM4U()
-        {
-            edmVersion = Utils.GetEDM4UVersion(platform);
-            if (edmVersion != null)
-                edmRequiredNewer = edmVersion < Utils.minEDM4UVersion;
-        }
-
-        private void InitEnvironmentDetails()
-        {
-            var environmentBuilder = new StringBuilder("Environment Details: ")
-                            .Append("CAS ").Append(MobileAds.wrapperVersion)
-                            .Append("; Unity ").Append(Application.unityVersion).Append("; ")
-                            .Append(Application.platform).Append("; ");
-            if (edmVersion != null)
-                environmentBuilder.Append("EDM4U ").Append(edmVersion).Append("; ");
-
-            if (platform == BuildTarget.Android)
-            {
-                var gradleWrapperVersion = CASPreprocessGradle.GetGradleWrapperVersion();
-                if (gradleWrapperVersion != null)
-                    environmentBuilder.Append("Gradle Wrapper - ").Append(gradleWrapperVersion).Append("; ");
-                var targetSDK = (int)PlayerSettings.Android.targetSdkVersion;
-                if (targetSDK == 0)
-                    environmentBuilder.Append("Target API Auto; ");
-                else
-                    environmentBuilder.Append("Target API ").Append(targetSDK).Append("; ");
-            }
-
-            if (platform == BuildTarget.iOS)
-            {
-                environmentBuilder.Append("Target iOS ").Append(PlayerSettings.iOS.targetOSVersionString);
-            }
-            environmentDetails = environmentBuilder.ToString();
-        }
         #endregion
 
         protected override void OnHeaderGUI()
@@ -640,7 +607,7 @@ namespace CAS.UEditor
 
         private void OnWarningsAreaGUI()
         {
-            if (edmVersion == null)
+            if (Utils.GetEDM4UVersion(platform) == null)
             {
                 if (HelpStyles.WarningWithButton(
                     "Mediation requires External Dependency Manager to resolve native dependencies",
@@ -694,7 +661,7 @@ namespace CAS.UEditor
         {
             if (platform == BuildTarget.Android)
             {
-                if (edmVersion == null)
+                if (Utils.GetEDM4UVersion(BuildTarget.Android) == null)
                     return;
                 if (HelpStyles.WarningWithButton(
                     "Changes to solutions/adapters must be resolved in project dependencies.",

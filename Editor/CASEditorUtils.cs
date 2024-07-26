@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
@@ -21,7 +22,9 @@ namespace CAS.UEditor
 
         // UNITY_2021_2_OR_NEWER use minumum API 21
         // UNITY_2021_3_OR_NEWER use minumum API 22
-        public const int targetAndroidVersion = 21;
+        // 2021.3.41 and 2022.3.38f use minimum API 24
+        public const int minAndroidVersion = 21;
+        public const int targetAndroidVersion = 34;
 
         // UNITY_2021_3_OR_NEWER use minimum iOS version 12
         public const int targetIOSVersion = 13;
@@ -48,6 +51,8 @@ namespace CAS.UEditor
         {
             get { return new System.Version(1, 2, 176); }
         }
+
+        private static System.Version edmVersion;
 
 
         [Obsolete("No longer used")]
@@ -414,6 +419,8 @@ namespace CAS.UEditor
 
         public static System.Version GetEDM4UVersion(BuildTarget platform)
         {
+            if (edmVersion != null)
+                return edmVersion;
 #if CASDeveloper
             CheckAssemblyForType<Google.AndroidResolverVersionNumber>("Google.JarResolver");
             CheckAssemblyForType<Google.IOSResolverVersionNumber>("Google.IOSResolver");
@@ -425,14 +432,12 @@ namespace CAS.UEditor
                     resolverType = Type.GetType("Google.AndroidResolverVersionNumber, Google.JarResolver", false);
                 else if (platform == BuildTarget.iOS)
                     resolverType = Type.GetType("Google.IOSResolverVersionNumber, Google.IOSResolver", false);
-                if (resolverType == null)
-                    return null;
-                return resolverType.GetProperty("Value").GetValue(null, null) as System.Version;
+                if (resolverType != null)
+                    edmVersion = resolverType.GetProperty("Value")
+                        .GetValue(null, null) as System.Version;
             }
-            catch
-            {
-                return null;
-            }
+            catch { }
+            return edmVersion;
         }
 
         public static bool TryResolveAndroidDependencies(bool force = true)
@@ -443,7 +448,7 @@ namespace CAS.UEditor
                 return false;
             }
 
-            CASPreprocessGradle.UpdateGradleTemplateIfNeed();
+            CASPreprocessGradle.Configure();
 
             bool success = false;
             var resolverType = GetAndroidDependenciesResolverType();
@@ -522,6 +527,52 @@ namespace CAS.UEditor
         internal static void Log(string message)
         {
             Debug.Log(logTag + message);
+        }
+
+        internal static string GetEnvironmentDetails(BuildTarget platform)
+        {
+            var builder = new StringBuilder("Environment Details: ")
+                            .Append("CAS ").Append(MobileAds.wrapperVersion)
+                            .Append("; Unity ").Append(Application.unityVersion).Append("; ")
+                            .Append(Application.platform).Append("; ");
+
+            var edmVersion = GetEDM4UVersion(platform);
+
+            builder.Append("EDM4U ")
+                .Append(edmVersion == null ? " Not found" : edmVersion.ToString())
+                .Append("; ");
+
+            if (platform == BuildTarget.Android)
+            {
+                var gradleWrapperVersion = CASPreprocessGradle.GetGradleWrapperVersion();
+                if (gradleWrapperVersion != null)
+                    builder.Append("Gradle ").Append(gradleWrapperVersion).Append("; ");
+
+                builder.Append("AGP ").Append(new CASPostGenerateGradle().FindGradlePluginVersion()).Append("; ");
+                builder.Append("Min API ").Append((int)PlayerSettings.Android.minSdkVersion).Append("; ");
+                var targetSDK = (int)PlayerSettings.Android.targetSdkVersion;
+                builder.Append("Target API ").Append(targetSDK == 0 ? "Auto" : targetSDK.ToString()).Append("; ");
+            }
+
+            if (platform == BuildTarget.iOS)
+            {
+                builder.Append("Target iOS ").Append(PlayerSettings.iOS.targetOSVersionString).Append("; ");
+                builder.Append(PlayerSettings.iOS.sdkVersion).Append("; ");
+
+// #if UNITY_2020_1_OR_NEWER && (UNITY_IOS || CASDeveloper)
+//                 if (UnityEditor.iOS.XcodeApplications.GetCount() == 0)
+//                     UnityEditor.iOS.XcodeApplications.RefreshListOfAvailableXcodeApplications();
+//                 var xcodeInfo = UnityEditor.iOS.XcodeApplications.GetXcodeApplicationPublicName(
+//                     UnityEditor.iOS.XcodeApplications.GetPreferedXcodeIndex()
+//                 );
+//                 builder.Append("XCode ").Append(xcodeInfo).Append("; ");
+// #endif
+                string preferXcodeVersion = EditorPrefs.GetString("BuildWithXcodeVersion", "");
+                if (preferXcodeVersion.Length > 0)
+                    builder.Append("XCode ").Append(preferXcodeVersion).Append("; ");
+
+            }
+            return builder.ToString();
         }
 
         internal static EditorWebRequest InstallUnityPackagePlugin(string url)

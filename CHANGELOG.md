@@ -1,7 +1,16 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.9.1] - 2024-07-26
+- Discover the native 3.9.1 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+### Changes
+- The CASExchange adapter has been included to the Optimal Ads Solutions.
+- Previously beta adapters are now available to all: CASExchange, HyprMX, and StartIO.
+
 # [3.9.0] - 2024-07-17
 - Discover the native 3.9.0 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+### Changes
+- [Android] Requires a minimum compileSdkVersion of 34.
+- [iOS] Requires apps to build with Xcode 15.3 or above.
 ### Bug Fixes
 - [Android] Fixed gradle build error `Could not find method apply()` in Unity 2022+.
 - [Editor] Fixed exception log when detecting Gradle version in Unity 6.
