@@ -548,7 +548,9 @@ namespace CAS.UEditor
                 if (gradleWrapperVersion != null)
                     builder.Append("Gradle ").Append(gradleWrapperVersion).Append("; ");
 
+#if UNITY_ANDROID
                 builder.Append("AGP ").Append(new CASPostGenerateGradle().FindGradlePluginVersion()).Append("; ");
+#endif
                 builder.Append("Min API ").Append((int)PlayerSettings.Android.minSdkVersion).Append("; ");
                 var targetSDK = (int)PlayerSettings.Android.targetSdkVersion;
                 builder.Append("Target API ").Append(targetSDK == 0 ? "Auto" : targetSDK.ToString()).Append("; ");
@@ -559,14 +561,14 @@ namespace CAS.UEditor
                 builder.Append("Target iOS ").Append(PlayerSettings.iOS.targetOSVersionString).Append("; ");
                 builder.Append(PlayerSettings.iOS.sdkVersion).Append("; ");
 
-// #if UNITY_2020_1_OR_NEWER && (UNITY_IOS || CASDeveloper)
-//                 if (UnityEditor.iOS.XcodeApplications.GetCount() == 0)
-//                     UnityEditor.iOS.XcodeApplications.RefreshListOfAvailableXcodeApplications();
-//                 var xcodeInfo = UnityEditor.iOS.XcodeApplications.GetXcodeApplicationPublicName(
-//                     UnityEditor.iOS.XcodeApplications.GetPreferedXcodeIndex()
-//                 );
-//                 builder.Append("XCode ").Append(xcodeInfo).Append("; ");
-// #endif
+                // #if UNITY_2020_1_OR_NEWER && (UNITY_IOS || CASDeveloper)
+                //                 if (UnityEditor.iOS.XcodeApplications.GetCount() == 0)
+                //                     UnityEditor.iOS.XcodeApplications.RefreshListOfAvailableXcodeApplications();
+                //                 var xcodeInfo = UnityEditor.iOS.XcodeApplications.GetXcodeApplicationPublicName(
+                //                     UnityEditor.iOS.XcodeApplications.GetPreferedXcodeIndex()
+                //                 );
+                //                 builder.Append("XCode ").Append(xcodeInfo).Append("; ");
+                // #endif
                 string preferXcodeVersion = EditorPrefs.GetString("BuildWithXcodeVersion", "");
                 if (preferXcodeVersion.Length > 0)
                     builder.Append("XCode ").Append(preferXcodeVersion).Append("; ");
