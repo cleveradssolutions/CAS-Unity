@@ -80,6 +80,14 @@ int CASUGetUserConsent(void) {
     return (int)CAS.settings.userConsent;
 }
 
+int CASUGetVendorConsent(int vendorId) {
+    return (int)[CAS.settings getVendorConsentWithVendorId:vendorId];
+}
+
+int CASUGetAdditionalConsent(int providerId) {
+    return (int)[CAS.settings getAdditionalConsentWithProviderId:providerId];
+}
+
 void CASUSetCCPAStatus(int doNotSell) {
     CAS.settings.userCCPAStatus = (CASCCPAStatus)doNotSell;
 }

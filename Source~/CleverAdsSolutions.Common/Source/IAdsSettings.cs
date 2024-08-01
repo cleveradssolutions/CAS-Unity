@@ -78,22 +78,41 @@ namespace CAS
     public interface IAdsSettings
     {
         /// <summary>
+        /// Ad filters by Audience
+        /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
+        /// </summary>
+        Audience taggedAudience { get; set; }
+
+        /// <summary>
         /// GDPR user Consent SDK Implementation for ads on session.
         /// <para>Default: <see cref="ConsentStatus.Undefined"/></para>
         /// </summary>
         ConsentStatus userConsent { get; set; }
 
         /// <summary>
+        /// Parses the system preferences string with key `IABTCF_VendorConsents` 
+        /// to determine the consent status of the IAB vendor with the provided ID.
+        /// <para><a href="https://iabeurope.eu/vendor-list-tcf/">TCF Vendor List</a></para>
+        /// </summary>
+        /// <param name="vendorId">Vendor ID as defined in the Global Vendor List.</param>
+        /// <returns>Accepted if the advertising entity has consent, Denied if not, or Undefined if VendorConsents is not available on disk.</returns>
+        ConsentStatus GetVendorConsent(int vendorId);
+
+        /// <summary>
+        /// Parses the system preferences string with key `IABTCF_AddtlConsent` 
+        /// to determine the consent status of the advertising entity with the provided Ad Technology Provider (ATP) ID.
+        /// <para><a href="https://support.google.com/admanager/answer/9681920">Google’s Additional Consent Mode technical specification</a></para>
+        /// <para><a href="https://storage.googleapis.com/tcfac/additional-consent-providers.csv">List of Google ATPs and their IDs</a></para>
+        /// </summary>
+        /// <param name="providerId">Vendor ID as defined in the Global Vendor List.</param>
+        /// <returns>Accepted if the advertising entity has consent, Denied if not, or Undefined if AddtlConsent is not available on disk.</returns>
+        ConsentStatus GetAdditionalConsent(int providerId);
+
+        /// <summary>
         /// Whether or not user has opted out of the sale of their personal information.
         /// <para>Default: <see cref="CCPAStatus.Undefined"/></para>
         /// </summary>
         CCPAStatus userCCPAStatus { get; set; }
-
-        /// <summary>
-        /// Ad filters by Audience
-        /// <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
-        /// </summary>
-        Audience taggedAudience { get; set; }
 
         /// <summary>
         /// Defines the time interval, in seconds, starting from the moment of the initial app installation,

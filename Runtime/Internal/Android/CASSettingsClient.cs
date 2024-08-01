@@ -166,6 +166,16 @@ namespace CAS.Android
         {
             return settingsBridge.CallStatic<float>("getDeviceScale");
         }
+
+        public ConsentStatus GetVendorConsent(int vendorId)
+        {
+            return (ConsentStatus)settingsBridge.CallStatic<int>("getVendorConsent", vendorId);
+        }
+
+        public ConsentStatus GetAdditionalConsent(int providerId)
+        {
+            return (ConsentStatus)settingsBridge.CallStatic<int>("getAdditionalConsent", providerId);
+        }
     }
 }
 #endif

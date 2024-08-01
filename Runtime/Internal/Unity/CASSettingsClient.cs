@@ -47,5 +47,15 @@ namespace CAS.Unity
         }
 
         public void SetKeywords(IList<string> keywords) { }
+
+        public ConsentStatus GetVendorConsent(int vendorId)
+        {
+            return userConsent;
+        }
+
+        public ConsentStatus GetAdditionalConsent(int providerId)
+        {
+            return userConsent;
+        }
     }
 }

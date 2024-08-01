@@ -1,5 +1,19 @@
 # CAS.AI Unity Plugin Change Log
 
+
+# [3.9.2] - 2024-08-01
+- Discover the native 3.9.1 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added new methods for retrieving user consent information for individual vendors and additional providers.
+```cs
+ConsentStatus googleConsent = CAS.MobileAds.settings.getVendorConsent(755)
+ConsentStatus audienceNetworkConsent = CAS.MobileAds.settings.getAdditionalConsent(89)
+```
+### Bug Fixes
+- [Editor] Fixed compilation error: name `CASPostGenerateGradle` could not be found.
+  > Please remove the `CASDeveloper` from the Sciripting Define Symbols if it was added to work around this issue.
+- [iOS] Fixed the `EXC_BAD_ACCESS` crash that occurred when accessing `AdMetaData` slightly later.
+- [Android] Added an alternative maven repository for Madex artifacts for those who had difficulties accessing the official repository.
+
 # [3.9.1] - 2024-07-26
 - Discover the native 3.9.1 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 ### Changes

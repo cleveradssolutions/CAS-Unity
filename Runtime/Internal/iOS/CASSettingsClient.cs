@@ -130,6 +130,16 @@ namespace CAS.iOS
             keywords.CopyTo(tempArray, 0);
             CASExterns.CASUSetKeywords(tempArray, keywords.Count);
         }
+
+        public ConsentStatus GetVendorConsent(int vendorId)
+        {
+            return (ConsentStatus)CASExterns.CASUGetVendorConsent(vendorId);
+        }
+
+        public ConsentStatus GetAdditionalConsent(int providerId)
+        {
+            return (ConsentStatus)CASExterns.CASUGetAdditionalConsent(providerId);
+        }
     }
 }
 #endif

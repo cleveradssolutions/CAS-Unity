@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 63575bec0981c469e913eecad2fb538d
+labels:
+- CleverAdsSolutions
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2

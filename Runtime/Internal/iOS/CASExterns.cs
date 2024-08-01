@@ -72,6 +72,12 @@ namespace CAS.iOS
         internal static extern int CASUGetUserConsent();
 
         [DllImport("__Internal")]
+        internal static extern int CASUGetVendorConsent(int vendorId);
+
+        [DllImport("__Internal")]
+        internal static extern int CASUGetAdditionalConsent(int providerId);
+
+        [DllImport("__Internal")]
         internal static extern void CASUSetCCPAStatus(int status);
 
         [DllImport("__Internal")]

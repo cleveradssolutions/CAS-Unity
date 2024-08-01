@@ -137,7 +137,7 @@
             <para>The height of adaptive banners cannot be less than 50 dp and more than 250 dp.</para>
             <para>This results in banner ads that occupy a more consistent portion
             of the screen across devices and provide opportunities for improved performance.</para>
-            <para>Use <see cref="F:CAS.AdSize.AdaptiveFullWidth"/> to select full screen width</para>
+            <para>For full width banners, you can use the <see cref="F:CAS.AdSize.AdaptiveFullWidth"/>.</para>
             </summary>
         </member>
         <member name="F:CAS.AdSize.SmartBanner">
@@ -344,22 +344,41 @@
             Audiences over the age of 13 NOT subject to the restrictions of child protection laws.
             </summary>
         </member>
+        <member name="P:CAS.IAdsSettings.taggedAudience">
+            <summary>
+            Ad filters by Audience
+            <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
+            </summary>
+        </member>
         <member name="P:CAS.IAdsSettings.userConsent">
             <summary>
             GDPR user Consent SDK Implementation for ads on session.
             <para>Default: <see cref="F:CAS.ConsentStatus.Undefined"/></para>
             </summary>
         </member>
+        <member name="M:CAS.IAdsSettings.GetVendorConsent(System.Int32)">
+            <summary>
+            Parses the system preferences string with key `IABTCF_VendorConsents` 
+            to determine the consent status of the IAB vendor with the provided ID.
+            <para><a href="https://iabeurope.eu/vendor-list-tcf/">TCF Vendor List</a></para>
+            </summary>
+            <param name="vendorId">Vendor ID as defined in the Global Vendor List.</param>
+            <returns>Accepted if the advertising entity has consent, Denied if not, or Undefined if VendorConsents is not available on disk.</returns>
+        </member>
+        <member name="M:CAS.IAdsSettings.GetAdditionalConsent(System.Int32)">
+            <summary>
+            Parses the system preferences string with key `IABTCF_AddtlConsent` 
+            to determine the consent status of the advertising entity with the provided Ad Technology Provider (ATP) ID.
+            <para><a href="https://support.google.com/admanager/answer/9681920">Google’s Additional Consent Mode technical specification</a></para>
+            <para><a href="https://storage.googleapis.com/tcfac/additional-consent-providers.csv">List of Google ATPs and their IDs</a></para>
+            </summary>
+            <param name="providerId">Vendor ID as defined in the Global Vendor List.</param>
+            <returns>Accepted if the advertising entity has consent, Denied if not, or Undefined if AddtlConsent is not available on disk.</returns>
+        </member>
         <member name="P:CAS.IAdsSettings.userCCPAStatus">
             <summary>
             Whether or not user has opted out of the sale of their personal information.
             <para>Default: <see cref="F:CAS.CCPAStatus.Undefined"/></para>
-            </summary>
-        </member>
-        <member name="P:CAS.IAdsSettings.taggedAudience">
-            <summary>
-            Ad filters by Audience
-            <para>By default selected in `Assets/CleverAdsSolutions/Settings` menu</para>
             </summary>
         </member>
         <member name="P:CAS.IAdsSettings.trialAdFreeInterval">
@@ -497,7 +516,6 @@
         <member name="P:CAS.IAdView.rectInPixels">
             <summary>
             Get the real AdView rect with position and size in pixels on screen.
-            <para>Return <see cref="P:UnityEngine.Rect.zero"/> when ad view is not active.</para>
             <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>
             </summary>
         </member>

@@ -3,7 +3,7 @@ The CAS.AI SDK is mobile advertising featuring refined ad formats and streamline
 
 This repository contains the source code for the CAS.AI (CleverAdsSolutions) Unity plugin. This plugin enables Unity developers to easily serve ads on Android and iOS apps without having to write Java or Objective-C code. The plugin provides a C# interface for ad management that is used by C# scripts in your Unity project.
 
-[![GitHub package.json version](https://img.shields.io/github/package-json/v/cleveradssolutions/CAS-Unity?label=Unity%20Package)](https://github.com/cleveradssolutions/CAS-Unity/releases/latest)
+[![openupm](https://img.shields.io/npm/v/com.cleversolutions.ads.unity?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.cleversolutions.ads.unity/)
 [![App-ads.txt](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/cleveradssolutions/App-ads.txt/master/Shield.json)](https://github.com/cleveradssolutions/App-ads.txt)
 
 ## Documentation
