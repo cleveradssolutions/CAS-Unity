@@ -1,5 +1,9 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.9.2] - 2024-08-16
+- Discover the native 3.9.3 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+### Bug Fixes
+- [Android] Fixed potential ANR from AppStateNotifier initialization.
 
 # [3.9.2] - 2024-08-01
 - Discover the native 3.9.2 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).

@@ -185,9 +185,9 @@ namespace CAS.UEditor
                             var asset = AssetDatabase.LoadAssetAtPath(assetPath, type);
                             if (asset)
                                 return asset;
-                            AssetDatabase.DeleteAsset(assetPath);
                         }
                         catch { }
+                        AssetDatabase.DeleteAsset(assetPath);
                     }
                 }
             }

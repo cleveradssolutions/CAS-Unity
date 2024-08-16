@@ -76,7 +76,13 @@ namespace CAS.UEditor
             CASEditorUtils.Log("Postrocess Build done: " + MobileAds.wrapperVersion);
         }
 
-        [PostProcessBuild(int.MaxValue - 10)]
+        /// <summary>
+        /// Process order should be between:
+        /// - EDM4U finishes installing Pods at 60
+        /// - Firebase Crashlytics runs their scripts at 100
+        /// To correct add embed frameworks.
+        /// </summary>
+        [PostProcessBuild(95)]
         public static void OnCocoaPodsReady(BuildTarget buildTarget, string buildPath)
         {
             if (buildTarget != BuildTarget.iOS)

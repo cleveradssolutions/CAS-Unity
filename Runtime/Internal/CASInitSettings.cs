@@ -15,13 +15,11 @@ namespace CAS
     {
         #region Fields
 #pragma warning disable 649 // is never assigned to, and will always have its default value null
-        [SerializeField]
-        private bool testAdMode = false;
-        [SerializeField]
-        private string[] managerIds = { "demo" };
+        public bool testAdMode = false;
+        public string[] managerIds = { "demo" };
         public AdFlags allowedAdFlags = AdFlags.None;
-        [SerializeField]
-        private Audience audienceTagged = Audience.Children;
+        public Audience audienceTagged = Audience.Children;
+        
         [Obsolete("No longer supported")]
         public AdSize bannerSize = 0;
 
@@ -81,7 +79,7 @@ namespace CAS
             initListenerDeprecated = listener;
             return this;
         }
-        
+
         public IManagerBuilder WithCompletionListener(CASInitCompleteEvent listener)
         {
             initListener = listener;
@@ -133,11 +131,10 @@ namespace CAS
             if (string.IsNullOrEmpty(casId))
                 throw new ArgumentNullException("managerId", "Manager ID is empty");
             targetId = casId;
+            managerIds = new[] { casId };
             return this;
         }
 
-        [Obsolete("Please set Test Ad Mode in `Assets>CleverAdsSolutions>Settings` menu to get true Test Ad, " +
-            "also Development build work same.")]
         public IManagerBuilder WithTestAdMode(bool test)
         {
             testAdMode = test;
