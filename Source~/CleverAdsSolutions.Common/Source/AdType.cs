@@ -22,6 +22,7 @@ namespace CAS
         Banner = 1,
         Interstitial = 1 << 1,
         Rewarded = 1 << 2,
-        Everything = Banner | Interstitial | Rewarded
+        AppOpen = 1 << 3,
+        Everything = Banner | Interstitial | Rewarded | AppOpen
     }
 }

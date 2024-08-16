@@ -29,7 +29,8 @@ namespace CAS
 
     internal abstract class CASManagerBase : IMediationManager
     {
-        internal readonly List<IAdView> adViews = new List<IAdView>();
+        private AdFlags enabledFormats;
+        private readonly List<CASViewBase> adViews = new List<CASViewBase>();
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get; private set; }
@@ -73,22 +74,30 @@ namespace CAS
         public event Action OnAppOpenAdClosed;
         #endregion
 
-        public abstract void LoadAd(AdType adType);
+        public abstract void EnableAd(AdType adType);
+        public void LoadAd(AdType adType)
+        {
+            if (IsEnabledAd(adType))
+                LoadAdNetive(adType);
+            else
+                HandleCallback(AdActionCode.FAILED, (int)adType, AdError.ManagerIsDisabled, null, null);
+        }
+        protected abstract void LoadAdNetive(AdType adType);
         public abstract bool IsReadyAd(AdType adType);
         public abstract void ShowAd(AdType adType);
+        public abstract void DisposeAd(AdType adType);
         public abstract void SetAppReturnAdsEnabled(bool enable);
         public abstract void SkipNextAppReturnAds();
-        public abstract void SetEnableAd(AdType adType, bool enabled);
-        public abstract bool IsEnabledAd(AdType adType);
 
         protected abstract void SetLastPageAdContentNative(string json);
-        protected abstract IAdView CreateAdView(AdSize size);
+        protected abstract CASViewBase CreateAdView(AdSize size);
         public abstract AdMetaData WrapImpression(AdType adType, object impression);
 
         internal virtual void Init(CASInitSettings initSettings)
         {
             managerID = initSettings.targetId;
             isTestAdMode = initSettings.IsTestAdMode();
+            enabledFormats = initSettings.allowedAdFlags;
             initCompleteEvent = initSettings.initListener;
             initCompleteAction = initSettings.initListenerDeprecated;
         }
@@ -109,6 +118,53 @@ namespace CAS
             }
         }
 
+        public bool IsEnabledAd(AdType adType)
+        {
+            return IsEnabledAdFlag((AdFlags)(1 << (int)adType));
+        }
+
+        internal bool IsEnabledAdFlag(AdFlags adFlags)
+        {
+            return (enabledFormats & adFlags) == adFlags;
+        }
+
+        public void SetEnableAd(AdType adType, bool enabled)
+        {
+            var adFlag = (AdFlags)(1 << (int)adType);
+            if (enabled)
+            {
+                if ((enabledFormats & adFlag) == adFlag) return;
+
+                enabledFormats |= adFlag;
+                if (CASFactory.IsAutoload(adType))
+                {
+                    if (adType == AdType.Banner)
+                    {
+                        for (int i = 0; i < adViews.Count; i++)
+                            adViews[i].Enable();
+                    }
+                    else
+                    {
+                        EnableAd(adType);
+                    }
+                }
+            }
+            else
+            {
+                if ((enabledFormats & adFlag) != adFlag) return;
+                enabledFormats &= ~adFlag;
+                if (adType == AdType.Banner)
+                {
+                    for (int i = 0; i < adViews.Count; i++)
+                        adViews[i].DestroyNative();
+                }
+                else
+                {
+                    DisposeAd(adType);
+                }
+            }
+        }
+
         public IAdView GetAdView(AdSize size)
         {
             if (size < AdSize.Banner)
@@ -120,10 +176,12 @@ namespace CAS
             }
             var view = CreateAdView(size);
             adViews.Add(view);
+            if (IsEnabledAdFlag(AdFlags.Banner) && CASFactory.IsAutoload(AdType.Banner))
+                view.Enable();
             return view;
         }
 
-        public void RemoveAdViewFromFactory(IAdView view)
+        public virtual void RemoveAdViewFromFactory(CASViewBase view)
         {
             adViews.Remove(view);
         }
@@ -154,7 +212,7 @@ namespace CAS
             CASFactory.OnManagerInitialized(this);
         }
 
-        public void HandleCallback(int action, int type, int error, object impression)
+        public void HandleCallback(int action, int type, int error, string errorMessage, object impression)
         {
             switch (action)
             {
@@ -182,15 +240,15 @@ namespace CAS
                     {
                         case AdTypeCode.INTER:
                             if (OnInterstitialAdFailedToLoad != null)
-                                OnInterstitialAdFailedToLoad((AdError)error);
+                                OnInterstitialAdFailedToLoad(new AdError(error, errorMessage));
                             break;
                         case AdTypeCode.REWARD:
                             if (OnRewardedAdFailedToLoad != null)
-                                OnRewardedAdFailedToLoad((AdError)error);
+                                OnRewardedAdFailedToLoad(new AdError(error, errorMessage));
                             break;
                         case AdTypeCode.APP_OPEN:
                             if (OnAppOpenAdFailedToLoad != null)
-                                OnAppOpenAdFailedToLoad((AdError)error);
+                                OnAppOpenAdFailedToLoad(new AdError(error, errorMessage));
                             break;
                         default:
                             return;
@@ -281,7 +339,12 @@ namespace CAS
                         default: return;
                     }
                     if (showFailedEvent != null)
-                        showFailedEvent(((AdError)error).GetMessage());
+                    {
+                        if (string.IsNullOrEmpty(errorMessage))
+                            showFailedEvent(new AdError(error, null).ToString());
+                        else
+                            showFailedEvent(errorMessage);
+                    }
                     break;
                 case AdActionCode.CLICKED:
                     CASFactory.RuntimeLog(type, "Callback Clicked");
@@ -372,14 +435,29 @@ namespace CAS
             set { SetPosition(0, 0, value); }
         }
 
-        public abstract void Load();
+        internal abstract void Enable();
+        public abstract void LoadNative();
         public abstract void SetActive(bool active);
-        public abstract void Dispose();
         public abstract int refreshInterval { get; set; }
         public abstract bool isReady { get; }
 
+        internal abstract void DestroyNative();
         protected abstract void SetPositionNative(int position, int x, int y);
         protected abstract void SetPositionPxNative(int position, int x, int y);
+
+        public void Load()
+        {
+            if (_manager.IsEnabledAdFlag(AdFlags.Banner))
+                LoadNative();
+            else
+                HandleCallback(AdActionCode.FAILED, 0, AdError.ManagerIsDisabled, null, null);
+        }
+
+        public virtual void Dispose()
+        {
+            _manager.RemoveAdViewFromFactory(this);
+            DestroyNative();
+        }
 
         public void DisableRefresh()
         {
@@ -401,7 +479,8 @@ namespace CAS
         private bool IsValidPosition(int x, int y, AdPosition position)
         {
             bool isChanged = false;
-            if (position < AdPosition.Undefined && position != _position){
+            if (position < AdPosition.Undefined && position != _position)
+            {
                 _position = position;
                 isChanged = true;
             }
@@ -417,7 +496,7 @@ namespace CAS
         }
 
 
-        public void HandleCallback(int action, int type, int error, object impression)
+        public void HandleCallback(int action, int type, int error, string errorMessage, object impression)
         {
             switch (action)
             {
@@ -429,7 +508,7 @@ namespace CAS
                 case AdActionCode.FAILED:
                     CASFactory.RuntimeLog(size, "Callback Failed");
                     if (OnFailed != null)
-                        OnFailed(this, (AdError)error);
+                        OnFailed(this, new AdError(error, errorMessage));
                     break;
                 case AdActionCode.IMPRESSION:
                     CASFactory.RuntimeLog(size, "Callback Impression");

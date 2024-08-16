@@ -46,7 +46,7 @@ namespace CAS.Android
     {
         internal interface Handler
         {
-            void HandleCallback(int action, int type, int error, object impression);
+            void HandleCallback(int action, int type, int error, string errorMessage, object impression);
         }
 
         private readonly Handler _client;
@@ -94,21 +94,18 @@ namespace CAS.Android
                     }
                     break;
                 default:
-                    int type;
-                    int error;
-                    AndroidJavaObject impression;
                     try
                     {
-                        action = (int)args[0];
-                        type = (int)args[1];
-                        error = (int)args[2];
-                        impression = args[3] as AndroidJavaObject;
+                        int type = (int)args[1];
+                        int error = (int)args[2];
+                        string errorMessage = args[3] as string;
+                        AndroidJavaObject impression = args[4] as AndroidJavaObject;
+                        CASJavaBridge.ExecuteEvent(() => _client.HandleCallback(action, type, error, errorMessage, impression));
                     }
                     catch (Exception e)
                     {
                         throw new ArgumentException("[CAS.AI] Action " + action, e);
                     }
-                    CASJavaBridge.ExecuteEvent(() => _client.HandleCallback(action, type, error, impression));
                     break;
             }
             return null;

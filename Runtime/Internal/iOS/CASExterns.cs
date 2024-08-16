@@ -219,9 +219,6 @@ namespace CAS.iOS
 
         #region General Ads functions
         [DllImport("__Internal")]
-        internal static extern bool CASUIsAdEnabledType(CASUManagerRef managerRef, int adType);
-
-        [DllImport("__Internal")]
         internal static extern void CASUEnableAdType(CASUManagerRef managerRef, int adType, bool enable);
 
         [DllImport("__Internal")]

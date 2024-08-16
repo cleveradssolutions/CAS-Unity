@@ -50,7 +50,15 @@ namespace CAS.Android
                 }
 
                 _managerBridge = builder.Call<AndroidJavaObject>("build",
-                    initSettings.targetId, Application.unityVersion, _managerCallback, (int)initSettings.allowedAdFlags);
+                    initSettings.targetId, Application.unityVersion, _managerCallback);
+            }
+            if (IsEnabledAdFlag(AdFlags.Interstitial) && CASFactory.IsAutoload(AdType.Interstitial))
+            {
+                LoadAd(AdType.Interstitial);
+            }
+            if (IsEnabledAdFlag(AdFlags.Rewarded) && CASFactory.IsAutoload(AdType.Rewarded))
+            {
+                LoadAd(AdType.Rewarded);
             }
         }
 
@@ -59,14 +67,9 @@ namespace CAS.Android
             _managerBridge.Call("setLastPageAdContent", json);
         }
 
-        public override bool IsEnabledAd(AdType adType)
+        public override void EnableAd(AdType adType)
         {
-            return _managerBridge.Call<bool>("isEnabled", (int)adType);
-        }
-
-        public override void SetEnableAd(AdType adType, bool enabled)
-        {
-            _managerBridge.Call("enableAd", (int)adType, enabled);
+            _managerBridge.Call("enableAd", (int)adType);
         }
 
         public override bool IsReadyAd(AdType adType)
@@ -74,7 +77,7 @@ namespace CAS.Android
             return _managerBridge.Call<bool>("isAdReady", (int)adType);
         }
 
-        public override void LoadAd(AdType adType)
+        protected override void LoadAdNetive(AdType adType)
         {
             _managerBridge.Call("loadAd", (int)adType);
         }
@@ -82,6 +85,11 @@ namespace CAS.Android
         public override void ShowAd(AdType adType)
         {
             _managerBridge.Call("showAd", (int)adType);
+        }
+
+        public override void DisposeAd(AdType adType)
+        {
+            _managerBridge.Call("destroyAd", (int)adType);
         }
 
         [UnityEngine.Scripting.Preserve]
@@ -100,9 +108,9 @@ namespace CAS.Android
             _managerBridge.Call("skipNextReturnAds");
         }
 
-        protected override IAdView CreateAdView(AdSize size)
+        protected override CASViewBase CreateAdView(AdSize size)
         {
-            return new CASViewClient(this, size, _managerBridge);
+            return new CASViewClient(this, size);
         }
 
         public override AdMetaData WrapImpression(AdType adType, object impression)

@@ -138,40 +138,57 @@ namespace CAS
         string managerID { get; }
 
         /// <summary>
-        /// Is Mediation manager use test ads for current session.
+        /// Indicates whether the mediation manager is using test ads for the current session.
         /// </summary>
         bool isTestAdMode { get; }
 
         /// <summary>
-        /// Manual load <see cref="AdType"/> Ad.
-        /// <para>Please call load before each show ad whe active load mode is <see cref="LoadingManagerMode.Manual"/>.</para>
-        /// <para>You can get a callback for the successful loading of an ad by subscribe OnLoadedAd events</para>
-        /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.Load() instead.</para>
+        /// Loads an ad of the specified <see cref="AdType"/>.
+        /// <para>Before calling <see cref="ShowAd"/> when <see cref="LoadingManagerMode.Manual"/> is in use, you must call this method to load the ad.</para>
+        /// <para>To receive a callback when the ad is successfully loaded, subscribe to the OnLoadedAd events.</para>
+        /// <para>For loading banner ads, use <see cref="IAdView.Load"/> obtained from <see cref="GetAdView"/>.</para>
         /// </summary>
+        /// <param name="adType">The type of ad to load.</param>
         void LoadAd(AdType adType);
 
         /// <summary>
-        /// Check ready selected <see cref="AdType"/> to show.
-        /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.isReady instead.</para>
+        /// Checks whether the specified <see cref="AdType"/> ad is ready to be shown.
+        /// <para>To get detailed information about why an ad may not be shown, 
+        /// subscribe to the OnAdFailedToShow event instead of relying solely on this method. 
+        /// This event provides insights into errors that may prevent the ad from being displayed.</para>
+        /// <para>For checking if a banner ad is ready, use the <see cref="IAdView.isReady"/> property from <see cref="GetAdView"/>.</para>
         /// </summary>
+        /// <param name="adType">The type of ad to check.</param>
+        /// <returns>True if the ad is ready to be shown; otherwise, false.</returns>
         bool IsReadyAd(AdType adType);
 
         /// <summary>
-        /// Force show ad by selected <see cref="AdType"/>.
-        /// <para>Please for <see cref="AdType.Banner"/> use new ad size api <see cref="GetAdView(AdSize)"/>.SetActive(true) instead.</para>
+        /// Shows an ad of the specified <see cref="AdType"/>.
+        /// <para>To show a banner ad, use the <see cref="IAdView.SetActive(bool)"/> method obtained from <see cref="GetAdView"/>.</para>
         /// </summary>
+        /// <param name="adType">The type of ad to show.</param>
         void ShowAd(AdType adType);
 
         /// <summary>
-        /// Get the ad view interface for specific <paramref name="size"/>.
-        /// <para>If a view for specific size has already been created then a reference to it
-        /// will be returned without creating a new one.</para>
-        /// <para>The newly created AdView has an inactive state. When you are ready to show the ad on the screen,
-        /// simply call a <see cref="IAdView.SetActive(bool)"/> method.</para>
-        /// <para>If you no longer need the AdView with this size, please call <see cref="IDisposable.Dispose()"/> to free memory.</para>
-        /// <para>After calling Dispose(), you can use GetAdView() method to create a new view.</para>
+        /// Disposes of the ad of the specified <see cref="AdType"/>.
+        /// <para>After calling this method, if you want to resume showing ads, 
+        /// you must call the <see cref="LoadAd"/> method to reload the ad. 
+        /// Note that in automatic loading mode, ads will not be automatically reloaded after Dispose. 
+        /// You need to explicitly call <see cref="LoadAd"/> to prepare the ad for future displays.</para>
+        /// <para>For disposing of a banner ad, use the <see cref="IDisposable.Dispose"/> method obtained from <see cref="GetAdView"/>.</para>
         /// </summary>
-        /// <param name="size">The ad size you want using.</param>
+        /// <param name="adType">The type of ad to dispose.</param>
+        void DisposeAd(AdType adType);
+
+        /// <summary>
+        /// Retrieves the ad view interface for the specified <paramref name="size"/>.
+        /// <para>If an ad view of the specified size already exists, a reference to the existing view will be returned instead of creating a new one.</para>
+        /// <para>Note that the returned <see cref="IAdView"/> is initially inactive. To display the ad, you need to activate the view by calling <see cref="IAdView.SetActive(bool)"/>.</para>
+        /// <para>When the ad view is no longer needed, call <see cref="IDisposable.Dispose"/> to release the associated resources and free up memory.</para>
+        /// <para>After disposing of the ad view, you can use this method again to create a new view if needed.</para>
+        /// </summary>
+        /// <param name="size">The desired size of the ad view.</param>
+        /// <returns>The ad view interface for the specified size.</returns>
         IAdView GetAdView(AdSize size);
 
         #region Return to App Ads eveents

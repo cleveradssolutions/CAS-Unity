@@ -46,6 +46,8 @@ namespace CAS.iOS
             {
                 if (_viewRef != IntPtr.Zero)
                 {
+                    // Ignoer base implementation before CAS iOS 4.0
+                    //base.Dispose();
                     _manager.RemoveAdViewFromFactory(this);
                     CASExterns.CASUDestroyAdView(_viewRef);
                     _viewRef = IntPtr.Zero;
@@ -58,7 +60,21 @@ namespace CAS.iOS
             }
         }
 
-        public override void Load()
+        internal override void Enable()
+        {
+            // Temptimplementation before CAS iOS 4.0
+            var iosManager = _manager as CASManagerClient;
+            iosManager.EnableAd(AdType.Banner);
+        }
+
+        internal override void DestroyNative()
+        {
+            // Temptimplementation before CAS iOS 4.0
+            var iosManager = _manager as CASManagerClient;
+            iosManager.DisposeAd(AdType.Banner);
+        }
+
+        public override void LoadNative()
         {
             CASExterns.CASULoadAdView(_viewRef);
         }
@@ -95,7 +111,7 @@ namespace CAS.iOS
         {
             try
             {
-                GetClient(view).HandleCallback(action, 0, error, null);
+                GetClient(view).HandleCallback(action, 0, error, null, null);
             }
             catch (Exception e)
             {
@@ -108,7 +124,7 @@ namespace CAS.iOS
         {
             try
             {
-                GetClient(view).HandleCallback(AdActionCode.IMPRESSION, 0, 0, impression);
+                GetClient(view).HandleCallback(AdActionCode.IMPRESSION, 0, 0, null, impression);
             }
             catch (Exception e)
             {

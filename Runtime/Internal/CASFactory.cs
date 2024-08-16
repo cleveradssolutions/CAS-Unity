@@ -175,6 +175,13 @@ namespace CAS
 #endif
         }
 
+        public static bool IsAutoload(AdType type)
+        {
+            // AppOpen format autoload not supported
+            return type != AdType.AppOpen && settings != null
+                && settings.loadingMode != LoadingManagerMode.Manual;
+        }
+
         internal static IMediationManager CreateManager(CASInitSettings initSettings)
         {
             if (managers != null)

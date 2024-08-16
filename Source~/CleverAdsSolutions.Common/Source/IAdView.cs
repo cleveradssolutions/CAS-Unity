@@ -5,11 +5,11 @@ using UnityEngine;
 
 namespace CAS
 {
-    public delegate void CASViewEvent( IAdView view );
-    public delegate void CASViewEventWithError( IAdView view, AdError error );
-    public delegate void CASViewEventWithMeta( IAdView view, AdMetaData data );
+    public delegate void CASViewEvent(IAdView view);
+    public delegate void CASViewEventWithError(IAdView view, AdError error);
+    public delegate void CASViewEventWithMeta(IAdView view, AdMetaData data);
 
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ads" )]
+    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ads")]
     public interface IAdView : IDisposable
     {
         /// <summary>
@@ -79,7 +79,7 @@ namespace CAS
         /// <param name="x">X-coordinate on screen in DP.</param>
         /// <param name="y">Y-coordinate on screen in DP.</param>
         /// <param name="position">The corner of the screen.</param>
-        void SetPosition( int x, int y, AdPosition position = AdPosition.TopLeft );
+        void SetPosition(int x, int y, AdPosition position = AdPosition.TopLeft);
 
         /// <summary>
         /// The AdView will be positioned at the X and Y values passed to the method,
@@ -89,7 +89,7 @@ namespace CAS
         /// <param name="x">X-coordinate on screen in pixels.</param>
         /// <param name="y">Y-coordinate on screen in pixels.</param>
         /// <param name="position">The corner of the screen.</param>
-        void SetPositionPx( int x, int y, AdPosition position = AdPosition.TopLeft );
+        void SetPositionPx(int x, int y, AdPosition position = AdPosition.TopLeft);
 
         /// <summary>
         /// Manual load the Ad or reload current loaded Ad to skip impression.
@@ -102,6 +102,6 @@ namespace CAS
         /// <para>If the AdView is active, it is displayed on the screen and user can interact with it.</para>
         /// <para>When you need to hide AdView from the user, just deactivate it.</para>
         /// </summary>
-        void SetActive( bool active );
+        void SetActive(bool active);
     }
 }

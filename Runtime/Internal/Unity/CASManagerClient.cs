@@ -12,11 +12,9 @@ namespace CAS.Unity
     internal sealed class CASManagerClient : CASManagerBase
     {
         private CASManagerBehaviour _behaviour;
-        private bool[] _enabledTypes;
 
         internal CASManagerClient()
         {
-            _enabledTypes = new bool[(int)AdType.None];
             var obj = new GameObject("[CAS] Mediation Manager");
             //obj.hideFlags = HideFlags.HideInHierarchy;
             MonoBehaviour.DontDestroyOnLoad(obj);
@@ -29,9 +27,6 @@ namespace CAS.Unity
             base.Init(initSettings);
             _behaviour.casId = managerID;
 
-            for (int i = 0; i < _enabledTypes.Length; i++)
-                _enabledTypes[i] = ((int)initSettings.defaultAllowedFormats & (1 << i)) != 0;
-
             CASFactory.HandleConsentFlow(initSettings.consentFlow, ConsentFlow.Status.Obtained);
         }
 
@@ -43,29 +38,14 @@ namespace CAS.Unity
                 CASFactory.UnityLog("CAS Last Page Ad apply content: " + json);
         }
 
-        public override bool IsEnabledAd(AdType adType)
+        public override void EnableAd(AdType adType)
         {
-            // App Open disabled, processing not supported
-            if (adType == AdType.AppOpen)
-                return true;
-            return _enabledTypes[(int)adType];
+            _behaviour.LoadAd(adType);
         }
 
-        public override void SetEnableAd(AdType adType, bool enabled)
+        public override void DisposeAd(AdType adType)
         {
-            _enabledTypes[(int)adType] = enabled;
-            if (enabled && _behaviour.IsAutoload(adType))
-            {
-                if (adType == AdType.Banner)
-                {
-                    for (int i = 0; i < adViews.Count; i++)
-                        adViews[i].Load();
-                }
-                else if (adType != AdType.AppOpen)
-                {
-                    LoadAd(adType);
-                }
-            }
+            _behaviour.DisposeAd(adType);
         }
 
         public override bool IsReadyAd(AdType adType)
@@ -73,7 +53,7 @@ namespace CAS.Unity
             return _behaviour.IsReadyAd(adType);
         }
 
-        public override void LoadAd(AdType adType)
+        protected override void LoadAdNetive(AdType adType)
         {
             _behaviour.LoadAd(adType);
         }
@@ -105,11 +85,17 @@ namespace CAS.Unity
             return new CASImpressionClient(adType);
         }
 
-        protected override IAdView CreateAdView(AdSize size)
+        protected override CASViewBase CreateAdView(AdSize size)
         {
             var view = new CASViewClient(this, _behaviour, size);
             _behaviour._adViews.Add(view);
             return view;
+        }
+
+        public override void RemoveAdViewFromFactory(CASViewBase view)
+        {
+            base.RemoveAdViewFromFactory(view);
+            _behaviour._adViews.Remove(view as CASViewClient);
         }
     }
 
@@ -128,7 +114,7 @@ namespace CAS.Unity
         public CASFullscreenView _rewarded;
         public CASFullscreenView _appOpen;
 
-        private void Awake()
+        public void Awake()
         {
             // Set Settings before any other calls.
             _settings = CAS.MobileAds.settings as CASSettingsClient;
@@ -138,14 +124,14 @@ namespace CAS.Unity
             _appOpen = new CASFullscreenView(this, AdType.AppOpen);
         }
 
-        private void Start()
+        public void Start()
         {
-            if (IsAutoload(AdType.Interstitial))
-                _interstitial.Load();
-            if (IsAutoload(AdType.Rewarded))
-                _rewarded.Load();
-            if (IsAutoload(AdType.AppOpen))
-                _appOpen.Load();
+            if (CASFactory.IsAutoload(AdType.Interstitial))
+                LoadAd(AdType.Interstitial);
+            if (CASFactory.IsAutoload(AdType.Rewarded))
+                LoadAd(AdType.Rewarded);
+            if (CASFactory.IsAutoload(AdType.AppOpen))
+                LoadAd(AdType.AppOpen);
 
             Post(() => client.OnInitialized(null, "US", true, true));
         }
@@ -185,21 +171,41 @@ namespace CAS.Unity
             _appOpen.OnGUIAd(_btnStyle);
         }
 
-        public bool IsReadyAd(AdType adType)
+        internal void DisposeAd(AdType adType)
+        {
+            switch (adType)
+            {
+                case AdType.Banner:
+                    throw new NotSupportedException("Use GetAdView(AdSize).Dispose() instead");
+                case AdType.Interstitial:
+                    _interstitial.Dispose();
+                    break;
+                case AdType.Rewarded:
+                    _rewarded.Dispose();
+                    break;
+                case AdType.AppOpen:
+                    _appOpen.Dispose();
+                    break;
+                default:
+                    throw new NotSupportedException("Destroy ad function not support for AdType: " + adType.ToString());
+            }
+        }
+
+        internal bool IsReadyAd(AdType adType)
         {
             switch (adType)
             {
                 case AdType.Interstitial:
-                    return _interstitial.GetReadyError().HasValue == false;
+                    return _interstitial.GetReadyError() == AdError.Internal;
                 case AdType.Rewarded:
-                    return _rewarded.GetReadyError().HasValue == false;
+                    return _rewarded.GetReadyError() == AdError.Internal;
                 case AdType.AppOpen:
-                    return _appOpen.GetReadyError().HasValue == false;
+                    return _appOpen.GetReadyError() == AdError.Internal;
             }
             return false;
         }
 
-        public void LoadAd(AdType adType)
+        internal void LoadAd(AdType adType)
         {
             switch (adType)
             {
@@ -219,7 +225,7 @@ namespace CAS.Unity
             }
         }
 
-        public void ShowAd(AdType adType)
+        internal void ShowAd(AdType adType)
         {
             switch (adType)
             {
@@ -239,13 +245,13 @@ namespace CAS.Unity
             }
         }
 
-        public void RemoveAdViewFromFactory(CASViewClient view)
+        internal void RemoveAdViewFromFactory(CASViewClient view)
         {
             _adViews.Remove(view);
             client.RemoveAdViewFromFactory(view);
         }
 
-        public bool isFullscreenAdVisible
+        internal bool isFullscreenAdVisible
         {
             get { return _rewarded.active || _interstitial.active; }
         }
@@ -265,13 +271,6 @@ namespace CAS.Unity
         {
             yield return new WaitForSecondsRealtime(delay);
             action();
-        }
-
-        public bool IsAutoload(AdType type)
-        {
-            // AppOpen format autoload not supported
-            return type != AdType.AppOpen
-                && _settings.loadingMode != LoadingManagerMode.Manual;
         }
     }
 }

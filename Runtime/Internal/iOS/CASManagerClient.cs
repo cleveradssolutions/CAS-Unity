@@ -82,14 +82,14 @@ namespace CAS.iOS
             CASExterns.CASUSetLastPageAdContent(_managerRef, json);
         }
 
-        public override bool IsEnabledAd(AdType adType)
+        public override void EnableAd(AdType adType)
         {
-            return CASExterns.CASUIsAdEnabledType(_managerRef, (int)adType);
+            CASExterns.CASUEnableAdType(_managerRef, (int)adType, true);
         }
 
-        public override void SetEnableAd(AdType adType, bool enabled)
+        public override void DisposeAd(AdType adType)
         {
-            CASExterns.CASUEnableAdType(_managerRef, (int)adType, enabled);
+            CASExterns.CASUEnableAdType(_managerRef, (int)adType, false);
         }
 
         public override bool IsReadyAd(AdType adType)
@@ -97,7 +97,7 @@ namespace CAS.iOS
             return CASExterns.CASUIsAdReady(_managerRef, (int)adType);
         }
 
-        public override void LoadAd(AdType adType)
+        protected override void LoadAdNetive(AdType adType)
         {
             CASExterns.CASULoadAd(_managerRef, (int)adType);
         }
@@ -124,7 +124,7 @@ namespace CAS.iOS
             CASExterns.CASUSkipNextAppReturnAds(_managerRef);
         }
 
-        protected override IAdView CreateAdView(AdSize size)
+        protected override CASViewBase CreateAdView(AdSize size)
         {
             var view = new CASViewClient(this, size);
             var viewClient = (IntPtr)GCHandle.Alloc(view);
@@ -163,7 +163,7 @@ namespace CAS.iOS
         {
             try
             {
-                GetClient(manager).HandleCallback(action, type, error, null);
+                GetClient(manager).HandleCallback(action, type, error, null, null);
             }
             catch (Exception e)
             {
@@ -176,7 +176,7 @@ namespace CAS.iOS
         {
             try
             {
-                GetClient(manager).HandleCallback(action, type, 0, impression);
+                GetClient(manager).HandleCallback(action, type, 0, null, impression);
             }
             catch (Exception e)
             {

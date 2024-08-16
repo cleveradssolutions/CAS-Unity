@@ -4,9 +4,18 @@
         <name>CleverAdsSolutions.Common</name>
     </assembly>
     <members>
-        <member name="F:CAS.AdError.NoConnection">
+        <member name="F:CAS.AdError.NotReady">
             <summary>
-            Loading ads cannot be successful without an internet connection.
+            Ad are not ready to show. 
+            You need to call Load ads or use one of the automatic cache mode. 
+            If you are already using automatic cache mode then just wait a little longer.
+            </summary>
+        </member>
+        <member name="F:CAS.AdError.Timeout">
+            <summary>
+            The Timeout error occurs when an advertising source fails to respond within a specified timeframe.
+            Following this error, the system continues to await a response from the source,
+            potentially resulting in delayed ad loading or triggering a genuine loading error.
             </summary>
         </member>
         <member name="F:CAS.AdError.NoFill">
@@ -17,36 +26,29 @@
             your implementation works correctly and people will be able to see ads in your app once it's live.</para>
             </summary>
         </member>
-        <member name="F:CAS.AdError.Configuration">
-            <summary>
-            A configuration error has been detected in one of the mediation ad networks.
-            Please report error message to your manager support.
-            </summary>
-        </member>
-        <member name="F:CAS.AdError.NotReady">
-            <summary>
-            Ad are not ready to show.
-            You need to call Load ads or use one of the automatic cache mode.
-            
-            <para>If you are already using automatic cache mode then just wait a little longer.</para>
-            <para>You can always check if ad is ready to show
-            using <see cref="M:CAS.IMediationManager.IsReadyAd(CAS.AdType)"/> or <see cref="P:CAS.IAdView.isReady"/> methods.</para>
-            </summary>
-        </member>
-        <member name="F:CAS.AdError.ManagerIsDisabled">
-            <summary>
-            The manager you want to use is not active at the moment.
-            
-            <para>To change the state of the manager, use <see cref="M:CAS.IMediationManager.SetEnableAd(CAS.AdType,System.Boolean)"/> method.</para>
-            </summary>
-        </member>
         <member name="F:CAS.AdError.ReachedCap">
             <summary>
             Ad creative has reached its daily cap for user.
             <para>The reason is for cross promo only.</para>
             </summary>
         </member>
-        <member name="F:CAS.AdError.IntervalNotYetPassed">
+        <member name="F:CAS.AdError.NotInitialized">
+            <summary>
+            The CAS is not initialized at the moment.
+            </summary>
+        </member>
+        <member name="F:CAS.AdError.NoConnection">
+            <summary>
+            Loading ads cannot be successful without an internet connection.
+            </summary>
+        </member>
+        <member name="F:CAS.AdError.Configuration">
+            <summary>
+            A configuration error has been detected in one of the mediation ad sources.
+            Please report error message to your manager support.
+            </summary>
+        </member>
+        <member name="F:CAS.AdError.NotPassedInterval">
             <summary>
             The interval between impressions of Interstitial Ad has not yet passed.
             <para>To change the interval, use <see cref="P:CAS.IAdsSettings.interstitialInterval"/> property.</para>
@@ -58,9 +60,16 @@
             <para>Please check your ad call logic to eliminate duplicate impressions.</para>
             </summary>
         </member>
-        <member name="F:CAS.AdError.AppIsPaused">
+        <member name="F:CAS.AdError.NotForeground">
             <summary>
             Ads cannot be shown as the application is currently not visible to the user.
+            </summary>
+        </member>
+        <member name="F:CAS.AdError.ManagerIsDisabled">
+            <summary>
+            The ad format you want to use is not active at the moment.
+            
+            <para>To change the state of the manager, use <see cref="M:CAS.IMediationManager.SetEnableAd(CAS.AdType,System.Boolean)"/> method.</para>
             </summary>
         </member>
         <member name="F:CAS.AdMetaData.type">
@@ -819,40 +828,57 @@
         </member>
         <member name="P:CAS.IMediationManager.isTestAdMode">
             <summary>
-            Is Mediation manager use test ads for current session.
+            Indicates whether the mediation manager is using test ads for the current session.
             </summary>
         </member>
         <member name="M:CAS.IMediationManager.LoadAd(CAS.AdType)">
             <summary>
-            Manual load <see cref="T:CAS.AdType"/> Ad.
-            <para>Please call load before each show ad whe active load mode is <see cref="F:CAS.LoadingManagerMode.Manual"/>.</para>
-            <para>You can get a callback for the successful loading of an ad by subscribe OnLoadedAd events</para>
-            <para>Please for <see cref="F:CAS.AdType.Banner"/> use new ad size api <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.Load() instead.</para>
+            Loads an ad of the specified <see cref="T:CAS.AdType"/>.
+            <para>Before calling <see cref="M:CAS.IMediationManager.ShowAd(CAS.AdType)"/> when <see cref="F:CAS.LoadingManagerMode.Manual"/> is in use, you must call this method to load the ad.</para>
+            <para>To receive a callback when the ad is successfully loaded, subscribe to the OnLoadedAd events.</para>
+            <para>For loading banner ads, use <see cref="M:CAS.IAdView.Load"/> obtained from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
             </summary>
+            <param name="adType">The type of ad to load.</param>
         </member>
         <member name="M:CAS.IMediationManager.IsReadyAd(CAS.AdType)">
             <summary>
-            Check ready selected <see cref="T:CAS.AdType"/> to show.
-            <para>Please for <see cref="F:CAS.AdType.Banner"/> use new ad size api <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.isReady instead.</para>
+            Checks whether the specified <see cref="T:CAS.AdType"/> ad is ready to be shown.
+            <para>To get detailed information about why an ad may not be shown, 
+            subscribe to the OnAdFailedToShow event instead of relying solely on this method. 
+            This event provides insights into errors that may prevent the ad from being displayed.</para>
+            <para>For checking if a banner ad is ready, use the <see cref="P:CAS.IAdView.isReady"/> property from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
             </summary>
+            <param name="adType">The type of ad to check.</param>
+            <returns>True if the ad is ready to be shown; otherwise, false.</returns>
         </member>
         <member name="M:CAS.IMediationManager.ShowAd(CAS.AdType)">
             <summary>
-            Force show ad by selected <see cref="T:CAS.AdType"/>.
-            <para>Please for <see cref="F:CAS.AdType.Banner"/> use new ad size api <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.SetActive(true) instead.</para>
+            Shows an ad of the specified <see cref="T:CAS.AdType"/>.
+            <para>To show a banner ad, use the <see cref="M:CAS.IAdView.SetActive(System.Boolean)"/> method obtained from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
             </summary>
+            <param name="adType">The type of ad to show.</param>
+        </member>
+        <member name="M:CAS.IMediationManager.DisposeAd(CAS.AdType)">
+            <summary>
+            Disposes of the ad of the specified <see cref="T:CAS.AdType"/>.
+            <para>After calling this method, if you want to resume showing ads, 
+            you must call the <see cref="M:CAS.IMediationManager.LoadAd(CAS.AdType)"/> method to reload the ad. 
+            Note that in automatic loading mode, ads will not be automatically reloaded after Dispose. 
+            You need to explicitly call <see cref="M:CAS.IMediationManager.LoadAd(CAS.AdType)"/> to prepare the ad for future displays.</para>
+            <para>For disposing of a banner ad, use the <see cref="M:System.IDisposable.Dispose"/> method obtained from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
+            </summary>
+            <param name="adType">The type of ad to dispose.</param>
         </member>
         <member name="M:CAS.IMediationManager.GetAdView(CAS.AdSize)">
             <summary>
-            Get the ad view interface for specific <paramref name="size"/>.
-            <para>If a view for specific size has already been created then a reference to it
-            will be returned without creating a new one.</para>
-            <para>The newly created AdView has an inactive state. When you are ready to show the ad on the screen,
-            simply call a <see cref="M:CAS.IAdView.SetActive(System.Boolean)"/> method.</para>
-            <para>If you no longer need the AdView with this size, please call <see cref="M:System.IDisposable.Dispose"/> to free memory.</para>
-            <para>After calling Dispose(), you can use GetAdView() method to create a new view.</para>
+            Retrieves the ad view interface for the specified <paramref name="size"/>.
+            <para>If an ad view of the specified size already exists, a reference to the existing view will be returned instead of creating a new one.</para>
+            <para>Note that the returned <see cref="T:CAS.IAdView"/> is initially inactive. To display the ad, you need to activate the view by calling <see cref="M:CAS.IAdView.SetActive(System.Boolean)"/>.</para>
+            <para>When the ad view is no longer needed, call <see cref="M:System.IDisposable.Dispose"/> to release the associated resources and free up memory.</para>
+            <para>After disposing of the ad view, you can use this method again to create a new view if needed.</para>
             </summary>
-            <param name="size">The ad size you want using.</param>
+            <param name="size">The desired size of the ad view.</param>
+            <returns>The ad view interface for the specified size.</returns>
         </member>
         <member name="E:CAS.IMediationManager.OnAppReturnAdShown">
             <summary>

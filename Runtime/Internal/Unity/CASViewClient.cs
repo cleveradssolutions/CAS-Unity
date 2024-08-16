@@ -17,51 +17,37 @@ namespace CAS.Unity
 
         public bool active = false;
         public bool loaded = false;
-        public AdError lastError = AdError.Internal;
+        public int lastError = AdError.Internal;
 
         public override int refreshInterval { get; set; }
 
-        public override bool isReady
-        {
-            get { return loaded && _manager.IsEnabledAd(AdType.Banner); }
-        }
+        public override bool isReady { get { return loaded; } }
 
         internal CASViewClient(CASManagerClient client, CASManagerBehaviour behaviour, AdSize size) : base(client, size)
         {
             this._behaviour = behaviour;
-            if (behaviour.IsAutoload(AdType.Banner))
-                Load();
             refreshInterval = MobileAds.settings.bannerRefreshInterval;
         }
 
-        public override void Dispose()
+        internal override void Enable()
         {
-            _behaviour.RemoveAdViewFromFactory(this);
+            Load();
         }
 
-        public override void Load()
+        internal override void DestroyNative()
         {
-            if (_manager.IsEnabledAd(AdType.Banner))
-            {
-                if (!loaded)
-                    CallAdAction(AdActionCode.LOADED, 0.5f);
-                return;
-            }
+            loaded = false;
             lastError = AdError.ManagerIsDisabled;
-            CallAdAction(AdActionCode.FAILED);
+        }
+
+        public override void LoadNative()
+        {
+            if (!loaded)
+                CallAdAction(AdActionCode.LOADED, 0.5f);
         }
 
         public override void SetActive(bool active)
         {
-            if (active)
-            {
-                if (!_manager.IsEnabledAd(AdType.Banner))
-                {
-                    lastError = AdError.ManagerIsDisabled;
-                    CallAdAction(AdActionCode.FAILED);
-                    return;
-                }
-            }
             this.active = active;
         }
 
@@ -120,7 +106,7 @@ namespace CAS.Unity
                     _waitImpressionEvent = true;
 
                 }
-                HandleCallback(action, 0, (int)lastError, null);
+                HandleCallback(action, 0, lastError, null, null);
             }, delay);
         }
 
@@ -222,7 +208,7 @@ namespace CAS.Unity
         public bool active = false;
         public bool loaded = false;
 
-        public AdError lastError;
+        public int lastError;
         public AdType type;
 
         private CASManagerBehaviour _behaviour;
@@ -233,19 +219,28 @@ namespace CAS.Unity
             this.type = type;
         }
 
+        public void Dispose()
+        {
+            if (active)
+                throw new InvalidOperationException("The Ad cannot be disabled because is still displayed");
+
+            loaded = false;
+            lastError = AdError.NotReady;
+        }
+
         public void Load()
         {
             if (_behaviour.client.IsEnabledAd(type))
             {
-                if (!loaded)
-                    CallAdAction(AdActionCode.LOADED, 1.0f);
+                //if (!loaded)
+                CallAdAction(AdActionCode.LOADED, 1.0f);
                 return;
             }
             lastError = AdError.ManagerIsDisabled;
             CallAdAction(AdActionCode.FAILED);
         }
 
-        public AdError? GetReadyError()
+        public int GetReadyError()
         {
             if (_behaviour.isFullscreenAdVisible)
                 return AdError.AlreadyDisplayed;
@@ -253,18 +248,18 @@ namespace CAS.Unity
                 return AdError.ManagerIsDisabled;
             if (type == AdType.Interstitial
                && _behaviour._settings.lastInterImpressionTimestamp + _behaviour._settings.interstitialInterval > Time.time)
-                return AdError.IntervalNotYetPassed;
+                return AdError.NotPassedInterval;
             if (!loaded)
                 return AdError.NotReady;
-            return null;
+            return AdError.Internal;
         }
 
         public void Show()
         {
             var error = GetReadyError();
-            if (error.HasValue)
+            if (error != AdError.Internal)
             {
-                lastError = error.Value;
+                lastError = error;
                 CallAdAction(AdActionCode.SHOW_FAILED);
                 return;
             }
@@ -318,10 +313,10 @@ namespace CAS.Unity
                 else if (action == AdActionCode.CLOSED)
                 {
                     active = false;
-                    if (_behaviour.IsAutoload(type))
+                    if (CASFactory.IsAutoload(type))
                         Load();
                 }
-                _behaviour.client.HandleCallback(action, (int)type, (int)lastError, null);
+                _behaviour.client.HandleCallback(action, (int)type, lastError, null, null);
             }, delay);
         }
     }

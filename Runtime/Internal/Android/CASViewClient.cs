@@ -22,20 +22,24 @@ namespace CAS.Android
             set { _bridge.Call("setRefreshInterval", value); }
         }
 
-        internal CASViewClient(CASManagerBase manager, AdSize size, AndroidJavaObject bridge)
+        internal CASViewClient(CASManagerBase manager, AdSize size)
             : base(manager, size)
         {
             _callback = new CASCallback(this);
-            _bridge = new AndroidJavaObject(CASJavaBridge.AdViewClass, (int)size, _callback, bridge);
+            _bridge = new AndroidJavaObject(CASJavaBridge.AdViewClass, (int)size, _callback, manager.managerID);
         }
 
-        public override void Dispose()
+        internal override void DestroyNative()
         {
-            _manager.RemoveAdViewFromFactory(this);
             _bridge.Call("destroy");
         }
 
-        public override void Load()
+        internal override void Enable()
+        {
+            _bridge.Call("enable");
+        }
+
+        public override void LoadNative()
         {
             _bridge.Call("load");
         }

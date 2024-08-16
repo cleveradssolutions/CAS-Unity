@@ -13,15 +13,15 @@ namespace CAS
     /// </summary>
     public enum AdPosition
     {
-        TopCenter,
-        TopLeft,
-        TopRight,
-        BottomCenter,
-        BottomLeft,
-        BottomRight,
-        MiddleCenter,
-        MiddleLeft,
-        MiddleRight,
+        TopCenter = 0,
+        TopLeft = 1,
+        TopRight = 2,
+        BottomCenter = 3,
+        BottomLeft = 4,
+        BottomRight = 5,
+        MiddleCenter = 6,
+        MiddleLeft = 7,
+        MiddleRight = 8,
 
         /// <summary>
         /// Service value to continue use previously Ad Position.
