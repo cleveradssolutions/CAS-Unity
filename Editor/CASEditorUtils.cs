@@ -185,9 +185,9 @@ namespace CAS.UEditor
                             var asset = AssetDatabase.LoadAssetAtPath(assetPath, type);
                             if (asset)
                                 return asset;
-                            AssetDatabase.DeleteAsset(assetPath);
                         }
                         catch { }
+                        AssetDatabase.DeleteAsset(assetPath);
                     }
                 }
             }
@@ -1033,6 +1033,7 @@ namespace CAS.UEditor
                 case AdFlags.Banner: iconIndex = 0; break;
                 case AdFlags.Interstitial: iconIndex = 1; break;
                 case AdFlags.Rewarded: iconIndex = 2; break;
+                case AdFlags.AppOpen: iconIndex = 4; break;
                 default: return null;
             }
             return formatIcons[active ? iconIndex : iconIndex + 5];

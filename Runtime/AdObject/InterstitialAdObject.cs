@@ -53,7 +53,7 @@ namespace CAS.AdObject
         {
             if (manager == null)
             {
-                OnAdFailedToShow.Invoke(AdError.ManagerIsDisabled.GetMessage());
+                OnAdFailedToShow.Invoke(new AdError(AdError.NotInitialized, null).ToString());
                 return;
             }
             OnAdShown.Invoke();
@@ -64,7 +64,7 @@ namespace CAS.AdObject
         private void Start()
         {
             if (!CASFactory.TryGetManagerByIndexAsync(managerId.index, OnManagerReady))
-                OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
+                OnAdFailedToLoad.Invoke(new AdError(AdError.NotInitialized, null).ToString());
         }
 
         private void OnDestroy()

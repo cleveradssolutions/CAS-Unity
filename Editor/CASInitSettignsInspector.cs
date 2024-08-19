@@ -94,7 +94,7 @@ namespace CAS.UEditor
             legacyUnityAdsPackageInstalled = Utils.IsPackageExist(Utils.legacyUnityAdsPackageName);
 
             dependencyManager = DependencyManager.Create(platform, (Audience)audienceTaggedProp.enumValueIndex, true);
-            
+
             var edmVersion = Utils.GetEDM4UVersion(platform);
             if (edmVersion != null)
                 edmRequiredNewer = edmVersion < Utils.minEDM4UVersion;
@@ -572,19 +572,12 @@ namespace CAS.UEditor
 
         private void DrawAppOpenScope()
         {
-            var icon = HelpStyles.GetFormatIcon(AdType.AppOpen, true);
-            var content = HelpStyles.GetContent("", icon);
-
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Toggle(true, "", GUILayout.ExpandWidth(false));
-            GUILayout.Toggle(true, "AppOpen ad format", EditorStyles.toolbarButton);
-            GUILayout.Label(content, EditorStyles.toolbar, GUILayout.ExpandWidth(false));
-            EditorGUILayout.EndHorizontal();
-            EditorGUI.EndDisabledGroup();
-            EditorGUI.indentLevel += 2;
-            EditorGUILayout.HelpBox("The AppOpen Ad format does not support auto preloading. Please use the LoadAd() method before each ShowAd().", MessageType.None);
-            EditorGUI.indentLevel -= 2;
+            if (DrawAdFlagToggle(AdFlags.AppOpen))
+            {
+                EditorGUI.indentLevel += 2;
+                EditorGUILayout.HelpBox("The AppOpen Ad format does not support auto preloading. Please use the LoadAd() method before each ShowAd().", MessageType.None);
+                EditorGUI.indentLevel -= 2;
+            }
         }
 
         private void DrawSeparator()

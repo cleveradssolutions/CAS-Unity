@@ -43,7 +43,7 @@ namespace CAS.AdObject
         private void Start()
         {
             if (!CASFactory.TryGetManagerByIndexAsync(managerId.index, OnManagerReady))
-                OnAdFailedToLoad.Invoke(AdError.ManagerIsDisabled.GetMessage());
+                OnAdFailedToLoad.Invoke(new AdError(AdError.NotInitialized, null).ToString());
         }
 
         private void OnDestroy()

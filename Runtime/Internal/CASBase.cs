@@ -75,13 +75,6 @@ namespace CAS
         #endregion
 
         public abstract void EnableAd(AdType adType);
-        public void LoadAd(AdType adType)
-        {
-            if (IsEnabledAd(adType))
-                LoadAdNetive(adType);
-            else
-                HandleCallback(AdActionCode.FAILED, (int)adType, AdError.ManagerIsDisabled, null, null);
-        }
         protected abstract void LoadAdNetive(AdType adType);
         public abstract bool IsReadyAd(AdType adType);
         public abstract void ShowAd(AdType adType);
@@ -165,6 +158,14 @@ namespace CAS
             }
         }
 
+        public void LoadAd(AdType adType)
+        {
+            if (IsEnabledAd(adType))
+                LoadAdNetive(adType);
+            else
+                HandleCallback(AdActionCode.FAILED, (int)adType, AdError.ManagerIsDisabled, null, null);
+        }
+        
         public IAdView GetAdView(AdSize size)
         {
             if (size < AdSize.Banner)
