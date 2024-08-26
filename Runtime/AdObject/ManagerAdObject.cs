@@ -26,7 +26,9 @@ namespace CAS.AdObject
 
         public void Initialize()
         {
+#if UNITY_EDITOR || UNITY_IOS || UNITY_ANDROID || CASDeveloper
             CreateBuilder().Build();
+#endif
         }
 
         public IManagerBuilder CreateBuilder()
