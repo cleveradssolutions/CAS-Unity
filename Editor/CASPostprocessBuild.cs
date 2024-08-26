@@ -310,7 +310,7 @@ namespace CAS.UEditor
                         Debug.LogWarning(CASEditorUtils.logTag + "Copy Config resources to XCode Project failed: " + e.ToString());
                     }
                 }
-                else
+                else if (casSettings.GetManagerId(i) != "demo")
                 {
                     CASEditorUtils.Log("Not found config file: " + cachePath);
                 }
