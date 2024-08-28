@@ -317,7 +317,7 @@ namespace CAS.UEditor
                         Debug.LogWarning(Utils.logTag + "Copy Config resources to Android Project failed: " + e.ToString());
                     }
                 }
-                else
+                else if (initSettings.GetManagerId(i) != "demo")
                 {
                     Utils.Log("Not found config file: " + cachePath);
                 }
