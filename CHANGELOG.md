@@ -1,6 +1,19 @@
 # CAS.AI Unity Plugin Change Log
 
-# [3.9.2] - 2024-08-16
+# [3.9.4] - 2024-09-24
+- Discover the native 3.9.4 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+### Bug Fixes
+- The Manager Ad Object will no longer display an initialization error on unsupported platforms.
+- The warning "Not found config file" will no longer be displayed for the test "demo" CAS ID.
+### Update Adapters
+> Below are important changes in the adapters that should be noted. Please refer to the native SDKs release notes for a complete overview of all adapter updates.
+- [Android] Yandex Ads
+  - ⚠️ [SDK] The minimum AppMetrica version is now 7.2.0 [(Unity plugin 6.3.0)](https://github.com/appmetrica/appmetrica-unity-plugin/releases).
+  - ⚠️ [SDK] The minimum Android Gradle plugin version is now 7.0 (Unity 2021.3.41f+)
+- [iOS] Google Ads
+  - [lib] Fixed a bug related to MarketplaceKit that would cause the SDK to crash when running on MacOS.
+
+# [3.9.3] - 2024-08-16
 - Discover the native 3.9.3 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 ### Bug Fixes
 - [Android] Fixed potential ANR from AppStateNotifier initialization.
