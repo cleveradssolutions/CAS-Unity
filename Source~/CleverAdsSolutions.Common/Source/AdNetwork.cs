@@ -41,6 +41,7 @@ namespace CAS
         LoopMe = 22,
         Mintegral = 23,
         Pangle = 24,
+        YsoNetwork = 25,
 
         DSPExchange = 30,
         LastPage = 31,
@@ -134,6 +135,7 @@ namespace CAS
                 case AdNetwork.Ogury: return "Og";
                 case AdNetwork.LoopMe: return "LM";
                 case AdNetwork.CASExchange: return "Ex";
+                case AdNetwork.YsoNetwork: return "YSO";
                 default: return string.Empty;
             }
         }
