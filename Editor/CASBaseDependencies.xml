@@ -4,7 +4,7 @@
     <repositories>
       <repository>https://repo.repsy.io/mvn/cleveradssolutions/beta</repository>
     </repositories>
-    <androidPackage spec="com.cleveradssolutions:cas-sdk:4.0.0-beta3" version="4.0.0-beta3" />
+    <androidPackage spec="com.cleveradssolutions:cas-sdk:4.0.0-beta4" version="4.0.0-beta4" />
     <androidPackage spec="androidx.lifecycle:lifecycle-process:2.6.2" version="2.6.2" />
   </androidPackages>
   <iosPods>
