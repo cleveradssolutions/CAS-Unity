@@ -21,7 +21,9 @@ namespace CAS.UEditor
 
         internal static void Configure()
         {
-#if UNITY_2022_3_OR_NEWER
+#if UNITY_6000_0_OR_NEWER
+            // TODO Implement Unity 6 update flags
+#elif UNITY_2022_3_OR_NEWER
             UpdateGradleTemplateIfNeed(Utils.mainGradlePath, "sourceCompatibility JavaVersion.VERSION_11");
             UpdateGradleTemplateIfNeed(Utils.projectGradlePath, "id 'com.android.application' version");
 #endif
