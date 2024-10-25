@@ -183,8 +183,6 @@ namespace CAS.UEditor
                 EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
             }
 #endif
-
-            CASPreprocessGradle.Configure();
 #endif
         }
 

@@ -11,6 +11,6 @@
     <sources>
       <source>https://github.com/cleveradssolutions/CAS-Specs.git</source>
     </sources>
-    <iosPod name="CleverAdsSolutions-Base" version="3.9.5" minTargetSdk="13.0" />
+    <iosPod name="CleverAdsSolutions-Base" version="3.9.6" minTargetSdk="13.0" />
   </iosPods>
 </dependencies>
