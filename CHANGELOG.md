@@ -1,5 +1,8 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.9.7] - 2024-11-07
+- Discover the native 3.9.7 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
 # [3.9.6] - 2024-10-25
 - Discover the native 3.9.6 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 ### Bug Fixes
