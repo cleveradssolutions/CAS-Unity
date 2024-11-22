@@ -15,11 +15,11 @@ namespace CAS
         /// </summary>
         public const int NotReady = 1;
         /// <summary>
-        /// The Timeout error occurs when an advertising source fails to respond within a specified timeframe.
-        /// Following this error, the system continues to await a response from the source,
-        /// potentially resulting in delayed ad loading or triggering a genuine loading error.
+        /// Indicates that the device is rejected for services.
+        /// <para>Services may not be available for some devices that do not meet the requirements.
+        /// For example, the country or version of the OS.</para>
         /// </summary>
-        public const int Timeout = 2;
+        public const int Rejected = 2;
         /// <summary>
         /// This means we are not able to serve ads to this person.
         /// 
@@ -37,9 +37,15 @@ namespace CAS
         /// </summary>
         public const int NotInitialized = 7;
         /// <summary>
+        /// The Timeout error occurs when an advertising source fails to respond within a specified timeframe.
+        /// Following this error, the system continues to await a response from the source,
+        /// potentially resulting in delayed ad loading or triggering a genuine loading error.
+        /// </summary>
+        public const int Timeout = 8;
+        /// <summary>
         /// Loading ads cannot be successful without an internet connection.
         /// </summary>
-        public const int NoConnection = 8;
+        public const int NoConnection = 9;
 
         /// <summary>
         /// A configuration error has been detected in one of the mediation ad sources.

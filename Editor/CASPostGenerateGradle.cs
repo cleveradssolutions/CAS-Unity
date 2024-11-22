@@ -267,7 +267,8 @@ namespace CAS.UEditor
             }
 
             properties["android.useAndroidX"] = "true";
-            properties["android.enableJetifier"] = "true";
+            
+            //properties["android.enableJetifier"] = "true";
 #if !UNITY_2022_2_OR_NEWER
             // Unity 6 uses Gradle version 8.4, but enableDexingArtifactTransform was removed in version 8.2.
             // Enabled by default Dexing artifact transform causes issues for ExoPlayer with Gradle plugin 3.5.0+

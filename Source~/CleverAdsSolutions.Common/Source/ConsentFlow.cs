@@ -89,6 +89,8 @@ namespace CAS
 
         public enum Status
         {
+            Unknown = 0,
+            
             /// <summary>
             /// User consent obtained. Personalized vs non-personalized undefined.
             /// </summary>

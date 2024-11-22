@@ -11,11 +11,11 @@
             If you are already using automatic cache mode then just wait a little longer.
             </summary>
         </member>
-        <member name="F:CAS.AdError.Timeout">
+        <member name="F:CAS.AdError.Rejected">
             <summary>
-            The Timeout error occurs when an advertising source fails to respond within a specified timeframe.
-            Following this error, the system continues to await a response from the source,
-            potentially resulting in delayed ad loading or triggering a genuine loading error.
+            Indicates that the device is rejected for services.
+            <para>Services may not be available for some devices that do not meet the requirements.
+            For example, the country or version of the OS.</para>
             </summary>
         </member>
         <member name="F:CAS.AdError.NoFill">
@@ -35,6 +35,13 @@
         <member name="F:CAS.AdError.NotInitialized">
             <summary>
             The CAS is not initialized at the moment.
+            </summary>
+        </member>
+        <member name="F:CAS.AdError.Timeout">
+            <summary>
+            The Timeout error occurs when an advertising source fails to respond within a specified timeframe.
+            Following this error, the system continues to await a response from the source,
+            potentially resulting in delayed ad loading or triggering a genuine loading error.
             </summary>
         </member>
         <member name="F:CAS.AdError.NoConnection">
