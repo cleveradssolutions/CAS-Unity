@@ -21,7 +21,7 @@ static NSString * CASUStringFromUnity(const char *bytes) {
 }
 
 /// Returns a C string from a C array of UTF8-encoded bytes.
-static const char * CASUStringToUnity(NSString *str) {
+const char * CASUStringToUnity(NSString *str) {
     if (!str) {
         return NULL;
     }
@@ -414,12 +414,14 @@ CASUViewRef CASUCreateAdView(CASUManagerRef   managerRef,
 }
 
 void CASUDestroyAdView(CASUViewRef viewRef) {
-    CASUView *view = (__bridge CASUView *)viewRef;
-
-    if (view) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [view destroy];
-        });
+    if(viewRef){
+        CASUView *view = (__bridge CASUView *)viewRef;
+        
+        if (view) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [view destroy];
+            });
+        }
     }
 }
 
@@ -506,9 +508,8 @@ void CASUSkipNextAppReturnAds(CASUManagerRef manager) {
 #pragma mark - Ad Impression
 
 int CASUGetImpressionNetwork(CASImpressionRef impression) {
-    NSObject<CASStatusHandler> *internalImp = (__bridge NSObject<CASStatusHandler> *)impression;
-
-    if (internalImp) {
+    if (impression) {
+        id<CASStatusHandler> internalImp = (__bridge id<CASStatusHandler>)impression;
         NSString *network = internalImp.network;
 
         if ([network isEqualToString:CASNetwork.casExchange]) {
@@ -530,9 +531,8 @@ int CASUGetImpressionNetwork(CASImpressionRef impression) {
 }
 
 double CASUGetImpressionCPM(CASImpressionRef impression) {
-    NSObject<CASStatusHandler> *internalImp = (__bridge NSObject<CASStatusHandler> *)impression;
-
-    if (internalImp) {
+    if (impression) {
+        id<CASStatusHandler> internalImp = (__bridge id<CASStatusHandler>)impression;
         return internalImp.cpm;
     }
 
@@ -540,9 +540,8 @@ double CASUGetImpressionCPM(CASImpressionRef impression) {
 }
 
 int CASUGetImpressionPrecission(CASImpressionRef impression) {
-    NSObject<CASStatusHandler> *internalImp = (__bridge NSObject<CASStatusHandler> *)impression;
-
-    if (internalImp) {
+    if (impression) {
+        id<CASStatusHandler> internalImp = (__bridge id<CASStatusHandler>)impression;
         return (int)internalImp.priceAccuracy;
     }
 
@@ -550,9 +549,8 @@ int CASUGetImpressionPrecission(CASImpressionRef impression) {
 }
 
 const char * CASUGetImpressionCreativeId(CASImpressionRef impression) {
-    NSObject<CASStatusHandler> *internalImp = (__bridge NSObject<CASStatusHandler> *)impression;
-
-    if (internalImp) {
+    if (impression) {
+        id<CASStatusHandler> internalImp = (__bridge id<CASStatusHandler>)impression;
         return CASUStringToUnity(internalImp.creativeIdentifier);
     }
 
@@ -560,9 +558,8 @@ const char * CASUGetImpressionCreativeId(CASImpressionRef impression) {
 }
 
 const char * CASUGetImpressionIdentifier(CASImpressionRef impression) {
-    NSObject<CASStatusHandler> *internalImp = (__bridge NSObject<CASStatusHandler> *)impression;
-
-    if (internalImp) {
+    if (impression) {
+        id<CASStatusHandler> internalImp = (__bridge id<CASStatusHandler>)impression;
         return CASUStringToUnity(internalImp.identifier);
     }
 
@@ -570,9 +567,8 @@ const char * CASUGetImpressionIdentifier(CASImpressionRef impression) {
 }
 
 int CASUGetImpressionDepth(CASImpressionRef impression) {
-    NSObject<CASStatusHandler> *internalImp = (__bridge NSObject<CASStatusHandler> *)impression;
-
-    if (internalImp) {
+    if (impression) {
+        id<CASStatusHandler> internalImp = (__bridge id<CASStatusHandler>)impression;
         return (int)internalImp.impressionDepth;
     }
 
@@ -580,9 +576,8 @@ int CASUGetImpressionDepth(CASImpressionRef impression) {
 }
 
 double CASUGetImpressionLifetimeRevenue(CASImpressionRef impression) {
-    NSObject<CASStatusHandler> *internalImp = (__bridge NSObject<CASStatusHandler> *)impression;
-
-    if (internalImp) {
+    if (impression) {
+        id<CASStatusHandler> internalImp = (__bridge id<CASStatusHandler>)impression;
         return internalImp.lifetimeRevenue;
     }
 

@@ -192,6 +192,7 @@
         return;
     }
 
+#if __has_include("UnityInterface.h")
     extern bool _didResignActive;
 
     if (_didResignActive) {
@@ -199,6 +200,8 @@
         // We shall not call unity API, and definitely not script callbacks, so nothing to do here
         return;
     }
+
+#endif
 
     if (self.rectCallback) {
         CGFloat scale = [UIScreen mainScreen].scale;
@@ -273,6 +276,7 @@
 }
 
 - (void)bannerAdView:(CASBannerView *)adView willPresent:(id<CASStatusHandler>)impression {
+#if __has_include("UnityInterface.h")
     extern bool _didResignActive;
 
     if (_didResignActive) {
@@ -280,6 +284,8 @@
         // We shall not call unity API, and definitely not script callbacks, so nothing to do here
         return;
     }
+
+#endif
 
     if (self.impressionCallback) {
         _lastImpression = (NSObject<CASStatusHandler> *)impression;
@@ -358,8 +364,8 @@
             break;
     }
 
-    self.constraintY.priority = UILayoutPriorityDefaultLow;
-    self.constraintX.priority = UILayoutPriorityDefaultLow;
+    self.constraintY.priority = UILayoutPriorityDefaultHigh;
+    self.constraintX.priority = UILayoutPriorityDefaultHigh;
     [NSLayoutConstraint activateConstraints:@[self.constraintX, self.constraintY]];
 }
 
