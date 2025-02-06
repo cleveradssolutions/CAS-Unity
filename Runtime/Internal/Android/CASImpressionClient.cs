@@ -40,7 +40,7 @@ namespace CAS.Android
             get { return impression.Call<string>( "getCreativeIdentifier" ); }
         }
 
-        public override string identifier
+        public override string sourceUnitId
         {
             get { return impression.Call<string>( "getIdentifier" ); }
         }

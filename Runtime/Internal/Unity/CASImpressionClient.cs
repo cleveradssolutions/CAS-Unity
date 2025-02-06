@@ -38,9 +38,9 @@ namespace CAS.Unity
             get { return null; }
         }
 
-        public override string identifier
+        public override string sourceUnitId
         {
-            get { return "Test"; }
+            get { return "TestUnitId"; }
         }
 
         public override int impressionDepth

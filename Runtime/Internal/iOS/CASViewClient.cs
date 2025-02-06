@@ -29,7 +29,8 @@ namespace CAS.iOS
         {
             _viewRef = viewRef;
             _viewClient = client;
-            CASExterns.CASUAttachAdViewDelegate(viewRef,
+            CASExterns.CASUSetAdViewDelegate(
+                viewRef,
                 AdViewActionCallback,
                 AdViewImpressionCallback,
                 AdViewRectCallback);
@@ -42,14 +43,11 @@ namespace CAS.iOS
 
         public override void Dispose()
         {
+            base.Dispose();
             try
             {
                 if (_viewRef != IntPtr.Zero)
                 {
-                    // Ignoer base implementation before CAS iOS 4.0
-                    //base.Dispose();
-                    _manager.RemoveAdViewFromFactory(this);
-                    CASExterns.CASUDestroyAdView(_viewRef);
                     _viewRef = IntPtr.Zero;
                     ((GCHandle)_viewClient).Free();
                 }
@@ -62,16 +60,15 @@ namespace CAS.iOS
 
         internal override void Enable()
         {
-            // Temptimplementation before CAS iOS 4.0
-            var iosManager = _manager as CASManagerClient;
-            iosManager.EnableAd(AdType.Banner);
+            CASExterns.CASUEnableAdView(_viewRef);
         }
 
         internal override void DestroyNative()
         {
-            // Temptimplementation before CAS iOS 4.0
-            var iosManager = _manager as CASManagerClient;
-            iosManager.DisposeAd(AdType.Banner);
+            if (_viewRef != IntPtr.Zero)
+            {
+                CASExterns.CASUDestroyAdView(_viewRef);
+            }
         }
 
         public override void LoadNative()
@@ -107,11 +104,11 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUViewActionCallback))]
-        private static void AdViewActionCallback(IntPtr view, int action, int error)
+        private static void AdViewActionCallback(IntPtr view, int action, int error, string errorMessage)
         {
             try
             {
-                GetClient(view).HandleCallback(action, 0, error, null, null);
+                GetClient(view).HandleCallback(action, 0, error, errorMessage, null);
             }
             catch (Exception e)
             {

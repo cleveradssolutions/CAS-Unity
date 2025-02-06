@@ -126,13 +126,6 @@ namespace CAS.Unity
 
         public void Start()
         {
-            if (CASFactory.IsAutoload(AdType.Interstitial))
-                LoadAd(AdType.Interstitial);
-            if (CASFactory.IsAutoload(AdType.Rewarded))
-                LoadAd(AdType.Rewarded);
-            if (CASFactory.IsAutoload(AdType.AppOpen))
-                LoadAd(AdType.AppOpen);
-
             Post(() => client.OnInitialized(null, "US", true, true));
         }
 

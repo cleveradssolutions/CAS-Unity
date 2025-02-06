@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CAS
 {
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Impression-Level-Data" )]
+    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Impression-Level-Data")]
     public abstract class AdMetaData
     {
         /// <summary>
@@ -41,9 +41,9 @@ namespace CAS
         public abstract string creativeIdentifier { get; }
 
         /// <summary>
-        /// Internal demand source name in CAS database.
+        /// Gets the Ad Unit identifier from the mediated network that purchased the impression.
         /// </summary>
-        public abstract string identifier { get; }
+        public abstract string sourceUnitId { get; }
 
         /// <summary>
         /// The amount of impressions of all ad formats to the current user for all sessions.
@@ -55,38 +55,41 @@ namespace CAS
         /// </summary>
         public abstract double lifetimeRevenue { get; }
 
-        public AdMetaData( AdType type )
+        [System.Obsolete("Renamed to sourceUnitId")]
+        public string identifier { get { return sourceUnitId; } }
+
+        public AdMetaData(AdType type)
         {
             this.type = type;
         }
 
         public override string ToString()
         {
-            var result = new StringBuilder( "Impression of the " )
-                .Append( type )
-                .Append( " ads with " );
+            var result = new StringBuilder("Impression of the ")
+                .Append(type)
+                .Append(" ads with ");
 
             var precision = priceAccuracy;
             if (precision == PriceAccuracy.Undisclosed)
             {
-                result.Append( "undisclosed cost " );
+                result.Append("undisclosed cost ");
             }
             else
             {
                 if (precision == PriceAccuracy.Floor)
-                    result.Append( "a floor " );
+                    result.Append("a floor ");
                 else
-                    result.Append( "an average " );
-                result.Append( cpm )
-                    .Append( " CPM " );
+                    result.Append("an average ");
+                result.Append(cpm)
+                    .Append(" CPM ");
             }
-            result.Append( "from " )
-                .Append( network );
+            result.Append("from ")
+                .Append(network);
 
             var creative = creativeIdentifier;
-            if (!string.IsNullOrEmpty( creative ))
-                result.Append( " creative id: " )
-                    .Append( creative );
+            if (!string.IsNullOrEmpty(creative))
+                result.Append(" creative id: ")
+                    .Append(creative);
 
             return result.ToString();
         }

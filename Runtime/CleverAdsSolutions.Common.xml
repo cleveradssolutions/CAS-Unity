@@ -112,9 +112,9 @@
             You can report creative issues to our Ad review team using this id.
             </summary>
         </member>
-        <member name="P:CAS.AdMetaData.identifier">
+        <member name="P:CAS.AdMetaData.sourceUnitId">
             <summary>
-            Internal demand source name in CAS database.
+            Gets the Ad Unit identifier from the mediated network that purchased the impression.
             </summary>
         </member>
         <member name="P:CAS.AdMetaData.impressionDepth">
@@ -289,12 +289,22 @@
         </member>
         <member name="F:CAS.ConsentFlow.DebugGeography.EEA">
             <summary>
-            Geography appears as in European Economic Area for debug devices.
+            Geography appears as in European Economic Area.
             </summary>
         </member>
         <member name="F:CAS.ConsentFlow.DebugGeography.NotEEA">
             <summary>
             Geography appears as not in European Economic Area.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.DebugGeography.RegulatedUSState">
+            <summary>
+            Geography appears as in a regulated US State for debug devices.
+            </summary>
+        </member>
+        <member name="F:CAS.ConsentFlow.DebugGeography.Other">
+            <summary>
+            Geography appears as in a region with no regulation in force.
             </summary>
         </member>
         <member name="F:CAS.ConsentStatus.Undefined">

@@ -14,19 +14,18 @@
 
 @class CASUManager;
 
-@interface CASUCallback : NSObject<CASAppReturnDelegate, CASPaidCallback>
+@interface CASUCallback : NSObject<CASScreenContentDelegate, CASImpressionDelegate>
 
 - (nonnull instancetype)initWithType:(int)type
                               client:(_Nonnull CASManagerClientRef *_Nonnull)client;
 
+@property (nonatomic, assign) int adType;
 @property (nonatomic, assign) _Nonnull CASManagerClientRef *_Nonnull client;
 @property (nonatomic, assign, nullable) CASUActionCallback actionCallback;
 @property (nonatomic, assign, nullable) CASUImpressionCallback impressionCallback;
-@property (nonatomic, strong, nullable) NSObject<CASStatusHandler> *impression;
-
-- (void)didAdLoaded;
-- (void)didAdFailedToLoadWithError:(NSString *_Nonnull)error;
-- (void)didAdFailedToLoadWithErrorCode:(int)error;
+@property (nonatomic, strong, nullable) CASContentInfo *impression;
+- (void)didCompletedAd;
+- (void)didAdNotReadyToPresent;
 
 @end
 

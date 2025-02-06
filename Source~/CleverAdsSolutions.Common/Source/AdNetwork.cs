@@ -38,6 +38,7 @@ namespace CAS
         Bigo = 19,
         Ogury = 20,
         Madex = 21,
+        [Obsolete("No longer supported")]
         LoopMe = 22,
         Mintegral = 23,
         Pangle = 24,
@@ -102,8 +103,8 @@ namespace CAS
                     return "https://www.start.io/policy/privacy-policy-site/";
                 case AdNetwork.Ogury:
                     return "https://ogury.com/ogury-advertising-privacy-policy/";
-                case AdNetwork.LoopMe:
-                    return "https://legal.loopme.com/privacy-center";
+                case AdNetwork.YsoNetwork:
+                    return "https://www.ysonetwork.com/privacy";
                 default: return null;
             }
         }
@@ -133,7 +134,6 @@ namespace CAS
                 case AdNetwork.Madex: return "Ma";
                 case AdNetwork.StartIO: return "SIO";
                 case AdNetwork.Ogury: return "Og";
-                case AdNetwork.LoopMe: return "LM";
                 case AdNetwork.CASExchange: return "Ex";
                 case AdNetwork.YsoNetwork: return "YSO";
                 default: return string.Empty;

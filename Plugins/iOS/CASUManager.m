@@ -9,7 +9,10 @@
 #import "CASUManager.h"
 #import "CASUPluginUtil.h"
 
-@interface CASUManager ()
+@interface CASUManager () {
+    BOOL _appReturnEnabled;
+}
+
 @property (nonatomic, strong) NSMutableDictionary *viewReferences;
 
 @end
@@ -23,13 +26,9 @@
     if (self) {
         _casManager = manager;
         _viewReferences = [[NSMutableDictionary alloc] init];
-        _interCallback = [[CASUCallback alloc] initWithType:kCASUType_INTER client:client];
+        _interCallback = [[CASUCallback alloc] initWithType:kCASUType_APP_RETURN client:client];
         _rewardCallback = [[CASUCallback alloc] initWithType:kCASUType_REWARD client:client];
-        _appReturnDelegate = [[CASUCallback alloc] initWithType:kCASUType_APP_RETURN client:client];
         _appOpenCallback = [[CASUCallback alloc] initWithType:kCASUType_APP_OPEN client:client];
-        _appOpenAd = [CASAppOpen createWithManager:manager];
-
-        manager.adLoadDelegate = self;
     }
 
     return self;
@@ -40,33 +39,96 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-- (void)loadAd:(int)type {
+- (void)enableAd:(int)type {
+    BOOL isAutoload = [CAS.settings getLoadingMode] != CASLoadingManagerModeManual;
+
     switch (type) {
         case kCASUType_INTER:
-            [self.casManager loadInterstitial];
+
+            if (self.interstitialAd) {
+                return;
+            }
+
+            self.interstitialAd = [[CASInterstitial alloc] initWithCasID:self.casManager.managerID];
+            self.interstitialAd.delegate = self.interCallback;
+            self.interstitialAd.impressionDelegate = self.interCallback;
+            self.interstitialAd.isAutoshowEnabled = _appReturnEnabled;
+            self.interstitialAd.isAutoloadEnabled = isAutoload;
             break;
 
         case kCASUType_REWARD:
-            [self.casManager loadRewardedAd];
+
+            if (self.rewardedAd) {
+                return;
+            }
+
+            self.rewardedAd = [[CASRewarded alloc] initWithCasID:self.casManager.managerID];
+            self.rewardedAd.delegate = self.rewardCallback;
+            self.rewardedAd.impressionDelegate = self.rewardCallback;
+            self.rewardedAd.isAutoloadEnabled = isAutoload;
+            break;
+
+        case kCASUType_APP_OPEN:
+
+            if (self.appOpenAd) {
+                return;
+            }
+
+            self.appOpenAd = [[CASAppOpen alloc] initWithCasID:self.casManager.managerID];
+            self.appOpenAd.delegate = self.appOpenCallback;
+            self.appOpenAd.impressionDelegate = self.appOpenCallback;
+            self.appOpenAd.isAutoloadEnabled = NO;         // disable by default
+            break;
+
+        default:
+            NSLog(kCASULOGTAG kCASUMETHOD_NOT_SUPPORT @"%d", type);
+            break;
+    }
+}
+
+- (void)loadAd:(int)type {
+    switch (type) {
+        case kCASUType_INTER:
+
+            if (!self.interstitialAd) {
+                [self enableAd:type];
+
+                if (self.interstitialAd.isAutoloadEnabled) {
+                    return;
+                }
+            }
+
+            [self.interstitialAd loadAd];
+            break;
+
+        case kCASUType_REWARD:
+
+            if (!self.rewardedAd) {
+                [self enableAd:type];
+
+                if (self.rewardedAd.isAutoloadEnabled) {
+                    return;
+                }
+            }
+
+            [self.rewardedAd loadAd];
             break;
 
         case kCASUType_APP_OPEN:{
-            __weak CASUManager *weakSelf = self;
-            [self.appOpenAd loadAdWithCompletionHandler:^(CASAppOpen *_Nonnull ad, NSError *_Nullable error) {
-                CASUManager *strongSelf = weakSelf;
+            if (!self.appOpenAd) {
+                [self enableAd:type];
 
-                if (strongSelf) {
-                    if (error) {
-                        [strongSelf.appOpenCallback didAdFailedToLoadWithErrorCode:(int)error.code];
-                    } else {
-                        [strongSelf.appOpenCallback didAdLoaded];
-                    }
+                if (self.appOpenAd.isAutoloadEnabled) {
+                    return;
                 }
-            }];
+            }
+
+            [self.appOpenAd loadAd];
             break;
         }
 
         default:
+            NSLog(kCASULOGTAG kCASUMETHOD_NOT_SUPPORT @"%d", type);
             break;
     }
 }
@@ -74,15 +136,16 @@
 - (BOOL)isAdReady:(int)type {
     switch (type) {
         case kCASUType_INTER:
-            return self.casManager.isInterstitialReady;
+            return self.interstitialAd && self.interstitialAd.isAdLoaded;
 
         case kCASUType_REWARD:
-            return self.casManager.isRewardedAdReady;
+            return self.rewardedAd && self.rewardedAd.isAdLoaded;
 
         case kCASUType_APP_OPEN:
-            return [self.appOpenAd isAdAvailable];
+            return self.appOpenAd && self.appOpenAd.isAdLoaded;
 
         default:
+            NSLog(kCASULOGTAG kCASUMETHOD_NOT_SUPPORT @"%d", type);
             return NO;
     }
 }
@@ -90,27 +153,84 @@
 - (void)showAd:(int)type {
     switch (type) {
         case kCASUType_INTER:
-            [self.casManager presentInterstitialFromRootViewController:[CASUPluginUtil unityGLViewController]
-                                                              callback:_interCallback];
+            // By default ad type sets to App Return for auto impressions.
+            self.interCallback.adType = kCASUType_INTER;
+
+            if (self.interstitialAd) {
+                [self.interstitialAd presentFromViewController:[CASUPluginUtil unityWindow].rootViewController];
+            } else {
+                [self.interCallback didAdNotReadyToPresent];
+            }
+
             break;
 
         case kCASUType_REWARD:
-            [self.casManager presentRewardedAdFromRootViewController:[CASUPluginUtil unityGLViewController]
-                                                            callback:_rewardCallback];
+
+            if (self.rewardedAd) {
+                CASUCallback *rewardCallback = self.rewardCallback;
+                [self.rewardedAd presentFromViewController:[CASUPluginUtil unityWindow].rootViewController
+                                  userDidEarnRewardHandler:^(CASContentInfo *_Nonnull info) {
+                [rewardCallback didCompletedAd];
+            }];
+            } else {
+                [self.rewardCallback didAdNotReadyToPresent];
+            }
+
             break;
 
         case kCASUType_APP_OPEN:
-            self.appOpenAd.contentCallback = self.appOpenCallback;
-            [self.appOpenAd presentFromRootViewController:[CASUPluginUtil unityGLViewController]];
+
+            if (self.appOpenAd) {
+                [self.appOpenAd presentFromViewController:[CASUPluginUtil unityWindow].rootViewController];
+            } else {
+                [self.appOpenCallback didAdNotReadyToPresent];
+            }
+
             break;
 
         default:
+            NSLog(kCASULOGTAG kCASUMETHOD_NOT_SUPPORT @"%d", type);
             break;
     }
 }
 
-- (CASUView *)createViewWithSize:(int)adSize client:(CASViewClientRef  _Nullable *)adViewClient{
-    CASUView *view = [[CASUView alloc] initWithManager:self.casManager forClient:adViewClient size:adSize];
+- (void)destroyAd:(int)type {
+    switch (type) {
+        case kCASUType_INTER:
+
+            if (self.interstitialAd) {
+                [self.interstitialAd destroy];
+                self.interstitialAd = nil;
+            }
+
+            break;
+
+        case kCASUType_REWARD:
+
+            if (self.rewardedAd) {
+                [self.rewardedAd destroy];
+                self.rewardedAd = nil;
+            }
+
+            break;
+
+        case kCASUType_APP_OPEN:
+
+            if (self.appOpenAd) {
+                [self.appOpenAd destroy];
+                self.appOpenAd = nil;
+            }
+
+            break;
+
+        default:
+            NSLog(kCASULOGTAG kCASUMETHOD_NOT_SUPPORT @"%d", type);
+            break;
+    }
+}
+
+- (CASUView *)createViewWithSize:(int)adSize client:(CASViewClientRef _Nullable *)adViewClient {
+    CASUView *view = [[CASUView alloc] initWithCASID:self.casManager.managerID forClient:adViewClient size:adSize];
 
     self.viewReferences[[NSString stringWithFormat:@"%d", adSize]] = view;
     return view;
@@ -120,29 +240,15 @@
     self.casManager.lastPageAdContent = [CASLastPageAdContent createFrom:content];
 }
 
-- (void)onAdLoaded:(enum CASType)adType {
-    // Callback called from any thread, so swith to UI thread for Unity.
-    if (adType == CASTypeInterstitial) {
-        [_interCallback didAdLoaded];
-    } else if (adType == CASTypeRewarded) {
-        [_rewardCallback didAdLoaded];
-    }
-}
-
-- (void)onAdFailedToLoad:(enum CASType) adType withError:(NSString *)error {
-    // Callback called from any thread, so swith to UI thread for Unity.
-    if (adType == CASTypeInterstitial) {
-        [_interCallback didAdFailedToLoadWithError:error];
-    } else if (adType == CASTypeRewarded) {
-        [_rewardCallback didAdFailedToLoadWithError:error];
-    }
-}
-
 - (void)setAutoShowAdOnAppReturn:(BOOL)enabled {
-    if (enabled) {
-        [self.casManager enableAppReturnAdsWith:_appReturnDelegate];
-    } else {
-        [self.casManager disableAppReturnAds];
+    if (_appReturnEnabled == enabled) {
+        return;
+    }
+
+    _appReturnEnabled = enabled;
+
+    if (self.interstitialAd) {
+        self.interstitialAd.isAutoshowEnabled = enabled;
     }
 }
 

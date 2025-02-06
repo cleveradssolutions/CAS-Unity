@@ -169,7 +169,7 @@ namespace CAS
                 return CAS.iOS.CASExterns.CASUGetDeviceScreenScale();
 #endif
 #if UNITY_EDITOR
-            return Mathf.Max(Screen.width, Screen.height) / (CAS.Unity.CASViewClient.emulateTabletScreen ? 1024 : 640);
+            return Mathf.Max(Screen.width, Screen.height) / (CAS.Unity.CASViewClient.emulateTabletScreen ? 1024.0f : 640.0f);
 #else
             return 0;
 #endif

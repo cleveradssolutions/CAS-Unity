@@ -165,7 +165,7 @@ namespace CAS
             else
                 HandleCallback(AdActionCode.FAILED, (int)adType, AdError.ManagerIsDisabled, null, null);
         }
-        
+
         public IAdView GetAdView(AdSize size)
         {
             if (size < AdSize.Banner)
@@ -208,6 +208,14 @@ namespace CAS
             {
                 initCompleteEvent = null;
                 initCompleteAction = null;
+            }
+
+            if (MobileAds.settings.loadingMode != LoadingManagerMode.Manual)
+            {
+                if (IsEnabledAdFlag(AdFlags.Interstitial))
+                    LoadAd(AdType.Interstitial);
+                if (IsEnabledAdFlag(AdFlags.Rewarded))
+                    LoadAd(AdType.Rewarded);
             }
 
             CASFactory.OnManagerInitialized(this);

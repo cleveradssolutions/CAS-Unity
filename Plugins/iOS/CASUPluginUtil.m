@@ -7,9 +7,12 @@
 
 #import <AVFoundation/AVFoundation.h>
 #import "CASUPluginUtil.h"
-#if __has_include("UnityInterface.h")
-#import "UnityInterface.h"
-#endif
+
+extern int UnityIsPaused(void);
+extern void UnityPause(int pause);
+extern void UnityUpdateMuteState(int mute);
+extern UIViewController * UnityGetGLViewController(void);
+extern UIWindow * UnityGetMainWindow(void);
 
 @interface CASUPluginUtil ()
 @property (nonatomic, strong) NSMutableDictionary *internalReferences;
@@ -57,50 +60,19 @@ static BOOL _pauseOnBackground = YES;
     _pauseOnBackground = pause;
 }
 
-+ (UIViewController *)unityGLViewController {
-#if __has_include("UnityInterface.h")
-    UIViewController *controller = UnityGetGLViewController() ? : UnityGetMainWindow().rootViewController;
-
-    if (controller) {
-        return controller;
-    }
-
-#endif
++ (UIWindow *)unityWindow {
+    //return UnityGetGLViewController() ? : UnityGetMainWindow().rootViewController;
     id<UIApplicationDelegate> appDelegate = [UIApplication sharedApplication].delegate;
-
-    UIWindow *window;
-
-    if ([appDelegate respondsToSelector:@selector(window)]) {
-        window = appDelegate.window;
-    }
-
-    if (!window) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        window = [UIApplication sharedApplication].keyWindow;
-#pragma clang diagnostic pop
-    }
-
-    if (window) {
-        return window.rootViewController;
-    }
-
-    return nil;
+    return appDelegate.window;
 }
 
 + (void)onAdsWillPressent {
-#if __has_include("UnityInterface.h")
-
     if ([CASUPluginUtil pauseOnBackground]) {
         UnityPause(YES);
     }
-
-#endif
 }
 
 + (void)onAdsDidClosed {
-#if __has_include("UnityInterface.h")
-
     if (UnityIsPaused()) {
         UnityPause(NO);
         // need to do this with delay because FMOD restarts audio in AVAudioSessionInterruptionNotification handler
@@ -108,8 +80,6 @@ static BOOL _pauseOnBackground = YES;
             UnityUpdateMuteState([[AVAudioSession sharedInstance] outputVolume] < 0.01f ? 1 : 0);
         });
     }
-
-#endif
 }
 
 @end

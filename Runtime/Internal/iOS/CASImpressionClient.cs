@@ -22,12 +22,12 @@ namespace CAS.iOS
 
         public override double revenue
         {
-            get { return cpm / 1000.0; }
+            get { return CASExterns.CASUGetImpressionRevenue(impressionRef); }
         }
 
         public override double cpm
         {
-            get { return CASExterns.CASUGetImpressionCPM(impressionRef); }
+            get { return revenue * 1000.0; }
         }
 
         public override PriceAccuracy priceAccuracy
@@ -40,11 +40,11 @@ namespace CAS.iOS
             get { return CASExterns.CASUGetImpressionCreativeId(impressionRef); }
         }
 
-        public override string identifier
+        public override string sourceUnitId
         {
             get { return CASExterns.CASUGetImpressionIdentifier(impressionRef); }
         }
-
+        
         public override int impressionDepth
         {
             get { return CASExterns.CASUGetImpressionDepth(impressionRef); }

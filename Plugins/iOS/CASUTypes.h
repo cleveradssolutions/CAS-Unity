@@ -22,14 +22,26 @@ typedef const void * CASUViewRef;
 typedef const void * CASImpressionRef;
 
 // MARK: - CAS Mediation Manager callbacks
-typedef void (*CASUInitializationCompleteCallback)(CASManagerClientRef *manager, const char *error, const char *countryCode, BOOL withConsent, BOOL isTestMode);
+typedef void (*CASUInitializationCompleteCallback)(CASManagerClientRef *manager,
+                                                   const char          *error,
+                                                   const char          *countryCode,
+                                                   BOOL                isConsentRequired,
+                                                   BOOL                isTestMode);
 
-typedef void (*CASUActionCallback)(CASManagerClientRef *manager, int action, int type, int error);
+typedef void (*CASUActionCallback)(CASManagerClientRef *manager,
+                                   int                 action,
+                                   int                 type,
+                                   int                 error,
+                                   const char          *errorMessage);
+
 typedef void (*CASUImpressionCallback)(CASManagerClientRef *manager, int action, int type, CASImpressionRef impression);
 
 
 // MARK: - CAS AdView callbacks
-typedef void (*CASUViewActionCallback)(CASViewClientRef *view, int action, int error);
+typedef void (*CASUViewActionCallback)(CASViewClientRef *view,
+                                       int action,
+                                       int error,
+                                       const char          *errorMessage);
 typedef void (*CASUViewImpressionCallback)(CASViewClientRef *view, CASImpressionRef impression);
 typedef void (*CASUViewRectCallback)(CASViewClientRef *view, float x, float y, float width, float height);
 
@@ -74,5 +86,8 @@ typedef void (*CASUConsentFlowCompletion)(int status);
 #define kCASUSize_MREC              5
 #define kCASUSize_FULL_WIDTH        6
 #define kCASUSize_LINE              7
+
+#define kCASULOGTAG @"[CAS.AI-UB] "
+#define kCASUMETHOD_NOT_SUPPORT @"Unity bridge not support method with AdType index: "
 
 #endif // ifndef CASUTypes_h

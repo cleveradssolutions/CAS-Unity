@@ -28,12 +28,12 @@ namespace CAS.iOS
         #region CAS Mediation Manager callbacks
         internal delegate void CASUInitializationCompleteCallback(CASManagerClientRef manager, string error, string countryCode, bool withConsent, bool isTestMode);
 
-        internal delegate void CASUActionCallback(CASManagerClientRef manager, int action, int type, int error);
+        internal delegate void CASUActionCallback(CASManagerClientRef manager, int action, int type, int error, string errorMessage);
         internal delegate void CASUImpressionCallback(CASManagerClientRef manager, int action, int type, CASImpressionRef impression);
         #endregion
 
         #region CAS AdView callbacks
-        internal delegate void CASUViewActionCallback(CASViewClientRef view, int action, int error);
+        internal delegate void CASUViewActionCallback(CASViewClientRef view, int action, int error, string errorMessage);
         internal delegate void CASUViewImpressionCallback(CASViewClientRef view, CASImpressionRef impression);
         internal delegate void CASUViewRectCallback(CASViewClientRef view, float x, float y, float width, float height);
         #endregion
@@ -147,6 +147,12 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern void CASUSetKeywords(string[] keywords, int keywordsLength);
+
+        [DllImport("__Internal")]
+        internal static extern void CASUSetUserID(string userID);
+
+        [DllImport("__Internal")]
+        internal static extern string CASUGetUserID();
         #endregion
 
         #region Utils
@@ -170,14 +176,6 @@ namespace CAS.iOS
         #endregion
 
         #region CAS Manager
-        [DllImport("__Internal")]
-        internal static extern void CASUCreateBuilder(
-            int enableAd,
-            bool demoAd,
-            string unityVersion,
-            string userID
-        );
-
         [DllImport("__Internal")]
         internal static extern void CASUSetConsentFlow(
             bool isEnabled,
@@ -213,13 +211,18 @@ namespace CAS.iOS
         internal static extern CASUManagerRef CASUBuildManager(
             CASManagerClientRef client,
             CASUInitializationCompleteCallback onInit,
-            string identifier
+            string identifier,
+            bool demoAd,
+            string unityVersion
         );
         #endregion
 
         #region General Ads functions
         [DllImport("__Internal")]
-        internal static extern void CASUEnableAdType(CASUManagerRef managerRef, int adType, bool enable);
+        internal static extern void CASUEnableAdType(CASUManagerRef managerRef, int adType);
+
+        [DllImport("__Internal")]
+        internal static extern void CASUDestroyAdType(CASUManagerRef managerRef, int adType);
 
         [DllImport("__Internal")]
         internal static extern void CASUSetLastPageAdContent(CASUManagerRef managerRef, string contentJson);
@@ -250,14 +253,18 @@ namespace CAS.iOS
         );
 
         [DllImport("__Internal")]
-        internal static extern void CASUDestroyAdView(CASUViewRef viewRef);
-
-        [DllImport("__Internal")]
-        internal static extern void CASUAttachAdViewDelegate(
+        internal static extern CASUViewRef CASUSetAdViewDelegate(
             CASUViewRef viewRef,
             CASUViewActionCallback actionCallback,
             CASUViewImpressionCallback impressionCallback,
-            CASUViewRectCallback rectCallback);
+            CASUViewRectCallback rectCallback
+        );
+
+        [DllImport("__Internal")]
+        internal static extern void CASUEnableAdView(CASUViewRef viewRef);
+
+        [DllImport("__Internal")]
+        internal static extern void CASUDestroyAdView(CASUViewRef viewRef);
 
         [DllImport("__Internal")]
         internal static extern void CASUPresentAdView(CASUViewRef viewRef);
@@ -298,7 +305,7 @@ namespace CAS.iOS
         internal static extern int CASUGetImpressionNetwork(CASImpressionRef impression);
 
         [DllImport("__Internal")]
-        internal static extern double CASUGetImpressionCPM(CASImpressionRef impression);
+        internal static extern double CASUGetImpressionRevenue(CASImpressionRef impression);
 
         [DllImport("__Internal")]
         internal static extern int CASUGetImpressionPrecission(CASImpressionRef impression);

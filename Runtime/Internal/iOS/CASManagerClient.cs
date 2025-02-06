@@ -33,12 +33,7 @@ namespace CAS.iOS
             if (initSettings.userID == null)
                 initSettings.userID = string.Empty; // Null string not supported
 
-            CASExterns.CASUCreateBuilder(
-                (int)initSettings.allowedAdFlags,
-                isTestAdMode,
-                Application.unityVersion,
-                initSettings.userID
-            );
+            CASExterns.CASUSetUserID(initSettings.userID);
 
             var consentFlow = initSettings.consentFlow;
             if (consentFlow != null)
@@ -72,7 +67,13 @@ namespace CAS.iOS
                 CASExterns.CASUSetMediationExtras(extrasKeys, extrasValues, extrasKeys.Length);
             }
 
-            _managerRef = CASExterns.CASUBuildManager(_managerClient, InitializationCompleteCallback, managerID);
+            _managerRef = CASExterns.CASUBuildManager(
+                _managerClient,
+                InitializationCompleteCallback,
+                managerID,
+                isTestAdMode,
+                Application.unityVersion
+            );
 
             CASExterns.CASUSetDelegates(_managerRef, AdActionCallback, AdImpressionCallback);
         }
@@ -84,12 +85,12 @@ namespace CAS.iOS
 
         public override void EnableAd(AdType adType)
         {
-            CASExterns.CASUEnableAdType(_managerRef, (int)adType, true);
+            CASExterns.CASUEnableAdType(_managerRef, (int)adType);
         }
 
         public override void DisposeAd(AdType adType)
         {
-            CASExterns.CASUEnableAdType(_managerRef, (int)adType, false);
+            CASExterns.CASUDestroyAdType(_managerRef, (int)adType);
         }
 
         public override bool IsReadyAd(AdType adType)
@@ -159,11 +160,11 @@ namespace CAS.iOS
         }
 
         [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUActionCallback))]
-        private static void AdActionCallback(IntPtr manager, int action, int type, int error)
+        private static void AdActionCallback(IntPtr manager, int action, int type, int error, string errorMessage)
         {
             try
             {
-                GetClient(manager).HandleCallback(action, type, error, null, null);
+                GetClient(manager).HandleCallback(action, type, error, errorMessage, null);
             }
             catch (Exception e)
             {

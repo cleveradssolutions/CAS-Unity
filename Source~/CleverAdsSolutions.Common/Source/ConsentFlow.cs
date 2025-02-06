@@ -90,7 +90,7 @@ namespace CAS
         public enum Status
         {
             Unknown = 0,
-            
+
             /// <summary>
             /// User consent obtained. Personalized vs non-personalized undefined.
             /// </summary>
@@ -135,14 +135,25 @@ namespace CAS
             Disabled = 0,
 
             /// <summary>
-            /// Geography appears as in European Economic Area for debug devices.
+            /// Geography appears as in European Economic Area.
             /// </summary>
             EEA = 1,
 
             /// <summary>
             /// Geography appears as not in European Economic Area.
             /// </summary>
-            NotEEA = 2
+            [Obsolete("Renamed to Other")]
+            NotEEA = 2,
+
+            /// <summary>
+            /// Geography appears as in a regulated US State for debug devices.
+            /// </summary>
+            RegulatedUSState = 3,
+
+            /// <summary>
+            /// Geography appears as in a region with no regulation in force.
+            /// </summary>
+            Other = 4
         }
     }
 }

@@ -52,14 +52,6 @@ namespace CAS.Android
                 _managerBridge = builder.Call<AndroidJavaObject>("build",
                     initSettings.targetId, Application.unityVersion, _managerCallback);
             }
-            if (IsEnabledAdFlag(AdFlags.Interstitial) && CASFactory.IsAutoload(AdType.Interstitial))
-            {
-                LoadAd(AdType.Interstitial);
-            }
-            if (IsEnabledAdFlag(AdFlags.Rewarded) && CASFactory.IsAutoload(AdType.Rewarded))
-            {
-                LoadAd(AdType.Rewarded);
-            }
         }
 
         protected override void SetLastPageAdContentNative(string json)

@@ -8,69 +8,80 @@
 #import "CASUPluginUtil.h"
 #import "CASUView.h"
 
+const char * CASUStringToUnity(NSString *str);
 
-@interface CASUView () <CASBannerDelegate>
+@interface CASUView () <CASBannerDelegate, CASImpressionDelegate>
 @property (nonatomic, strong) NSLayoutConstraint *constraintX;
 @property (nonatomic, strong) NSLayoutConstraint *constraintY;
 @end
 
 @implementation CASUView {
-    NSObject<CASStatusHandler> *_lastImpression;
+    NSString *_casID;
+    CASContentInfo *_lastImpression;
     int _horizontalOffset;
     int _verticalOffset;
     int _activePos;
     int _activeSizeId;
     BOOL _requiredRefreshSize;
+    BOOL _adHidden;
 }
 
-- (instancetype)initWithManager:(CASMediationManager *)manager
-                      forClient:(CASViewClientRef *)adViewClient
-                           size:(int)size {
+- (instancetype)initWithCASID:(NSString *)casID forClient:(CASViewClientRef _Nullable *)adViewClient size:(int)size {
     self = [super init];
 
     if (self) {
+        _casID = casID;
         _client = adViewClient;
         _horizontalOffset = 0;
         _verticalOffset = 0;
         _activePos = kCASUPosition_BOTTOM_CENTER;
         _activeSizeId = size;
         _requiredRefreshSize = NO;
-
-        if (size > 0) {
-            _bannerView = [[CASBannerView alloc] initWithAdSize:[self getSizeByCode:size]
-                                                        manager:manager];
-            _bannerView.hidden = YES;
-            _bannerView.adDelegate = self;
-            _bannerView.rootViewController = [CASUPluginUtil unityGLViewController];
-        }
+        _adHidden = YES;
     }
 
     return self;
 }
 
 - (void)present {
+    _adHidden = NO;
+
     if (self.bannerView) {
         self.bannerView.hidden = NO;
     }
 }
 
 - (void)hide {
+    _adHidden = YES;
+
     if (self.bannerView) {
         self.bannerView.hidden = YES;
     }
 }
 
-- (void)attach {
-    if (!self.bannerView) {
+- (void)enable {
+    if (self.bannerView) {
         return;
     }
 
+    UIViewController *unityController = [CASUPluginUtil unityWindow].rootViewController;
+    
+    self.bannerView = [[CASBannerView alloc] initWithCasID:_casID
+                                                      size:[self getSizeByCode:_activeSizeId]
+                                                    origin:CGPointZero];
+    self.bannerView.isAutoloadEnabled = NO;
+    self.bannerView.hidden = _adHidden;
+    self.bannerView.delegate = self;
+    self.bannerView.impressionDelegate = self;
+    self.bannerView.rootViewController = unityController;
+    self.bannerView.translatesAutoresizingMaskIntoConstraints = NO;
+
     [self.bannerView addObserver:self forKeyPath:@"center" options:NSKeyValueObservingOptionNew context:nil];
 
-    UIViewController *unityController = [CASUPluginUtil unityGLViewController];
     UIView *unityView = unityController.view;
-    self.bannerView.translatesAutoresizingMaskIntoConstraints = NO;
     [unityView addSubview:self.bannerView];
+    
+    self.bannerView.isAutoloadEnabled = [CAS.settings getLoadingMode] != CASLoadingManagerModeManual;
 
     UILayoutGuide *safeArea = unityView.safeAreaLayoutGuide;
 
@@ -132,9 +143,15 @@
 }
 
 - (void)load {
-    if (self.bannerView) {
-        [self.bannerView loadNextAd];
+    if (!self.bannerView) {
+        [self enable];
+
+        if (self.bannerView.isAutoloadEnabled) {
+            return;
+        }
     }
+
+    [self.bannerView loadNextAd];
 }
 
 - (BOOL)isReady {
@@ -192,7 +209,6 @@
         return;
     }
 
-#if __has_include("UnityInterface.h")
     extern bool _didResignActive;
 
     if (_didResignActive) {
@@ -200,8 +216,6 @@
         // We shall not call unity API, and definitely not script callbacks, so nothing to do here
         return;
     }
-
-#endif
 
     if (self.rectCallback) {
         CGFloat scale = [UIScreen mainScreen].scale;
@@ -258,9 +272,9 @@
 }
 
     #pragma mark - CASBannerDelegate
-- (void)bannerAdView:(CASBannerView *_Nonnull)adView didFailToLoadWith:(enum CASError)error {
+- (void)bannerAdView:(CASBannerView *)adView didFailWith:(CASError *)error {
     if (self.actionCallback) {
-        self.actionCallback(self.client, kCASUAction_FAILED, (int)error);
+        self.actionCallback(self.client, kCASUAction_FAILED, (int)error.code, CASUStringToUnity(error.description));
     }
 }
 
@@ -271,12 +285,17 @@
     [self refreshPixelsRect:[self calculateRect]];
 
     if (self.actionCallback) {
-        self.actionCallback(self.client, kCASUAction_LOADED, 0);
+        self.actionCallback(self.client, kCASUAction_LOADED, 0, NULL);
     }
 }
 
-- (void)bannerAdView:(CASBannerView *)adView willPresent:(id<CASStatusHandler>)impression {
-#if __has_include("UnityInterface.h")
+- (void)bannerAdViewDidRecordClick:(CASBannerView *)adView {
+    if (self.actionCallback) {
+        self.actionCallback(self.client, kCASUAction_CLICKED, 0, NULL);
+    }
+}
+
+- (void)adDidRecordImpressionWithInfo:(CASContentInfo *)info {
     extern bool _didResignActive;
 
     if (_didResignActive) {
@@ -285,29 +304,17 @@
         return;
     }
 
-#endif
-
     if (self.impressionCallback) {
-        _lastImpression = (NSObject<CASStatusHandler> *)impression;
+        _lastImpression = info;
         self.impressionCallback(self.client, (__bridge CASImpressionRef)_lastImpression);
-    }
-}
-
-- (void)bannerAdViewDidRecordClick:(CASBannerView *)adView {
-    if (self.actionCallback) {
-        self.actionCallback(self.client, kCASUAction_CLICKED, 0);
     }
 }
 
 #pragma mark - Ad Rect
 
-- (UIWindow *)getWindow {
-    return [UIApplication sharedApplication].keyWindow;
-}
-
 - (CGSize)getSafeAreaSize {
     CGRect screenBounds;
-    CGRect safeFrame = [self getWindow].safeAreaLayoutGuide.layoutFrame;
+    CGRect safeFrame = [CASUPluginUtil unityWindow].safeAreaLayoutGuide.layoutFrame;
 
     if (CGSizeEqualToSize(safeFrame.size, CGSizeZero)) {
         screenBounds = [UIScreen mainScreen].bounds;
@@ -374,7 +381,7 @@
         return CGRectZero;
     }
 
-    CGRect screenRect = [self getWindow].bounds;
+    CGRect screenRect = [CASUPluginUtil unityWindow].bounds;
     CGRect safeAreaRect = self.bannerView.superview.safeAreaLayoutGuide.layoutFrame;
 
     if (CGSizeEqualToSize(safeAreaRect.size, CGSizeZero)) {

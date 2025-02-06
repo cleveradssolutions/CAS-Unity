@@ -16,7 +16,7 @@
 
 @interface CASUView : NSObject
 
-- (nonnull instancetype)initWithManager:(CASMediationManager *_Nonnull)manager
+- (nonnull instancetype)initWithCASID:(NSString *_Nonnull)casID
                               forClient:(CASViewClientRef _Nullable *_Nullable)adViewClient
                                    size:(int)size;
 
@@ -26,15 +26,15 @@
 @property (nonatomic, assign, nullable) CASUViewImpressionCallback impressionCallback;
 @property (nonatomic, assign, nullable) CASUViewRectCallback rectCallback;
 
+- (void)enable;
 - (void)present;
 - (void)hide;
-- (void)load;
 - (BOOL)isReady;
-- (void)attach;
-- (void)destroy;
+- (void)load;
 - (void)setPositionCode:(int)code withX:(int)x withY:(int)y;
 - (void)setRefreshInterval:(int)interval;
 - (int)getRefreshInterval;
+- (void)destroy;
 @end
 
 #endif /* ifndef CASUView_h */
