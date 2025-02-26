@@ -43,6 +43,12 @@ const char * CASUStringToUnity(NSString *str);
     return self;
 }
 
+- (void)dealloc {
+    if (self.bannerView) {
+        self.bannerView.delegate = nil;
+    }
+}
+
 - (void)present {
     _adHidden = NO;
 
@@ -65,7 +71,7 @@ const char * CASUStringToUnity(NSString *str);
     }
 
     UIViewController *unityController = [CASUPluginUtil unityWindow].rootViewController;
-    
+
     self.bannerView = [[CASBannerView alloc] initWithCasID:_casID
                                                       size:[self getSizeByCode:_activeSizeId]
                                                     origin:CGPointZero];
@@ -80,7 +86,7 @@ const char * CASUStringToUnity(NSString *str);
 
     UIView *unityView = unityController.view;
     [unityView addSubview:self.bannerView];
-    
+
     self.bannerView.isAutoloadEnabled = [CAS.settings getLoadingMode] != CASLoadingManagerModeManual;
 
     UILayoutGuide *safeArea = unityView.safeAreaLayoutGuide;
@@ -151,11 +157,11 @@ const char * CASUStringToUnity(NSString *str);
         }
     }
 
-    [self.bannerView loadNextAd];
+    [self.bannerView loadAd];
 }
 
 - (BOOL)isReady {
-    return self.bannerView && self.bannerView.isAdReady;
+    return self.bannerView && self.bannerView.isAdLoaded;
 }
 
 - (void)setRefreshInterval:(int)interval {

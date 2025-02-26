@@ -43,6 +43,7 @@ namespace CAS
         Mintegral = 23,
         Pangle = 24,
         YsoNetwork = 25,
+        Prado = 26,
 
         DSPExchange = 30,
         LastPage = 31,
@@ -136,6 +137,7 @@ namespace CAS
                 case AdNetwork.Ogury: return "Og";
                 case AdNetwork.CASExchange: return "Ex";
                 case AdNetwork.YsoNetwork: return "YSO";
+                case AdNetwork.Prado: return "Pr";
                 default: return string.Empty;
             }
         }

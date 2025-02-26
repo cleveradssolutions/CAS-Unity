@@ -73,7 +73,7 @@ const char * CASUStringToUnity(NSString *str);
     [CASUPluginUtil onAdsWillPressent];
 
     if (self.impressionCallback) {
-        self.impression = ad.adInfo;
+        self.impression = ad.contentInfo;
         self.impressionCallback(self.client, kCASUAction_SHOWN, self.adType, (__bridge CASImpressionRef)self.impression);
     }
 }
