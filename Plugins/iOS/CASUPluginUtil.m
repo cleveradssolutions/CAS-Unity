@@ -75,10 +75,20 @@ static BOOL _pauseOnBackground = YES;
 + (void)onAdsDidClosed {
     if (UnityIsPaused()) {
         UnityPause(NO);
-        // need to do this with delay because FMOD restarts audio in AVAudioSessionInterruptionNotification handler
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-            UnityUpdateMuteState([[AVAudioSession sharedInstance] outputVolume] < 0.01f ? 1 : 0);
-        });
+    }
+    
+    // Unity not support change active of [AVAudioSession sharedInstance]
+    // After that audio session can be restored by
+    // UnitySetAudioSessionActive(YES);
+    // but any AudioSources that are already playing will be stoped.
+    
+    // need to do this with delay because FMOD restarts audio in AVAudioSessionInterruptionNotification handler
+    [CASUPluginUtil.sharedInstance performSelector:@selector(updateUnityAudioOutput) withObject:nil afterDelay:0.1];
+}
+
+- (void)updateUnityAudioOutput {
+    if ([[AVAudioSession sharedInstance] outputVolume] > 0.0f) {
+        UnityUpdateMuteState(0);
     }
 }
 
