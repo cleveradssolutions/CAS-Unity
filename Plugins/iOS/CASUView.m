@@ -21,6 +21,12 @@
     int _activePos;
     int _activeSizeId;
     BOOL _requiredRefreshSize;
+    
+    /// Bug in Apple's SKProductViewController which always tries to present in portrait mode.
+    /// In landscape apps, it tries to force the orientation to be portrait, causing the safe areas insets to switch to portrait mode insets even though the SKProductViewController looks like it's presenting in landscape.
+    /// As woraround we ignore Top safearea offset if Portrait Orientation is not Supported.
+    BOOL _isPortraitOrientationSupported;
+
 }
 
 - (instancetype)initWithManager:(CASMediationManager *)manager
@@ -35,13 +41,13 @@
         _activePos = kCASUPosition_BOTTOM_CENTER;
         _activeSizeId = size;
         _requiredRefreshSize = NO;
+        _isPortraitOrientationSupported = NO;
 
         if (size > 0) {
             _bannerView = [[CASBannerView alloc] initWithAdSize:[self getSizeByCode:size]
                                                         manager:manager];
             _bannerView.hidden = YES;
             _bannerView.adDelegate = self;
-            _bannerView.rootViewController = [CASUPluginUtil unityGLViewController];
         }
     }
 
@@ -67,18 +73,32 @@
 
     [self.bannerView addObserver:self forKeyPath:@"center" options:NSKeyValueObservingOptionNew context:nil];
 
-    UIViewController *unityController = [CASUPluginUtil unityGLViewController];
+    UIWindow *unityWindow = [CASUPluginUtil unityWindow];
+    UIViewController *unityController = unityWindow.rootViewController;
     UIView *unityView = unityController.view;
+    self.bannerView.rootViewController = unityController;
     self.bannerView.translatesAutoresizingMaskIntoConstraints = NO;
     [unityView addSubview:self.bannerView];
 
+    UIInterfaceOrientationMask orientation = [unityController supportedInterfaceOrientations];
+
+    _isPortraitOrientationSupported = (orientation & UIInterfaceOrientationMaskPortrait) != 0;
+
+    if (_isPortraitOrientationSupported && (orientation & UIInterfaceOrientationMaskLandscape) != 0) {
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(orientationChangedNotification:)
+                                                     name:UIDeviceOrientationDidChangeNotification
+                                                   object:nil];
+    }
+    
     UILayoutGuide *safeArea = unityView.safeAreaLayoutGuide;
 
     [NSLayoutConstraint activateConstraints:@[
          [NSLayoutConstraint constraintWithItem:self.bannerView
                                       attribute:NSLayoutAttributeTop
                                       relatedBy:NSLayoutRelationGreaterThanOrEqual
-                                         toItem:safeArea
+                                         toItem:_isPortraitOrientationSupported ?
+          safeArea : unityWindow
                                       attribute:NSLayoutAttributeTop
                                      multiplier:1.0
                                        constant:0.0],
@@ -106,17 +126,6 @@
     ]];
 
     [self refreshPositionInSafeArea:safeArea];
-
-
-    UIInterfaceOrientationMask orientation = [unityController supportedInterfaceOrientations];
-
-    if ((orientation & UIInterfaceOrientationMaskPortrait) != 0
-        && (orientation & UIInterfaceOrientationMaskLandscape) != 0) {
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(orientationChangedNotification:)
-                                                     name:UIDeviceOrientationDidChangeNotification
-                                                   object:nil];
-    }
 }
 
 - (void)destroy {
@@ -301,13 +310,9 @@
 
 #pragma mark - Ad Rect
 
-- (UIWindow *)getWindow {
-    return [UIApplication sharedApplication].keyWindow;
-}
-
 - (CGSize)getSafeAreaSize {
     CGRect screenBounds;
-    CGRect safeFrame = [self getWindow].safeAreaLayoutGuide.layoutFrame;
+    CGRect safeFrame = [CASUPluginUtil unityWindow].safeAreaLayoutGuide.layoutFrame;
 
     if (CGSizeEqualToSize(safeFrame.size, CGSizeZero)) {
         screenBounds = [UIScreen mainScreen].bounds;
@@ -332,7 +337,7 @@
         case kCASUPosition_TOP_CENTER:
         case kCASUPosition_TOP_LEFT:
         case kCASUPosition_TOP_RIGHT:
-            self.constraintY = [NSLayoutConstraint constraintWithItem:self.bannerView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:safeArea attribute:NSLayoutAttributeTop multiplier:1.0 constant:_verticalOffset];
+            self.constraintY = [NSLayoutConstraint constraintWithItem:self.bannerView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem: _isPortraitOrientationSupported ? safeArea : [CASUPluginUtil unityWindow] attribute:NSLayoutAttributeTop multiplier:1.0 constant:_verticalOffset];
             break;
 
         case kCASUPosition_BOTTOM_CENTER:
@@ -374,7 +379,7 @@
         return CGRectZero;
     }
 
-    CGRect screenRect = [self getWindow].bounds;
+    CGRect screenRect = [CASUPluginUtil unityWindow].bounds;
     CGRect safeAreaRect = self.bannerView.superview.safeAreaLayoutGuide.layoutFrame;
 
     if (CGSizeEqualToSize(safeAreaRect.size, CGSizeZero)) {

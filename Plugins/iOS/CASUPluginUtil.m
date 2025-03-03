@@ -7,9 +7,10 @@
 
 #import <AVFoundation/AVFoundation.h>
 #import "CASUPluginUtil.h"
-#if __has_include("UnityInterface.h")
-#import "UnityInterface.h"
-#endif
+
+extern void UnityPause(int pause);
+extern void UnityUpdateMuteState(int mute);
+extern int UnityIsPaused(void);
 
 @interface CASUPluginUtil ()
 @property (nonatomic, strong) NSMutableDictionary *internalReferences;
@@ -57,59 +58,35 @@ static BOOL _pauseOnBackground = YES;
     _pauseOnBackground = pause;
 }
 
-+ (UIViewController *)unityGLViewController {
-#if __has_include("UnityInterface.h")
-    UIViewController *controller = UnityGetGLViewController() ? : UnityGetMainWindow().rootViewController;
-
-    if (controller) {
-        return controller;
-    }
-
-#endif
++ (UIWindow *)unityWindow {
     id<UIApplicationDelegate> appDelegate = [UIApplication sharedApplication].delegate;
-
-    UIWindow *window;
-
-    if ([appDelegate respondsToSelector:@selector(window)]) {
-        window = appDelegate.window;
-    }
-
-    if (!window) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        window = [UIApplication sharedApplication].keyWindow;
-#pragma clang diagnostic pop
-    }
-
-    if (window) {
-        return window.rootViewController;
-    }
-
-    return nil;
+    return appDelegate.window;
 }
 
 + (void)onAdsWillPressent {
-#if __has_include("UnityInterface.h")
-
     if ([CASUPluginUtil pauseOnBackground]) {
         UnityPause(YES);
     }
-
-#endif
 }
 
 + (void)onAdsDidClosed {
-#if __has_include("UnityInterface.h")
-
     if (UnityIsPaused()) {
         UnityPause(NO);
-        // need to do this with delay because FMOD restarts audio in AVAudioSessionInterruptionNotification handler
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-            UnityUpdateMuteState([[AVAudioSession sharedInstance] outputVolume] < 0.01f ? 1 : 0);
-        });
     }
+    
+    // Unity not support change active of [AVAudioSession sharedInstance]
+    // After that audio session can be restored by
+    // UnitySetAudioSessionActive(YES);
+    // but any AudioSources that are already playing will be stoped.
+    
+    // need to do this with delay because FMOD restarts audio in AVAudioSessionInterruptionNotification handler
+    [CASUPluginUtil.sharedInstance performSelector:@selector(updateUnityAudioOutput) withObject:nil afterDelay:0.1];
+}
 
-#endif
+- (void)updateUnityAudioOutput {
+    if ([[AVAudioSession sharedInstance] outputVolume] > 0.0f) {
+        UnityUpdateMuteState(0);
+    }
 }
 
 @end

@@ -196,7 +196,7 @@ void CASUValidateIntegration(void) {
 
 void CASUOpenDebugger(CASUManagerRef manager) {
     CASUManager *internalManager = (__bridge CASUManager *)manager;
-    UIViewController *root = [CASUPluginUtil unityGLViewController];
+    UIViewController *root = [CASUPluginUtil unityWindow].rootViewController;
 
     Class testSuit = NSClassFromString(@"CASTestSuit");
 

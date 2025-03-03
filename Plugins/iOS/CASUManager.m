@@ -90,18 +90,18 @@
 - (void)showAd:(int)type {
     switch (type) {
         case kCASUType_INTER:
-            [self.casManager presentInterstitialFromRootViewController:[CASUPluginUtil unityGLViewController]
+            [self.casManager presentInterstitialFromRootViewController:[CASUPluginUtil unityWindow].rootViewController
                                                               callback:_interCallback];
             break;
 
         case kCASUType_REWARD:
-            [self.casManager presentRewardedAdFromRootViewController:[CASUPluginUtil unityGLViewController]
+            [self.casManager presentRewardedAdFromRootViewController:[CASUPluginUtil unityWindow].rootViewController
                                                             callback:_rewardCallback];
             break;
 
         case kCASUType_APP_OPEN:
             self.appOpenAd.contentCallback = self.appOpenCallback;
-            [self.appOpenAd presentFromRootViewController:[CASUPluginUtil unityGLViewController]];
+            [self.appOpenAd presentFromRootViewController:[CASUPluginUtil unityWindow].rootViewController];
             break;
 
         default:

@@ -33,7 +33,6 @@
 - (void)showAd:(int)type;
 - (CASUView *_Nonnull)createViewWithSize:(int)adSize 
                                   client:(CASViewClientRef _Nullable *_Nullable)adViewClient;
-- (void)destroyViewWithSize:(int)adSize;
 
 - (void)setLastPageAdFor:(NSString *_Nullable)content;
 - (void)setAutoShowAdOnAppReturn:(BOOL)enabled;

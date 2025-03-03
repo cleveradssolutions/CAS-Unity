@@ -81,7 +81,7 @@
 }
 
 - (UIViewController *)viewControllerForPresentingAppReturnAd {
-    return [CASUPluginUtil unityGLViewController];
+    return [CASUPluginUtil unityWindow].rootViewController;
 }
 
 - (void)didAdLoaded {

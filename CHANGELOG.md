@@ -1,5 +1,24 @@
 # CAS.AI Unity Plugin Change Log
 
+# [3.9.10] - 2025-03-03
+- Discover the native 3.9.10 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+### Changes
+- The LoopMe network support has been removed. 
+### Bug Fixes
+- Fixed manual loading of ads before SDK is fully initialized.
+- [iOS] Fixed banner ad position issue in landscape orientation after fullscreen ads.
+
+# [3.9.9] - 2025-01-16
+- Discover the native 3.9.9 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+### Changes
+- [iOS] Requires apps to build with Xcode 16.1 or above.
+### Bug Fixes
+- [Android] (From DTExchange SDK update) Fixed usage of Android Advertising ID to be compliant with Google Play Ads policy. #15 
+- [iOS] Fixed a rare `EXC_BAD_ACCESS` crash from `AdMetaData`.
+
+# [3.9.8] - 2024-12-16
+- Discover the native 3.9.8 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
 # [3.9.7] - 2024-11-07
 - Discover the native 3.9.7 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 
