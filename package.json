@@ -1,6 +1,6 @@
 {
     "name": "com.cleversolutions.ads.unity",
-    "version": "4.0.1-rc4",
+    "version": "4.0.1-rc5",
     "displayName": "Clever Ads Solutions for Unity",
     "description": "The CAS.AI Unity plugin allows you to easily monetize your apps for iOS and Android using lot of Ads SDKs in mediation via a unified C# API in Unity.",
     "unity": "2018.4",
