@@ -24,7 +24,7 @@ const char * CASUStringToUnity(NSString *str);
     int _activeSizeId;
     BOOL _requiredRefreshSize;
     BOOL _adHidden;
-    
+
     /// Bug in Apple's SKProductViewController which always tries to present in portrait mode.
     /// In landscape apps, it tries to force the orientation to be portrait, causing the safe areas insets to switch to portrait mode insets even though the SKProductViewController looks like it's presenting in landscape.
     /// As woraround we ignore Top safearea offset if Portrait Orientation is not Supported.
@@ -76,8 +76,7 @@ const char * CASUStringToUnity(NSString *str);
         return;
     }
 
-    UIWindow *unityWindow = [CASUPluginUtil unityWindow];
-    UIViewController *unityController = unityWindow.rootViewController;
+    UIViewController *unityController = [CASUPluginUtil unityWindow].rootViewController;
 
     self.bannerView = [[CASBannerView alloc] initWithCasID:_casID
                                                       size:[self getSizeByCode:_activeSizeId]
@@ -114,7 +113,7 @@ const char * CASUStringToUnity(NSString *str);
                                       attribute:NSLayoutAttributeTop
                                       relatedBy:NSLayoutRelationGreaterThanOrEqual
                                          toItem:_isPortraitOrientationSupported ?
-          safeArea : unityWindow
+          safeArea : unityView
                                       attribute:NSLayoutAttributeTop
                                      multiplier:1.0
                                        constant:0.0],
@@ -141,7 +140,7 @@ const char * CASUStringToUnity(NSString *str);
                                        constant:0.0]
     ]];
 
-    [self refreshPositionInSafeArea:safeArea];
+    [self refreshPosition];
 }
 
 - (void)destroy {
@@ -192,8 +191,7 @@ const char * CASUStringToUnity(NSString *str);
     _verticalOffset = y;
 
     if (self.bannerView) {
-        UILayoutGuide *safeArea = self.bannerView.superview.safeAreaLayoutGuide;
-        [self refreshPositionInSafeArea:safeArea];
+        [self refreshPosition];
     }
 }
 
@@ -341,7 +339,14 @@ const char * CASUStringToUnity(NSString *str);
 }
 
 /// Attention. NSLayoutConstraint with `[self getWindow].safeAreaLayoutGuide` can be lost (removed) after Window refreshed (Interstitial ad), use `superview.safeAreaLayoutGuide` instead.
-- (void)refreshPositionInSafeArea:(UILayoutGuide *)safeArea {
+- (void)refreshPosition {
+    if (!self.bannerView) {
+        return;
+    }
+
+    UIView *superView = self.bannerView.superview;
+    UILayoutGuide *safeArea = superView.safeAreaLayoutGuide;
+
     if (!safeArea) {
         return;
     }
@@ -354,7 +359,7 @@ const char * CASUStringToUnity(NSString *str);
         case kCASUPosition_TOP_CENTER:
         case kCASUPosition_TOP_LEFT:
         case kCASUPosition_TOP_RIGHT:{
-            self.constraintY = [NSLayoutConstraint constraintWithItem:self.bannerView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem: _isPortraitOrientationSupported ? safeArea : [CASUPluginUtil unityWindow] attribute:NSLayoutAttributeTop multiplier:1.0 constant:_verticalOffset];
+            self.constraintY = [NSLayoutConstraint constraintWithItem:self.bannerView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:_isPortraitOrientationSupported ? safeArea : superView attribute:NSLayoutAttributeTop multiplier:1.0 constant:_verticalOffset];
             break;
         }
 
