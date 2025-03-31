@@ -98,7 +98,7 @@
                                       attribute:NSLayoutAttributeTop
                                       relatedBy:NSLayoutRelationGreaterThanOrEqual
                                          toItem:_isPortraitOrientationSupported ?
-          safeArea : unityWindow
+          safeArea : unityView
                                       attribute:NSLayoutAttributeTop
                                      multiplier:1.0
                                        constant:0.0],
@@ -337,7 +337,7 @@
         case kCASUPosition_TOP_CENTER:
         case kCASUPosition_TOP_LEFT:
         case kCASUPosition_TOP_RIGHT:
-            self.constraintY = [NSLayoutConstraint constraintWithItem:self.bannerView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem: _isPortraitOrientationSupported ? safeArea : [CASUPluginUtil unityWindow] attribute:NSLayoutAttributeTop multiplier:1.0 constant:_verticalOffset];
+            self.constraintY = [NSLayoutConstraint constraintWithItem:self.bannerView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem: _isPortraitOrientationSupported ? safeArea : self.bannerView.superview attribute:NSLayoutAttributeTop multiplier:1.0 constant:_verticalOffset];
             break;
 
         case kCASUPosition_BOTTOM_CENTER:
