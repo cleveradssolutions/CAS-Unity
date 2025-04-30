@@ -7,7 +7,6 @@
 // Unity 2020.1-2022.1 use Gradle Wrapper 6.1.1 and plugin 4.0.1
 
 //#define CAS_DISABLE_PACKAGING_OPTIONS
-//#define CAS_DISABLE_VALIDATE_DEPS
 
 #if !UNITY_2022_2_OR_NEWER
 // Known issue with jCenter repository where repository is not responding
@@ -33,16 +32,9 @@ namespace CAS.UEditor
     public class CASPostGenerateGradle : IPostGenerateGradleAndroidProject
     {
         private const string buildOptionsFile = "cas_android_build_options.gradle";
-        private const string validateGMAFile = "cas_android_validate_gma.gradle";
 
         private readonly XNamespace androidNamespace = "http://schemas.android.com/apk/res/android";
         private readonly Regex versionRegex = new Regex("\\b\\d+(?:\\.\\d+){1,2}\\b");
-
-#if UNITY_2022_3_OR_NEWER
-        private Version gradlePluginVersion = new Version(7, 1, 2);
-#else
-        private Version gradlePluginVersion = new Version(4, 0, 1);
-#endif
 
         public int callbackOrder { get { return 1000; } }
 
@@ -57,7 +49,7 @@ namespace CAS.UEditor
 
             UpdateGradleWrapper(path, editorSettings);
             UpdateRootGradleBuild(path, editorSettings);
-            UpdateGradleBuild(path, gradlePluginVersion);
+            UpdateGradleBuild(path);
             UpdateGradleProperties(path);
             UpdateAppManifest(path, initSettings, editorSettings, depManager);
             AddCASConfigResources(path, initSettings);
@@ -101,9 +93,17 @@ namespace CAS.UEditor
             if (File.Exists(Utils.projectGradlePath))
             {
                 var lines = File.ReadAllLines(Utils.projectGradlePath);
-                return FindGradlePluginVersion(lines);
+                var version = FindGradlePluginVersion(lines);
+                if (version != null)
+                {
+                    return version;
+                }
             }
-            return gradlePluginVersion;
+#if UNITY_2022_3_OR_NEWER
+            return new Version(7, 1, 2);
+#else
+            return new Version(4, 0, 1);
+#endif
         }
 
         private System.Version FindGradlePluginVersion(string[] fileLines)
@@ -127,8 +127,7 @@ namespace CAS.UEditor
                 {
                     try
                     {
-                        gradlePluginVersion = new System.Version(versionRegex.Match(fileLines[i]).Value);
-                        break;
+                        return new System.Version(versionRegex.Match(fileLines[i]).Value);
                     }
                     catch (Exception e)
                     {
@@ -136,7 +135,7 @@ namespace CAS.UEditor
                     }
                 }
             }
-            return gradlePluginVersion;
+            return null;
         }
 
         private void UpdateRootGradleBuild(string path, CASEditorSettings editorSettings)
@@ -175,7 +174,6 @@ namespace CAS.UEditor
             {
                 Utils.Log("Updated Android Gradle Plugin version to: " + newVersion.ToString() +
                                    " from: " + currVersion.ToString() + "\nIn file: " + gradlePath);
-                gradlePluginVersion = newVersion;
             }
 
             for (var i = 0; i < lines.Length; i++)
@@ -198,7 +196,7 @@ namespace CAS.UEditor
                 File.WriteAllLines(gradlePath, lines);
         }
 
-        private void UpdateGradleBuild(string path, Version gradlePluginVersion)
+        private void UpdateGradleBuild(string path)
         {
             var gradlePath = Path.Combine(path, "build.gradle");
             if (!File.Exists(gradlePath))
@@ -218,25 +216,6 @@ namespace CAS.UEditor
                 {
                     File.Copy(optionsPath, Path.Combine(path, buildOptionsFile), true);
                     mainGradle += Environment.NewLine + applyBuildOptions + Environment.NewLine;
-                    gradleChanged = true;
-                }
-            }
-#endif
-
-#if !CAS_DISABLE_VALIDATE_DEPS
-            const string applyValidateGMA = "gradle.projectsEvaluated { apply from: '" + validateGMAFile + "' }";
-
-            // if Android Gradle Plugin version is 4.2.2+
-            var isSupportNewGradleTag = gradlePluginVersion.Major > 4
-                    || (gradlePluginVersion.Major == 4 && gradlePluginVersion.Minor >= 2 && gradlePluginVersion.Build >= 2);
-
-            if (!isSupportNewGradleTag && !mainGradle.Contains(applyValidateGMA))
-            {
-                var validationPath = Utils.GetPluginComponentPath(validateGMAFile);
-                if (validationPath != null)
-                {
-                    File.Copy(validationPath, Path.Combine(path, validateGMAFile), true);
-                    mainGradle += Environment.NewLine + applyValidateGMA + Environment.NewLine;
                     gradleChanged = true;
                 }
             }
@@ -267,7 +246,7 @@ namespace CAS.UEditor
             }
 
             properties["android.useAndroidX"] = "true";
-            
+
             //properties["android.enableJetifier"] = "true";
 #if !UNITY_2022_2_OR_NEWER
             // Unity 6 uses Gradle version 8.4, but enableDexingArtifactTransform was removed in version 8.2.
@@ -385,13 +364,6 @@ namespace CAS.UEditor
             {
                 UpdateMetaData(appElem, metaDataElems, "com.google.android.gms.ads.APPLICATION_ID", googleAppId);
             }
-
-            if (editorSettings.optimizeGADLoading)
-            {
-                UpdateMetaData(appElem, metaDataElems, "com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION", "true");
-                UpdateMetaData(appElem, metaDataElems, "com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING", "true");
-            }
-
             manifest.Save(manifestPath);
         }
 

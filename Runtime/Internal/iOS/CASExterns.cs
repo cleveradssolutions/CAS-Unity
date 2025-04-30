@@ -26,7 +26,7 @@ namespace CAS.iOS
     internal class CASExterns
     {
         #region CAS Mediation Manager callbacks
-        internal delegate void CASUInitializationCompleteCallback(CASManagerClientRef manager, string error, string countryCode, bool withConsent, bool isTestMode);
+        internal delegate void CASUInitializationCompleteCallback(CASManagerClientRef manager, string error, string countryCode, bool withConsent, bool isTestMode, int consentFlowStatus);
 
         internal delegate void CASUActionCallback(CASManagerClientRef manager, int action, int type, int error, string errorMessage);
         internal delegate void CASUImpressionCallback(CASManagerClientRef manager, int action, int type, CASImpressionRef impression);
@@ -172,7 +172,7 @@ namespace CAS.iOS
         internal static extern bool CASUIsActiveMediationNetwork(int net);
 
         [DllImport("__Internal")]
-        internal static extern void CASUOpenDebugger(CASUManagerRef manager);
+        internal static extern void CASUOpenDebugger(string casId);
         #endregion
 
         #region CAS Manager
@@ -349,7 +349,6 @@ namespace CAS.iOS
                 consentFlow = new ConsentFlow();
 
             consentFlow.OnResult += flow.OnResult;
-            consentFlow.OnCompleted += flow.OnCompleted;
         }
 
         [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUConsentFlowCompletion))]

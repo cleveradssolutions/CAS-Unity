@@ -95,13 +95,6 @@ namespace CAS
             "also Development build work same.")]
         IManagerBuilder WithTestAdMode(bool test);
 
-        
-        
-        /// <summary>
-        /// Same as <see cref="WithCompletionListener(CASInitCompleteEvent)"/>
-        /// </summary>
-        IManagerBuilder WithInitListener(InitCompleteAction listener);
-
         /// <summary>
         /// Same as <see cref="WithCASId(int)"/> method. 
         /// </summary>

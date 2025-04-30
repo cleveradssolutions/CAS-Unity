@@ -111,7 +111,7 @@ namespace CAS.iOS
         [UnityEngine.Scripting.Preserve]
         public bool TryOpenDebugger()
         {
-            CASExterns.CASUOpenDebugger(_managerRef);
+            CASExterns.CASUOpenDebugger(managerID);
             return true;
         }
 
@@ -147,11 +147,11 @@ namespace CAS.iOS
 
 
         [AOT.MonoPInvokeCallback(typeof(CASExterns.CASUInitializationCompleteCallback))]
-        private static void InitializationCompleteCallback(IntPtr manager, string error, string countryCode, bool withConsent, bool isTestMode)
+        private static void InitializationCompleteCallback(IntPtr manager, string error, string countryCode, bool withConsent, bool isTestMode, int consentFlowStatus)
         {
             try
             {
-                GetClient(manager).OnInitialized(error, countryCode, withConsent, isTestMode);
+                GetClient(manager).OnInitialized(error, countryCode, withConsent, isTestMode, consentFlowStatus);
             }
             catch (Exception e)
             {

@@ -1,5 +1,29 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.0.2] - 2025-04-30
+- Discover the native 4.0.2 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+Increased the minimum Android API level to 23.
+- `AdType.AppOpen` can now be disabled like other formats. It is disabled by default, so make sure to enable it if you plan to use it.
+- Added new adapter for YSO Network.
+- Added new adapter for Prado Ads. Contact our manager if you want to try a new ad network. 
+- Added `DebugGeography.RegulatedUSState` option to support testing with regulated US states.
+- Added `InitialConfig.consentFlowStatus` to get same status from `ConsentFlow.WithCompletionListener`.
+- Added automatic initialization of the Tenjin SDK when you provide the API key in the CAS SDK initialization parameters. The CAS SDK will handle the `Connect()`, `OptIn()`, or `OptOut()` functions calls for Tenjin SDK. 
+```csharp
+CAS.MobileAds.BuildManager()
+   .WithMediationExtras("tenjin_key", <TENJIN_SDK_KEY>)
+   ...
+```
+- `AdError` is now a struct instead of an enum, and its message field provides more detailed error information. There can be multiple detailed messages for a single error code. New errors have been added: AdError.Timeout and AdError.NotInitialized.
+- Added `IMediationManager.DisposeAd(AdType)` method for freeing up memory from loaded ads. After calling this method, use `IMediationManager.LoadAd(AdType)` to reload ads or to continue automatic ad loading.
+- Deprecated all `LoadingManagerMode` except `Manual` and `Auto (Optimal)`.
+- Removed `ConsentFlow.WithCompletionListener` with `Action`, please use listener with `Action<ConsentFlow.Status>` instead.
+- Removed `IManagerBuilder.WithInitListener`, please use `WithCompletionListener` instead.
+- Removed `Include Ads SDK versions to Gradle/Podfile` option from settings window.
+- [Android] Removed `Optimize Google Ad loading` option from settings window and is enabled by default by Google Mobile Ads SDK v.24.0.0.
+- [Android] Removed "Remove property tag from GMA SDK" feature from Google Mobile Ads Editor Settings as this tag has been removed from Google Mobile Ads SDK v.24.0.0 Android Manifest.
+- Update External Dependency Manager for Unity to 1.2.185.
+
 # [3.9.10] - 2025-03-03
 - Discover the native 3.9.10 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 ### Changes

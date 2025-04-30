@@ -66,12 +66,14 @@ namespace CAS.Android
                     string countryCode;
                     bool isConsentRequired;
                     bool isTestMode;
+                    int consentFlowStatus;
                     try
                     {
                         initError = args[1] as string;
                         countryCode = args[2] as string;
                         isConsentRequired = (bool)args[3];
                         isTestMode = (bool)args[4];
+                        consentFlowStatus = (int)args[5];
                     }
                     catch (Exception e)
                     {
@@ -79,7 +81,7 @@ namespace CAS.Android
                     }
                     CASJavaBridge.ExecuteEvent(() =>
                     {
-                        ((CASManagerClient)_client).OnInitialized(initError, countryCode, isConsentRequired, isTestMode);
+                        ((CASManagerClient)_client).OnInitialized(initError, countryCode, isConsentRequired, isTestMode, consentFlowStatus);
                     });
                     break;
                 case AdActionCode.VIEW_RECT:
@@ -146,12 +148,10 @@ namespace CAS.Android
 
     internal class CASConsentFlowCallback : AndroidJavaProxy
     {
-        private Action OnCompleted;
         private Action<ConsentFlow.Status> OnResult;
 
-        internal CASConsentFlowCallback(Action<ConsentFlow.Status> OnResult, Action OnCompleted) : base(CASJavaBridge.SimpleCallbackClass)
+        internal CASConsentFlowCallback(Action<ConsentFlow.Status> OnResult) : base(CASJavaBridge.SimpleCallbackClass)
         {
-            this.OnCompleted = OnCompleted;
             this.OnResult = OnResult;
         }
 
@@ -180,8 +180,6 @@ namespace CAS.Android
                     }
                 }
             }
-            CASJavaBridge.ExecuteEvent(OnCompleted);
-            OnCompleted = null;
             return null;
         }
     }
@@ -198,8 +196,8 @@ namespace CAS.Android
                 obj.Call("forceTesting");
             if (!string.IsNullOrEmpty(flow.privacyPolicyUrl))
                 obj.Call("withPrivacyPolicy", flow.privacyPolicyUrl);
-            if (flow.OnResult != null || flow.OnCompleted != null)
-                obj.Call("withDismissListener", new CASConsentFlowCallback(flow.OnResult, flow.OnCompleted));
+            if (flow.OnResult != null)
+                obj.Call("withDismissListener", new CASConsentFlowCallback(flow.OnResult));
         }
 
         internal void Show(bool ifRequired)

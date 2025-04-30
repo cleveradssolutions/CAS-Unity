@@ -35,7 +35,6 @@ namespace CAS
     {
         public bool isEnabled;
         public string privacyPolicyUrl = null;
-        public Action OnCompleted = null;
         public Action<ConsentFlow.Status> OnResult = null;
         public DebugGeography debugGeography = DebugGeography.EEA;
 
@@ -64,15 +63,6 @@ namespace CAS
         public ConsentFlow WithCompletionListener(Action<ConsentFlow.Status> result)
         {
             OnResult += result;
-            return this;
-        }
-
-        /// <summary>
-        /// Set a listener to be invoked when the dialog is dismissed.
-        /// </summary>
-        public ConsentFlow WithCompletionListener(Action complete)
-        {
-            OnCompleted += complete;
             return this;
         }
 

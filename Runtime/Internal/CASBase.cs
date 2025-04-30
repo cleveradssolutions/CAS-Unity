@@ -35,7 +35,6 @@ namespace CAS
         public string managerID { get; private set; }
         public bool isTestAdMode { get; private set; }
         public CASInitCompleteEvent initCompleteEvent { get; set; }
-        public InitCompleteAction initCompleteAction { get; set; }
         public InitialConfiguration initialConfig { get; set; }
 
         #region Ad Events
@@ -92,7 +91,6 @@ namespace CAS
             isTestAdMode = initSettings.IsTestAdMode();
             enabledFormats = initSettings.allowedAdFlags;
             initCompleteEvent = initSettings.initListener;
-            initCompleteAction = initSettings.initListenerDeprecated;
         }
 
         private LastPageAdContent _lastPageAdContent = null;
@@ -187,17 +185,15 @@ namespace CAS
             adViews.Remove(view);
         }
 
-        internal void OnInitialized(string error, string countryCode, bool isConsentRequired, bool testMode)
+        internal void OnInitialized(string error, string countryCode, bool isConsentRequired, bool testMode, int consentFlowStatus)
         {
-            initialConfig = new InitialConfiguration(error, this, countryCode, isConsentRequired);
+            initialConfig = new InitialConfiguration(error, this, countryCode, isConsentRequired, (ConsentFlow.Status)consentFlowStatus);
 
             isTestAdMode = testMode;
             try
             {
                 if (initCompleteEvent != null)
                     initCompleteEvent(initialConfig);
-                if (initCompleteAction != null)
-                    initCompleteAction(initialConfig.error == null, initialConfig.error);
             }
             catch (Exception e)
             {
@@ -207,7 +203,6 @@ namespace CAS
             if (error != InitializationError.NoConnection)
             {
                 initCompleteEvent = null;
-                initCompleteAction = null;
             }
 
             if (MobileAds.settings.loadingMode != LoadingManagerMode.Manual)

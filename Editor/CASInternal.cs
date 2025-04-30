@@ -385,16 +385,6 @@ namespace CAS.UEditor
             HelpStyles.Devider();
             EditorGUILayout.BeginHorizontal();
 
-            string sdkVersion = null;
-            for (int i = 0; i < libs.Count; i++)
-            {
-                if (libs[i].version != version)
-                {
-                    sdkVersion = libs[i].version;
-                    break;
-                }
-            }
-
             string netTitle = " " + name;
             if (altName.Length != 0)
                 netTitle += "/" + altName;
@@ -404,8 +394,6 @@ namespace CAS.UEditor
                 EditorGUI.BeginDisabledGroup((!installed && locked) || (installed && isRequired && !locked && !isNewer));
                 if (!GUILayout.Toggle(true, netTitle, GUILayout.ExpandWidth(false)))
                     DisableDependencies(platform, mediation);
-                if (sdkVersion != null)
-                    GUILayout.Label(sdkVersion, EditorStyles.centeredGreyMiniLabel, GUILayout.ExpandWidth(false));
                 OnLabelGUI(labels);
                 GUILayout.FlexibleSpace();
 
@@ -443,15 +431,13 @@ namespace CAS.UEditor
             }
             else
             {
-                EditorGUI.BeginDisabledGroup(notSupported || libs.Count == 0);
+                EditorGUI.BeginDisabledGroup(notSupported);
 
                 if (GUILayout.Toggle(false, netTitle, GUILayout.ExpandWidth(false)))
                 {
                     ActivateDependencies(platform, mediation);
                     GUIUtility.ExitGUI();
                 }
-                if (sdkVersion != null)
-                    GUILayout.Label(sdkVersion, EditorStyles.centeredGreyMiniLabel, GUILayout.ExpandWidth(false));
                 OnLabelGUI(labels);
                 GUILayout.FlexibleSpace();
                 GUILayout.Label("none", mediation.columnWidth);
@@ -476,11 +462,7 @@ namespace CAS.UEditor
             }
             else
             {
-                var url = id.GetPrivacyPolicy();
-                if (string.IsNullOrEmpty(url))
-                    GUILayout.Space(25);
-                else if (GUILayout.Button(HelpStyles.helpIconContent, EditorStyles.label, GUILayout.Width(20)))
-                    Application.OpenURL(url);
+                GUILayout.Space(25);
             }
             EditorGUILayout.EndHorizontal();
             if (contains.Length > 0)
@@ -488,11 +470,11 @@ namespace CAS.UEditor
                 var footerText = new StringBuilder();
                 for (int i = 0; i < contains.Length; i++)
                 {
-                    if (contains[i] != adBaseName)
+                    if (contains[i] != adBase)
                     {
                         if (footerText.Length > 0)
                             footerText.Append(", ");
-                        footerText.Append(contains[i]);
+                        footerText.Append(mediation.Find(contains[i]).name);
                     }
                 }
 
@@ -530,11 +512,6 @@ namespace CAS.UEditor
 
         public void ActivateDependencies(BuildTarget platform, DependencyManager mediation = null)
         {
-            if (libs.Count == 0)
-            {
-                Debug.LogError(Utils.logTag + name + " have no dependencies. Please try reimport CAS package.");
-                return;
-            }
             if (locked)
             {
                 return;
@@ -551,8 +528,11 @@ namespace CAS.UEditor
                        .AppendLine("<dependencies>")
                        .Append("  <").Append(depTagName).Append("s>").AppendLine();
 
-                var includeVersions = CASEditorSettings.Load().includeAdDependencyVersions;
-
+                if (libs.Length == 0)
+                {
+                    builder.Append("    <!-- ").Append(name).Append(" version=\"").Append(version).Append("\" -->").AppendLine();
+                }
+                
                 var sourcesBuilder = new StringBuilder();
                 AppendSources(platform, sourcesBuilder, mediation);
 
@@ -564,16 +544,7 @@ namespace CAS.UEditor
                     builder.Append("    </").Append(sourcesTagName).Append('>').AppendLine();
                 }
 
-                // EDM4U have a bug.
-                // Dependencies that will be added For All Targets must be at the end of the list of dependencies.
-                // Otherwise, those dependencies that should not be for all targets will be tagged for all targets.
-                if (includeVersions)
-                    AppendSDK(platform, mediation, builder, false);
-
-                if (libs.Count > 0)
-                    AppendDependency(mediation, libs[0], platform, builder);
-
-                AppendSDK(platform, mediation, builder, true);
+                AppendSDK(platform, mediation, builder);
 
                 builder.Append("  </").Append(depTagName).Append("s>").AppendLine()
                        .AppendLine("</dependencies>");
@@ -600,12 +571,11 @@ namespace CAS.UEditor
             }
         }
 
-        private void AppendSDK(BuildTarget platform, DependencyManager mediation, StringBuilder builder, bool allowAllTargets)
+        private void AppendSDK(BuildTarget platform, DependencyManager mediation, StringBuilder builder)
         {
-            for (int i = 1; i < libs.Count; i++)
+            for (int i = 0; i < libs.Length; i++)
             {
-                if (allowAllTargets == libs[i].embed)
-                    AppendDependency(mediation, libs[i], platform, builder);
+                AppendDependency(mediation, libs[i], platform, builder);
             }
 
             if (mediation == null)
@@ -615,7 +585,7 @@ namespace CAS.UEditor
             {
                 var item = mediation.Find(contains[i]);
                 if (item != null)
-                    item.AppendSDK(platform, mediation, builder, allowAllTargets);
+                    item.AppendSDK(platform, mediation, builder);
             }
         }
 

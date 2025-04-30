@@ -11,7 +11,6 @@ namespace CAS
     public delegate void CASEventWithMeta(AdMetaData meta);
 
     public delegate void CASInitCompleteEvent(InitialConfiguration config);
-    public delegate void InitCompleteAction(bool success, string error);
 
     public class WikiPageAttribute : Attribute
     {

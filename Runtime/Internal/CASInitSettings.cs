@@ -18,7 +18,7 @@ namespace CAS
         public bool testAdMode = false;
         public string[] managerIds = { "demo" };
         public AdFlags allowedAdFlags = AdFlags.None;
-        public Audience audienceTagged = Audience.Children;
+        public Audience audienceTagged = Audience.Mixed;
         
         [Obsolete("No longer supported")]
         public AdSize bannerSize = 0;
@@ -39,7 +39,6 @@ namespace CAS
         internal string targetId;
         internal string userID;
         internal Dictionary<string, string> extras;
-        internal InitCompleteAction initListenerDeprecated;
         internal CASInitCompleteEvent initListener;
         internal ConsentFlow consentFlow;
 #pragma warning restore 649
@@ -71,12 +70,6 @@ namespace CAS
                 throw new ArgumentNullException("index", "Manager ID is empty. " +
                     "Please use Assets/CleverAdsSolutions/Settings menu and set manager ID.");
             targetId = managerIds[index];
-            return this;
-        }
-
-        public IManagerBuilder WithInitListener(InitCompleteAction listener)
-        {
-            initListenerDeprecated = listener;
             return this;
         }
 

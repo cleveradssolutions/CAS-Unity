@@ -2,7 +2,7 @@
 //  CSAUTypes.h
 //  CASUnityPlugin
 //
-//  Copyright © 2024 CleverAdsSolutions LTD, CAS.AI. All rights reserved.
+//  Copyright © 2025 CleverAdsSolutions LTD, CAS.AI. All rights reserved.
 //
 
 #ifndef CASUTypes_h
@@ -26,7 +26,8 @@ typedef void (*CASUInitializationCompleteCallback)(CASManagerClientRef *manager,
                                                    const char          *error,
                                                    const char          *countryCode,
                                                    BOOL                isConsentRequired,
-                                                   BOOL                isTestMode);
+                                                   BOOL                isTestMode,
+                                                   int                 consentFlowStatus);
 
 typedef void (*CASUActionCallback)(CASManagerClientRef *manager,
                                    int                 action,
@@ -39,9 +40,9 @@ typedef void (*CASUImpressionCallback)(CASManagerClientRef *manager, int action,
 
 // MARK: - CAS AdView callbacks
 typedef void (*CASUViewActionCallback)(CASViewClientRef *view,
-                                       int action,
-                                       int error,
-                                       const char          *errorMessage);
+                                       int              action,
+                                       int              error,
+                                       const char       *errorMessage);
 typedef void (*CASUViewImpressionCallback)(CASViewClientRef *view, CASImpressionRef impression);
 typedef void (*CASUViewRectCallback)(CASViewClientRef *view, float x, float y, float width, float height);
 
@@ -87,7 +88,7 @@ typedef void (*CASUConsentFlowCompletion)(int status);
 #define kCASUSize_FULL_WIDTH        6
 #define kCASUSize_LINE              7
 
-#define kCASULOGTAG @"[CAS.AI-UB] "
-#define kCASUMETHOD_NOT_SUPPORT @"Unity bridge not support method with AdType index: "
+#define kCASULOGTAG                 @"[CAS.AI-UB] "
+#define kCASUMETHOD_NOT_SUPPORT     @"Unity bridge not support method with AdType index: "
 
 #endif // ifndef CASUTypes_h

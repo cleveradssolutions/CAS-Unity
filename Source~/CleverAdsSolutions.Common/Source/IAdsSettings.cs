@@ -214,8 +214,5 @@ namespace CAS
         /// </summary>
         [Obsolete("Use CAS.MobileAds.targetingOptions.locationCollectionEnabled instead.")]
         bool trackLocationEnabled { get; set; }
-
-        [Obsolete("No longer in use")]
-        bool analyticsCollectionEnabled { get; set; }
     }
 }

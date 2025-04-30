@@ -235,11 +235,6 @@
             The <see cref="T:CAS.ConsentFlow.Status"/> with which the dialog is dismissed will be passed to the listener function.
             </summary>
         </member>
-        <member name="M:CAS.ConsentFlow.WithCompletionListener(System.Action)">
-            <summary>
-            Set a listener to be invoked when the dialog is dismissed.
-            </summary>
-        </member>
         <member name="M:CAS.ConsentFlow.WithDebugGeography(CAS.ConsentFlow.DebugGeography)">
             <summary>
             Sets the debug geography for testing purposes.
@@ -688,11 +683,6 @@
             <para><b>Don't forget to set False test ad mode to release application.</b></para>
             </summary>
         </member>
-        <member name="M:CAS.IManagerBuilder.WithInitListener(CAS.InitCompleteAction)">
-            <summary>
-            Same as <see cref="M:CAS.IManagerBuilder.WithCompletionListener(CAS.CASInitCompleteEvent)"/>
-            </summary>
-        </member>
         <member name="M:CAS.IManagerBuilder.WithManagerIdAtIndex(System.Int32)">
             <summary>
             Same as <see cref="M:CAS.IManagerBuilder.WithCASId(System.Int32)"/> method. 
@@ -982,6 +972,11 @@
         <member name="F:CAS.InitialConfiguration.isConsentRequired">
             <summary>
             The consent must be requested from the user.
+            </summary>
+        </member>
+        <member name="F:CAS.InitialConfiguration.consentFlowStatus">
+            <summary>
+            Get the consent flow status.
             </summary>
         </member>
         <member name="F:CAS.InitializationError.NoConnection">

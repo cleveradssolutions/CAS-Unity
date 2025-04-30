@@ -2,7 +2,7 @@
 //  CASUSettings.h
 //  CASUnityPlugin
 //
-//  Copyright © 2024 CleverAdsSolutions LTD, CAS.AI. All rights reserved.
+//  Copyright © 2025 CleverAdsSolutions LTD, CAS.AI. All rights reserved.
 //
 
 #import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
@@ -202,52 +202,21 @@ void CASUValidateIntegration(void) {
     [CAS validateIntegration];
 }
 
-void CASUOpenDebugger(CASUManagerRef manager) {
-    CASUManager *internalManager = (__bridge CASUManager *)manager;
+void CASUOpenDebugger(const char *casId) {
     UIViewController *root = [CASUPluginUtil unityWindow].rootViewController;
 
     Class testSuit = NSClassFromString(@"CASTestSuit");
 
     if (testSuit) {
-        SEL presentSelector = NSSelectorFromString(@"presentFromController:manager:");
+        SEL presentSelector = NSSelectorFromString(@"presentFromController:forCasID:");
 
         if ([testSuit respondsToSelector:presentSelector]) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
             [testSuit performSelector:presentSelector
                            withObject:root
-                           withObject:[internalManager casManager]];
+                           withObject:CASUStringFromUnity(casId)];
 #pragma clang diagnostic pop
-            return;
-        }
-    }
-
-    UIStoryboard *storyboard =
-        [UIStoryboard storyboardWithName:@"CASTestSuit"
-                                  bundle:[NSBundle bundleForClass:[CASUManager class]]];
-
-    if (!storyboard) {
-        storyboard = [UIStoryboard storyboardWithName:@"CASDebugger"
-                                               bundle:[NSBundle bundleForClass:[CASUManager class]]];
-    }
-
-    if (storyboard) {
-        UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:@"DebuggerController"];
-
-        if (vc) {
-            SEL selector = NSSelectorFromString(@"setTargetManager:");
-
-            if (![vc respondsToSelector:selector]) {
-                NSLog(@"[CAS.AI] Framework bridge cant connect to CASTestSuit");
-                return;
-            }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-            [vc performSelector:selector withObject:[internalManager casManager]];
-#pragma clang diagnostic pop
-            vc.modalPresentationStyle = UIModalPresentationFullScreen;
-            [root presentViewController:vc animated:YES completion:nil];
             return;
         }
     }
@@ -346,7 +315,8 @@ CASUManagerRef CASUBuildManager(CASManagerClientRef                *client,
                    CASUStringToUnity(config.error),
                    CASUStringToUnity(config.countryCode),
                    config.isConsentRequired,
-                   config.manager.isDemoAdMode);
+                   config.manager.isDemoAdMode,
+                   (int)config.consentFlowStatus);
         }];
     }
 

@@ -30,8 +30,5 @@ namespace CAS
         /// </summary>
         [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Additional-Meta-AudienceNetwork-steps")]
         public static string facebookDataProcessing = "FB_dp";
-
-        [Obsolete("Not longer supported")]
-        public static void SetGlobalEtras(Dictionary<string, string> extras) { }
     }
 }

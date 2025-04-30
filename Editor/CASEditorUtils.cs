@@ -20,10 +20,8 @@ namespace CAS.UEditor
         public const string rootCASFolderPath = "Assets/CleverAdsSolutions";
         public const string editorFolderPath = rootCASFolderPath + "/Editor";
 
-        // UNITY_2021_2_OR_NEWER use minumum API 21
-        // UNITY_2021_3_OR_NEWER use minumum API 22
         // 2021.3.41 and 2022.3.38f use minimum API 24
-        public const int minAndroidVersion = 21;
+        public const int minAndroidVersion = 23;
         public const int targetAndroidVersion = 34;
 
         // UNITY_2021_3_OR_NEWER use minimum iOS version 12
@@ -49,7 +47,7 @@ namespace CAS.UEditor
 
         public static System.Version minEDM4UVersion
         {
-            get { return new System.Version(1, 2, 176); }
+            get { return new System.Version(1, 2, 183); }
         }
 
         private static System.Version edmVersion;
@@ -147,6 +145,10 @@ namespace CAS.UEditor
             {
                 case Dependency.adBase:
                     return Dependency.adBaseName;
+                case Dependency.adsOptimal:
+                    return Dependency.adsOptimalName;
+                case Dependency.adsFamilies:
+                    return Dependency.adsFamiliesName;
                 case AdNetwork.DTExchange:
                     return "DTExchange";
                 case AdNetwork.LiftoffMonetize:
@@ -210,8 +212,9 @@ namespace CAS.UEditor
 
         public static string GetDependencyName(string name, BuildTarget platform)
         {
-            var platformPrefix = name == Dependency.adBaseName ? "" : platform.ToString();
-            return "CAS" + platformPrefix + name + "Dependencies";
+            if (name == Dependency.adBaseName)
+                return "CAS" + Dependency.adBaseName + "Dependencies";
+            return "CAS" + platform.ToString() + name + "Dependencies";
         }
 
         private static bool IsPathInPackage(string path)

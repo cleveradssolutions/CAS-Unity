@@ -2,7 +2,7 @@
 //  CASUManager.m
 //  CASUnityPlugin
 //
-//  Copyright © 2024 CleverAdsSolutions LTD, CAS.AI. All rights reserved.
+//  Copyright © 2025 CleverAdsSolutions LTD, CAS.AI. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

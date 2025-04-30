@@ -196,13 +196,10 @@ namespace CAS
                         {
                             if (initSettings.initListener != null)
                                 initSettings.initListener(initialConfig);
-                            if (initSettings.initListenerDeprecated != null)
-                                initSettings.initListenerDeprecated(initialConfig.error == null, initialConfig.error);
                         }
                         else
                         {
                             readyManager.initCompleteEvent += initSettings.initListener;
-                            readyManager.initCompleteAction += initSettings.initListenerDeprecated;
                         }
                         return readyManager;
                     }
@@ -399,8 +396,6 @@ namespace CAS
             {
                 if (flow.OnResult != null)
                     flow.OnResult(status);
-                if (flow.OnCompleted != null)
-                    flow.OnCompleted();
             }
             catch (Exception e)
             {

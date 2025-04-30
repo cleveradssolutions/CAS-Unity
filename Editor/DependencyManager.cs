@@ -75,27 +75,22 @@ namespace CAS.UEditor
         {
             if (network == Dependency.noNetwork)
                 return null;
-            return Find(network.GetName());
-        }
-
-        public Dependency Find(string name)
-        {
-            if (name == Dependency.adBaseName)
+            if (network == Dependency.adBase)
             {
-                var dep = new Dependency(name);
-                dep.version = Dependency.FindInstalledVersion(name, platform);
+                var dep = new Dependency();
+                dep.id = Dependency.adBase;
+                dep.version = Dependency.FindInstalledVersion(Dependency.adBaseName, platform);
                 dep.installedVersion = dep.version;
                 return dep;
             }
-
             for (int i = 0; i < solutions.Length; i++)
             {
-                if (solutions[i].name == name)
+                if (solutions[i].id == network)
                     return solutions[i];
             }
             for (int i = 0; i < adapters.Length; i++)
             {
-                if (adapters[i].name == name)
+                if (adapters[i].id == network)
                     return adapters[i];
             }
             return null;
@@ -125,19 +120,19 @@ namespace CAS.UEditor
         public string GetInstalledVersion()
         {
             string version = "";
-            var casDep = Find(Dependency.adBaseName);
+            var casDep = Find(Dependency.adBase);
             if (casDep != null)
                 version = casDep.version;
             if (!string.IsNullOrEmpty(version))
                 return version;
 
-            casDep = Find(Dependency.adOptimalName);
+            casDep = Find(Dependency.adsOptimal);
             if (casDep != null)
                 version = casDep.installedVersion;
             if (!string.IsNullOrEmpty(version))
                 return version;
 
-            casDep = Find(Dependency.adFamiliesName);
+            casDep = Find(Dependency.adsFamilies);
             if (casDep != null)
                 version = casDep.installedVersion;
 
@@ -158,7 +153,7 @@ namespace CAS.UEditor
             }
             return 0;
         }
-        
+
         public bool IsNewerVersionFound()
         {
             for (int i = 0; i < simple.Length; i++)
@@ -176,18 +171,20 @@ namespace CAS.UEditor
 
         public Dependency FindCrossPromotion()
         {
-            return Find(AdNetwork.CrossPromotion.GetName());
+            return Find(AdNetwork.CrossPromotion);
         }
     }
 
     [Serializable]
     public partial class Dependency
     {
+        public const AdNetwork adsOptimal = (AdNetwork)62;
+        public const AdNetwork adsFamilies = (AdNetwork)63;
         public const AdNetwork adBase = (AdNetwork)64;
         public const AdNetwork noNetwork = (AdNetwork)65;
         public const string adBaseName = "Base";
-        public const string adOptimalName = "OptimalAds";
-        public const string adFamiliesName = "FamiliesAds";
+        public const string adsOptimalName = "OptimalAds";
+        public const string adsFamiliesName = "FamiliesAds";
 
         [Flags]
         public enum Label
@@ -198,7 +195,7 @@ namespace CAS.UEditor
             Reward = 4,
             Native = 8,
             Beta = 16,
-            Obsolete = 32
+            AppOpen = 32
         }
 
         public enum Filter
@@ -230,13 +227,13 @@ namespace CAS.UEditor
         public string version = string.Empty;
         public AdNetwork require = noNetwork;
         public Filter filter;
-        public List<SDK> libs = new List<SDK>();
+        public SDK[] libs = new SDK[0];
         public string[] embedPath = new string[0];
-        public string[] contains = new string[0];
+        public AdNetwork[] contains = new AdNetwork[0];
         public string source = string.Empty;
         public string comment;
         public Label labels = Label.Banner | Label.Inter | Label.Reward;
-        
+
         public string installedVersion { get; set; }
         public bool isNewer { get; set; }
         /// <summary>
@@ -253,11 +250,6 @@ namespace CAS.UEditor
         public bool notSupported { get; set; }
 
         public Dependency() { }
-
-        public Dependency(string name)
-        {
-            this.name = name;
-        }
 
         public bool IsInstalled()
         {

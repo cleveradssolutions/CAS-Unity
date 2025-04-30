@@ -37,14 +37,12 @@ namespace CAS.UEditor
         private SerializedObject editorSettingsObj;
         private SerializedProperty autoCheckForUpdatesEnabledProp;
         private SerializedProperty buildPreprocessEnabledProp;
-        private SerializedProperty optimizeGADLoadingProp;
 #if !UNITY_2022_2_OR_NEWER
         private SerializedProperty updateGradlePluginVersionProp;
 #endif
         private SerializedProperty permissionAdIdProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
-        private SerializedProperty includeAdDependencyVersionsProp;
 
 #if CAS_GRADLE_VERSIONS
         private SerializedProperty overrideGradleWrapperVersionProp;
@@ -140,7 +138,6 @@ namespace CAS.UEditor
         {
             editorSettingsObj = new SerializedObject(CASEditorSettings.Load(true));
             autoCheckForUpdatesEnabledProp = editorSettingsObj.FindProperty("autoCheckForUpdatesEnabled");
-            optimizeGADLoadingProp = editorSettingsObj.FindProperty("optimizeGADLoading");
             buildPreprocessEnabledProp = editorSettingsObj.FindProperty("buildPreprocessEnabled");
 #if !UNITY_2022_2_OR_NEWER
             updateGradlePluginVersionProp = editorSettingsObj.FindProperty("updateGradlePluginVersion");
@@ -149,7 +146,6 @@ namespace CAS.UEditor
             permissionAdIdProp = editorSettingsObj.FindProperty("permissionAdId");
 
             attributionReportEndpointProp = editorSettingsObj.FindProperty("attributionReportEndpoint");
-            includeAdDependencyVersionsProp = editorSettingsObj.FindProperty("includeAdDependencyVersions");
 
 #if CAS_GRADLE_VERSIONS
             overrideGradleWrapperVersionProp = editorSettingsObj.FindProperty("overrideGradleWrapperVersion");
@@ -365,11 +361,6 @@ namespace CAS.UEditor
                     EditorGUI.indentLevel--;
                 }
 #endif
-
-                optimizeGADLoadingProp.boolValue = EditorGUILayout.ToggleLeft(
-                    HelpStyles.GetContent("Optimize Google Ad loading", null,
-                        "Google Ad loading tasks will be offloaded to a background thread"),
-                    optimizeGADLoadingProp.boolValue);
             }
             else
             {
@@ -411,10 +402,6 @@ namespace CAS.UEditor
                     "Auto check for CAS updates enabled",
                     tooltip: "Checks for CAS plugin updates and notifies you when an update is available"),
                 autoCheckForUpdatesEnabledProp.boolValue);
-
-            includeAdDependencyVersionsProp.boolValue = EditorGUILayout.ToggleLeft(
-                "Include Ads SDK versions to Gradle/Podfile (not recomended)",
-                includeAdDependencyVersionsProp.boolValue);
 
             EditorGUILayout.EndFadeGroup();
             HelpStyles.EndBoxScope();
@@ -739,10 +726,11 @@ namespace CAS.UEditor
 
         private void OnLoadingModeGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(loadingModeProp, HelpStyles.GetContent("Loading mode", null));
-            HelpStyles.HelpButton(Utils.gitUnityRepoURL + "/wiki/Other-Options#loading-mode");
-            EditorGUILayout.EndHorizontal();
+            bool isAutoLoadMode = loadingModeProp.enumValueIndex != (int)LoadingManagerMode.Manual;
+            if (isAutoLoadMode != EditorGUILayout.ToggleLeft("Auto loading enabled", isAutoLoadMode))
+            {
+                loadingModeProp.enumValueIndex = (int)(isAutoLoadMode ? LoadingManagerMode.Manual : LoadingManagerMode.Optimal);
+            }
         }
 
         private void OnEditroRuntimeActiveAdGUI()

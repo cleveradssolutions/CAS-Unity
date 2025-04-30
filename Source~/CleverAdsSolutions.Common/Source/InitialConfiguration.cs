@@ -21,13 +21,18 @@ namespace CAS
         /// The consent must be requested from the user.
         /// </summary>
         public readonly bool isConsentRequired;
+        /// <summary>
+        /// Get the consent flow status.
+        /// </summary>
+        public readonly ConsentFlow.Status consentFlowStatus;
 
-        public InitialConfiguration(string error, IMediationManager manager, string countryCode, bool isConsentRequired)
+        public InitialConfiguration(string error, IMediationManager manager, string countryCode, bool isConsentRequired, ConsentFlow.Status consentFlowStatus)
         {
             this.error = error;
             this.manager = manager;
             this.countryCode = countryCode;
             this.isConsentRequired = isConsentRequired;
+            this.consentFlowStatus = consentFlowStatus;
         }
     }
 }

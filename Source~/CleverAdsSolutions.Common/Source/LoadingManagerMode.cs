@@ -1,24 +1,15 @@
 ﻿//  Copyright © 2024 CAS.AI. All rights reserved.
 
+using System;
+
 namespace CAS
 {
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Other-Options#loading-mode" )]
+    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Other-Options#loading-mode")]
     public enum LoadingManagerMode
     {
-        /// <summary>
-        /// Automatic control loading mediation ads.
-        /// <para>Provides frequent polling of mediation networks for advertising content.</para>
-        /// <para>May increase coverage with more expensive ads.</para>
-        /// <para>But this will run more background processes that slow down the application.</para>
-        /// </summary>
+        [Obsolete("Not longer support, replaced to Auto")]
         FastestRequests = 0,
-
-        /// <summary>
-        /// Automatic control loading mediation ads.
-        /// <para>Provides frequent polling of mediation networks for advertising content.</para>
-        /// <para>May increase coverage with more expensive ads.</para>
-        /// <para>But this will run more background processes that slow down the application.</para>
-        /// </summary>
+        [Obsolete("Not longer support, replaced to Auto")]
         FastRequests = 1,
 
         /// <summary>
@@ -26,24 +17,17 @@ namespace CAS
         /// <para>Provides balanced polling rate of mediation networks for advertising content.</para>
         /// <para>Doesn't significantly affect application performance.</para>
         /// </summary>
-        Optimal = 2,
+        Auto = 2,
 
         /// <summary>
-        /// Automatic control loading mediation ads.
-        /// <para>Provides slow polling of mediation networks for advertising content.</para>
-        /// <para>This helps to reduce the impact of background processes on the application.</para>
-        /// <para>At the same time, do not lose much of the relevance of the high cost of advertising content.</para>
-        /// <para>Reduces memory reservations for advertising content.</para>
+        /// Same as Auto
         /// </summary>
+        Optimal = Auto,
+
+        [Obsolete("Not longer support, replaced to Auto")]
         HighePerformance = 3,
 
-        /// <summary>
-        /// Automatic control loading mediation ads.
-        /// <para>Provides slow polling of mediation networks for advertising content.</para>
-        /// <para>This helps to reduce the impact of background processes on the application.</para>
-        /// <para>At the same time, do not lose much of the relevance of the high cost of advertising content.</para>
-        /// <para>Reduces memory reservations for advertising content.</para>
-        /// </summary>
+        [Obsolete("Not longer support, replaced to Auto")]
         HighestPerformance = 4,
 
         /// <summary>

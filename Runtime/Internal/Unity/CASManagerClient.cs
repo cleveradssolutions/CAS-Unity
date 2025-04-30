@@ -126,7 +126,7 @@ namespace CAS.Unity
 
         public void Start()
         {
-            Post(() => client.OnInitialized(null, "US", true, true));
+            Post(() => client.OnInitialized(null, "US", true, true, (int)ConsentFlow.Status.Obtained));
         }
 
         public void Update()
