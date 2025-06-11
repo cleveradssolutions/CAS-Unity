@@ -202,6 +202,9 @@ namespace CAS.UEditor
 
             DrawTestAdMode();
 
+            if (allowedAdFlagsProp.intValue < 0)
+                allowedAdFlagsProp.intValue = 0;
+            
             if (DrawAdFlagToggle(AdFlags.Banner))
                 DrawBannerScope();
             var inter = DrawAdFlagToggle(AdFlags.Interstitial);

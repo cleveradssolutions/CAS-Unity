@@ -247,7 +247,7 @@ namespace CAS.Unity
             if (!_behaviour.client.IsEnabledAd(type))
                 return AdError.ManagerIsDisabled;
             if (type == AdType.Interstitial
-               && _behaviour._settings.lastInterImpressionTimestamp + _behaviour._settings.interstitialInterval > Time.time)
+               && _behaviour._settings.lastInterImpressionTimestamp + _behaviour._settings.interstitialInterval > Time.unscaledTime)
                 return AdError.NotPassedInterval;
             if (!loaded)
                 return AdError.NotReady;
@@ -296,7 +296,7 @@ namespace CAS.Unity
             else if (GUI.Button(new Rect(0, 0, Screen.width, Screen.height), header, style))
             {
                 if (type == AdType.Interstitial)
-                    _behaviour._settings.lastInterImpressionTimestamp = Time.time;
+                    MobileAds.settings.RestartInterstitialInterval();
                 CallAdAction(AdActionCode.CLICKED);
                 CallAdAction(AdActionCode.CLOSED);
             }

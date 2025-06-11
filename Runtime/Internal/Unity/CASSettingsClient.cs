@@ -39,7 +39,7 @@ namespace CAS.Unity
 
         public void RestartInterstitialInterval()
         {
-            lastInterImpressionTimestamp = Time.time;
+            lastInterImpressionTimestamp = Time.unscaledTime;
         }
 
         public void SetTestDeviceIds(IList<string> testDeviceIds)

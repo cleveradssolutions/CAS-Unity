@@ -1,5 +1,8 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.1.0] - 2025-06-11
+- Discover the native 4.1.0 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
 # [4.0.2] - 2025-04-30
 - Discover the native 4.0.2 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 Increased the minimum Android API level to 23.
