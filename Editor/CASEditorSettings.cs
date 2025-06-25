@@ -1,4 +1,4 @@
-﻿//  Copyright © 2024 CAS.AI. All rights reserved.
+﻿//  Copyright © 2025 CAS.AI. All rights reserved.
 
 using System;
 using UnityEngine;
@@ -42,13 +42,8 @@ namespace CAS.UEditor
         /// </summary>
         public KeyValuePair[] userTrackingUsageDescription = new KeyValuePair[0];
 
-
-#if UNITY_2022_2_OR_NEWER
-        // Unity 2022.2 migrated to valid gradle 7.1.2
+        [System.Obsolete("Deprecated option")]
         public bool updateGradlePluginVersion { get { return false; } }
-#else
-        public bool updateGradlePluginVersion = true;
-#endif
 
         public static CASEditorSettings Load(bool createAsset = false)
         {

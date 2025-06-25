@@ -1,4 +1,4 @@
-﻿//  Copyright © 2024 CAS.AI. All rights reserved.
+﻿//  Copyright © 2025 CAS.AI. All rights reserved.
 
 using System;
 using UnityEngine;
@@ -11,7 +11,7 @@ namespace CAS
         /// <summary>
         /// The CAS Unity plugin wrapper version.
         /// </summary>
-        public const string wrapperVersion = "4.1.1";
+        public const string wrapperVersion = "4.1.2";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.

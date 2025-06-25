@@ -1,12 +1,42 @@
-//  Copyright © 2024 CAS.AI. All rights reserved.
+//  Copyright © 2025 CAS.AI. All rights reserved.
 
 #if UNITY_ANDROID || CASDeveloper
 
-// Unity 2023.3 use Gradle Wrapper 7.6 and plugin 7.3.1
-// Unity 2022.2 use Gradle Wrapper 7.2 and plugin 7.1.2
-// Unity 2020.1-2022.1 use Gradle Wrapper 6.1.1 and plugin 4.0.1
+/*
+Unity Version               | Gradle  | AGP
+6000.0.45f1+                | 8.11    | 8.7.2
+6000.0.1f1 - 6000.0.44f1    | 8.4     | 8.3.0
+2023.1 - 2023.2             | 7.6     | 7.3.1
+2022.3.38f1+                | 7.5.1   | 7.4.2
+2022.2 - 2022.3.37f1        | 7.2     | 7.1.2
+2021.3.41f1+                | 7.5.1   | 7.4.2
+2021.3.37f1 - 2021.3.40f1   | 6.7.1   | 4.2.2
+2021.2 - 2021.3.36f1        | 6.1.1   | 4.0.1
+*/
 
-//#define CAS_DISABLE_PACKAGING_OPTIONS
+
+// Known issue of META-INF duplication from kotlinx_coroutines_core and core-utils_release.
+// Recommended workaround: pickFirst META-INF in packagingOptions.
+// by cas_android_build_options.gradle file
+#if !CAS_DISABLE_PACKAGING_OPTIONS
+#define CAS_ADD_PACKAGING_OPTIONS
+#endif
+
+// Known issue: Crash on API 25 and below when using play-services-ads-identifier:18.2.0.
+// Recommended workaround: explicitly force library version 18.1.0.
+#define CAS_FORCE_AD_ID_VERSION
+
+#if !UNITY_6000_0_OR_NEWER
+// Known issue: Yandex Ads SDK 7.10.0 build fails with Android Gradle Plugin versions lower than 7.5.
+// Recommended workaround: explicitly force SDK version 7.9.0.
+#define CAS_DOWNGRADE_YANDEX_SDK
+#endif
+
+#if !UNITY_2021_3_OR_NEWER
+// Known issue in older minor versions (before 4.2.2) of the Android Gradle Plugin to enable support 
+// for <queries> elements in the manifest.
+#define CAS_FIX_AGP_MINOR_VERSION
+#endif
 
 #if !UNITY_2022_2_OR_NEWER
 // Known issue with jCenter repository where repository is not responding
@@ -31,8 +61,6 @@ namespace CAS.UEditor
 
     public class CASPostGenerateGradle : IPostGenerateGradleAndroidProject
     {
-        private const string buildOptionsFile = "cas_android_build_options.gradle";
-
         private readonly XNamespace androidNamespace = "http://schemas.android.com/apk/res/android";
         private readonly Regex versionRegex = new Regex("\\b\\d+(?:\\.\\d+){1,2}\\b");
 
@@ -48,7 +76,7 @@ namespace CAS.UEditor
             var depManager = DependencyManager.Create(BuildTarget.Android, Audience.Mixed, true);
 
             UpdateGradleWrapper(path, editorSettings);
-            UpdateRootGradleBuild(path, editorSettings);
+            UpdateRootGradleBuild(path, initSettings, editorSettings, depManager);
             UpdateGradleBuild(path);
             UpdateGradleProperties(path);
             UpdateAppManifest(path, initSettings, editorSettings, depManager);
@@ -99,7 +127,11 @@ namespace CAS.UEditor
                     return version;
                 }
             }
-#if UNITY_2022_3_OR_NEWER
+#if UNITY_6000_0_OR_NEWER
+            return new Version(8, 3, 0);
+#elif UNITY_2022_3 || UNITY_2021_3
+            return new Version(7, 4, 2);
+#elif UNIT_2022_2_OR_NEWER
             return new Version(7, 1, 2);
 #else
             return new Version(4, 0, 1);
@@ -138,7 +170,7 @@ namespace CAS.UEditor
             return null;
         }
 
-        private void UpdateRootGradleBuild(string path, CASEditorSettings editorSettings)
+        private void UpdateRootGradleBuild(string path, CASInitSettings initSettings, CASEditorSettings editorSettings, DependencyManager depManager)
         {
 #if UNITY_2019_3_OR_NEWER
             path = Path.Combine(path, "..");
@@ -192,6 +224,34 @@ namespace CAS.UEditor
 #endif
             }
 
+            var linesList = new List<string>(lines);
+
+#if CAS_FORCE_AD_ID_VERSION
+            var useAdvertiserId = !editorSettings.isUseAdvertiserIdLimited(initSettings.defaultAudienceTagged);
+            if ((int)PlayerSettings.Android.minSdkVersion < 26 && useAdvertiserId)
+            {
+                const string forceAdIdVersion = "force 'com.google.android.gms:play-services-ads-identifier:18.1.0'";
+                if (AddResolutionStrategy(forceAdIdVersion, linesList))
+                {
+                    updated = true;
+                    lines = linesList.ToArray();
+                }
+            }
+#endif
+
+#if CAS_DOWNGRADE_YANDEX_SDK
+            var yandexDependency = depManager.Find(AdNetwork.YandexAds);
+            if (yandexDependency.IsInstalled() && currVersion < new System.Version(7, 5, 0))
+            {
+                const string forceYandexAdsSDK = "force 'com.yandex.android:mobileads:7.9.0'";
+                if (AddResolutionStrategy(forceYandexAdsSDK, linesList))
+                {
+                    updated = true;
+                    lines = linesList.ToArray();
+                }
+            }
+#endif
+
             if (updated)
                 File.WriteAllLines(gradlePath, lines);
         }
@@ -207,7 +267,8 @@ namespace CAS.UEditor
             var mainGradle = File.ReadAllText(gradlePath);
             var gradleChanged = false;
 
-#if !CAS_DISABLE_PACKAGING_OPTIONS
+#if CAS_ADD_PACKAGING_OPTIONS
+            const string buildOptionsFile = "cas_android_build_options.gradle";
             const string applyBuildOptions = "apply from: '" + buildOptionsFile + "'";
             if (!mainGradle.Contains(applyBuildOptions))
             {
@@ -390,10 +451,45 @@ namespace CAS.UEditor
             );
         }
 
+        private bool AddResolutionStrategy(string stategyLine, List<string> lines)
+        {
+            var lineNotFound = true;
+            var blockLineNum = -1;
+            for (var i = 0; lineNotFound && i < lines.Count; i++)
+            {
+                if (lines[i].Contains("resolutionStrategy"))
+                    blockLineNum = i + 1;
+                else if (lines[i].Contains(stategyLine))
+                    lineNotFound = false;
+            }
+            if (lineNotFound)
+            {
+                if (blockLineNum > 0)
+                {
+                    lines.Insert(blockLineNum, "          " + stategyLine);
+                }
+                else
+                {
+                    lines.AddRange(new string[] {
+                            "",
+                            "// The CAS Unity Plugin adds the following resolution strategy",
+                            "allprojects {",
+                            "    configurations.all {",
+                            "        resolutionStrategy {",
+                            "          " + stategyLine,
+                            "        }",
+                            "    }",
+                            "}"
+                        });
+                }
+                return true;
+            }
+            return false;
+        }
 
         private Version GetFixedGradlePluginVersion(Version current)
         {
-#if UpdateGradleToolsMinorVersion || CASDeveloper
+#if CAS_FIX_AGP_MINOR_VERSION || CASDeveloper
             Version target = null;
 
             if (current.Major == 4)

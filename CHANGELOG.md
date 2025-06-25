@@ -1,5 +1,13 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.1.2] - 2025-06-24
+- Discover the native 4.1.2 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- The SuperAwesome adapter was removed as the SDK has been deprecated and is no longer receiving updates.
+- [Android] Added dependency resolution strategy to use `play-services-ads-identifier:18.1.0` for min API 25 and below, due to a known crash with version 18.2.0. [See the Android Issue for more information](https://github.com/cleveradssolutions/CAS-Android/issues/26).
+- [Android] Added automatic rollback to Yandex Ads SDK 7.9.0 when using Android Gradle Plugin (AGP) versions below 7.5 due to minimum compatibility requirements starting from Yandex Ads SDK 7.10.0.
+- [Android] Removed the need for manual `resolutionStrategy` in `baseProjectTemplate.gradle` — you can safely delete it if previously added.
+- [Android] Added option to override Gradle Wrapper and Android Gradle Plugin versions in CAS Other Settings. The specified versions will be pre-set for the Android Studio project without requiring manual project export. Please ensure compatibility of all build components when using this option. Leave the fields empty to avoid overriding the versions.
+
 # [4.1.0] - 2025-06-11
 - Discover the native 4.1.0 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 

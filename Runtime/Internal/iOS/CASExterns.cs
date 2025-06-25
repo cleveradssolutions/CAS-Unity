@@ -1,4 +1,4 @@
-﻿//  Copyright © 2024 CAS.AI. All rights reserved.
+﻿//  Copyright © 2025 CAS.AI. All rights reserved.
 
 #if UNITY_IOS || (CASDeveloper && UNITY_EDITOR)
 using System.Runtime.InteropServices;

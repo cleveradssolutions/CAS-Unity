@@ -1,4 +1,4 @@
-//  Copyright © 2024 CAS.AI. All rights reserved.
+//  Copyright © 2025 CAS.AI. All rights reserved.
 
 // Used for Editor and iOS runtime
 #if UNITY_EDITOR || UNITY_IOS

@@ -1,7 +1,6 @@
-﻿//  Copyright © 2024 CAS.AI. All rights reserved.
+﻿//  Copyright © 2025 CAS.AI. All rights reserved.
 
-// Overriding Gradle Wrapper and Android Gradle Plugin versions during development.
-//#define CAS_GRADLE_VERSIONS
+#define CAS_OVERRIDE_GRADLE_VERSION
 
 #pragma warning disable 649
 using System;
@@ -37,14 +36,11 @@ namespace CAS.UEditor
         private SerializedObject editorSettingsObj;
         private SerializedProperty autoCheckForUpdatesEnabledProp;
         private SerializedProperty buildPreprocessEnabledProp;
-#if !UNITY_2022_2_OR_NEWER
-        private SerializedProperty updateGradlePluginVersionProp;
-#endif
         private SerializedProperty permissionAdIdProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
 
-#if CAS_GRADLE_VERSIONS
+#if CAS_OVERRIDE_GRADLE_VERSION
         private SerializedProperty overrideGradleWrapperVersionProp;
         private SerializedProperty overrideGradlePluginVersionProp;
 #endif
@@ -139,15 +135,12 @@ namespace CAS.UEditor
             editorSettingsObj = new SerializedObject(CASEditorSettings.Load(true));
             autoCheckForUpdatesEnabledProp = editorSettingsObj.FindProperty("autoCheckForUpdatesEnabled");
             buildPreprocessEnabledProp = editorSettingsObj.FindProperty("buildPreprocessEnabled");
-#if !UNITY_2022_2_OR_NEWER
-            updateGradlePluginVersionProp = editorSettingsObj.FindProperty("updateGradlePluginVersion");
-#endif
 
             permissionAdIdProp = editorSettingsObj.FindProperty("permissionAdId");
 
             attributionReportEndpointProp = editorSettingsObj.FindProperty("attributionReportEndpoint");
 
-#if CAS_GRADLE_VERSIONS
+#if CAS_OVERRIDE_GRADLE_VERSION
             overrideGradleWrapperVersionProp = editorSettingsObj.FindProperty("overrideGradleWrapperVersion");
             overrideGradlePluginVersionProp = editorSettingsObj.FindProperty("overrideGradlePluginVersion");
 #endif
@@ -204,7 +197,7 @@ namespace CAS.UEditor
 
             if (allowedAdFlagsProp.intValue < 0)
                 allowedAdFlagsProp.intValue = 0;
-            
+
             if (DrawAdFlagToggle(AdFlags.Banner))
                 DrawBannerScope();
             var inter = DrawAdFlagToggle(AdFlags.Interstitial);
@@ -326,22 +319,32 @@ namespace CAS.UEditor
             trackLocationEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
                 "Location targeting if allowed", trackLocationEnabledProp.boolValue);
 
+            buildPreprocessEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                               "Build preprocess enabled", buildPreprocessEnabledProp.boolValue);
+            if (!buildPreprocessEnabledProp.boolValue)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.HelpBox("Automatic configuration at build time is disabled.\n" +
+                    "You must use `Assets > CleverAdsSolutions > Configure project` to call configuration manually.",
+                    MessageType.Warning);
+                EditorGUI.indentLevel--;
+            }
+
+            autoCheckForUpdatesEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
+                HelpStyles.GetContent(
+                    "Auto check for CAS updates enabled",
+                    tooltip: "Checks for CAS plugin updates and notifies you when an update is available"),
+                autoCheckForUpdatesEnabledProp.boolValue);
+
             if (platform == BuildTarget.Android)
             {
-#if !UNITY_2022_2_OR_NEWER
-                updateGradlePluginVersionProp.boolValue = EditorGUILayout.ToggleLeft(
-                   HelpStyles.GetContent("Update Gradle Plugin enabled", null,
-                       "The Gradle plugin version will be updated during build to be optimal " +
-                       "for the current Gradle Wrapper version."),
-                    updateGradlePluginVersionProp.boolValue);
-#endif
-#if CAS_GRADLE_VERSIONS
+#if CAS_OVERRIDE_GRADLE_VERSION
                 Version gradleVer;
                 var gradleVersion = EditorGUILayout.TextField(
                     "Override Gradle Wrapper Version/URL",
                     overrideGradleWrapperVersionProp.stringValue);
                 overrideGradleWrapperVersionProp.stringValue = gradleVersion;
-                
+
                 if (!string.IsNullOrEmpty(gradleVersion) && !gradleVersion.StartsWith("https\\://") && !Version.TryParse(gradleVersion, out gradleVer))
                 {
                     EditorGUI.indentLevel++;
@@ -388,23 +391,6 @@ namespace CAS.UEditor
                     EditorGUI.indentLevel--;
                 }
             }
-
-            buildPreprocessEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                    "Build preprocess enabled", buildPreprocessEnabledProp.boolValue);
-            if (!buildPreprocessEnabledProp.boolValue)
-            {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.HelpBox("Automatic configuration at build time is disabled.\n" +
-                    "You must use `Assets > CleverAdsSolutions > Configure project` to call configuration manually.",
-                    MessageType.Warning);
-                EditorGUI.indentLevel--;
-            }
-
-            autoCheckForUpdatesEnabledProp.boolValue = EditorGUILayout.ToggleLeft(
-                HelpStyles.GetContent(
-                    "Auto check for CAS updates enabled",
-                    tooltip: "Checks for CAS plugin updates and notifies you when an update is available"),
-                autoCheckForUpdatesEnabledProp.boolValue);
 
             EditorGUILayout.EndFadeGroup();
             HelpStyles.EndBoxScope();
