@@ -22,7 +22,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="UnityEngine">
-      <HintPath>/Users/stratos/Documents/Environment/UnityEditors/2020.3.44f1/Unity.app/Contents/Managed/UnityEngine.dll</HintPath>
+      <HintPath>/Users/stratos/Documents/Environment/UnityEditors/2021.3.45f1/Unity.app/Contents/Managed/UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

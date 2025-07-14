@@ -1050,45 +1050,16 @@
              <param name="imageURL">Enter the direct URL of the image to be used as the ad file. Optional property.</param>
              <param name="iconURL">Enter the direct URL of the icon or logo (Small square picture). Optional property.</param>
         </member>
-        <member name="F:CAS.LoadingManagerMode.FastestRequests">
-            <summary>
-            Automatic control loading mediation ads.
-            <para>Provides frequent polling of mediation networks for advertising content.</para>
-            <para>May increase coverage with more expensive ads.</para>
-            <para>But this will run more background processes that slow down the application.</para>
-            </summary>
-        </member>
-        <member name="F:CAS.LoadingManagerMode.FastRequests">
-            <summary>
-            Automatic control loading mediation ads.
-            <para>Provides frequent polling of mediation networks for advertising content.</para>
-            <para>May increase coverage with more expensive ads.</para>
-            <para>But this will run more background processes that slow down the application.</para>
-            </summary>
-        </member>
-        <member name="F:CAS.LoadingManagerMode.Optimal">
+        <member name="F:CAS.LoadingManagerMode.Auto">
             <summary>
             Automatic control loading mediation ads.
             <para>Provides balanced polling rate of mediation networks for advertising content.</para>
             <para>Doesn't significantly affect application performance.</para>
             </summary>
         </member>
-        <member name="F:CAS.LoadingManagerMode.HighePerformance">
+        <member name="F:CAS.LoadingManagerMode.Optimal">
             <summary>
-            Automatic control loading mediation ads.
-            <para>Provides slow polling of mediation networks for advertising content.</para>
-            <para>This helps to reduce the impact of background processes on the application.</para>
-            <para>At the same time, do not lose much of the relevance of the high cost of advertising content.</para>
-            <para>Reduces memory reservations for advertising content.</para>
-            </summary>
-        </member>
-        <member name="F:CAS.LoadingManagerMode.HighestPerformance">
-            <summary>
-            Automatic control loading mediation ads.
-            <para>Provides slow polling of mediation networks for advertising content.</para>
-            <para>This helps to reduce the impact of background processes on the application.</para>
-            <para>At the same time, do not lose much of the relevance of the high cost of advertising content.</para>
-            <para>Reduces memory reservations for advertising content.</para>
+            Same as Auto
             </summary>
         </member>
         <member name="F:CAS.LoadingManagerMode.Manual">
@@ -1131,9 +1102,14 @@
             Is initialized already.
             </summary>
         </member>
+        <member name="M:CAS.EventExecutor.IsOnMainThread">
+            <summary>
+            Returns true if the current thread is the Unity main thread.
+            </summary>
+        </member>
         <member name="M:CAS.EventExecutor.Add(System.Action)">
             <summary>
-            Schedule action on the next Update() loop in Unity Thread.
+            Execute action on the next Update() loop in Unity Thread.
             <para>Warning! To enable EventExecutor requires call once static <see cref="M:CAS.EventExecutor.Initialize"/> method.</para>
             </summary>
         </member>

@@ -1,5 +1,9 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.2.0] - 2025-07-14
+- See the native 4.2.0 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added `CAS.EventExecutor.IsOnMainThread()` to check if the current thread is Unity’s main thread.
+
 # [4.1.2] - 2025-06-24
 - Discover the native 4.1.2 SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - The SuperAwesome adapter was removed as the SDK has been deprecated and is no longer receiving updates.

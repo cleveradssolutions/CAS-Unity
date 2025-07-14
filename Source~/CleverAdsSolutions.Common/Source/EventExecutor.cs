@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Threading;
 
 namespace CAS
 {
@@ -11,15 +12,16 @@ namespace CAS
     /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
     /// You can use EventExecutor to schedule each calls on the next Update() loop
     /// </summary>
-    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Other-Options#execute-events-on-unity-thread")]
+    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Include-Android#execute-events-on-unity-thread")]
     public static class EventExecutor
     {
         private static EventExecutorComponent instance = null;
 
         private static List<Action> eventsQueue = new List<Action>();
-        private static List<Action> startedEvents = new List<Action>();
-
+        private static List<Action> stagedEventsQueue = new List<Action>();
         private static volatile bool eventsQueueEmpty = true;
+        private static int unityManagedThreadId = -1;
+
 
         /// <summary>
         /// Creation of the Executor component if needed.
@@ -44,7 +46,15 @@ namespace CAS
         }
 
         /// <summary>
-        /// Schedule action on the next Update() loop in Unity Thread.
+        /// Returns true if the current thread is the Unity main thread.
+        /// </summary>
+        public static bool IsOnMainThread()
+        {
+            return Thread.CurrentThread.ManagedThreadId == unityManagedThreadId;
+        }
+
+        /// <summary>
+        /// Execute action on the next Update() loop in Unity Thread.
         /// <para>Warning! To enable EventExecutor requires call once static <see cref="Initialize"/> method.</para>
         /// </summary>
         public static void Add(Action action)
@@ -64,6 +74,14 @@ namespace CAS
 
         public sealed class EventExecutorComponent : MonoBehaviour
         {
+            private void Awake()
+            {
+                if (unityManagedThreadId == -1)
+                {
+                    unityManagedThreadId = Thread.CurrentThread.ManagedThreadId;
+                }
+            }
+
             private void Update()
             {
                 if (eventsQueueEmpty)
@@ -71,16 +89,16 @@ namespace CAS
 
                 lock (eventsQueue)
                 {
-                    startedEvents.AddRange(eventsQueue);
+                    stagedEventsQueue.AddRange(eventsQueue);
                     eventsQueue.Clear();
                     eventsQueueEmpty = true;
                 }
 
-                for (int i = 0; i < startedEvents.Count; i++)
+                for (int i = 0; i < stagedEventsQueue.Count; i++)
                 {
                     try
                     {
-                        var action = startedEvents[i];
+                        var action = stagedEventsQueue[i];
                         if (action.Target != null)
                             action.Invoke();
                     }
@@ -89,7 +107,7 @@ namespace CAS
                         Debug.LogException(e);
                     }
                 }
-                startedEvents.Clear();
+                stagedEventsQueue.Clear();
             }
 
             private void OnDisable()
