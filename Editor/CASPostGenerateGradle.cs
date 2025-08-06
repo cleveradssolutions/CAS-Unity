@@ -24,13 +24,13 @@ Unity Version               | Gradle  | AGP
 
 // Known issue: Crash on API 25 and below when using play-services-ads-identifier:18.2.0.
 // Recommended workaround: explicitly force library version 18.1.0.
-#define CAS_FORCE_AD_ID_VERSION
+// Update 4.3.0: All mediation dependencies now use version 18.1 or earlier.
+//#define CAS_FORCE_AD_ID_VERSION
 
-#if !UNITY_6000_0_OR_NEWER
-// Known issue: Yandex Ads SDK 7.10.0 build fails with Android Gradle Plugin versions lower than 7.5.
-// Recommended workaround: explicitly force SDK version 7.9.0.
-#define CAS_DOWNGRADE_YANDEX_SDK
-#endif
+// Update 4.3.0: no longer required
+//#if !UNITY_6000_0_OR_NEWER
+//#define CAS_DOWNGRADE_YANDEX_SDK
+//#endif
 
 #if !UNITY_2021_3_OR_NEWER
 // Known issue in older minor versions (before 4.2.2) of the Android Gradle Plugin to enable support 

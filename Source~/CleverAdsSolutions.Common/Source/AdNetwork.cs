@@ -12,6 +12,7 @@ namespace CAS
         Chartboost = 3,
         UnityAds = 4,
         AppLovin = 5,
+        [Obsolete("No longer supported")]
         SuperAwesome = 6,
         StartIO = 7,
         CASExchange = 8,
@@ -33,6 +34,7 @@ namespace CAS
         Pangle = 24,
         YsoNetwork = 25,
         Prado = 26,
+        Maticoo = 27,
 
         DSPExchange = 30,
         LastPage = 31,
@@ -51,7 +53,6 @@ namespace CAS
                 case AdNetwork.Chartboost: return "CB";
                 case AdNetwork.UnityAds: return "U";
                 case AdNetwork.AppLovin: return "AL";
-                case AdNetwork.SuperAwesome: return "SuA";
                 case AdNetwork.AudienceNetwork: return "FB";
                 case AdNetwork.InMobi: return "IM";
                 case AdNetwork.CrossPromotion: return "P";
@@ -63,12 +64,13 @@ namespace CAS
                 case AdNetwork.HyprMX: return "HMX";
                 case AdNetwork.Smaato: return "Sma";
                 case AdNetwork.Bigo: return "Big";
-                case AdNetwork.Madex: return "Ma";
+                case AdNetwork.Madex: return "Mdx";
                 case AdNetwork.StartIO: return "SIO";
                 case AdNetwork.Ogury: return "Og";
                 case AdNetwork.CASExchange: return "Ex";
                 case AdNetwork.YsoNetwork: return "YSO";
                 case AdNetwork.Prado: return "Pr";
+                case AdNetwork.Maticoo: return "Mtc";
                 default: return string.Empty;
             }
         }

@@ -1,5 +1,10 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.3.0] - 2025-08-06
+- See the native SDKs release notes 4.2.0 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added new adapter for Maticoo (closed beta).
+- [Android] The update to Yandex Ads SDK 7.15.0 allowed the removal of the `resolutionStrategy` in `baseProjectTemplate.gradle` previously used to forcibly downgrade versions of `com.yandex.android:mobileads` and `play-services-ads-identifier`. These issues are no longer relevant, so please ensure your Gradle files do not contain outdated resolutionStrategy configurations.
+
 # [4.2.1] - 2025-07-14
 - See the native SDKs release notes for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) 4.2.0 and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases) 4.2.1.
 - Added `CAS.EventExecutor.IsOnMainThread()` to check if the current thread is Unity’s main thread.
