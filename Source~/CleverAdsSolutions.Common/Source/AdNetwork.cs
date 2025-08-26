@@ -35,6 +35,7 @@ namespace CAS
         YsoNetwork = 25,
         Prado = 26,
         Maticoo = 27,
+        Verve = 28,
 
         DSPExchange = 30,
         LastPage = 31,
@@ -71,6 +72,7 @@ namespace CAS
                 case AdNetwork.YsoNetwork: return "YSO";
                 case AdNetwork.Prado: return "Pr";
                 case AdNetwork.Maticoo: return "Mtc";
+                case AdNetwork.Verve: return "Vr";
                 default: return string.Empty;
             }
         }

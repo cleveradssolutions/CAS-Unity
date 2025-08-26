@@ -11,7 +11,7 @@ namespace CAS
         /// <summary>
         /// The CAS Unity plugin wrapper version.
         /// </summary>
-        public const string wrapperVersion = "4.3.0";
+        public const string wrapperVersion = "4.4.0-rc1";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -119,6 +119,14 @@ namespace CAS
         public static bool IsActiveNetwork(AdNetwork network)
         {
             return CASFactory.IsActiveNetwork(network);
+        }
+
+        /// <summary>
+        /// For internal purposes only.
+        /// </summary>
+        public static void ReportCustomRevenue(string json)
+        {
+            CASFactory.ReportCustomRevenue(json);
         }
 
         [Obsolete("Use ShowIfRequired() or Show() methods for ConsentFlow insntance.")]

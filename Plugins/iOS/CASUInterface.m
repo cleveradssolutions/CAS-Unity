@@ -246,6 +246,10 @@ float CASUGetDeviceScreenScale(void) {
     return [UIScreen mainScreen].scale;
 }
 
+void CASUReportCustomRevenue(const char *json) {
+    [CAS reportCustomRevenueWithJson:CASUStringFromUnity(json)];
+}
+
 #pragma mark - CAS Manager
 
 void CASUSetMediationExtras(const char **extraKeys,

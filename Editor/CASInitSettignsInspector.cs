@@ -87,7 +87,7 @@ namespace CAS.UEditor
             allowedPackageUpdate = Utils.IsPackageExist(Utils.packageName);
             legacyUnityAdsPackageInstalled = Utils.IsPackageExist(Utils.legacyUnityAdsPackageName);
 
-            dependencyManager = DependencyManager.Create(platform, (Audience)audienceTaggedProp.enumValueIndex, true);
+            dependencyManager = DependencyManager.Create(platform, (Audience)audienceTaggedProp.intValue, true);
 
             var edmVersion = Utils.GetEDM4UVersion(platform);
             if (edmVersion != null)
@@ -683,12 +683,12 @@ namespace CAS.UEditor
         private void OnAudienceGUI()
         {
             var targetAudience = (Audience)EditorGUILayout.EnumPopup("Audience Tagged",
-                (Audience)audienceTaggedProp.enumValueIndex);
-            if (audienceTaggedProp.enumValueIndex != (int)targetAudience)
+                (Audience)audienceTaggedProp.intValue);
+            if (audienceTaggedProp.intValue != (int)targetAudience)
             {
                 if (dependencyManager != null)
                     dependencyManager.SetAudience(targetAudience);
-                audienceTaggedProp.enumValueIndex = (int)targetAudience;
+                audienceTaggedProp.intValue = (int)targetAudience;
             }
 
             EditorGUI.indentLevel++;
@@ -715,10 +715,10 @@ namespace CAS.UEditor
 
         private void OnLoadingModeGUI()
         {
-            bool isAutoLoadMode = loadingModeProp.enumValueIndex != (int)LoadingManagerMode.Manual;
+            bool isAutoLoadMode = loadingModeProp.intValue != (int)LoadingManagerMode.Manual;
             if (isAutoLoadMode != EditorGUILayout.ToggleLeft("Auto loading enabled", isAutoLoadMode))
             {
-                loadingModeProp.enumValueIndex = (int)(isAutoLoadMode ? LoadingManagerMode.Manual : LoadingManagerMode.Optimal);
+                loadingModeProp.intValue = (int)(isAutoLoadMode ? LoadingManagerMode.Manual : LoadingManagerMode.Optimal);
             }
         }
 

@@ -25,6 +25,11 @@ namespace CAS.Android
             settingsBridge.CallStatic("validateIntegration");
         }
 
+        public void ReportCustomRevenue(string json)
+        {
+            settingsBridge.CallStatic("reportCustomRevenue", json);
+        }
+
         public string GetActiveMediationPattern()
         {
             return settingsBridge.CallStatic<string>("getActiveMediationPattern");

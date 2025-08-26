@@ -175,6 +175,23 @@ namespace CAS
 #endif
         }
 
+        internal static void ReportCustomRevenue(string json)
+        {
+#if PlatformAndroid
+            if (Application.platform == RuntimePlatform.Android)
+            {
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
+                androidSettings.ReportCustomRevenue(json);
+            }
+#endif
+#if PlatformIOS
+            if (Application.platform == RuntimePlatform.IPhonePlayer)
+            {
+                CAS.iOS.CASExterns.CASUReportCustomRevenue(json);
+            }
+#endif
+        }
+
         public static bool IsAutoload(AdType type)
         {
             // AppOpen format autoload not supported

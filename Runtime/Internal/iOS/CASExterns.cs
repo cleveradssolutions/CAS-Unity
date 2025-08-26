@@ -166,6 +166,9 @@ namespace CAS.iOS
         internal static extern string CASUValidateIntegration();
 
         [DllImport("__Internal")]
+        internal static extern string CASUReportCustomRevenue(string json);
+
+        [DllImport("__Internal")]
         internal static extern string CASUGetActiveMediationPattern();
 
         [DllImport("__Internal")]
