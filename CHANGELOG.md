@@ -1,5 +1,18 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.4.1] - 2025-10-30
+- See the native SDKs release notes 4.4.1 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [iOS] **This release requires a minimum Xcode version of 16.4.**
+- Fixed CAS Settings window issue #17 with `Auto loading enabled`.
+- Migration to the new [Developer Docs](https://docs.page/cleveradssolutions/docs/Unity)
+### Update Adapters
+- Removed adapter for Yandex Ads.
+- Added new adapter for Yango Ads. Now included in the Optimal solution.
+- Restored SuperAwesome support with new bidding integration for interstitial and rewarded ads
+- Added new adapter for Verve (closed beta).
+
+> Please refer to the native SDKs release notes for a complete overview of all adapter updates.
+
 # [4.3.0] - 2025-08-06
 - See the native SDKs release notes 4.2.0 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added new adapter for Maticoo (closed beta).

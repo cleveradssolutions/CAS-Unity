@@ -121,7 +121,7 @@ namespace CAS.UEditor
                     project.AddEmbeddablePaths(appTargetGuid, depManager);
 
 #if EmbedYandexAdsResourcesBundle
-                    var yandexDep = depManager.Find(AdNetwork.YandexAds);
+                    var yandexDep = depManager.Find(AdNetwork.YangoAds);
                     if (yandexDep != null && yandexDep.IsInstalled())
                     {
                         const string yandexBundlePath = "Pods/YandexMobileAds/static/YandexMobileAds.xcframework/MobileAdsBundle.bundle";

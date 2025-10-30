@@ -12,7 +12,7 @@ namespace CAS
     /// Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
     /// You can use EventExecutor to schedule each calls on the next Update() loop
     /// </summary>
-    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Include-Android#execute-events-on-unity-thread")]
+    [WikiPage("https://docs.page/cleveradssolutions/docs/Unity/Include-Android#execute-events-on-unity-thread")]
     public static class EventExecutor
     {
         private static EventExecutorComponent instance = null;

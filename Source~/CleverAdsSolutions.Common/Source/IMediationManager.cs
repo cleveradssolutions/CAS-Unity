@@ -21,7 +21,7 @@ namespace CAS
     /// Interface for managing CAS mediation.
     /// Get instance using the CAS.MobileAds.BuildManager() builder.
     /// </summary>
-    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK")]
+    [WikiPage("https://docs.page/cleveradssolutions/docs/Unity/Initialize-SDK")]
     public interface IMediationManager
     {
         #region Interstitial Ads events

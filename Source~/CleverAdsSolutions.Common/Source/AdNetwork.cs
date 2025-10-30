@@ -12,18 +12,15 @@ namespace CAS
         Chartboost = 3,
         UnityAds = 4,
         AppLovin = 5,
-        [Obsolete("No longer supported")]
         SuperAwesome = 6,
         StartIO = 7,
         CASExchange = 8,
         AudienceNetwork = 9,
         InMobi = 10,
         DTExchange = 11,
-        [Obsolete("No longer supported")]
-        MyTarget = 12,
         CrossPromotion = 13,
         IronSource = 14,
-        YandexAds = 15,
+        YangoAds = 15,
         HyprMX = 16,
 
         Smaato = 18,
@@ -58,7 +55,8 @@ namespace CAS
                 case AdNetwork.InMobi: return "IM";
                 case AdNetwork.CrossPromotion: return "P";
                 case AdNetwork.IronSource: return "IS";
-                case AdNetwork.YandexAds: return "Ya";
+                case AdNetwork.YangoAds: return "Ya";
+                case AdNetwork.SuperAwesome: return "SA";
                 case AdNetwork.DTExchange: return "Fy";
                 case AdNetwork.Mintegral: return "MB";
                 case AdNetwork.Pangle: return "Pa";

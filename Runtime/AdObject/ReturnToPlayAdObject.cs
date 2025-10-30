@@ -8,7 +8,7 @@ namespace CAS.AdObject
 {
     [AddComponentMenu("CleverAdsSolutions/Return To Play Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Return-To-Play-Ad-Object")]
+    [HelpURL("https://docs.page/cleveradssolutions/docs/Unity/Return-To-Play-Ad-Object")]
     public class ReturnToPlayAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;

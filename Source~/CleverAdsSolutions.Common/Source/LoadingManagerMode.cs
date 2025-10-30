@@ -4,7 +4,7 @@ using System;
 
 namespace CAS
 {
-    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Other-Options#loading-mode")]
+    [WikiPage("https://docs.page/cleveradssolutions/docs/Unity/Other-Options#loading-mode")]
     public enum LoadingManagerMode
     {
         [Obsolete("Not longer support, replaced to Auto")]

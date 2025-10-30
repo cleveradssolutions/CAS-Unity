@@ -6,7 +6,7 @@ using UnityEngine;
 namespace CAS
 {
     [Serializable]
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Configuring-Last-Page-Ad" )]
+    [WikiPage( "https://docs.page/cleveradssolutions/docs/Unity/Configuring-Last-Page-Ad" )]
     public class LastPageAdContent
     {
         [SerializeField]

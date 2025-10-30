@@ -4,7 +4,7 @@ using System;
 
 namespace CAS
 {
-    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Initialize-SDK")]
+    [WikiPage("https://docs.page/cleveradssolutions/docs/Unity/Initialize-SDK")]
     public interface IManagerBuilder : IAdsPreset
     {
         /// <summary>
