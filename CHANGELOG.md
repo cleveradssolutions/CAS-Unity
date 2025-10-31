@@ -1,5 +1,8 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.4.2] - 2025-10-31
+- See the native SDKs release notes 4.4.2 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
 # [4.4.1] - 2025-10-30
 - See the native SDKs release notes 4.4.1 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - [iOS] **This release requires a minimum Xcode version of 16.4.**
