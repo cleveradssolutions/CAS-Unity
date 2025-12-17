@@ -22,16 +22,17 @@ namespace CAS
         IronSource = 14,
         YangoAds = 15,
         HyprMX = 16,
-
         Smaato = 18,
         Bigo = 19,
         Ogury = 20,
         Madex = 21,
+        MonetriX = 22,
         Mintegral = 23,
         Pangle = 24,
         YsoNetwork = 25,
         Prado = 26,
         Maticoo = 27,
+        PubMatic = 28,
         Verve = 29,
 
         DSPExchange = 30,
@@ -58,6 +59,7 @@ namespace CAS
                 case AdNetwork.YangoAds: return "Ya";
                 case AdNetwork.SuperAwesome: return "SA";
                 case AdNetwork.DTExchange: return "Fy";
+                case AdNetwork.MonetriX: return "MtX";
                 case AdNetwork.Mintegral: return "MB";
                 case AdNetwork.Pangle: return "Pa";
                 case AdNetwork.HyprMX: return "HMX";
@@ -70,6 +72,7 @@ namespace CAS
                 case AdNetwork.YsoNetwork: return "YSO";
                 case AdNetwork.Prado: return "Pr";
                 case AdNetwork.Maticoo: return "Mtc";
+                case AdNetwork.PubMatic: return "PM";
                 case AdNetwork.Verve: return "Vr";
                 default: return string.Empty;
             }

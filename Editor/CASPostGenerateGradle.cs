@@ -32,6 +32,16 @@ Unity Version               | Gradle  | AGP
 //#define CAS_DOWNGRADE_YANDEX_SDK
 //#endif
 
+#if !UNITY_6000_0_OR_NEWER
+// Meta Audiende Network version 6.20.1 required AGP 8+ to build.
+// So we force downgradle SDK to 'com.facebook.android:audience-network-sdk:6.20.0'
+#define CAS_DOWNGRADE_META_SDK
+
+// YSO Network version 1.3.1 required AGP 8+ to build.
+// So we force downgradle adapter to 'com.cleveradssolutions:ysonetwork:1.2.9.1'
+#define CAS_DOWNGRADE_YSO_SDK
+#endif
+
 #if !UNITY_2021_3_OR_NEWER
 // Known issue in older minor versions (before 4.2.2) of the Android Gradle Plugin to enable support 
 // for <queries> elements in the manifest.
@@ -239,12 +249,24 @@ namespace CAS.UEditor
             }
 #endif
 
-#if CAS_DOWNGRADE_YANDEX_SDK
-            var yandexDependency = depManager.Find(AdNetwork.YandexAds);
-            if (yandexDependency.IsInstalled() && currVersion < new System.Version(7, 5, 0))
+#if CAS_DOWNGRADE_META_SDK
+            var metaDependency = depManager.Find(AdNetwork.AudienceNetwork);
+            if (metaDependency.IsInstalled())
             {
-                const string forceYandexAdsSDK = "force 'com.yandex.android:mobileads:7.9.0'";
-                if (AddResolutionStrategy(forceYandexAdsSDK, linesList))
+                const string forceMetaSDK = "force 'com.facebook.android:audience-network-sdk:6.20.0'";
+                if (AddResolutionStrategy(forceMetaSDK, linesList) && currVersion < new System.Version(8, 0, 0))
+                {
+                    updated = true;
+                    lines = linesList.ToArray();
+                }
+            }
+#endif
+#if CAS_DOWNGRADE_YSO_SDK
+            var ysoDependency = depManager.Find(AdNetwork.YsoNetwork);
+            if (ysoDependency.IsInstalled() && currVersion < new System.Version(8, 0, 0))
+            {
+                const string forceMetaSDK = "force 'com.cleveradssolutions:ysonetwork:1.2.9.1'";
+                if (AddResolutionStrategy(forceMetaSDK, linesList))
                 {
                     updated = true;
                     lines = linesList.ToArray();

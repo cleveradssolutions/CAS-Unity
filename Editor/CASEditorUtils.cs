@@ -28,6 +28,7 @@ namespace CAS.UEditor
         public const int targetIOSVersion = 13;
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
+        private const string docsURL = "https://docs.page/cleveradssolutions/docs/Unity";
         public const string websiteURL = "https://cas.ai";
 
         public const string androidAdmobSampleAppID = "ca-app-pub-3940256099942544~3347511713";
@@ -70,7 +71,7 @@ namespace CAS.UEditor
         #region Internal Constants
         internal const string gitUnityRepo = "CAS-Unity";
         internal const string gitUnityRepoURL = gitRootURL + gitUnityRepo;
-        internal const string supportURL = gitUnityRepoURL + "#support";
+        internal const string supportURL = "https://cas.ai/contacts/";
         internal const string gitAppAdsTxtRepoUrl = gitRootURL + "App-ads.txt";
         internal const string attributionReportEndPoint = "https://";
 
@@ -102,7 +103,7 @@ namespace CAS.UEditor
         [MenuItem("Assets/CleverAdsSolutions/Documentation...", priority = 1031)]
         public static void OpenDocumentationMenu()
         {
-            OpenDocumentation(gitUnityRepo);
+            Application.OpenURL(docsURL);
         }
 
         [MenuItem("Assets/CleverAdsSolutions/Report Issue...", priority = 1032)]
@@ -352,20 +353,16 @@ namespace CAS.UEditor
         public static void LinksToolbarGUI(string gitRepoName)
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            if (GUILayout.Button("Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
-                Application.OpenURL(gitRootURL + gitRepoName + "#support");
-            if (GUILayout.Button("Wiki", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
-                OpenDocumentation(gitRepoName);
-            if (GUILayout.Button("CAS.ai", EditorStyles.toolbarButton))
-                Application.OpenURL(websiteURL);
+            if (GUILayout.Button("Docs", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
+                OpenDocumentationMenu();
+            if (GUILayout.Button("Contact Us", EditorStyles.toolbarButton))
+                Application.OpenURL(supportURL);
             EditorGUILayout.EndHorizontal();
         }
 
         public static void OnHeaderGUI(string gitRepoName, bool allowedPackageUpdate, string currVersion, ref string newCASVersion)
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            HelpStyles.HelpButton(gitRootURL + gitRepoName + "/wiki");
-
             if (GUILayout.Button(gitRepoName + " " + currVersion, EditorStyles.toolbarButton))
                 Application.OpenURL(gitRootURL + gitRepoName + "/releases");
             if (GUILayout.Button("Check for Updates", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
@@ -376,8 +373,10 @@ namespace CAS.UEditor
                 EditorUtility.DisplayDialog("Check for Updates", message, "OK");
             }
 
-            if (GUILayout.Button("Support", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
-                Application.OpenURL(gitRootURL + gitRepoName + "#support");
+            if (GUILayout.Button("Docs", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
+                OpenDocumentationMenu();
+            if (GUILayout.Button("Contact Us", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
+                Application.OpenURL(supportURL);
             EditorGUILayout.EndHorizontal();
 
             if (!string.IsNullOrEmpty(newCASVersion))
@@ -597,11 +596,6 @@ namespace CAS.UEditor
         internal static string GetUnityPackagePluginFromReleases(string version, string repo)
         {
             return gitRootURL + repo + "/releases/download/" + version + "/CleverAdsSolutions.unitypackage";
-        }
-
-        internal static void OpenDocumentation(string gitRepoName)
-        {
-            Application.OpenURL(gitRootURL + gitRepoName + "/wiki");
         }
 
         internal static void OpenSettingsWindow(BuildTarget target)

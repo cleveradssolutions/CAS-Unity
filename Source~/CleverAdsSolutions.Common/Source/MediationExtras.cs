@@ -8,6 +8,11 @@ namespace CAS
     public class MediationExtras
     {
         /// <summary>
+        /// Provide TENJIN SDK KEY with CAS SDK initialization to allow CAS initialize Tenjin SDK automatically.
+        /// </summary>
+        public static string tenjinSDKKey = "tenjin_key";
+
+        /// <summary>
         /// Advertising Tracking Enabled for Audience Network for iOS Only.
         /// <para>Set the `FBAdSettings.setAdvertiserTrackingEnabled` flag.</para>
         /// <para>Value "1" flag to inform Audience Network to use the data to deliver personalized ads

@@ -1,5 +1,17 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.5.2] - 2025-12-17
+- See the native SDKs release notes 4.5.2 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Updated links to the new CAS documentation.
+### Update Adapters
+- The **Maticoo, Smaato**, and **Verve** mediation adapters are now out of closed beta and available to all developers.
+- Added new adapter for PubMatic (closed beta).
+- [Android] Added new adapter for Monetrix (closed beta).
+- [Android] Added automatic downgrade of the Audience Network SDK version for compatibility with Unity 2023 and earlier.
+- [Android] Added automatic downgrade of the YSO Network SDK version for compatibility with Unity 2023 and earlier.
+
+> Because the latest versions of some adapters require a newer version of Gradle, automatic downgrading of adapter versions was added for Unity versions that use an older Gradle. In this case, please ignore the adapter integration warnings.
+
 # [4.5.0] - 2025-11-21
 - See the native SDKs release notes 4.5.0 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 
