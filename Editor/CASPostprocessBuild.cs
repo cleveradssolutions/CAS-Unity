@@ -101,6 +101,7 @@ namespace CAS.UEditor
                 plist.SetAttributionReportEndpoint(editorSettings.attributionReportEndpoint);
                 plist.SetDefaultUserTrackingDescription(editorSettings.userTrackingUsageDescription);
                 plist.AddSKAdNetworkItemsForCAS();
+                plist.AddAttributionAdNetworksForCAS();
             });
 
             EditXCProject(buildPath, unityProjectName, (project) =>
@@ -183,7 +184,7 @@ namespace CAS.UEditor
         private static void SetSDKInitializationDelay(this PlistDocument plist)
         {
             plist.root.SetBoolean("GADDelayAppMeasurementInit", true);
-            plist.root.SetBoolean("MyTargetSDKAutoInitMode", !false);
+            //plist.root.SetBoolean("MyTargetSDKAutoInitMode", !false);
         }
 
         private static void SetGADAppIdForCAS(this PlistDocument plist, CASInitSettings initSettings, DependencyManager deps)
@@ -213,6 +214,28 @@ namespace CAS.UEditor
                 {
                     var dict = adNetworkItems.AddDict();
                     dict.SetString("SKAdNetworkIdentifier", networksLines[i] + ".skadnetwork");
+                }
+            }
+        }
+
+        private static void AddAttributionAdNetworksForCAS(this PlistDocument plist)
+        {
+            var templateFile = CASEditorUtils.GetPluginComponentPath(CASEditorUtils.iosAttAdNetworksTemplateFile);
+            if (string.IsNullOrEmpty(templateFile)) return;
+            var networksLines = File.ReadAllLines(templateFile);
+
+            PlistElementArray adNetworkItems;
+            var adNetworkItemsField = plist.root["AdNetworkIdentifiers"];
+            if (adNetworkItemsField == null)
+                adNetworkItems = plist.root.CreateArray("AdNetworkIdentifiers");
+            else
+                adNetworkItems = adNetworkItemsField.AsArray();
+
+            for (int i = 0; i < networksLines.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(networksLines[i]))
+                {
+                    adNetworkItems.AddString(networksLines[i] + ".adattributionkit");
                 }
             }
         }

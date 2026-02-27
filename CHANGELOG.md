@@ -1,5 +1,9 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.6.3] - 2026-02-27
+- See the native SDKs release notes 4.6.3 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [iOS] Added support for AdAttributionKit. The project is configured automatically.
+
 # [4.6.2] - 2026-02-12
 - See the native SDKs release notes 4.6.2 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - [iOS] Fixed an issue where adapters from Optimal Ads Solutions were included in Families Ads Solutions.

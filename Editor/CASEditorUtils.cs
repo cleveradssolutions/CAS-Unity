@@ -81,6 +81,7 @@ namespace CAS.UEditor
         internal const string editorLatestVersionPrefs = "cas_last_ver_";
         internal const string editorLatestVersionTimestampPrefs = "cas_last_ver_time_";
         internal const string iosSKAdNetworksTemplateFile = "CASSKAdNetworks.txt";
+        internal const string iosAttAdNetworksTemplateFile = "CASAttAdNetworks.txt";
 
         internal const string legacyUnityAdsPackageName = "com.unity.ads";
         internal const string editorIconNamePrefix = "cas_editoricon_";
