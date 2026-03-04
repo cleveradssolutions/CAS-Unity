@@ -1,5 +1,8 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.6.4] - 2026-03-04
+- [iOS] Fixed `NullReferenceException` in build configuration.
+
 # [4.6.3] - 2026-02-27
 - See the native SDKs release notes 4.6.3 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - [iOS] Added support for AdAttributionKit. The project is configured automatically.
