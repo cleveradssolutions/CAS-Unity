@@ -1,5 +1,8 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.6.5] - 2026-03-06
+- See the native SDKs release notes 4.6.5 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
 # [4.6.4] - 2026-03-04
 - [iOS] Fixed `NullReferenceException` in build configuration.
 
