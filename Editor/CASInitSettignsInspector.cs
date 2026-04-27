@@ -579,7 +579,8 @@ namespace CAS.UEditor
             if (Utils.GetEDM4UVersion(platform) == null)
             {
                 if (HelpStyles.WarningWithButton(
-                    "Mediation requires External Dependency Manager to resolve native dependencies",
+                    "Mediation requires External Dependency Manager to resolve native dependencies. " +
+                    "If it is already installed, make sure that Editor is selected in the list of platforms for Google.JarResolver.",
                     "Install", MessageType.Error))
                     InstallEDM4U();
                 return;

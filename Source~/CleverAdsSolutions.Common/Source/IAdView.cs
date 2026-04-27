@@ -9,7 +9,7 @@ namespace CAS
     public delegate void CASViewEventWithError(IAdView view, AdError error);
     public delegate void CASViewEventWithMeta(IAdView view, AdMetaData data);
 
-    [WikiPage("https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ads")]
+    [WikiPage("https://docs.page/cleveradssolutions/docs/Unity/Banner-Ads")]
     public interface IAdView : IDisposable
     {
         /// <summary>

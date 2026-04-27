@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace CAS
 {
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Regulations" )]
+    [WikiPage( "https://docs.page/cleveradssolutions/docs/Unity/Privacy-Regulations" )]
     public enum ConsentStatus
     {
         /// <summary>
@@ -22,7 +22,7 @@ namespace CAS
         Denied,
     }
 
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Regulations" )]
+    [WikiPage( "https://docs.page/cleveradssolutions/docs/Unity/Privacy-Regulations" )]
     public enum CCPAStatus
     {
         /// <summary>
@@ -39,7 +39,7 @@ namespace CAS
         OptInSale,
     }
 
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Privacy-Regulations" )]
+    [WikiPage( "https://docs.page/cleveradssolutions/docs/Unity/Privacy-Regulations" )]
     public enum Audience
     {
         /// <summary>
@@ -74,7 +74,7 @@ namespace CAS
         NotChildren,
     }
 
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Configuring-SDK" )]
+    [WikiPage( "https://docs.page/cleveradssolutions/docs/Unity/Configuring-SDK" )]
     public interface IAdsSettings
     {
         /// <summary>

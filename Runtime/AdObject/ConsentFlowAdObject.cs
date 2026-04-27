@@ -8,7 +8,7 @@ namespace CAS.AdObject
 {
     [AddComponentMenu("CleverAdsSolutions/Consent Flow Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/User-Consent-Flow#inspector-implementation")]
+    [HelpURL("https://docs.page/cleveradssolutions/docs/Unity/User-Consent-Flow#inspector-implementation")]
     public class ConsentFlowAdObject : MonoBehaviour
     {
         [SerializeField]

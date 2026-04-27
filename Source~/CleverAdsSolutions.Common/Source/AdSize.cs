@@ -2,7 +2,7 @@
 
 namespace CAS
 {
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ads#ad-size" )]
+    [WikiPage( "https://docs.page/cleveradssolutions/docs/Unity/Banner-Ads#ad-size" )]
     public enum AdSize
     {
         // 0 Index reserved for internal logic

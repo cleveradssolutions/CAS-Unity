@@ -1113,6 +1113,11 @@
             <para>Warning! To enable EventExecutor requires call once static <see cref="M:CAS.EventExecutor.Initialize"/> method.</para>
             </summary>
         </member>
+        <member name="F:CAS.MediationExtras.tenjinSDKKey">
+            <summary>
+            Provide TENJIN SDK KEY with CAS SDK initialization to allow CAS initialize Tenjin SDK automatically.
+            </summary>
+        </member>
         <member name="F:CAS.MediationExtras.facebookAdvertiserTracking">
             <summary>
             Advertising Tracking Enabled for Audience Network for iOS Only.

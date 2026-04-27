@@ -2,7 +2,7 @@
 
 namespace CAS
 {
-    [WikiPage( "https://github.com/cleveradssolutions/CAS-Unity/wiki/Impression-Level-Data" )]
+    [WikiPage( "https://docs.page/cleveradssolutions/docs/Unity/Impression-Level-Data" )]
     public enum PriceAccuracy
     {
         /// <summary>

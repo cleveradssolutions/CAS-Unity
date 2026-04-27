@@ -1,5 +1,60 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.6.6] - 2026-04-17
+- See the native SDKs release notes 4.6.6 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
+# [4.6.5] - 2026-03-06
+- See the native SDKs release notes 4.6.5 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
+# [4.6.4] - 2026-03-04
+- [iOS] Fixed `NullReferenceException` in build configuration.
+
+# [4.6.3] - 2026-02-27
+- See the native SDKs release notes 4.6.3 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [iOS] Added support for AdAttributionKit. The project is configured automatically.
+
+# [4.6.2] - 2026-02-12
+- See the native SDKs release notes 4.6.2 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [iOS] Fixed an issue where adapters from Optimal Ads Solutions were included in Families Ads Solutions.
+
+# [4.6.0] - 2026-02-10
+- See the native SDKs release notes 4.6.0 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [iOS] This release requires a minimum Xcode version of 26.0.
+
+# [4.5.4] - 2025-12-22
+- See the native SDKs release notes 4.5.4 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
+# [4.5.2] - 2025-12-17
+- See the native SDKs release notes 4.5.2 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Updated links to the new CAS documentation.
+### Update Adapters
+- The **Maticoo, Smaato**, and **Verve** mediation adapters are now out of closed beta and available to all developers.
+- Added new adapter for PubMatic (closed beta).
+- [Android] Added new adapter for Monetrix (closed beta).
+- [Android] Added automatic downgrade of the Audience Network SDK version for compatibility with Unity 2023 and earlier.
+- [Android] Added automatic downgrade of the YSO Network SDK version for compatibility with Unity 2023 and earlier.
+
+> Because the latest versions of some adapters require a newer version of Gradle, automatic downgrading of adapter versions was added for Unity versions that use an older Gradle. In this case, please ignore the adapter integration warnings.
+
+# [4.5.0] - 2025-11-21
+- See the native SDKs release notes 4.5.0 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
+# [4.4.2] - 2025-10-31
+- See the native SDKs release notes 4.4.2 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
+# [4.4.1] - 2025-10-30
+- See the native SDKs release notes 4.4.1 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [iOS] **This release requires a minimum Xcode version of 16.4.**
+- Fixed CAS Settings window issue #17 with `Auto loading enabled`.
+- Migration to the new [Developer Docs](https://docs.page/cleveradssolutions/docs/Unity)
+### Update Adapters
+- Removed adapter for Yandex Ads.
+- Added new adapter for Yango Ads. Now included in the Optimal solution.
+- Restored SuperAwesome support with new bidding integration for interstitial and rewarded ads
+- Added new adapter for Verve (closed beta).
+
+> Please refer to the native SDKs release notes for a complete overview of all adapter updates.
+
 # [4.3.0] - 2025-08-06
 - See the native SDKs release notes 4.2.0 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added new adapter for Maticoo (closed beta).

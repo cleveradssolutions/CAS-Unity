@@ -8,7 +8,7 @@ namespace CAS.AdObject
 {
     [AddComponentMenu("CleverAdsSolutions/Interstitial Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Interstitial-Ad-object")]
+    [HelpURL("https://docs.page/cleveradssolutions/docs/Unity/Interstitial-Ad-object")]
     public sealed class InterstitialAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;

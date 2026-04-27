@@ -8,7 +8,7 @@ namespace CAS.AdObject
 {
     [AddComponentMenu("CleverAdsSolutions/Banner Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Banner-Ad-object")]
+    [HelpURL("https://docs.page/cleveradssolutions/docs/Unity/Banner-Ad-object")]
     public sealed class BannerAdObject : MonoBehaviour
     {
         /// <summary>

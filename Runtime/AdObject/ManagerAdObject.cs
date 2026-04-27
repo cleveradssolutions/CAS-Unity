@@ -8,7 +8,7 @@ namespace CAS.AdObject
 {
     [AddComponentMenu("CleverAdsSolutions/Initialize Manager Ad Object")]
     [DisallowMultipleComponent]
-    [HelpURL("https://github.com/cleveradssolutions/CAS-Unity/wiki/Manager-Ad-object")]
+    [HelpURL("https://docs.page/cleveradssolutions/docs/Unity/Manager-Ad-object")]
     public class ManagerAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;

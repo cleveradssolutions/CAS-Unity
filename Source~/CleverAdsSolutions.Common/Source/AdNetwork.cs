@@ -12,30 +12,28 @@ namespace CAS
         Chartboost = 3,
         UnityAds = 4,
         AppLovin = 5,
-        [Obsolete("No longer supported")]
         SuperAwesome = 6,
         StartIO = 7,
         CASExchange = 8,
         AudienceNetwork = 9,
         InMobi = 10,
         DTExchange = 11,
-        [Obsolete("No longer supported")]
-        MyTarget = 12,
         CrossPromotion = 13,
         IronSource = 14,
-        YandexAds = 15,
+        YangoAds = 15,
         HyprMX = 16,
-
         Smaato = 18,
         Bigo = 19,
         Ogury = 20,
         Madex = 21,
+        MonetriX = 22,
         Mintegral = 23,
         Pangle = 24,
         YsoNetwork = 25,
         Prado = 26,
         Maticoo = 27,
-        Verve = 28,
+        PubMatic = 28,
+        Verve = 29,
 
         DSPExchange = 30,
         LastPage = 31,
@@ -58,8 +56,10 @@ namespace CAS
                 case AdNetwork.InMobi: return "IM";
                 case AdNetwork.CrossPromotion: return "P";
                 case AdNetwork.IronSource: return "IS";
-                case AdNetwork.YandexAds: return "Ya";
+                case AdNetwork.YangoAds: return "Ya";
+                case AdNetwork.SuperAwesome: return "SA";
                 case AdNetwork.DTExchange: return "Fy";
+                case AdNetwork.MonetriX: return "MtX";
                 case AdNetwork.Mintegral: return "MB";
                 case AdNetwork.Pangle: return "Pa";
                 case AdNetwork.HyprMX: return "HMX";
@@ -72,6 +72,7 @@ namespace CAS
                 case AdNetwork.YsoNetwork: return "YSO";
                 case AdNetwork.Prado: return "Pr";
                 case AdNetwork.Maticoo: return "Mtc";
+                case AdNetwork.PubMatic: return "PM";
                 case AdNetwork.Verve: return "Vr";
                 default: return string.Empty;
             }
