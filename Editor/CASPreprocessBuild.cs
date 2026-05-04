@@ -86,7 +86,7 @@ namespace CAS.UEditor
                     Debug.LogWarning(Utils.logTag + "There is a new version " + newCASVersion + " of the CAS Unity plugin available for update.");
 
                 if (deps.IsNewerVersionFound())
-                    Utils.DialogOrCancelBuild("There is a new versions of the native dependencies available for update." +
+                    Utils.DialogOrCancelBuild("There is a new version of the native dependencies available for update. " +
                         "Please use 'Assets > CleverAdsSolutions > Settings' menu to update.", target);
             }
 
@@ -143,7 +143,7 @@ namespace CAS.UEditor
                 var iosVersion = int.Parse(PlayerSettings.iOS.targetOSVersionString.Split('.')[0]);
                 if (iosVersion < Utils.targetIOSVersion)
                 {
-                    Utils.DialogOrCancelBuild("CAS required a higher minimum deployment target. Set iOS " +
+                    Utils.DialogOrCancelBuild("CAS requires a higher minimum deployment target. Set iOS " +
                         Utils.targetIOSVersion + " and continue?", BuildTarget.NoTarget);
                     PlayerSettings.iOS.targetOSVersionString = Utils.targetIOSVersion + ".0";
                 }
@@ -161,7 +161,7 @@ namespace CAS.UEditor
             var minSDK = (int)PlayerSettings.Android.minSdkVersion;
             if (minSDK > 0 && minSDK < Utils.minAndroidVersion)
             {
-                Utils.DialogOrCancelBuild("CAS required a higher minimum SDK API level. Set Mininum SDK level " +
+                Utils.DialogOrCancelBuild("CAS requires a higher minimum SDK API level. Set Minimum SDK level " +
                     Utils.minAndroidVersion + " and continue?", BuildTarget.NoTarget);
                 PlayerSettings.Android.minSdkVersion = (AndroidSdkVersions)Utils.minAndroidVersion;
             }
@@ -169,7 +169,7 @@ namespace CAS.UEditor
             var targetSDK = (int)PlayerSettings.Android.targetSdkVersion;
             if (targetSDK > 0 && targetSDK < Utils.targetAndroidVersion)
             {
-                Utils.DialogOrCancelBuild("CAS required a higher target SDK API level. Set Target SDK level " +
+                Utils.DialogOrCancelBuild("CAS requires a higher target SDK API level. Set Target SDK level " +
                     Utils.targetAndroidVersion + " and continue?", BuildTarget.NoTarget);
                 PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions)Utils.targetAndroidVersion;
             }
@@ -190,7 +190,7 @@ namespace CAS.UEditor
         {
             if (settings.managersCount == 0 || string.IsNullOrEmpty(settings.GetManagerId(0)))
             {
-                Utils.StopBuildWithMessage("Settings not found manager ids for " + platform.ToString() +
+                Utils.StopBuildWithMessage("Settings did not find manager IDs for " + platform.ToString() +
                     " platform. For a successful build, you need to specify at least one ID" +
                     " that you use in the project. To test integration, you can use test mode with 'demo' manager id.", platform);
             }
@@ -222,8 +222,8 @@ namespace CAS.UEditor
             var targetId = settings.GetManagerId(0);
 
             var message = updateSettingsError +
-                "\nPlease try using a real CAS identifier in the first place CAS Settings Window else contact support." +
-                "\nIf you haven't created an CAS account and registered an app yet, use Test Ads mode to continue build.";
+                "\nPlease try using a real CAS identifier in the CAS Settings Window first, otherwise contact support." +
+                "\nIf you haven't created a CAS account and registered an app yet, use Test Ads mode to continue build.";
 
             Debug.LogError(Utils.logTag + message);
             if (!Utils.IsBatchMode())

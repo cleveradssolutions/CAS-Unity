@@ -20,7 +20,7 @@ namespace CAS.AdObject
 
         [SerializeField]
         private AdPosition adPosition = AdPosition.BottomCenter;
-        [Tooltip("For greater control over where a AdView is placed on screen. Use Density-independent Pixels (DP).")]
+        [Tooltip("For greater control over where an AdView is placed on screen. Use Density-independent Pixels (DP).")]
         [SerializeField]
         private Vector2Int adOffset = Vector2Int.zero;
         [SerializeField]

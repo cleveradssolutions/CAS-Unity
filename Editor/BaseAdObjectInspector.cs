@@ -101,7 +101,7 @@ namespace CAS.AdObject
             EditorGUILayout.PropertyField(initializeOnAwakeProp);
             EditorGUI.indentLevel++;
             if (initializeOnAwakeProp.boolValue)
-                EditorGUILayout.HelpBox("The CAS begin initialization automatically when the component is awake", MessageType.None);
+                EditorGUILayout.HelpBox("CAS begins initialization automatically when the component is awake", MessageType.None);
             else
                 EditorGUILayout.HelpBox("Call `Initialize()` method to begin CAS initialization", MessageType.None);
             EditorGUI.indentLevel--;
@@ -110,7 +110,7 @@ namespace CAS.AdObject
             if (consentFlowEnabledProp.boolValue)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.HelpBox("If desired, select an ConsentFlow Ad Object for additional options or leave it blank", MessageType.None);
+                EditorGUILayout.HelpBox("If desired, select a ConsentFlow Ad Object for additional options or leave it blank", MessageType.None);
                 EditorGUILayout.PropertyField(consentFlowProp);
                 if (consentFlowProp.objectReferenceValue)
                     EditorGUILayout.HelpBox("The selected component should not be used to manually show the consent flow.", MessageType.None);
