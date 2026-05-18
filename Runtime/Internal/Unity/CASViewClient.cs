@@ -21,6 +21,9 @@ namespace CAS.Unity
 
         public override int refreshInterval { get; set; }
 
+        [field: SerializeField]
+        public override string placement { get; set; }
+
         public override bool isReady { get { return loaded; } }
 
         internal CASViewClient(CASManagerClient client, CASManagerBehaviour behaviour, AdSize size) : base(client, size)

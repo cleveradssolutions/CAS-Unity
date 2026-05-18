@@ -244,7 +244,7 @@ namespace CAS.iOS
         internal static extern bool CASUIsAdReady(CASUManagerRef managerRef, int type);
 
         [DllImport("__Internal")]
-        internal static extern void CASUShowAd(CASUManagerRef managerRef, int type);
+        internal static extern void CASUShowAd(CASUManagerRef managerRef, int type, string placement);
         #endregion
 
         #region AdView
@@ -283,6 +283,9 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern void CASUSetAdViewRefreshInterval(CASUViewRef viewRef, int interval);
+        
+        [DllImport("__Internal")]
+        internal static extern void CASUSetAdViewPlacement(CASUViewRef viewRef, string placement);
 
         [DllImport("__Internal")]
         internal static extern void CASULoadAdView(CASUViewRef viewRef);

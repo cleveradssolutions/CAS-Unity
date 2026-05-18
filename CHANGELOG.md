@@ -1,5 +1,11 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.7.0] - 2026.05.18
+- See the native SDKs release notes 4.7.0 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added `placement` parameter for labeling the display location of all ad formats. Read more in the updated documentation.
+- [Android] Fixed build error `Failed to transform hybid.sdk-3.8.1.aar` by downgrading the Verve Adapter to 3.7.1 for Unity versions below 6.0.
+- [Editor] Fixed typos in the text.
+
 # [4.6.6] - 2026-04-17
 - See the native SDKs release notes 4.6.6 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 

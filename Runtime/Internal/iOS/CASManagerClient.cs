@@ -103,9 +103,9 @@ namespace CAS.iOS
             CASExterns.CASULoadAd(_managerRef, (int)adType);
         }
 
-        public override void ShowAd(AdType adType)
+        public override void ShowAd(AdType adType, string placement)
         {
-            CASExterns.CASUShowAd(_managerRef, (int)adType);
+            CASExterns.CASUShowAd(_managerRef, (int)adType, placement);
         }
 
         [UnityEngine.Scripting.Preserve]

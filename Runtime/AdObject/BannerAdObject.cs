@@ -17,14 +17,17 @@ namespace CAS.AdObject
         public static BannerAdObject Instance { get; private set; }
 
         public ManagerIndex managerId;
-
+        
         [SerializeField]
         private AdPosition adPosition = AdPosition.BottomCenter;
-        [Tooltip("For greater control over where a AdView is placed on screen. Use Density-independent Pixels (DP).")]
+        [Tooltip("For greater control over where an AdView is placed on screen. Use Density-independent Pixels (DP).")]
         [SerializeField]
         private Vector2Int adOffset = Vector2Int.zero;
         [SerializeField]
         private AdSize adSize = AdSize.Banner;
+        [Tooltip("An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.")]
+        [SerializeField]
+        private string placement = null;
 
         public UnityEvent OnAdLoaded;
         public CASUEventWithError OnAdFailedToLoad;
@@ -190,6 +193,7 @@ namespace CAS.AdObject
             newView.OnImpression += AdImpression;
 
             adView = newView;
+            adView.placement = placement;
 
             try
             {

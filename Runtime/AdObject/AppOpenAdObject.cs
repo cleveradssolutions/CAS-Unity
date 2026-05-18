@@ -13,6 +13,9 @@ namespace CAS.AdObject
     {
         public ManagerIndex managerId;
 
+        [Tooltip("An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.")]
+        [SerializeField]
+        private string placement;
         [SerializeField]
         private bool autoshow = false;
 
@@ -60,7 +63,7 @@ namespace CAS.AdObject
                 return;
             }
             OnAdShown.Invoke();
-            manager.ShowAd(AdType.AppOpen);
+            manager.ShowAd(AdType.AppOpen, placement);
         }
 
         #region MonoBehaviour

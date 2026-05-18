@@ -76,7 +76,7 @@ namespace CAS
         public abstract void EnableAd(AdType adType);
         protected abstract void LoadAdNetive(AdType adType);
         public abstract bool IsReadyAd(AdType adType);
-        public abstract void ShowAd(AdType adType);
+        public abstract void ShowAd(AdType adType, string placement);
         public abstract void DisposeAd(AdType adType);
         public abstract void SetAppReturnAdsEnabled(bool enable);
         public abstract void SkipNextAppReturnAds();
@@ -162,6 +162,11 @@ namespace CAS
                 LoadAdNetive(adType);
             else
                 HandleCallback(AdActionCode.FAILED, (int)adType, AdError.ManagerIsDisabled, null, null);
+        }
+
+        public void ShowAd(AdType adType)
+        {
+            ShowAd(adType, null);
         }
 
         public IAdView GetAdView(AdSize size)
@@ -443,6 +448,7 @@ namespace CAS
         public abstract void LoadNative();
         public abstract void SetActive(bool active);
         public abstract int refreshInterval { get; set; }
+        public abstract string placement { get; set; }
         public abstract bool isReady { get; }
 
         internal abstract void DestroyNative();

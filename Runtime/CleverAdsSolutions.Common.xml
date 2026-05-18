@@ -584,6 +584,14 @@
             <param name="y">Y-coordinate on screen in pixels.</param>
             <param name="position">The corner of the screen.</param>
         </member>
+        <member name="P:CAS.IAdView.placement">
+            <summary>
+            An optional placement name for the ad instance that helps categorize 
+            and track statistics across different ad placements.
+            The placement name is applied only before ad load.
+            Maximum 100 characters allowed for the placement name.
+            </summary>
+        </member>
         <member name="M:CAS.IAdView.Load">
             <summary>
             Manual load the Ad or reload current loaded Ad to skip impression.
@@ -864,6 +872,14 @@
             <para>To show a banner ad, use the <see cref="M:CAS.IAdView.SetActive(System.Boolean)"/> method obtained from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
             </summary>
             <param name="adType">The type of ad to show.</param>
+        </member>
+        <member name="M:CAS.IMediationManager.ShowAd(CAS.AdType,System.String)">
+            <summary>
+            Shows an ad of the specified <see cref="T:CAS.AdType"/>.
+            <para>To show a banner ad, use the <see cref="M:CAS.IAdView.SetActive(System.Boolean)"/> method obtained from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
+            </summary>
+            <param name="adType">The type of ad to show.</param>
+            <param name="placement">An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.</param>
         </member>
         <member name="M:CAS.IMediationManager.DisposeAd(CAS.AdType)">
             <summary>

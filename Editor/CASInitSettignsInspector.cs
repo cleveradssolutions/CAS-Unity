@@ -16,7 +16,7 @@ namespace CAS.UEditor
     using Utils = CASEditorUtils;
 
     [CustomEditor(typeof(CASInitSettings))]
-    internal class CASInitSettignsInspector : Editor
+    internal class CASInitSettingsInspector : Editor
     {
         #region Init settings properties
         private SerializedProperty testAdModeProp;
@@ -75,7 +75,7 @@ namespace CAS.UEditor
             }
             catch (MissingReferenceException)
             {
-                // The variable m_Targets of CASInitSettignsInspector doesn't exist anymore.
+                // The variable m_Targets of CASInitSettingsInspector doesn't exist anymore.
             }
 
             InitMainProperties(serializedObject);
@@ -94,10 +94,10 @@ namespace CAS.UEditor
                 edmRequiredNewer = edmVersion < Utils.minEDM4UVersion;
             environmentDetails = Utils.GetEnvironmentDetails(platform);
 
-            newCASVersion = Utils.GetNewVersionOrNull(Utils.gitUnityRepo, MobileAds.wrapperVersion, false, OnRemoteCASVersionRecieved);
+            newCASVersion = Utils.GetNewVersionOrNull(Utils.gitUnityRepo, MobileAds.wrapperVersion, false, OnRemoteCASVersionReceived);
         }
 
-        private void OnRemoteCASVersionRecieved(string version)
+        private void OnRemoteCASVersionReceived(string version)
         {
             newCASVersion = version;
             if (version != null)
@@ -209,7 +209,7 @@ namespace CAS.UEditor
 
             IsAdFormatsNotUsed();
             DrawSeparator();
-            OnEditroRuntimeActiveAdGUI();
+            OnEditorRuntimeActiveAdGUI();
             OnAudienceGUI();
 
             if (dependencyManager == null)
@@ -224,7 +224,7 @@ namespace CAS.UEditor
                 OnEDMAreaGUI();
             }
 
-            OnUserTrackingDesctiptionGUI();
+            OnUserTrackingDescriptionGUI();
             OnOtherSettingsGUI();
 
             HelpStyles.BeginBoxScope();
@@ -310,8 +310,8 @@ namespace CAS.UEditor
             {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.HelpBox(
-                    "The enabled Verbose Debug Mode will display a lot of useful information for debugging about the states of the sdk with tag 'CAS.AI'. " +
-                    "Enabled debug mode affects application performanc and should be disabled after debugging.",
+                    "The enabled Verbose Debug Mode will display a lot of useful information for debugging about the states of the SDK with tag 'CAS.AI'. " +
+                    "Enabled debug mode affects application performance and should be disabled after debugging.",
                     MessageType.Warning);
                 EditorGUI.indentLevel--;
             }
@@ -358,12 +358,12 @@ namespace CAS.UEditor
                 {
                     EditorGUI.indentLevel++;
                     EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox("If you are override the Android Gradle Plugin version, make sure it is compatible with the Gradle Wrapper version. See official Gradle and Android Gradle Plugin compatibility table.", MessageType.None);
+                    EditorGUILayout.HelpBox("If you override the Android Gradle Plugin version, make sure it is compatible with the Gradle Wrapper version. See official Gradle and Android Gradle Plugin compatibility table.", MessageType.None);
                     HelpStyles.HelpButton("https://developer.android.com/build/releases/gradle-plugin#updating-gradle");
                     EditorGUILayout.EndHorizontal();
 
                     if (!Version.TryParse(gradlePluginVersion, out gradleVer))
-                        EditorGUILayout.HelpBox("Supported version string only, for example 4.2.2", MessageType.Error);
+                        EditorGUILayout.HelpBox("Supported version strings only, for example 4.2.2", MessageType.Error);
                     EditorGUI.indentLevel--;
                 }
 #endif
@@ -396,7 +396,7 @@ namespace CAS.UEditor
             HelpStyles.EndBoxScope();
         }
 
-        private void OnUserTrackingDesctiptionGUI()
+        private void OnUserTrackingDescriptionGUI()
         {
             if (platform != BuildTarget.iOS)
                 return;
@@ -498,8 +498,8 @@ namespace CAS.UEditor
             EditorGUI.BeginDisabledGroup(!allowInter);
             interWhenNoRewardedAdProp.boolValue = EditorGUILayout.ToggleLeft(
                HelpStyles.GetContent("Increase filling by Interstitial ads", null,
-               "Sometimes a situation occurs when filling Rewarded ads is not enough, " +
-               "in this case, you can allow the display of Interstitial ads to receiving a reward in any case."),
+               "Sometimes a situation occurs when filling Rewarded ads is not enough; " +
+               "in this case, you can allow the display of Interstitial ads to receive a reward in any case."),
                 allowInter && interWhenNoRewardedAdProp.boolValue);
             EditorGUI.EndDisabledGroup();
             EditorGUI.indentLevel -= 2;
@@ -640,9 +640,9 @@ namespace CAS.UEditor
                     if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
                     {
                         DependencyManager.isDirt = false;
-                        var succses = Utils.TryResolveAndroidDependencies();
+                        var success = Utils.TryResolveAndroidDependencies();
                         EditorUtility.DisplayDialog("Android Dependencies",
-                            succses ? "Resolution Succeeded" : "Resolution Failed! See the log for details.",
+                            success ? "Resolution Succeeded" : "Resolution Failed! See the log for details.",
                             "OK");
                     }
                     else
@@ -661,7 +661,7 @@ namespace CAS.UEditor
                 return;
 
             var msg = prefix + " template feature is disabled!\n" +
-                "A successful build requires do modifications to " + prefix + " template.";
+                "A successful build requires modifications to " + prefix + " template.";
             if (HelpStyles.WarningWithButton(msg, "Enable", MessageType.Error))
                 CASPreprocessGradle.TryEnableGradleTemplate(path);
         }
@@ -674,7 +674,7 @@ namespace CAS.UEditor
                 EditorGUILayout.HelpBox("The ID of the first manager cannot be empty!", MessageType.Error);
             else
                 return;
-            EditorGUILayout.HelpBox("If you haven't created an CAS account and registered an manager yet, " +
+            EditorGUILayout.HelpBox("If you haven't created a CAS account and registered an manager yet, " +
                 "now's a great time to do so at cleveradssolutions.com. " +
                 "If you're just looking to experiment with the SDK, though, " +
                 "you can use the Test Ad Mode below with any manager ID.",
@@ -723,14 +723,14 @@ namespace CAS.UEditor
             }
         }
 
-        private void OnEditroRuntimeActiveAdGUI()
+        private void OnEditorRuntimeActiveAdGUI()
         {
             if (editorRuntimeActiveAdFlags > -1)
             {
                 DrawSeparator();
                 EditorGUI.BeginChangeCheck();
                 editorRuntimeActiveAdFlags = Convert.ToInt32(
-                    EditorGUILayout.EnumFlagsField("Editor runtime Active ad", (AdFlags)editorRuntimeActiveAdFlags));
+                    EditorGUILayout.EnumFlagsField("Editor runtime active ad", (AdFlags)editorRuntimeActiveAdFlags));
                 if (EditorGUI.EndChangeCheck())
                     PlayerPrefs.SetInt(Utils.editorRuntimeActiveAdPrefs, editorRuntimeActiveAdFlags);
             }

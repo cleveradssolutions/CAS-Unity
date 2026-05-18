@@ -11,6 +11,7 @@ namespace CAS.iOS
     {
         private IntPtr _viewRef;
         private IntPtr _viewClient;
+        private string _placement;
 
         public override bool isReady
         {
@@ -21,6 +22,17 @@ namespace CAS.iOS
         {
             get { return CASExterns.CASUGetAdViewRefreshInterval(_viewRef); }
             set { CASExterns.CASUSetAdViewRefreshInterval(_viewRef, value); }
+        }
+        
+        
+        public override string placement
+        {
+            get { return _placement; }
+            set
+            {
+                _placement = value;
+               CASExterns.CASUSetAdViewPlacement(_viewRef, value); 
+            }
         }
 
         internal CASViewClient(CASManagerBase manager, AdSize size) : base(manager, size) { }

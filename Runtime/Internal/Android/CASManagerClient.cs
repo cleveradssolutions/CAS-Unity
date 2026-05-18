@@ -74,9 +74,9 @@ namespace CAS.Android
             _managerBridge.Call("loadAd", (int)adType);
         }
 
-        public override void ShowAd(AdType adType)
+        public override void ShowAd(AdType adType, string placement)
         {
-            _managerBridge.Call("showAd", (int)adType);
+            _managerBridge.Call("showAd", (int)adType, placement);
         }
 
         public override void DisposeAd(AdType adType)
