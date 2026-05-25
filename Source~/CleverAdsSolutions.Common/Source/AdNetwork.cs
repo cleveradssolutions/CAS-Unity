@@ -38,6 +38,7 @@ namespace CAS
         DSPExchange = 30,
         LastPage = 31,
 
+        DisplayIO = 73,
     }
 
     public static class AdNetworkExtension
@@ -74,6 +75,7 @@ namespace CAS
                 case AdNetwork.Maticoo: return "Mtc";
                 case AdNetwork.PubMatic: return "PM";
                 case AdNetwork.Verve: return "Vr";
+                case AdNetwork.DisplayIO: return "DIO";
                 default: return string.Empty;
             }
         }

@@ -1,5 +1,8 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.7.1] - 2026-05-25
+- See the native SDKs release notes 4.7.1 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
 # [4.7.0] - 2026.05.18
 - See the native SDKs release notes 4.7.0 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added `placement` parameter for labeling the display location of all ad formats. Read more in the updated documentation.
