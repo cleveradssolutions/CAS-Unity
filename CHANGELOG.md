@@ -1,5 +1,10 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.7.3] - 2026-06-01
+- See the native SDKs release notes 4.7.3 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [iOS] Fixed build error: No such module or file `MobileAdsBundle.bundle`
+- [iOS] Fixed build error with Unity 6000.3.0f1+: Undefined symbols for `AppMetricaLibraryAdapter` (#19)
+
 # [4.7.1] - 2026-05-25
 - See the native SDKs release notes 4.7.1 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 

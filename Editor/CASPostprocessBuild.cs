@@ -1,23 +1,23 @@
 ﻿//  Copyright © 2025 CAS.AI. All rights reserved.
 
-// Bitcode is deprecated in Xcode 14.
-// Unity 2020.3.44f still use Bitcode.
-#define DisableBitcode
-
-// EDM4U will add `Unity-iPhone` target to Podfile by default
-//#define AddMainTargetToPodfile
-
 #if UNITY_2019_3_OR_NEWER
 #define EmbedDynamicFrameworks
 
 // Avoid XCFrameworks issue with: Invalid Signature - A sealed resource is missing or invalid
 //#define CAS_UNPACK_XCFRAMEWORKS
 
-// Yandex Ads not support to place the Resources bundle in UnityFramework, 
+// Yango Ads not support to place the Resources bundle in UnityFramework, 
 // then we embed the bundle to App target
-#define EmbedYandexAdsResourcesBundle
+//#define EmbedYangoAdsResourcesBundle
 #endif
 
+#if UNITY_6000_3_OR_NEWER
+// Fix https://github.com/cleveradssolutions/CAS-Unity/issues/19
+#define AppMetricaPodfileFix
+#else
+// Bitcode is deprecated in Xcode 14.
+#define DisableBitcode
+#endif
 
 #if UNITY_IOS || CASDeveloper
 using System;
@@ -70,9 +70,6 @@ namespace CAS.UEditor
             if (editorSettings.generateIOSDeepLinksForPromo && initSettings)
                 ApplyCrosspromoDynamicLinks(buildPath, initSettings, depManager);
 
-#if AddMainTargetToPodfile
-            UpdatePodfileForUnity2019(buildPath);
-#endif
             CASEditorUtils.Log("Postrocess Build done: " + MobileAds.wrapperVersion);
         }
 
@@ -121,11 +118,11 @@ namespace CAS.UEditor
                     var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
                     project.AddEmbeddablePaths(appTargetGuid, depManager);
 
-#if EmbedYandexAdsResourcesBundle
+#if EmbedYangoAdsResourcesBundle
                     var yandexDep = depManager.Find(AdNetwork.YangoAds);
                     if (yandexDep != null && yandexDep.IsInstalled())
                     {
-                        const string yandexBundlePath = "Pods/YandexMobileAds/static/YandexMobileAds.xcframework/MobileAdsBundle.bundle";
+                        const string yandexBundlePath = "Pods/YandexMobileAds/YandexMobileAds.xcframework/MobileAdsBundle.bundle";
                         project.AddEmbeddableResources(appTargetGuid, yandexBundlePath);
                     }
 #endif
@@ -139,26 +136,43 @@ namespace CAS.UEditor
                 project.SetBitcodeEnabled(project.ProjectGuid(), false);
             });
 #endif
+
+#if AppMetricaPodfileFix
+            AddPodfileFixes(buildPath);
+#endif
         }
 
-        private static void UpdatePodfileForUnity2019(string buildPath)
+        private static void AddPodfileFixes(string buildPath)
         {
             var path = Path.Combine(buildPath, "Podfile");
             if (!File.Exists(path))
             {
-                Debug.LogError(CASEditorUtils.logTag + "Podfile not found.\n" +
-                   "Please add `target '" + unityProjectName + "' do end` to the Podfile in root folder " +
-                   "of XCode project and call `pod install --no-repo-update`");
+                Debug.LogError(CASEditorUtils.logTag + "Not found: " + path);
                 return;
             }
             try
             {
                 var content = File.ReadAllText(path);
-                if (!content.Contains("'" + unityProjectName + "'"))
+                if (content.Contains("BUILD_LIBRARY_FOR_DISTRIBUTION"))
                 {
-                    content += "\ntarget '" + unityProjectName + "' do\nend\n";
-                    File.WriteAllText(path, content);
+                    return;
                 }
+
+                var postInstallFix = new string[]{
+                    "",
+                    "# CAS Postprocess AppMetricaPodfileFix",
+                    "post_install do |installer|",
+                    "  installer.pods_project.targets.each do |target|",
+                    "    if target.name == 'AppMetricaLibraryAdapter'",
+                    "      target.build_configurations.each do |config|",
+                    "        config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'NO'",
+                    "      end",
+                    "    end",
+                    "  end",
+                    "end"
+                };
+
+                File.AppendAllLines(path, postInstallFix);
             }
             catch (Exception e)
             {
@@ -247,8 +261,7 @@ namespace CAS.UEditor
 
             if (atsRoot == null || atsRoot.GetType() != typeof(PlistElementDict))
             {
-                // Add the missing App Transport Security settings for publishers if needed. 
-                CASEditorUtils.Log("Adding App Transport Security settings");
+                // Add the missing App Transport Security settings for publishers if needed.
                 atsRoot = plist.root.CreateDict("NSAppTransportSecurity");
                 atsRoot.AsDict().SetBoolean("NSAllowsArbitraryLoads", true);
                 return;
