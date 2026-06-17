@@ -70,6 +70,10 @@ namespace CAS.UEditor
             if (editorSettings.generateIOSDeepLinksForPromo && initSettings)
                 ApplyCrosspromoDynamicLinks(buildPath, initSettings, depManager);
 
+#if AppMetricaPodfileFix
+            AddPodfileFixes(buildPath);
+#endif
+
             CASEditorUtils.Log("Postrocess Build done: " + MobileAds.wrapperVersion);
         }
 
@@ -135,10 +139,6 @@ namespace CAS.UEditor
             {
                 project.SetBitcodeEnabled(project.ProjectGuid(), false);
             });
-#endif
-
-#if AppMetricaPodfileFix
-            AddPodfileFixes(buildPath);
 #endif
         }
 

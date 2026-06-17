@@ -39,6 +39,8 @@ namespace CAS
         LastPage = 31,
 
         DisplayIO = 73,
+        Bidease = 74,
+        Moloco = 76,
     }
 
     public static class AdNetworkExtension
@@ -76,6 +78,8 @@ namespace CAS
                 case AdNetwork.PubMatic: return "PM";
                 case AdNetwork.Verve: return "Vr";
                 case AdNetwork.DisplayIO: return "DIO";
+                case AdNetwork.Bidease: return "Bse";
+                case AdNetwork.Moloco: return "Mol";
                 default: return string.Empty;
             }
         }

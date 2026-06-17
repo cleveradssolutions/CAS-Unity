@@ -1,5 +1,13 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.7.4] - 2026-06-16
+- Updated the [Android SDK to 4.7.4](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.7.4](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added Unity Package Manager signature to archive.
+- [iOS] Fixed the need to manually run `pod install` for the fix from the 4.7.3. (#19)
+## Update Adapters
+- Added new adapter for Bidease (closed beta).
+- Added new adapter for Moloco (closed beta).
+
 # [4.7.3] - 2026-06-01
 - See the native SDKs release notes 4.7.3 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - [iOS] Fixed build error: No such module or file `MobileAdsBundle.bundle`

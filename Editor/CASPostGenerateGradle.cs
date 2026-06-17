@@ -40,10 +40,6 @@ Unity Version               | Gradle  | AGP
 // YSO Network version 1.3.1 required AGP 8+ to build.
 // So we force downgradle adapter to 'com.cleveradssolutions:ysonetwork:1.2.9.1'
 #define CAS_DOWNGRADE_YSO_SDK
-
-// Verve version 3.8.1 required AGP 8+ to build.
-// So we force downgradle adapter to 'com.cleveradssolutions:verve:3.7.1.0'
-#define CAS_DONWGRADE_VERVE_SDK
 #endif
 
 #if !UNITY_2021_3_OR_NEWER
