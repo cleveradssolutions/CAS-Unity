@@ -1,5 +1,12 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.8.0-beta1] - 2026-07-02
+- Updated the [Android SDK to 4.8.0-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.0-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added **Publishing Ads Solutions** designed for apps enrolled in CAS.AI Mobile Game Publishing.
+- [iOS] This release requires **a minimum Xcode version of 26.2**.
+- [Android] This release requires **a minimum Android API level of 24**.
+- [iOS] Fixed conflicting types for UnityIsPaused with Unity 6.5.
+
 # [4.7.4] - 2026-06-16
 - Updated the [Android SDK to 4.7.4](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.7.4](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added Unity Package Manager signature to archive.
