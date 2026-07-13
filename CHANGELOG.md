@@ -1,5 +1,9 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.9.0-alpha1] - 2026-07-13
+- Updated the [Android SDK to 4.9.0-alpha1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.0-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Changed the order of AdNetwork as required by the native SDK update.
+
 # [4.8.0-beta1] - 2026-07-02
 - Updated the [Android SDK to 4.8.0-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.0-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added **Publishing Ads Solutions** designed for apps enrolled in CAS.AI Mobile Game Publishing.

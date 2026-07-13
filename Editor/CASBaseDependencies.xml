@@ -1,6 +1,9 @@
 <dependencies>
   <androidPackages>
-    <androidPackage spec="com.cleveradssolutions:cas-sdk:4.8.0-beta1" version="4.8.0-beta1" />
+    <repositories>
+      <repository>https://repo.repsy.io/mvn/cleveradssolutions/beta</repository>
+    </repositories>
+    <androidPackage spec="com.cleveradssolutions:cas-sdk:4.9.0-alpha1" version="4.9.0-alpha1" />
     <androidPackage spec="androidx.lifecycle:lifecycle-process:2.6.2" version="2.6.2" />
   </androidPackages>
   <iosPods>
