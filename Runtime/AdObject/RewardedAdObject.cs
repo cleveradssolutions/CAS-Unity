@@ -12,6 +12,10 @@ namespace CAS.AdObject
     public sealed class RewardedAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
+        
+        [Tooltip("An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.")]
+        [SerializeField]
+        private string placement;
 
         public bool restartInterstitialInterval = false;
 
@@ -61,7 +65,7 @@ namespace CAS.AdObject
                 return;
             }
             OnAdShown.Invoke();
-            manager.ShowAd(AdType.Rewarded);
+            manager.ShowAd(AdType.Rewarded, placement);
         }
 
         #region MonoBehaviour

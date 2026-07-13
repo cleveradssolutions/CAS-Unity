@@ -10,6 +10,7 @@ namespace CAS.Android
     {
         private readonly AndroidJavaObject _bridge;
         private CASCallback _callback;
+        private string _placement;
 
         public override bool isReady
         {
@@ -20,6 +21,16 @@ namespace CAS.Android
         {
             get { return _bridge.Call<int>("getRefreshInterval"); }
             set { _bridge.Call("setRefreshInterval", value); }
+        }
+
+        public override string placement
+        {
+            get { return _placement; }
+            set
+            {
+                _placement = value;
+                _bridge.Call("setPlacement", value);
+            }
         }
 
         internal CASViewClient(CASManagerBase manager, AdSize size)

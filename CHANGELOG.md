@@ -1,5 +1,34 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.8.0-beta1] - 2026-07-02
+- Updated the [Android SDK to 4.8.0-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.0-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added **Publishing Ads Solutions** designed for apps enrolled in CAS.AI Mobile Game Publishing.
+- [iOS] This release requires **a minimum Xcode version of 26.2**.
+- [Android] This release requires **a minimum Android API level of 24**.
+- [iOS] Fixed conflicting types for UnityIsPaused with Unity 6.5.
+
+# [4.7.4] - 2026-06-16
+- Updated the [Android SDK to 4.7.4](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.7.4](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added Unity Package Manager signature to archive.
+- [iOS] Fixed the need to manually run `pod install` for the fix from the 4.7.3. (#19)
+## Update Adapters
+- Added new adapter for Bidease (closed beta).
+- Added new adapter for Moloco (closed beta).
+
+# [4.7.3] - 2026-06-01
+- See the native SDKs release notes 4.7.3 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [iOS] Fixed build error: No such module or file `MobileAdsBundle.bundle`
+- [iOS] Fixed build error with Unity 6000.3.0f1+: Undefined symbols for `AppMetricaLibraryAdapter` (#19)
+
+# [4.7.1] - 2026-05-25
+- See the native SDKs release notes 4.7.1 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
+# [4.7.0] - 2026.05.18
+- See the native SDKs release notes 4.7.0 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added `placement` parameter for labeling the display location of all ad formats. Read more in the updated documentation.
+- [Android] Fixed build error `Failed to transform hybid.sdk-3.8.1.aar` by downgrading the Verve Adapter to 3.7.1 for Unity versions below 6.0.
+- [Editor] Fixed typos in the text.
+
 # [4.6.6] - 2026-04-17
 - See the native SDKs release notes 4.6.6 for [Android](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS](https://github.com/cleveradssolutions/CAS-iOS/releases).
 

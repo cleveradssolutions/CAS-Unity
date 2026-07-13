@@ -155,6 +155,7 @@ MonoBehaviour:
   managerId:
     android: 0
     ios: 0
+  placement: 
   autoshow: 1
   OnAdLoaded:
     m_PersistentCalls:
@@ -299,6 +300,7 @@ MonoBehaviour:
   adPosition: 3
   adOffset: {x: 0, y: 0}
   adSize: 1
+  placement: 
   OnAdLoaded:
     m_PersistentCalls:
       m_Calls:
@@ -795,7 +797,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   managerId:
     android: 0
-    ios: 0
+    ios: 1
+  placement: 
   OnAdLoaded:
     m_PersistentCalls:
       m_Calls:
@@ -3809,7 +3812,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2099481161}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.6379828
+  m_Size: 0.6379827
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4193,6 +4196,7 @@ MonoBehaviour:
   managerId:
     android: 0
     ios: 0
+  placement: 
   restartInterstitialInterval: 1
   OnAdLoaded:
     m_PersistentCalls:

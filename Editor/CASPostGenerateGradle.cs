@@ -104,7 +104,7 @@ namespace CAS.UEditor
             var propertiesPath = Path.Combine(path, "gradle/wrapper/gradle-wrapper.properties");
             if (!File.Exists(propertiesPath))
             {
-                Debug.LogError(Utils.logTag + "Required file is missied: " + propertiesPath);
+                Debug.LogError(Utils.logTag + "Required file is missing: " + propertiesPath);
                 return;
             }
             var lines = File.ReadAllLines(propertiesPath);
@@ -188,7 +188,7 @@ namespace CAS.UEditor
             var gradlePath = Path.Combine(path, "build.gradle");
             if (!File.Exists(gradlePath))
             {
-                Debug.LogError(Utils.logTag + "Required file is missied: " + gradlePath);
+                Debug.LogError(Utils.logTag + "Required file is missing: " + gradlePath);
                 return;
             }
 
@@ -249,30 +249,30 @@ namespace CAS.UEditor
             }
 #endif
 
-#if CAS_DOWNGRADE_META_SDK
-            var metaDependency = depManager.Find(AdNetwork.AudienceNetwork);
-            if (metaDependency.IsInstalled())
+            if (currVersion < new System.Version(8, 0, 0))
             {
-                const string forceMetaSDK = "force 'com.facebook.android:audience-network-sdk:6.20.0'";
-                if (AddResolutionStrategy(forceMetaSDK, linesList) && currVersion < new System.Version(8, 0, 0))
-                {
-                    updated = true;
-                    lines = linesList.ToArray();
-                }
-            }
+                var strategies = new Dictionary<AdNetwork, string>();
+#if CAS_DOWNGRADE_META_SDK
+                strategies.Add(AdNetwork.AudienceNetwork, "force 'com.facebook.android:audience-network-sdk:6.20.0'");
 #endif
 #if CAS_DOWNGRADE_YSO_SDK
-            var ysoDependency = depManager.Find(AdNetwork.YsoNetwork);
-            if (ysoDependency.IsInstalled() && currVersion < new System.Version(8, 0, 0))
-            {
-                const string forceMetaSDK = "force 'com.cleveradssolutions:ysonetwork:1.2.9.1'";
-                if (AddResolutionStrategy(forceMetaSDK, linesList))
+                strategies.Add(AdNetwork.YsoNetwork, "force 'com.cleveradssolutions:ysonetwork:1.2.9.1'");
+#endif
+#if CAS_DONWGRADE_VERVE_SDK
+                strategies.Add(AdNetwork.Verve, "force 'com.cleveradssolutions:verve:3.7.1.0'");
+#endif
+                foreach (var adapter in strategies)
                 {
-                    updated = true;
-                    lines = linesList.ToArray();
+                    if (depManager.Find(adapter.Key).IsInstalled())
+                    {
+                        if (AddResolutionStrategy(adapter.Value, linesList))
+                        {
+                            updated = true;
+                            lines = linesList.ToArray();
+                        }
+                    }
                 }
             }
-#endif
 
             if (updated)
                 File.WriteAllLines(gradlePath, lines);
@@ -283,7 +283,7 @@ namespace CAS.UEditor
             var gradlePath = Path.Combine(path, "build.gradle");
             if (!File.Exists(gradlePath))
             {
-                Debug.LogError(Utils.logTag + "Required file is missied: " + gradlePath);
+                Debug.LogError(Utils.logTag + "Required file is missing: " + gradlePath);
                 return;
             }
             var mainGradle = File.ReadAllText(gradlePath);

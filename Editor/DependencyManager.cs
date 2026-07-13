@@ -178,13 +178,15 @@ namespace CAS.UEditor
     [Serializable]
     public partial class Dependency
     {
+        public const AdNetwork adBase = (AdNetwork)61;
         public const AdNetwork adsOptimal = (AdNetwork)62;
         public const AdNetwork adsFamilies = (AdNetwork)63;
-        public const AdNetwork adBase = (AdNetwork)64;
+        public const AdNetwork adsPublishing = (AdNetwork)64;
         public const AdNetwork noNetwork = (AdNetwork)65;
         public const string adBaseName = "Base";
         public const string adsOptimalName = "OptimalAds";
         public const string adsFamiliesName = "FamiliesAds";
+        public const string adsPublishingName = "PublishingAds";
 
         [Flags]
         public enum Label

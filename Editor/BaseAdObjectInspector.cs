@@ -101,7 +101,7 @@ namespace CAS.AdObject
             EditorGUILayout.PropertyField(initializeOnAwakeProp);
             EditorGUI.indentLevel++;
             if (initializeOnAwakeProp.boolValue)
-                EditorGUILayout.HelpBox("The CAS begin initialization automatically when the component is awake", MessageType.None);
+                EditorGUILayout.HelpBox("CAS begins initialization automatically when the component is awake", MessageType.None);
             else
                 EditorGUILayout.HelpBox("Call `Initialize()` method to begin CAS initialization", MessageType.None);
             EditorGUI.indentLevel--;
@@ -110,7 +110,7 @@ namespace CAS.AdObject
             if (consentFlowEnabledProp.boolValue)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.HelpBox("If desired, select an ConsentFlow Ad Object for additional options or leave it blank", MessageType.None);
+                EditorGUILayout.HelpBox("If desired, select a ConsentFlow Ad Object for additional options or leave it blank", MessageType.None);
                 EditorGUILayout.PropertyField(consentFlowProp);
                 if (consentFlowProp.objectReferenceValue)
                     EditorGUILayout.HelpBox("The selected component should not be used to manually show the consent flow.", MessageType.None);
@@ -211,6 +211,7 @@ namespace CAS.AdObject
     [CustomEditor(typeof(BannerAdObject))]
     internal class BannerAdObjectInspector : BaseAdObjectInspector
     {
+        private SerializedProperty placement;
         private SerializedProperty adPositionProp;
         private SerializedProperty adSizeProp;
         private SerializedProperty adOffsetProp;
@@ -221,6 +222,7 @@ namespace CAS.AdObject
         {
             base.OnEnable();
             var obj = serializedObject;
+            placement = obj.FindProperty("placement");
             adPositionProp = obj.FindProperty("adPosition");
             adOffsetProp = obj.FindProperty("adOffset");
             adSizeProp = obj.FindProperty("adSize");
@@ -234,7 +236,7 @@ namespace CAS.AdObject
             var isPlaying = Application.isPlaying;
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(adPositionProp);
-            
+
             EditorGUI.indentLevel++;
             adOffsetProp.vector2IntValue = EditorGUILayout.Vector2IntField("Offset Points", adOffsetProp.vector2IntValue);
             if (EditorGUI.EndChangeCheck() && isPlaying)
@@ -254,6 +256,8 @@ namespace CAS.AdObject
             EditorGUILayout.PropertyField(adSizeProp);
             if (EditorGUI.EndChangeCheck() && Application.isPlaying)
                 adView.SetAdSizeEnumIndex(adSizeProp.intValue);
+
+            EditorGUILayout.PropertyField(placement);
         }
 
         protected override void OnCallbacksGUI()
@@ -273,6 +277,7 @@ namespace CAS.AdObject
     [CanEditMultipleObjects]
     internal class InterstitialAdObjectInspector : BaseAdObjectInspector
     {
+        private SerializedProperty placement;
         private SerializedProperty onAdFailedToShowProp;
         private SerializedProperty onAdClosedProp;
 
@@ -280,8 +285,14 @@ namespace CAS.AdObject
         {
             base.OnEnable();
             var obj = serializedObject;
+            placement = obj.FindProperty("placement");
             onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
             onAdClosedProp = obj.FindProperty("OnAdClosed");
+        }
+
+        protected override void OnAdditionalPropertiesGUI()
+        {
+            EditorGUILayout.PropertyField(placement);
         }
 
         protected override void OnCallbacksGUI()
@@ -367,14 +378,18 @@ namespace CAS.AdObject
     }
 
     [CustomEditor(typeof(ReturnToPlayAdObject))]
-    internal class ReturnToPlayAdObjectInspector : InterstitialAdObjectInspector
+    internal class ReturnToPlayAdObjectInspector : BaseAdObjectInspector
     {
+        private SerializedProperty onAdFailedToShowProp;
+        private SerializedProperty onAdClosedProp;
         private SerializedProperty allowAdProp;
 
         protected override void OnEnable()
         {
             base.OnEnable();
             var obj = serializedObject;
+            onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
+            onAdClosedProp = obj.FindProperty("OnAdClosed");
             allowAdProp = obj.FindProperty("_allowReturnToPlayAd");
         }
 
@@ -390,6 +405,19 @@ namespace CAS.AdObject
             {
                 ((ReturnToPlayAdObject)target).allowReturnToPlayAd = allowAdProp.boolValue;
             }
+        }
+
+        protected override void OnCallbacksGUI()
+        {
+            EditorGUILayout.PropertyField(onAdFailedToShowProp);
+            base.OnCallbacksGUI();
+            EditorGUILayout.PropertyField(onAdClosedProp);
+        }
+
+        protected override void OnFooterGUI()
+        {
+            EditorGUILayout.LabelField("Call `Present()` method to show Interstitial Ad.",
+                EditorStyles.wordWrappedMiniLabel);
         }
     }
 }

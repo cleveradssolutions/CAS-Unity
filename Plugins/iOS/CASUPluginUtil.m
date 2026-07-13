@@ -8,11 +8,16 @@
 #import <AVFoundation/AVFoundation.h>
 #import "CASUPluginUtil.h"
 
+#if __has_include("Unity/UnityInternalInterface.h")
+#import "Unity/UnityInternalInterface.h"
+#else
+// Unity 6.5 replaced int with bool in UnityIsPaused and UnityUpdateMuteState functions.
 extern int UnityIsPaused(void);
 extern void UnityPause(int pause);
 extern void UnityUpdateMuteState(int mute);
-extern UIViewController * UnityGetGLViewController(void);
-extern UIWindow * UnityGetMainWindow(void);
+extern UIViewController *UnityGetGLViewController(void);
+extern UIWindow *UnityGetMainWindow(void);
+#endif
 
 @interface CASUPluginUtil ()
 @property (nonatomic, strong) NSMutableDictionary *internalReferences;

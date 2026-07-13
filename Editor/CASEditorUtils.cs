@@ -20,11 +20,8 @@ namespace CAS.UEditor
         public const string rootCASFolderPath = "Assets/CleverAdsSolutions";
         public const string editorFolderPath = rootCASFolderPath + "/Editor";
 
-        // 2021.3.41 and 2022.3.38f use minimum API 24
-        public const int minAndroidVersion = 23;
-        public const int targetAndroidVersion = 34;
-
-        // UNITY_2021_3_OR_NEWER use minimum iOS version 12
+        public const int minAndroidVersion = 24;
+        public const int targetAndroidVersion = 35;
         public const int targetIOSVersion = 13;
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
@@ -151,6 +148,8 @@ namespace CAS.UEditor
                     return Dependency.adsOptimalName;
                 case Dependency.adsFamilies:
                     return Dependency.adsFamiliesName;
+                case Dependency.adsPublishing:
+                    return Dependency.adsPublishingName;
                 case AdNetwork.DTExchange:
                     return "DTExchange";
                 case AdNetwork.LiftoffMonetize:

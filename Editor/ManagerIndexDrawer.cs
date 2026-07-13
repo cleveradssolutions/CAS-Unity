@@ -22,7 +22,7 @@ namespace CAS.AdObject
             var android = property.FindPropertyRelative( "android" );
             var ios = property.FindPropertyRelative( "ios" );
             position.yMax -= position.height * 0.66f;
-            EditorGUI.LabelField( position, "Mediaiton manager" );
+            EditorGUI.LabelField( position, "Mediation manager" );
             position.y += position.height;
             EditorGUI.indentLevel++;
             android.intValue = EditorGUI.Popup( position, "Android", android.intValue, androidIDs );

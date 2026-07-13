@@ -92,6 +92,14 @@ namespace CAS
         void SetPositionPx(int x, int y, AdPosition position = AdPosition.TopLeft);
 
         /// <summary>
+        /// An optional placement name for the ad instance that helps categorize 
+        /// and track statistics across different ad placements.
+        /// The placement name is applied only before ad load.
+        /// Maximum 100 characters allowed for the placement name.
+        /// </summary>
+        string placement { get; set; }
+
+        /// <summary>
         /// Manual load the Ad or reload current loaded Ad to skip impression.
         /// <para>You can get a callback for the successful loading of an ad by subscribe to <see cref="OnLoaded"/>.</para>
         /// </summary>

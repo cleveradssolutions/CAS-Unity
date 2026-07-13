@@ -5,23 +5,20 @@
 //  Copyright © 2025 CleverAdsSolutions LTD, CAS.AI. All rights reserved.
 //
 
-#import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
-#import <CleverAdsSolutions/CleverAdsSolutions.h>
-#import <Foundation/Foundation.h>
 #import "CASUManager.h"
 #import "CASUPluginUtil.h"
 #import "CASUTypes.h"
 #import "CASUView.h"
-
+#import <CleverAdsSolutions/CleverAdsSolutions-Swift.h>
+#import <CleverAdsSolutions/CleverAdsSolutions.h>
+#import <Foundation/Foundation.h>
 
 /// Returns an NSString copying the characters from |bytes|, a C array of UTF8-encoded bytes.
 /// Returns nil if |bytes| is NULL.
-static NSString * CASUStringFromUnity(const char *bytes) {
-    return bytes ? @(bytes) : nil;
-}
+static NSString *CASUStringFromUnity(const char *bytes) { return bytes ? @(bytes) : nil; }
 
 /// Returns a C string from a C array of UTF8-encoded bytes.
-const char * CASUStringToUnity(NSString *str) {
+const char *CASUStringToUnity(NSString *str) {
     if (!str) {
         return NULL;
     }
@@ -44,41 +41,23 @@ void CASUSetTestDeviceWithIds(const char **testDeviceIDs, int testDeviceIDLength
     [CAS.settings setTestDeviceWithIds:testDeviceIDsArray];
 }
 
-void CASUSetTrialAdFreeInterval(int interval) {
-    CAS.settings.trialAdFreeInterval = interval;
-}
+void CASUSetTrialAdFreeInterval(int interval) { CAS.settings.trialAdFreeInterval = interval; }
 
-int CASUGetTrialAdFreeInterval(void) {
-    return (int)CAS.settings.trialAdFreeInterval;
-}
+int CASUGetTrialAdFreeInterval(void) { return (int)CAS.settings.trialAdFreeInterval; }
 
-void CASUSetBannerRefreshRate(int interval) {
-    CAS.settings.bannerRefreshInterval = interval;
-}
+void CASUSetBannerRefreshRate(int interval) { CAS.settings.bannerRefreshInterval = interval; }
 
-int CASUGetBannerRefreshRate(void) {
-    return (int)CAS.settings.bannerRefreshInterval;
-}
+int CASUGetBannerRefreshRate(void) { return (int)CAS.settings.bannerRefreshInterval; }
 
-void CASUSetInterstitialInterval(int interval) {
-    CAS.settings.interstitialInterval = interval;
-}
+void CASUSetInterstitialInterval(int interval) { CAS.settings.interstitialInterval = interval; }
 
-int CASUGetInterstitialInterval(void) {
-    return (int)CAS.settings.interstitialInterval;
-}
+int CASUGetInterstitialInterval(void) { return (int)CAS.settings.interstitialInterval; }
 
-void CASURestartInterstitialInterval(void) {
-    [CAS.settings restartInterstitialInterval];
-}
+void CASURestartInterstitialInterval(void) { [CAS.settings restartInterstitialInterval]; }
 
-void CASUSetUserConsent(int consent) {
-    CAS.settings.userConsent = (CASConsentStatus)consent;
-}
+void CASUSetUserConsent(int consent) { CAS.settings.userConsent = (CASConsentStatus)consent; }
 
-int CASUGetUserConsent(void) {
-    return (int)CAS.settings.userConsent;
-}
+int CASUGetUserConsent(void) { return (int)CAS.settings.userConsent; }
 
 int CASUGetVendorConsent(int vendorId) {
     return (int)[CAS.settings getVendorConsentWithVendorId:vendorId];
@@ -88,45 +67,27 @@ int CASUGetAdditionalConsent(int providerId) {
     return (int)[CAS.settings getAdditionalConsentWithProviderId:providerId];
 }
 
-void CASUSetCCPAStatus(int doNotSell) {
-    CAS.settings.userCCPAStatus = (CASCCPAStatus)doNotSell;
-}
+void CASUSetCCPAStatus(int doNotSell) { CAS.settings.userCCPAStatus = (CASCCPAStatus)doNotSell; }
 
-int CASUGetCCPAStatus(void) {
-    return (int)CAS.settings.userCCPAStatus;
-}
+int CASUGetCCPAStatus(void) { return (int)CAS.settings.userCCPAStatus; }
 
-void CASUSetAudienceTagged(int audience) {
-    CAS.settings.taggedAudience = (CASAudience)audience;
-}
+void CASUSetAudienceTagged(int audience) { CAS.settings.taggedAudience = (CASAudience)audience; }
 
-int CASUGetAudienceTagged(void) {
-    return (int)CAS.settings.taggedAudience;
-}
+int CASUGetAudienceTagged(void) { return (int)CAS.settings.taggedAudience; }
 
-void CASUSetDebugMode(BOOL mode) {
-    CAS.settings.debugMode = mode;
-}
+void CASUSetDebugMode(BOOL mode) { CAS.settings.debugMode = mode; }
 
-BOOL CASUGetDebugMode(void) {
-    return CAS.settings.debugMode;
-}
+BOOL CASUGetDebugMode(void) { return CAS.settings.debugMode; }
 
-void CASUSetMuteAdSounds(BOOL muted) {
-    CAS.settings.mutedAdSounds = muted;
-}
+void CASUSetMuteAdSounds(BOOL muted) { CAS.settings.mutedAdSounds = muted; }
 
-BOOL CASUGetMuteAdSounds(void) {
-    return CAS.settings.mutedAdSounds;
-}
+BOOL CASUGetMuteAdSounds(void) { return CAS.settings.mutedAdSounds; }
 
 void CASUSetLoadingWithMode(int mode) {
     [CAS.settings setLoadingWithMode:(CASLoadingManagerMode)mode];
 }
 
-int CASUGetLoadingMode(void) {
-    return (int)[CAS.settings getLoadingMode];
-}
+int CASUGetLoadingMode(void) { return (int)[CAS.settings getLoadingMode]; }
 
 void CASUSetInterstitialAdsWhenVideoCostAreLower(BOOL allow) {
     [CAS.settings setInterstitialAdsWhenVideoCostAreLowerWithAllow:allow];
@@ -136,47 +97,31 @@ BOOL CASUGetInterstitialAdsWhenVideoCostAreLower(void) {
     return [CAS.settings isInterstitialAdsWhenVideoCostAreLowerAllowed];
 }
 
-void CASUSetiOSAppPauseOnBackground(BOOL pause) {
-    [CASUPluginUtil setPauseOnBackground:pause];
-}
+void CASUSetiOSAppPauseOnBackground(BOOL pause) { [CASUPluginUtil setPauseOnBackground:pause]; }
 
-BOOL CASUGetiOSAppPauseOnBackground(void) {
-    return [CASUPluginUtil pauseOnBackground];
-}
+BOOL CASUGetiOSAppPauseOnBackground(void) { return [CASUPluginUtil pauseOnBackground]; }
 
 void CASUSetTrackLocationEnabled(BOOL enabled) {
     CAS.targetingOptions.locationCollectionEnabled = enabled;
 }
 
-BOOL CASUGetTrackLocationEnabled(void) {
-    return CAS.targetingOptions.locationCollectionEnabled;
-}
+BOOL CASUGetTrackLocationEnabled(void) { return CAS.targetingOptions.locationCollectionEnabled; }
 
 #pragma mark - User targeting options
 
-void CASUSetUserGender(int gender) {
-    CAS.targetingOptions.gender = (CASGender)gender;
-}
+void CASUSetUserGender(int gender) { CAS.targetingOptions.gender = (CASGender)gender; }
 
-int CASUGetUserGender(void) {
-    return (int)CAS.targetingOptions.gender;
-}
+int CASUGetUserGender(void) { return (int)CAS.targetingOptions.gender; }
 
-void CASUSetUserAge(int age) {
-    CAS.targetingOptions.age = age;
-}
+void CASUSetUserAge(int age) { CAS.targetingOptions.age = age; }
 
-int CASUGetUserAge(void) {
-    return (int)CAS.targetingOptions.age;
-}
+int CASUGetUserAge(void) { return (int)CAS.targetingOptions.age; }
 
 void CASUSetContentURL(const char *contentURL) {
     CAS.targetingOptions.contentUrl = CASUStringFromUnity(contentURL);
 }
 
-const char * CASUGetContentURL(void) {
-    return CASUStringToUnity(CAS.targetingOptions.contentUrl);
-}
+const char *CASUGetContentURL(void) { return CASUStringToUnity(CAS.targetingOptions.contentUrl); }
 
 void CASUSetKeywords(const char **keywords, int keywordsLength) {
     NSMutableArray *keywordsArray = [[NSMutableArray alloc] init];
@@ -192,15 +137,11 @@ void CASUSetUserID(const char *userID) {
     CAS.targetingOptions.userID = CASUStringFromUnity(userID);
 }
 
-const char * CASUGetUserID(void) {
-    return CASUStringToUnity(CAS.targetingOptions.userID);
-}
+const char *CASUGetUserID(void) { return CASUStringToUnity(CAS.targetingOptions.userID); }
 
 #pragma mark - Utils
 
-void CASUValidateIntegration(void) {
-    [CAS validateIntegration];
-}
+void CASUValidateIntegration(void) { [CAS validateIntegration]; }
 
 void CASUOpenDebugger(const char *casId) {
     UIViewController *root = [CASUPluginUtil unityWindow].rootViewController;
@@ -224,7 +165,7 @@ void CASUOpenDebugger(const char *casId) {
     NSLog(@"[CAS.AI] Framework bridge cant find CASDebugger");
 }
 
-const char * CASUGetActiveMediationPattern(void) {
+const char *CASUGetActiveMediationPattern(void) {
     return CASUStringToUnity([CASNetwork getActiveNetworkPattern]);
 }
 
@@ -238,13 +179,9 @@ BOOL CASUIsActiveMediationNetwork(int net) {
     return NO;
 }
 
-const char * CASUGetSDKVersion(void) {
-    return CASUStringToUnity([CAS getSDKVersion]);
-}
+const char *CASUGetSDKVersion(void) { return CASUStringToUnity([CAS getSDKVersion]); }
 
-float CASUGetDeviceScreenScale(void) {
-    return [UIScreen mainScreen].scale;
-}
+float CASUGetDeviceScreenScale(void) { return [UIScreen mainScreen].scale; }
 
 void CASUReportCustomRevenue(const char *json) {
     [CAS reportCustomRevenueWithJson:CASUStringFromUnity(json)];
@@ -252,9 +189,8 @@ void CASUReportCustomRevenue(const char *json) {
 
 #pragma mark - CAS Manager
 
-void CASUSetMediationExtras(const char **extraKeys,
-                            const char **extraValues,
-                            NSInteger  extrasCount) {
+void CASUSetMediationExtras(const char **extraKeys, const char **extraValues,
+                            NSInteger extrasCount) {
     if (![CASUPluginUtil sharedInstance].builder) {
         [CASUPluginUtil sharedInstance].builder = [CAS buildManager];
     }
@@ -267,9 +203,7 @@ void CASUSetMediationExtras(const char **extraKeys,
     }
 }
 
-void CASUSetConsentFlow(BOOL                      isEnabled,
-                        int                       geography,
-                        const char                *policyUrl,
+void CASUSetConsentFlow(BOOL isEnabled, int geography, const char *policyUrl,
                         CASUConsentFlowCompletion completion) {
     if (![CASUPluginUtil sharedInstance].builder) {
         [CASUPluginUtil sharedInstance].builder = [CAS buildManager];
@@ -284,7 +218,7 @@ void CASUSetConsentFlow(BOOL                      isEnabled,
 
     if (completion) {
         flow.completionHandler = ^(enum CASConsentFlowStatus status) {
-            completion((int)status);
+          completion((int)status);
         };
     }
 
@@ -298,29 +232,24 @@ void CASUDisableConsentFlow(void) {
 
     CASManagerBuilder *builder = [CASUPluginUtil sharedInstance].builder;
 
-    [builder withConsentFlow:[[CASConsentFlow alloc]initWithEnabled:NO]];
+    [builder withConsentFlow:[[CASConsentFlow alloc] initWithEnabled:NO]];
 }
 
-CASUManagerRef CASUBuildManager(CASManagerClientRef                *client,
-                                CASUInitializationCompleteCallback onInit,
-                                const char                         *identifier,
-                                BOOL                               demoAd,
-                                const char                         *unityVersion) {
+CASUManagerRef CASUBuildManager(CASManagerClientRef *client,
+                                CASUInitializationCompleteCallback onInit, const char *identifier,
+                                BOOL demoAd, const char *unityVersion) {
     CASUPluginUtil *cache = [CASUPluginUtil sharedInstance];
 
-    CASManagerBuilder *builder = cache.builder ? : [CAS buildManager];
+    CASManagerBuilder *builder = cache.builder ?: [CAS buildManager];
 
     [builder withTestAdMode:demoAd];
     [builder withFramework:@"Unity" version:CASUStringFromUnity(unityVersion)];
 
     if (onInit) {
         [builder withCompletionHandler:^(CASInitialConfig *config) {
-            onInit(client,
-                   CASUStringToUnity(config.error),
-                   CASUStringToUnity(config.countryCode),
-                   config.isConsentRequired,
-                   config.manager.isDemoAdMode,
-                   (int)config.consentFlowStatus);
+          onInit(client, CASUStringToUnity(config.error), CASUStringToUnity(config.countryCode),
+                 config.isConsentRequired, config.manager.isDemoAdMode,
+                 (int)config.consentFlowStatus);
         }];
     }
 
@@ -351,8 +280,7 @@ void CASUSetLastPageAdContent(CASUManagerRef managerRef, const char *contentJson
     [manager setLastPageAdFor:CASUStringFromUnity(contentJson)];
 }
 
-void CASUSetDelegates(CASUManagerRef         managerRef,
-                      CASUActionCallback     actionCallback,
+void CASUSetDelegates(CASUManagerRef managerRef, CASUActionCallback actionCallback,
                       CASUImpressionCallback impressionCallback) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
 
@@ -366,10 +294,10 @@ void CASUSetDelegates(CASUManagerRef         managerRef,
     manager.appOpenCallback.impressionCallback = impressionCallback;
 }
 
-void CASUShowAd(CASUManagerRef managerRef, int type) {
+void CASUShowAd(CASUManagerRef managerRef, int type, const char *placement) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
 
-    [manager showAd:type];
+    [manager showAd:type placement:CASUStringFromUnity(placement)];
 }
 
 void CASULoadAd(CASUManagerRef managerRef, int type) {
@@ -386,20 +314,16 @@ BOOL CASUIsAdReady(CASUManagerRef managerRef, int type) {
 
 #pragma mark - AdView
 
-CASUViewRef CASUCreateAdView(CASUManagerRef   managerRef,
-                             CASViewClientRef *client,
-                             int              adSizeCode) {
+CASUViewRef CASUCreateAdView(CASUManagerRef managerRef, CASViewClientRef *client, int adSizeCode) {
     CASUManager *manager = (__bridge CASUManager *)managerRef;
     CASUView *view = [manager createViewWithSize:adSizeCode client:client];
-
 
     return (__bridge CASUViewRef)view;
 }
 
-void CASUSetAdViewDelegate(CASUViewRef                viewRef,
-                           CASUViewActionCallback     actionCallback,
+void CASUSetAdViewDelegate(CASUViewRef viewRef, CASUViewActionCallback actionCallback,
                            CASUViewImpressionCallback impressionCallback,
-                           CASUViewRectCallback       rectCallback) {
+                           CASUViewRectCallback rectCallback) {
     CASUView *view = (__bridge CASUView *)viewRef;
 
     view.actionCallback = actionCallback;
@@ -413,7 +337,7 @@ void CASUDestroyAdView(CASUViewRef viewRef) {
 
         if (view) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [view destroy];
+              [view destroy];
             });
         }
     }
@@ -459,6 +383,12 @@ void CASUSetAdViewRefreshInterval(CASUViewRef viewRef, int interval) {
     CASUView *view = (__bridge CASUView *)viewRef;
 
     [view setRefreshInterval:interval];
+}
+
+void CASUSetAdViewPlacement(CASUViewRef viewRef, const char *placement) {
+    CASUView *view = (__bridge CASUView *)viewRef;
+
+    [view setPlacement:CASUStringFromUnity(placement)];
 }
 
 void CASULoadAdView(CASUViewRef viewRef) {
@@ -522,7 +452,7 @@ int CASUGetImpressionPrecission(CASImpressionRef impression) {
     return (int)CASPriceAccuracyUndisclosed;
 }
 
-const char * CASUGetImpressionCreativeId(CASImpressionRef impression) {
+const char *CASUGetImpressionCreativeId(CASImpressionRef impression) {
     if (impression) {
         CASContentInfo *internalImp = (__bridge CASContentInfo *)impression;
         return CASUStringToUnity(internalImp.creativeID);
@@ -531,7 +461,7 @@ const char * CASUGetImpressionCreativeId(CASImpressionRef impression) {
     return NULL;
 }
 
-const char * CASUGetImpressionIdentifier(CASImpressionRef impression) {
+const char *CASUGetImpressionIdentifier(CASImpressionRef impression) {
     if (impression) {
         CASContentInfo *internalImp = (__bridge CASContentInfo *)impression;
         return CASUStringToUnity(internalImp.sourceUnitID);
@@ -560,10 +490,7 @@ double CASUGetImpressionLifetimeRevenue(CASImpressionRef impression) {
 
 #pragma mark - Consent Flow
 
-void CASUShowConsentFlow(BOOL                      ifRequired,
-                         BOOL                      testing,
-                         int                       geography,
-                         const char                *policy,
+void CASUShowConsentFlow(BOOL ifRequired, BOOL testing, int geography, const char *policy,
                          CASUConsentFlowCompletion completion) {
     CASConsentFlow *flow = [[CASConsentFlow alloc] init];
 
@@ -573,7 +500,7 @@ void CASUShowConsentFlow(BOOL                      ifRequired,
 
     if (completion) {
         flow.completionHandler = ^(enum CASConsentFlowStatus status) {
-            completion((int)status);
+          completion((int)status);
         };
     }
 
@@ -588,7 +515,7 @@ void CASUShowConsentFlow(BOOL                      ifRequired,
 
 void CASURequestATT(CASUConsentFlowCompletion completion) {
     [CASInternalUtils trackingAuthorizationRequest:^(NSUInteger status) {
-        completion((int)status);
+      completion((int)status);
     }];
 }
 

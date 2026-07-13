@@ -143,7 +143,7 @@ namespace CAS
 
         /// <summary>
         /// Loads an ad of the specified <see cref="AdType"/>.
-        /// <para>Before calling <see cref="ShowAd"/> when <see cref="LoadingManagerMode.Manual"/> is in use, you must call this method to load the ad.</para>
+        /// <para>Before calling <see cref="ShowAd(AdType)"/> when <see cref="LoadingManagerMode.Manual"/> is in use, you must call this method to load the ad.</para>
         /// <para>To receive a callback when the ad is successfully loaded, subscribe to the OnLoadedAd events.</para>
         /// <para>For loading banner ads, use <see cref="IAdView.Load"/> obtained from <see cref="GetAdView"/>.</para>
         /// </summary>
@@ -167,6 +167,14 @@ namespace CAS
         /// </summary>
         /// <param name="adType">The type of ad to show.</param>
         void ShowAd(AdType adType);
+
+        /// <summary>
+        /// Shows an ad of the specified <see cref="AdType"/>.
+        /// <para>To show a banner ad, use the <see cref="IAdView.SetActive(bool)"/> method obtained from <see cref="GetAdView"/>.</para>
+        /// </summary>
+        /// <param name="adType">The type of ad to show.</param>
+        /// <param name="placement">An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.</param>
+        void ShowAd(AdType adType, string placement);
 
         /// <summary>
         /// Disposes of the ad of the specified <see cref="AdType"/>.

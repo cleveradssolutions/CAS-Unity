@@ -58,7 +58,7 @@ namespace CAS.Unity
             _behaviour.LoadAd(adType);
         }
 
-        public override void ShowAd(AdType adType)
+        public override void ShowAd(AdType adType, string placement)
         {
             _behaviour.ShowAd(adType);
         }

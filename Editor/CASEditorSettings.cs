@@ -18,7 +18,7 @@ namespace CAS.UEditor
         public string attributionReportEndpoint = null;
         
         /// <summary>
-        /// Override Gradle Wrapper propery.
+        /// Override Gradle Wrapper property.
         /// <para>distributionUrl=https\://services.gradle.org/distributions/gradle-7.2-bin.zip</para>
         /// Supported strings with full https url or just version number, for example "7.2".
         /// </summary>
