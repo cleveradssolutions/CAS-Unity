@@ -175,6 +175,46 @@ namespace CAS
 #endif
         }
 
+        internal static void ReportPurchase(PurchaseInfo info)
+        {
+#if PlatformAndroid
+            if (Application.platform == RuntimePlatform.Android)
+            {
+                var androidSettings = GetAdsSettings() as CAS.Android.CASSettingsClient;
+
+                if (info.amazonPayload != null)
+                {
+                    androidSettings.ReportAmazonPurchase(info);
+                }
+                else if (info.xsollaOrderId != null)
+                {
+                    androidSettings.ReportXsollaPurchase(info);
+                }
+                else
+                {
+                    androidSettings.ReportGooglePurchase(info);
+                }
+            }
+#endif
+#if PlatformIOS
+            if (Application.platform == RuntimePlatform.IPhonePlayer)
+            {
+                if (info.xsollaOrderId != null)
+                {
+                    CAS.iOS.CASExterns.CASUReportXsollaPurchase(
+                        info.productId, info.price, info.currency, info.quantity, info.xsollaOrderId, info.xsollaUserId
+                    );
+                }
+                else
+                {
+                    CAS.iOS.CASExterns.CASUReportApplePurchase(
+                        info.productId, info.price, info.currency, info.quantity, info.transactionID, info.jwsRepresentation, info.payload, info.isSubscriptionType
+                    );
+                }
+            }
+#endif
+        }
+
         internal static void ReportCustomRevenue(string json)
         {
 #if PlatformAndroid

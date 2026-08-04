@@ -25,6 +25,27 @@ namespace CAS.Android
             settingsBridge.CallStatic("validateIntegration");
         }
 
+        public void ReportGooglePurchase(PurchaseInfo info)
+        {
+            settingsBridge.CallStatic("reportGooglePurchase",
+                info.productId, info.price, info.currency, info.quantity, info.payload, info.isSubscriptionType
+            );
+        }
+
+        public void ReportAmazonPurchase(PurchaseInfo info)
+        {
+            settingsBridge.CallStatic("reportAmazonPurchase",
+                info.productId, info.price, info.currency, info.quantity, info.amazonPayload
+            );
+        }
+
+        public void ReportXsollaPurchase(PurchaseInfo info)
+        {
+            settingsBridge.CallStatic("reportXsollaPurchase",
+                info.productId, info.price, info.currency, info.quantity, info.xsollaOrderId, info.xsollaUserId
+            );
+        }
+
         public void ReportCustomRevenue(string json)
         {
             settingsBridge.CallStatic("reportCustomRevenue", json);

@@ -25,7 +25,7 @@ namespace CAS
         /// <summary>
         /// The CAS Unity plugin wrapper version.
         /// </summary>
-        public const string wrapperVersion = "4.8.0-beta1";
+        public const string wrapperVersion = "4.8.1-beta1";
 
         /// <summary>
         /// Get singleton instance for configure all mediation managers.
@@ -133,6 +133,15 @@ namespace CAS
         public static bool IsActiveNetwork(AdNetwork network)
         {
             return CASFactory.IsActiveNetwork(network);
+        }
+
+
+        /// <summary>
+        /// Reports purchase data to analytics services.
+        /// </summary>
+        public static void ReportPurchase(PurchaseInfo info)
+        {
+            CASFactory.ReportPurchase(info);
         }
 
         /// <summary>

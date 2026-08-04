@@ -50,6 +50,7 @@
     <Compile Include="Source\PriceAccuracy.cs" />
     <Compile Include="Source\EventExecutor.cs" />
     <Compile Include="Source\MediationExtras.cs" />
+    <Compile Include="Source\PurchaseInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
