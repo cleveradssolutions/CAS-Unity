@@ -1,7 +1,9 @@
 # CAS.AI Unity Plugin Change Log
 
-# [4.9.0-alpha1] - 2026-07-13
-- Updated the [Android SDK to 4.9.0-alpha1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.0-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
+# [4.9.0-alpha2] - 2026-08-06
+- Updated the Android SDK to 4.9.0-alpha2 and iOS SDK to 4.9.0-alpha2.
+- [iOS] This release requires **a minimum iOS version of 15.0**.
+- [Android] This release requires **a target Android API level of 36**.
 - Changed the order of AdNetwork as required by the native SDK update.
 
 # [4.8.1-beta1] - 2026-08-04

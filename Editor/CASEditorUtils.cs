@@ -21,8 +21,8 @@ namespace CAS.UEditor
         public const string editorFolderPath = rootCASFolderPath + "/Editor";
 
         public const int minAndroidVersion = 24;
-        public const int targetAndroidVersion = 35;
-        public const int targetIOSVersion = 13;
+        public const int targetAndroidVersion = 36;
+        public const int targetIOSVersion = 15;
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
         private const string docsURL = "https://docs.page/cleveradssolutions/docs/Unity";
