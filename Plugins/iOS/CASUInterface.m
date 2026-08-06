@@ -187,6 +187,47 @@ void CASUReportCustomRevenue(const char *json) {
     [CAS reportCustomRevenueWithJson:CASUStringFromUnity(json)];
 }
 
+void CASUReportApplePurchase(const char *productId, double price, const char *currency,
+                             int quantity, const char *transactionID, const char *jwsRepresentation,
+                             const char *receiptData, BOOL isSubscriptionType) {
+    CASPurchaseInfo *info =
+        [[CASPurchaseInfo alloc] initWithProductID:CASUStringFromUnity(productId)
+                                             price:[[NSDecimalNumber alloc] initWithDouble:price]
+                                          currency:CASUStringFromUnity(currency)
+                                          quantity:quantity];
+    if (isSubscriptionType) {
+        if (@available(iOS 16.0, *)) {
+            [info setSubsValidationFromStoreKit];
+            [CAS reportPurchase:info];
+            return;
+        }
+    }
+    if (jwsRepresentation) {
+        uint64_t identifier = strtoull(transactionID, NULL, 10);
+        [info setValidationWithTransactionID:identifier
+                           jwsRepresentation:CASUStringFromUnity(jwsRepresentation)];
+    } else if (receiptData) {
+        NSData *data = [[NSData alloc] initWithBase64EncodedString:CASUStringFromUnity(receiptData)
+                                                           options:0];
+        [info setValidationWithTransactionID:CASUStringFromUnity(transactionID) receiptData:data];
+    }
+    [CAS reportPurchase:info];
+}
+
+void CASUReportXsollaPurchase(const char *productId, double price, const char *currency,
+                              int quantity, const char *xsollaOrderId, const char *xsollaUserId) {
+    CASPurchaseInfo *info =
+        [[CASPurchaseInfo alloc] initWithProductID:CASUStringFromUnity(productId)
+                                             price:[[NSDecimalNumber alloc] initWithDouble:price]
+                                          currency:CASUStringFromUnity(currency)
+                                          quantity:quantity];
+    if (xsollaOrderId) {
+        [info setXsollaValidationWithOrderID:CASUStringFromUnity(xsollaOrderId)
+                                      userID:CASUStringFromUnity(xsollaUserId)];
+    }
+    [CAS reportPurchase:info];
+}
+
 #pragma mark - CAS Manager
 
 void CASUSetMediationExtras(const char **extraKeys, const char **extraValues,

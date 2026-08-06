@@ -33,13 +33,14 @@ Unity Version               | Gradle  | AGP
 //#endif
 
 #if !UNITY_6000_0_OR_NEWER
-// Meta Audiende Network version 6.20.1 required AGP 8+ to build.
+// Meta Audiende Network version 6.21.0 required AGP 8+ to build.
+// Meta Audiende Network version 6.22.0 used browser 1.9.0 that required AGP 8+ to build.
 // So we force downgradle SDK to 'com.facebook.android:audience-network-sdk:6.20.0'
 #define CAS_DOWNGRADE_META_SDK
 
 // YSO Network version 1.3.1 required AGP 8+ to build.
 // So we force downgradle adapter to 'com.cleveradssolutions:ysonetwork:1.2.9.1'
-#define CAS_DOWNGRADE_YSO_SDK
+//#define CAS_DOWNGRADE_YSO_SDK
 #endif
 
 #if !UNITY_2021_3_OR_NEWER

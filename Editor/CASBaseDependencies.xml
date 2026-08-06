@@ -1,4 +1,4 @@
-<dependencies>
+﻿<dependencies>
   <androidPackages>
     <repositories>
       <repository>https://repo.repsy.io/mvn/cleveradssolutions/beta</repository>
@@ -10,6 +10,6 @@
     <sources>
       <source>https://github.com/cleveradssolutions/CAS-Specs.git</source>
     </sources>
-    <iosPod name="CleverAdsSolutions-Base" version="4.8.0-beta1" minTargetSdk="13.0" />
+    <iosPod name="CleverAdsSolutions-Base" version="4.8.1-beta1" minTargetSdk="13.0" />
   </iosPods>
 </dependencies>

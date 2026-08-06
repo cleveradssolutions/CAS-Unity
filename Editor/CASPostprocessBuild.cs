@@ -511,12 +511,18 @@ namespace CAS.UEditor
 
         private static void AddEmbeddablePaths(this PBXProject project, string targetGuid, DependencyManager deps)
         {
-            for (int i = 0; i < deps.networks.Length; i++)
+            project.AddEmbeddablePaths(targetGuid, deps.networks);
+            project.AddEmbeddablePaths(targetGuid, deps.solutions);
+        }
+
+        private static void AddEmbeddablePaths(this PBXProject project, string targetGuid, Dependency[] deps)
+        {
+            for (int i = 0; i < deps.Length; i++)
             {
-                if (deps.networks[i].embedPath.Length == 0 || !deps.networks[i].IsInstalled())
+                if (deps[i].embedPath.Length == 0 || !deps[i].IsInstalled())
                     continue;
 
-                foreach (var embedPath in deps.networks[i].embedPath)
+                foreach (var embedPath in deps[i].embedPath)
                 {
                     var path = Path.Combine("Pods", embedPath);
 #if CAS_UNPACK_XCFRAMEWORKS
