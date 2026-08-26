@@ -312,6 +312,11 @@ BOOL CASUIsAdReady(CASUManagerRef managerRef, int type) {
     return [manager isAdReady:type];
 }
 
+void CASUSetSSVData(CASUManagerRef managerRef, const char *data) {
+    CASUManager *manager = (__bridge CASUManager *)managerRef;
+
+    [manager setSSVData:CASUStringFromUnity(data)];
+}
 #pragma mark - AdView
 
 CASUViewRef CASUCreateAdView(CASUManagerRef managerRef, CASViewClientRef *client, int adSizeCode) {

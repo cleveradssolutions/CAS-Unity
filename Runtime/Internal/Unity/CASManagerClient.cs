@@ -48,6 +48,11 @@ namespace CAS.Unity
             _behaviour.DisposeAd(adType);
         }
 
+        public override void SetServerSideVerificationData(string data)
+        {
+            CASFactory.UnityLog("Server Side Verification Data: " + data);
+        }
+
         public override bool IsReadyAd(AdType adType)
         {
             return _behaviour.IsReadyAd(adType);

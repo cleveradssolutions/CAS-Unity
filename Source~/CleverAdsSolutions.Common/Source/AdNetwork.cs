@@ -26,7 +26,7 @@ namespace CAS
         Bigo = 19,
         Ogury = 20,
         Madex = 21,
-        MonetriX = 22,
+        Monetrix = 22,
         Mintegral = 23,
         Pangle = 24,
         YsoNetwork = 25,
@@ -62,7 +62,7 @@ namespace CAS
                 case AdNetwork.YangoAds: return "Ya";
                 case AdNetwork.SuperAwesome: return "SA";
                 case AdNetwork.DTExchange: return "Fy";
-                case AdNetwork.MonetriX: return "MtX";
+                case AdNetwork.Monetrix: return "MtX";
                 case AdNetwork.Mintegral: return "MB";
                 case AdNetwork.Pangle: return "Pa";
                 case AdNetwork.HyprMX: return "HMX";

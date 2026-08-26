@@ -73,6 +73,7 @@ namespace CAS
         public event Action OnAppOpenAdClosed;
         #endregion
 
+        public abstract void SetServerSideVerificationData(string data);
         public abstract void EnableAd(AdType adType);
         protected abstract void LoadAdNetive(AdType adType);
         public abstract bool IsReadyAd(AdType adType);

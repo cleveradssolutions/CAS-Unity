@@ -245,6 +245,9 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern void CASUShowAd(CASUManagerRef managerRef, int type, string placement);
+
+        [DllImport("__Internal")]
+        internal static extern void CASUSetSSVData(CASUManagerRef managerRef, string data);
         #endregion
 
         #region AdView

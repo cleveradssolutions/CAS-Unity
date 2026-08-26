@@ -100,6 +100,12 @@ namespace CAS.iOS
             set { locationCollectionEnabled = value; }
         }
 
+        public string userID
+        {
+            get { return CASExterns.CASUGetUserID(); }
+            set { CASExterns.CASUSetUserID(value); }
+        }
+
         public Gender gender
         {
             get { return (Gender)CASExterns.CASUGetUserGender(); }
