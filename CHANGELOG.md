@@ -1,5 +1,11 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.8.1-beta2] - 2026-09-02
+- [Android] Fixed `java.lang.NoSuchMethodError` from new `CAS.MobileAds.ReportPurchase(PurchaseInfo)` function.
+- [Android] Fixed Yso Network build error with Unity 2022.
+- [iOS] Fixed Monetrix dependency.
+- Added features from 4.8.0 release.
+
 # [4.8.0] - 2026-08-26
 - Updated the [Android SDK to 4.8.0](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.0](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added **Publishing Ads Solutions** designed for apps enrolled in CAS.AI Mobile Game Publishing.

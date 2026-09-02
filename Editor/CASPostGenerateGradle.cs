@@ -40,7 +40,7 @@ Unity Version               | Gradle  | AGP
 
 // YSO Network version 1.3.1 required AGP 8+ to build.
 // So we force downgradle adapter to 'com.cleveradssolutions:ysonetwork:1.2.9.1'
-//#define CAS_DOWNGRADE_YSO_SDK
+#define CAS_DOWNGRADE_YSO_SDK
 #endif
 
 #if !UNITY_2021_3_OR_NEWER

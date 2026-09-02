@@ -846,6 +846,15 @@
             Indicates whether the mediation manager is using test ads for the current session.
             </summary>
         </member>
+        <member name="M:CAS.IMediationManager.SetServerSideVerificationData(System.String)">
+            <summary>
+            Sets custom data to be included in server-side verification callbacks.
+            <para>Maximum 8192 characters allowed for the custom data.</para>
+            <para>The callbacks contain query parameters that describe the rewarded ad interaction,
+            including the placement and userID from CAS.targetingOptions alongside any custom data provided here.</para>
+            <para>This feature is currently in closed beta.</para>
+            </summary>
+        </member>
         <member name="M:CAS.IMediationManager.LoadAd(CAS.AdType)">
             <summary>
             Loads an ad of the specified <see cref="T:CAS.AdType"/>.
@@ -1017,6 +1026,13 @@
             <summary>
             Indicates a temporary problem with the server.
             If the error could be 100% replicated, please give feedback to us.
+            </summary>
+        </member>
+        <member name="P:CAS.ITargetingOptions.userID">
+            <summary>
+            The userID is a unique identifier supplied by your application and must be static for each user across sessions.
+            Your userID should not contain any personally identifiable information such as
+            an email address, screen name, Android ID(AID), or Google Advertising ID(GAID).
             </summary>
         </member>
         <member name="P:CAS.ITargetingOptions.gender">
