@@ -24,6 +24,7 @@ namespace CAS.Unity
         public bool locationCollectionEnabled { get; set; }
         public bool isExecuteEventsOnUnityThread { get; set; }
 
+        public string userID { get; set; }
         public Gender gender { get; set; }
         public int age { get; set; }
         public string contentURL { get; set; }

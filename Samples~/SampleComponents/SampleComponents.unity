@@ -797,7 +797,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   managerId:
     android: 0
-    ios: 1
+    ios: 0
   placement: 
   OnAdLoaded:
     m_PersistentCalls:
@@ -3812,7 +3812,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2099481161}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.6379827
+  m_Size: 0.6379828
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

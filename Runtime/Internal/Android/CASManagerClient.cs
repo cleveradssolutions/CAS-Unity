@@ -64,6 +64,11 @@ namespace CAS.Android
             _managerBridge.Call("enableAd", (int)adType);
         }
 
+        public override void SetServerSideVerificationData(string data)
+        {
+            _managerBridge.Call("setSSVData", data);
+        }
+
         public override bool IsReadyAd(AdType adType)
         {
             return _managerBridge.Call<bool>("isAdReady", (int)adType);

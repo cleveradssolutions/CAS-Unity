@@ -142,6 +142,15 @@ namespace CAS
         bool isTestAdMode { get; }
 
         /// <summary>
+        /// Sets custom data to be included in server-side verification callbacks.
+        /// <para>Maximum 8192 characters allowed for the custom data.</para>
+        /// <para>The callbacks contain query parameters that describe the rewarded ad interaction,
+        /// including the placement and userID from CAS.targetingOptions alongside any custom data provided here.</para>
+        /// <para>This feature is currently in closed beta.</para>
+        /// </summary>
+        void SetServerSideVerificationData(string data);
+
+        /// <summary>
         /// Loads an ad of the specified <see cref="AdType"/>.
         /// <para>Before calling <see cref="ShowAd(AdType)"/> when <see cref="LoadingManagerMode.Manual"/> is in use, you must call this method to load the ad.</para>
         /// <para>To receive a callback when the ad is successfully loaded, subscribe to the OnLoadedAd events.</para>

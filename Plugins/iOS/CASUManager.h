@@ -34,8 +34,9 @@
 - (void)enableAd:(int)type;
 - (void)loadAd:(int)type;
 - (BOOL)isAdReady:(int)type;
-- (void)showAd:(int)type placement:(NSString *)placement;
+- (void)showAd:(int)type placement:(NSString *_Nullable)placement;
 - (void)destroyAd:(int)type;
+- (void)setSSVData:(NSString *_Nullable)data;
 - (CASUView *_Nonnull)createViewWithSize:(int)adSize
                                   client:(CASViewClientRef _Nullable *_Nullable)adViewClient;
 

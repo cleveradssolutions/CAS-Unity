@@ -1,18 +1,20 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.8.0] - 2026-08-26
+- Updated the [Android SDK to 4.8.0](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.0](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added **Publishing Ads Solutions** designed for apps enrolled in CAS.AI Mobile Game Publishing.
+- Added `CAS.MobileAds.targetingOptions.userID` property to update User ID aftr CAS initialization.
+- Added `IMediationManager.SetServerSideVerificationData(string)` to be included in server-side verification callbacks for Rewarded Ads. (Closed beta)
+- [iOS] This release requires **a minimum Xcode version of 26.2**.
+- [Android] This release requires **a minimum Android API level of 24**.
+- [iOS] Fixed conflicting types for UnityIsPaused with Unity 6.5.
+
 # [4.8.1-beta1] - 2026-08-04
 - Updated the [Android SDK to 4.8.1-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.1-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added a new `CAS.MobileAds.ReportPurchase(PurchaseInfo)` function for collecting in-app purchase information with automatic reporting to Tenjin.
 - Added an option to include the Tenjin SDK without a Unity plugin. The CAS SDK can initialize Tenjin automatically.
 - [iOS] The following adapters now **require a minimum of iOS 15**: Audience Network, DTExchange.
 - Removed Madex adapter from mediation.
-
-# [4.8.0-beta1] - 2026-07-02
-- Updated the [Android SDK to 4.8.0-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.0-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
-- Added **Publishing Ads Solutions** designed for apps enrolled in CAS.AI Mobile Game Publishing.
-- [iOS] This release requires **a minimum Xcode version of 26.2**.
-- [Android] This release requires **a minimum Android API level of 24**.
-- [iOS] Fixed conflicting types for UnityIsPaused with Unity 6.5.
 
 # [4.7.4] - 2026-06-16
 - Updated the [Android SDK to 4.7.4](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.7.4](https://github.com/cleveradssolutions/CAS-iOS/releases).
