@@ -1,5 +1,9 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.8.2-beta1] - 2026-09-07
+- Updated the [Android SDK to 4.8.2-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.2-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added new adapter for BlueSea (closed beta).
+
 # [4.8.1-beta2] - 2026-09-02
 - [Android] Fixed `java.lang.NoSuchMethodError` from new `CAS.MobileAds.ReportPurchase(PurchaseInfo)` function.
 - [Android] Fixed Yso Network build error with Unity 2022.
