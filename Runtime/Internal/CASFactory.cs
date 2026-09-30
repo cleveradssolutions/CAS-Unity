@@ -199,6 +199,20 @@ namespace CAS
                 && settings.loadingMode != LoadingManagerMode.Manual;
         }
 
+        internal static INativeOverlayAdClient CreateNativeOverlayClient(CASManagerBase manager)
+        {
+#if PlatformAndroid
+            if (Application.platform == RuntimePlatform.Android)
+                return new CAS.Android.CASNativeOverlayClient(manager);
+#endif
+#if UNITY_EDITOR
+            var unityManager = manager as CAS.Unity.CASManagerClient;
+            if (unityManager != null)
+                return unityManager.CreateNativeOverlay();
+#endif
+            throw new NotSupportedException("Native Overlay is supported on Android only.");
+        }
+
         internal static IMediationManager CreateManager(CASInitSettings initSettings)
         {
             if (managers != null)

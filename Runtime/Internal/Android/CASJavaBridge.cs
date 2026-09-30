@@ -16,6 +16,8 @@ namespace CAS.Android
         internal const string SettingsClass = PluginPackage + ".CASBridgeSettings";
         internal const string AdCallbackClass = PluginPackage + ".CASCallback";
         internal const string AdViewClass = PluginPackage + ".CASView";
+        internal const string NativeOverlayClass = PluginPackage + ".CASNativeOverlay";
+        internal const string NativeOverlayCallbackClass = PluginPackage + ".CASNativeOverlayCallback";
         internal const string ConsentFlowClass = PluginPackage + ".CASConsentFlow";
         internal const string SimpleCallbackClass = PluginPackage + ".CASSimpleCallback";
         internal const string AppStateEventNotifierClass = PluginPackage + ".AppStateEventNotifier";

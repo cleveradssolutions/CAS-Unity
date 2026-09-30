@@ -8,7 +8,6 @@ using UnityEngine;
 
 namespace CAS.Unity
 {
-
     internal sealed class CASManagerClient : CASManagerBase
     {
         private CASManagerBehaviour _behaviour;
@@ -26,7 +25,6 @@ namespace CAS.Unity
         {
             base.Init(initSettings);
             _behaviour.casId = managerID;
-
             CASFactory.HandleConsentFlow(initSettings.consentFlow, ConsentFlow.Status.Obtained);
         }
 
@@ -97,6 +95,13 @@ namespace CAS.Unity
             return view;
         }
 
+        internal CASNativeOverlayClient CreateNativeOverlay()
+        {
+            var overlay = new CASNativeOverlayClient();
+            _behaviour.nativeOverlay = overlay;
+            return overlay;
+        }
+
         public override void RemoveAdViewFromFactory(CASViewBase view)
         {
             base.RemoveAdViewFromFactory(view);
@@ -118,12 +123,11 @@ namespace CAS.Unity
         public CASFullscreenView _interstitial;
         public CASFullscreenView _rewarded;
         public CASFullscreenView _appOpen;
+        internal CASNativeOverlayClient nativeOverlay;
 
         public void Awake()
         {
-            // Set Settings before any other calls.
             _settings = CAS.MobileAds.settings as CASSettingsClient;
-
             _interstitial = new CASFullscreenView(this, AdType.Interstitial);
             _rewarded = new CASFullscreenView(this, AdType.Rewarded);
             _appOpen = new CASFullscreenView(this, AdType.AppOpen);
@@ -138,6 +142,7 @@ namespace CAS.Unity
         {
             if (_eventsQueue.Count == 0)
                 return;
+
             for (int i = 0; i < _eventsQueue.Count; i++)
             {
                 try
@@ -151,6 +156,7 @@ namespace CAS.Unity
                     Debug.LogException(e);
                 }
             }
+
             _eventsQueue.Clear();
         }
 
@@ -158,12 +164,14 @@ namespace CAS.Unity
         {
             if (_btnStyle == null)
                 _btnStyle = new GUIStyle("Button");
+
             _btnStyle.fontSize = (int)(Math.Min(Screen.width, Screen.height) * 0.035f);
 
             for (int i = 0; i < _adViews.Count; i++)
-            {
                 _adViews[i].OnGUIAd(_btnStyle);
-            }
+
+            nativeOverlay?.OnGUIAd(_btnStyle);
+
             _interstitial.OnGUIAd(_btnStyle);
             _rewarded.OnGUIAd(_btnStyle);
             _appOpen.OnGUIAd(_btnStyle);
@@ -200,6 +208,7 @@ namespace CAS.Unity
                 case AdType.AppOpen:
                     return _appOpen.GetReadyError() == AdError.Internal;
             }
+
             return false;
         }
 
@@ -256,13 +265,13 @@ namespace CAS.Unity
 
         public void Post(Action action, float delay = 0.0f)
         {
-            if (action != null)
-            {
-                if (delay > 0.0f)
-                    StartCoroutine(DelayAction(action, delay));
-                else
-                    _eventsQueue.Add(action);
-            }
+            if (action == null)
+                return;
+
+            if (delay > 0.0f)
+                StartCoroutine(DelayAction(action, delay));
+            else
+                _eventsQueue.Add(action);
         }
 
         private IEnumerator DelayAction(Action action, float delay)
