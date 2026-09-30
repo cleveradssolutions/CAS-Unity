@@ -22,7 +22,7 @@ namespace CAS.UEditor
 
         public const int minAndroidVersion = 24;
         public const int targetAndroidVersion = 35;
-        public const int targetIOSVersion = 13;
+        public const int targetIOSVersion = 15;
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
         private const string docsURL = "https://docs.page/cleveradssolutions/docs/Unity";
@@ -918,7 +918,7 @@ namespace CAS.UEditor
             if (!settings) return null;
 
             bool appIdRequired = !settings.IsTestAdMode()
-                    && depManager.Find(AdNetwork.GoogleAds).IsInstalled();
+                    && depManager.FindGoogleAds().IsInstalled();
 
             string googleAppId = null;
             if (settings.managersCount > 0)

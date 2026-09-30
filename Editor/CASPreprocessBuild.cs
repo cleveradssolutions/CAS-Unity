@@ -197,7 +197,7 @@ namespace CAS.UEditor
 
             string appId = null;
             string updateSettingsError = "";
-            bool appIdRequired = !settings.IsTestAdMode() && deps.Find(AdNetwork.GoogleAds).IsInstalled();
+            bool appIdRequired = !settings.IsTestAdMode() && deps.FindGoogleAds().IsInstalled();
             for (int i = 0; i < settings.managersCount; i++)
             {
                 var casId = settings.GetManagerId(i);

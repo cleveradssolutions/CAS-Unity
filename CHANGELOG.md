@@ -1,5 +1,10 @@
 # CAS.AI Unity Plugin Change Log
 
+# [4.8.3-beta1] - 2026-09-30
+- Updated the [Android SDK to 4.8.3-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.3-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- [Android] Fixed an issue where the Google App ID was not added to the Android Manifest when using the GoogleAdsNext adapter.
+- [iOS] Raised the minimum supported iOS version to 15.0, as required by Xcode 27. The minimum supported Xcode version remains 26.2.
+
 # [4.8.2-beta1] - 2026-09-07
 - Updated the [Android SDK to 4.8.2-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.2-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
 - Added new adapter for BlueSea (closed beta).
