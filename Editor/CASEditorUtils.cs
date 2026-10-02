@@ -918,7 +918,7 @@ namespace CAS.UEditor
             if (!settings) return null;
 
             bool appIdRequired = !settings.IsTestAdMode()
-                    && depManager.Find(AdNetwork.GoogleAds).IsInstalled();
+                    && depManager.FindGoogleAds().IsInstalled();
 
             string googleAppId = null;
             if (settings.managersCount > 0)

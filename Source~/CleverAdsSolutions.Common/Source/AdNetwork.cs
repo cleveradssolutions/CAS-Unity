@@ -27,7 +27,7 @@ namespace CAS
         Bigo = 38,
         Ogury = 50,
         Madex = 44,
-        MonetriX = 71,
+        Monetrix = 71,
         Mintegral = 28,
         Pangle = 30,
         YsoNetwork = 52,
@@ -40,6 +40,7 @@ namespace CAS
         DisplayIO = 73,
         Bidease = 74,
         Moloco = 76,
+        BlueSea = 78,
     }
 
     public static class AdNetworkExtension
@@ -61,7 +62,7 @@ namespace CAS
                 case AdNetwork.YangoAds: return "Ya";
                 case AdNetwork.SuperAwesome: return "SA";
                 case AdNetwork.DTExchange: return "Fy";
-                case AdNetwork.MonetriX: return "MtX";
+                case AdNetwork.Monetrix: return "MtX";
                 case AdNetwork.Mintegral: return "MB";
                 case AdNetwork.Pangle: return "Pa";
                 case AdNetwork.HyprMX: return "HMX";
@@ -79,6 +80,7 @@ namespace CAS
                 case AdNetwork.DisplayIO: return "DIO";
                 case AdNetwork.Bidease: return "Bse";
                 case AdNetwork.Moloco: return "Mol";
+                case AdNetwork.BlueSea: return "BS";
                 default: return string.Empty;
             }
         }

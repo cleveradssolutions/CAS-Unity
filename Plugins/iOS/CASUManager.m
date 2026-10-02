@@ -234,6 +234,15 @@
     }
 }
 
+- (void)setSSVData:(NSString *)data {
+    if (data) {
+        [self enableAd:kCASUType_REWARD];
+    }
+    if (self.rewardedAd) {
+        self.rewardedAd.serverSideVerificationData = data;
+    }
+}
+
 - (CASUView *)createViewWithSize:(int)adSize client:(CASViewClientRef _Nullable *)adViewClient {
     CASUView *view = [[CASUView alloc] initWithCASID:self.casManager.managerID
                                            forClient:adViewClient

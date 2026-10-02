@@ -161,6 +161,12 @@ namespace CAS.Android
             set { settingsBridge.CallStatic("setUserGender", (int)value); }
         }
 
+        public string userID
+        {
+            get { return settingsBridge.CallStatic<string>("getUserID"); }
+            set { settingsBridge.CallStatic("setUserID", value); }
+        }
+
         public int age
         {
             get { return settingsBridge.CallStatic<int>("getUserAge"); }

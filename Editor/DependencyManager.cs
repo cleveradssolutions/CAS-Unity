@@ -173,6 +173,17 @@ namespace CAS.UEditor
         {
             return Find(AdNetwork.CrossPromotion);
         }
+
+        internal Dependency FindGoogleAds()
+        {
+            // Google Ads Next adapter issue for Android
+            for (int i = 0; i < adapters.Length; i++)
+            {
+                if (adapters[i].id == AdNetwork.GoogleAds && adapters[i].IsInstalled())
+                    return adapters[i];
+            }
+            return Find(AdNetwork.GoogleAds);
+        }
     }
 
     [Serializable]

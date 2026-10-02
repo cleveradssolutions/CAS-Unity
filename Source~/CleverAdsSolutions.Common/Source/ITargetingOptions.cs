@@ -14,6 +14,12 @@ namespace CAS
     public interface ITargetingOptions
     {
         /// <summary>
+        /// The userID is a unique identifier supplied by your application and must be static for each user across sessions.
+        /// Your userID should not contain any personally identifiable information such as
+        /// an email address, screen name, Android ID(AID), or Google Advertising ID(GAID).
+        /// </summary>
+        string userID { get; set; }
+        /// <summary>
         /// The user’s gender
         /// </summary>
         Gender gender { get; set; }

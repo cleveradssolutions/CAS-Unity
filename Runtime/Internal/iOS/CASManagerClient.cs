@@ -93,6 +93,11 @@ namespace CAS.iOS
             CASExterns.CASUDestroyAdType(_managerRef, (int)adType);
         }
 
+        public override void SetServerSideVerificationData(string data)
+        {
+            CASExterns.CASUSetSSVData(_managerRef, data);
+        }
+
         public override bool IsReadyAd(AdType adType)
         {
             return CASExterns.CASUIsAdReady(_managerRef, (int)adType);

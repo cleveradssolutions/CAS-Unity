@@ -3,13 +3,13 @@
     <repositories>
       <repository>https://repo.repsy.io/mvn/cleveradssolutions/beta</repository>
     </repositories>
-    <androidPackage spec="com.cleveradssolutions:cas-sdk:4.9.0-alpha2" version="4.9.0-alpha2" />
+    <androidPackage spec="com.cleveradssolutions:cas-sdk:4.9.0-alpha3" version="4.9.0-alpha3" />
     <androidPackage spec="androidx.lifecycle:lifecycle-process:2.6.2" version="2.6.2" />
   </androidPackages>
   <iosPods>
     <sources>
       <source>https://github.com/cleveradssolutions/CAS-Specs.git</source>
     </sources>
-    <iosPod name="CleverAdsSolutions-Base" version="4.9.0-alpha2" minTargetSdk="13.0" />
+    <iosPod name="CleverAdsSolutions-Base" version="4.9.0-alpha3" minTargetSdk="15.0" />
   </iosPods>
 </dependencies>
