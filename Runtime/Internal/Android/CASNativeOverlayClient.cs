@@ -3,24 +3,29 @@
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
 using System;
 using UnityEngine;
-using UnityEngine.Scripting;
 
 namespace CAS.Android
 {
-    internal sealed class CASNativeOverlayClient :AndroidJavaProxy, INativeOverlayAdClient
+    internal sealed class CASNativeOverlayClient :INativeOverlayAdClient, CASCallback.Handler, CASCallback.RectHandler
     {
         private readonly CASManagerBase _manager;
+        private readonly CASCallback _callback;
 
         private AndroidJavaObject _bridge;
 
         private string _placement;
         private Rect _rectInPixels;
 
-        internal CASNativeOverlayClient(CASManagerBase manager) : base(CASJavaBridge.NativeOverlayCallbackClass)
+        internal CASNativeOverlayClient(CASManagerBase manager)
         {
             _manager = manager;
+            _callback = new CASCallback(this);
 
-            _bridge = new AndroidJavaObject(CASJavaBridge.NativeOverlayClass,this,manager.managerID);
+            _bridge = new AndroidJavaObject(
+                CASJavaBridge.NativeOverlayClass,
+                _callback,
+                manager.managerID
+            );
         }
 
         public event Action OnAdLoaded;
@@ -30,22 +35,19 @@ namespace CAS.Android
         public event Action<AdMetaData> OnAdImpression;
         public event Action<Rect> OnAdRectChanged;
 
-
         public bool isReady
         {
             get
             {
-                return _bridge != null && _bridge.Call<bool>("isReady");
+                return _bridge != null &&
+                       _bridge.Call<bool>("isReady");
             }
         }
 
-
         public string placement
         {
-            get
-            {
-                return _placement;
-            }
+            get => _placement;
+
             set
             {
                 _placement = value;
@@ -55,15 +57,7 @@ namespace CAS.Android
             }
         }
 
-
-        public Rect rectInPixels
-        {
-            get
-            {
-                return _rectInPixels;
-            }
-        }
-
+        public Rect rectInPixels => _rectInPixels;
 
         public int widthInPixels
         {
@@ -76,7 +70,6 @@ namespace CAS.Android
             }
         }
 
-
         public int heightInPixels
         {
             get
@@ -88,13 +81,11 @@ namespace CAS.Android
             }
         }
 
-
         public void Load()
         {
             if (_bridge != null)
                 _bridge.Call("load");
         }
-
 
         public void Show()
         {
@@ -102,13 +93,11 @@ namespace CAS.Android
                 _bridge.Call("show");
         }
 
-
         public void Hide()
         {
             if (_bridge != null)
                 _bridge.Call("hide");
         }
-
 
         public void SetPosition(AdPosition position)
         {
@@ -116,94 +105,63 @@ namespace CAS.Android
                 _bridge.Call("setPosition", (int)position);
         }
 
-
         public void SetPosition(int x, int y, AdPosition position)
         {
             if (_bridge != null)
-            {
                 _bridge.Call("setPosition", (int)position, x, y);
-            }
         }
-
 
         public void SetPositionPx(int x, int y, AdPosition position)
         {
             if (_bridge != null)
-            {
                 _bridge.Call("setPositionPx", (int)position, x, y);
-            }
         }
 
-
-        public void Render(int widthDp, int heightDp)
+        public void RenderTemplate(NativeTemplateStyle style,int widthDp,int heightDp)
         {
-            if (_bridge != null)
+            if (_bridge == null)
+                return;
+
+            string json = style == null? null: JsonUtility.ToJson(ToBridgeStyle(style));
+
+            _bridge.Call("renderTemplate", json, widthDp, heightDp);
+        }
+
+        public void HandleCallback(int action,int type,int error,string errorMessage,object impression)
+        {
+            if (type != AdTypeCode.NATIVE)
+                return;
+
+            switch (action)
             {
-                _bridge.Call("render", widthDp, heightDp);
+                case AdActionCode.LOADED:
+                    OnAdLoaded?.Invoke();
+                    break;
+
+                case AdActionCode.FAILED:
+                    OnAdFailedToLoad?.Invoke(new AdError(error, errorMessage));
+                    break;
+
+                case AdActionCode.SHOW_FAILED:
+                    OnAdFailedToShow?.Invoke(new AdError(error, errorMessage));
+                    break;
+
+                case AdActionCode.CLICKED:
+                    OnAdClicked?.Invoke();
+                    break;
+
+                case AdActionCode.IMPRESSION:
+                    OnAdImpression?.Invoke(_manager.WrapImpression(AdType.Native, impression));
+                    break;
             }
         }
 
-
-        public void RenderDefault()
+        public void HandleRect(int x,int y,int width,int height)
         {
-            if (_bridge != null)
-                _bridge.Call("renderDefault");
+            _rectInPixels = new Rect(x, y, width, height);
+
+            OnAdRectChanged?.Invoke(_rectInPixels);
         }
-
-
-        public void SetBackgroundColor(Color color)
-        {
-            if (_bridge != null)
-            {
-                _bridge.Call("setBackgroundColor", ToAndroidColor(color));
-            }
-        }
-
-
-        public void SetHeadlineColor(Color color)
-        {
-            if (_bridge != null)
-            {
-                _bridge.Call("setHeadlineColor", ToAndroidColor(color));
-            }
-        }
-
-
-        public void SetBodyColor(Color color)
-        {
-            if (_bridge != null)
-            {
-                _bridge.Call("setBodyColor", ToAndroidColor(color));
-            }
-        }
-
-
-        public void SetAdvertiserColor(Color color)
-        {
-            if (_bridge != null)
-            {
-                _bridge.Call("setAdvertiserColor", ToAndroidColor(color));
-            }
-        }
-
-
-        public void SetCallToActionTextColor(Color color)
-        {
-            if (_bridge != null)
-            {
-                _bridge.Call("setCallToActionTextColor", ToAndroidColor(color));
-            }
-        }
-
-
-        public void SetCallToActionBackgroundColor(Color color)
-        {
-            if (_bridge != null)
-            {
-                _bridge.Call("setCallToActionBackgroundColor", ToAndroidColor(color));
-            }
-        }
-
 
         public void Dispose()
         {
@@ -221,54 +179,71 @@ namespace CAS.Android
             }
         }
 
+        private static BridgeTemplateStyle ToBridgeStyle(
+            NativeTemplateStyle style)
+        {
+            return new BridgeTemplateStyle
+            {
+                mainBackgroundColor =ToAndroidColor(style.MainBackgroundColor),
+
+                headline = ToBridge(style.Headline),
+                body = ToBridge(style.Body),
+                advertiser = ToBridge(style.Advertiser),
+                callToAction = ToBridge(style.CallToAction),
+                store = ToBridge(style.Store),
+                price = ToBridge(style.Price),
+                reviewCount = ToBridge(style.ReviewCount),
+                adLabel = ToBridge(style.AdLabel)
+            };
+        }
+
+        private static BridgeTextStyle ToBridge(
+            NativeTemplateTextStyle style)
+        {
+            if (style == null)
+                return null;
+
+            return new BridgeTextStyle
+            {
+                backgroundColor = ToAndroidColor(style.BackgroundColor),
+                textColor = ToAndroidColor(style.FontColor),
+                fontSize = style.FontSize,
+                fontStyle = (int)style.Style
+            };
+        }
 
         private static int ToAndroidColor(Color color)
         {
             Color32 value = color;
-
-            uint argb =((uint)value.a << 24) |((uint)value.r << 16) |((uint)value.g << 8) |value.b;
+            uint argb =((uint)value.a << 24) | ((uint)value.r << 16) | ((uint)value.g << 8) | value.b;
 
             return unchecked((int)argb);
         }
 
-        public void onNativeAdLoaded()
+        [Serializable]
+        private sealed class BridgeTemplateStyle
         {
-            CASJavaBridge.ExecuteEvent(() => OnAdLoaded?.Invoke());
+            public int mainBackgroundColor;
+
+            public BridgeTextStyle headline;
+            public BridgeTextStyle body;
+            public BridgeTextStyle advertiser;
+            public BridgeTextStyle callToAction;
+            public BridgeTextStyle store;
+            public BridgeTextStyle price;
+            public BridgeTextStyle reviewCount;
+            public BridgeTextStyle adLabel;
         }
 
-        public void onNativeAdFailedToLoad(int code, string message)
+        [Serializable]
+        private sealed class BridgeTextStyle
         {
-            CASJavaBridge.ExecuteEvent(() => OnAdFailedToLoad?.Invoke(new AdError(code, message)));
+            public int backgroundColor;
+            public int textColor;
+
+            public float fontSize;
+            public int fontStyle;
         }
-
-        public void onNativeAdFailedToShow(int code, string message)
-        {
-            CASJavaBridge.ExecuteEvent(() => OnAdFailedToShow?.Invoke(new AdError(code, message)));
-        }
-
-        public void onNativeAdClicked()
-        {
-            CASJavaBridge.ExecuteEvent(() => OnAdClicked?.Invoke());
-        }
-
-
-        public void onNativeAdImpression(AndroidJavaObject impression)
-        {
-            CASJavaBridge.ExecuteEvent(() => {
-                OnAdImpression?.Invoke(_manager.WrapImpression(AdType.Native, impression));
-            });
-        }
-
-        [Preserve]
-        public void onNativeAdRect(int x, int y, int width, int height)
-        {
-            CASJavaBridge.ExecuteEvent(() => {
-                _rectInPixels = new Rect(x, y, width, height);
-                OnAdRectChanged?.Invoke(_rectInPixels);
-            });
-        }
-
     }
 }
-
 #endif

@@ -6,12 +6,17 @@ using UnityEngine;
 
 namespace CAS.Android
 {
-    internal sealed class CASViewClient : CASViewBase, CASCallback.Handler
+    internal sealed class CASViewClient : CASViewBase, CASCallback.Handler, CASCallback.RectHandler
     {
         private readonly AndroidJavaObject _bridge;
         private CASCallback _callback;
         private string _placement;
 
+
+        public void HandleRect(int x, int y, int width, int height)
+        {
+            rectInPixels = new Rect(x, y, width, height);
+        }
         public override bool isReady
         {
             get { return _bridge.Call<bool>("isReady"); }

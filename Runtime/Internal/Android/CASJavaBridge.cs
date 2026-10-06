@@ -17,7 +17,6 @@ namespace CAS.Android
         internal const string AdCallbackClass = PluginPackage + ".CASCallback";
         internal const string AdViewClass = PluginPackage + ".CASView";
         internal const string NativeOverlayClass = PluginPackage + ".CASNativeOverlay";
-        internal const string NativeOverlayCallbackClass = PluginPackage + ".CASNativeOverlayCallback";
         internal const string ConsentFlowClass = PluginPackage + ".CASConsentFlow";
         internal const string SimpleCallbackClass = PluginPackage + ".CASSimpleCallback";
         internal const string AppStateEventNotifierClass = PluginPackage + ".AppStateEventNotifier";
@@ -49,6 +48,11 @@ namespace CAS.Android
         internal interface Handler
         {
             void HandleCallback(int action, int type, int error, string errorMessage, object impression);
+        }
+
+        internal interface RectHandler
+        {
+            void HandleRect(int x, int y, int width, int height);
         }
 
         private readonly Handler _client;
@@ -89,8 +93,16 @@ namespace CAS.Android
                 case AdActionCode.VIEW_RECT:
                     try
                     {
-                        ((CASViewClient)_client).rectInPixels =
-                            new Rect((int)args[1], (int)args[2], (int)args[3], (int)args[4]);
+                        int x = (int)args[1];
+                        int y = (int)args[2];
+                        int width = (int)args[3];
+                        int height = (int)args[4];
+
+                        CASJavaBridge.ExecuteEvent(() =>
+                        {
+                            if (_client is RectHandler handler)
+                                handler.HandleRect(x, y, width, height);
+                        });
                     }
                     catch (Exception e)
                     {

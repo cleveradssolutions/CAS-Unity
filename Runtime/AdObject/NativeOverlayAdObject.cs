@@ -67,13 +67,13 @@ namespace CAS.AdObject
         {
             useDefaultSize = false;
             templateSize = new Vector2Int(widthDp, heightDp);
-            _ad?.Render(widthDp, heightDp);
+            _ad?.RenderTemplate(null, widthDp, heightDp);
         }
 
         public void SetDefaultTemplateSize()
         {
             useDefaultSize = true;
-            _ad?.RenderDefault();
+            _ad?.RenderTemplate();
         }
 
         public void SetPlacement(string value)
@@ -125,9 +125,9 @@ namespace CAS.AdObject
             _ad.placement = placement;
 
             if (useDefaultSize)
-                _ad.RenderDefault();
+                _ad.RenderTemplate();
             else
-                _ad.Render(templateSize.x, templateSize.y);
+                _ad.RenderTemplate(null, templateSize.x, templateSize.y);
 
             ApplyPosition();
 

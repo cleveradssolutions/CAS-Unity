@@ -10,6 +10,7 @@ namespace CAS
         internal const int INTER = 1;
         internal const int REWARD = 2;
         internal const int APP_OPEN = 3;
+        internal const int NATIVE = 4;
         internal const int APP_RETURN = 5;
     }
 

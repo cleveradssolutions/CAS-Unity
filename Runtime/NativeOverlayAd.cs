@@ -68,14 +68,11 @@ namespace CAS
         public void SetPosition(AdPosition position) { _client?.SetPosition(position); }
         public void SetPosition(int x, int y, AdPosition position = AdPosition.TopLeft) { _client?.SetPosition(x, y, position); }
         public void SetPositionPx(int x, int y, AdPosition position = AdPosition.TopLeft) { _client?.SetPositionPx(x, y, position); }
-        public void Render(int widthDp, int heightDp) { _client?.Render(widthDp, heightDp); }
-        public void RenderDefault() { _client?.RenderDefault(); }
-        public void SetBackgroundColor(Color color) { _client?.SetBackgroundColor(color); }
-        public void SetHeadlineColor(Color color) { _client?.SetHeadlineColor(color); }
-        public void SetBodyColor(Color color) { _client?.SetBodyColor(color); }
-        public void SetAdvertiserColor(Color color) { _client?.SetAdvertiserColor(color); }
-        public void SetCallToActionTextColor(Color color) { _client?.SetCallToActionTextColor(color); }
-        public void SetCallToActionBackgroundColor(Color color) { _client?.SetCallToActionBackgroundColor(color); }
+
+        public void RenderTemplate(NativeTemplateStyle style = null, int widthDp = 0, int heightDp = 0)
+        {
+            _client?.RenderTemplate(style, widthDp, heightDp);
+        }
 
         public void Dispose()
         {

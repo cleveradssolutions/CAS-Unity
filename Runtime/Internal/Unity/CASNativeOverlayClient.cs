@@ -25,12 +25,29 @@ namespace CAS.Unity
         public event Action<AdMetaData> OnAdImpression;
         public event Action<Rect> OnAdRectChanged;
 
+        private NativeTemplateStyle _style;
+
         public bool isReady => _ready;
         public string placement { get => _placement; set => _placement = value; }
         public Rect rectInPixels => _rect;
         public int widthInPixels => (int)_rect.width;
         public int heightInPixels => (int)_rect.height;
 
+
+        public void RenderTemplate(NativeTemplateStyle style, int widthDp, int heightDp)
+        {
+            _style = style;
+
+            _widthDp = widthDp > 0
+                ? widthDp
+                : 300;
+
+            _heightDp = heightDp > 0
+                ? heightDp
+                : 250;
+
+            CalculateRect();
+        }
         public void Load()
         {
             _ready = true;
@@ -70,18 +87,6 @@ namespace CAS.Unity
             SetPosition((int)(x / scale), (int)(y / scale), position);
         }
 
-        public void Render(int widthDp, int heightDp)
-        {
-            _widthDp = widthDp;
-            _heightDp = heightDp;
-            CalculateRect();
-        }
-
-        public void RenderDefault()
-        {
-            Render(300, 250);
-        }
-
         public void OnGUIAd(GUIStyle style)
         {
             if (!_active || !_ready)
@@ -108,15 +113,17 @@ namespace CAS.Unity
                 case AdPosition.TopLeft:
                 case AdPosition.MiddleLeft:
                 case AdPosition.BottomLeft:
-                    x = safe.xMin + _offsetX * scale;
+                    x = safe.xMin;
                     break;
+
                 case AdPosition.TopRight:
                 case AdPosition.MiddleRight:
                 case AdPosition.BottomRight:
-                    x = safe.xMax - width - _offsetX * scale;
+                    x = safe.xMax - width;
                     break;
+
                 default:
-                    x = safe.center.x - width * 0.5f + _offsetX * scale;
+                    x = safe.center.x - width * 0.5f;
                     break;
             }
 
@@ -125,31 +132,40 @@ namespace CAS.Unity
                 case AdPosition.TopLeft:
                 case AdPosition.TopCenter:
                 case AdPosition.TopRight:
-                    y = safe.yMin + _offsetY * scale;
+                    y = safe.yMin;
                     break;
+
                 case AdPosition.BottomLeft:
                 case AdPosition.BottomCenter:
                 case AdPosition.BottomRight:
-                    y = safe.yMax - height - _offsetY * scale;
+                    y = safe.yMax - height;
                     break;
+
                 default:
-                    y = safe.center.y - height * 0.5f + _offsetY * scale;
+                    y = safe.center.y - height * 0.5f;
                     break;
             }
 
-            x = Mathf.Clamp(x, safe.xMin, safe.xMax - width);
-            y = Mathf.Clamp(y, safe.yMin, safe.yMax - height);
+            x = Mathf.Clamp(
+                x + _offsetX * scale,
+                safe.xMin,
+                safe.xMax - width
+            );
 
-            _rect = new Rect(x, y, width, height);
+            y = Mathf.Clamp(
+                y + _offsetY * scale,
+                safe.yMin,
+                safe.yMax - height
+            );
+
+            var newRect = new Rect(x, y, width, height);
+
+            if (_rect == newRect)
+                return;
+
+            _rect = newRect;
             OnAdRectChanged?.Invoke(_rect);
         }
-
-        public void SetBackgroundColor(Color color) { }
-        public void SetHeadlineColor(Color color) { }
-        public void SetBodyColor(Color color) { }
-        public void SetAdvertiserColor(Color color) { }
-        public void SetCallToActionTextColor(Color color) { }
-        public void SetCallToActionBackgroundColor(Color color) { }
 
         public void Dispose()
         {

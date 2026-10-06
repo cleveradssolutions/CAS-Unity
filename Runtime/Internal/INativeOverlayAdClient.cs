@@ -34,20 +34,6 @@ namespace CAS
 
         void SetPositionPx(int x, int y, AdPosition position);
 
-        void Render(int widthDp, int heightDp);
-
-        void RenderDefault();
-
-        void SetBackgroundColor(Color color);
-
-        void SetHeadlineColor(Color color);
-
-        void SetBodyColor(Color color);
-
-        void SetAdvertiserColor(Color color);
-
-        void SetCallToActionTextColor(Color color);
-
-        void SetCallToActionBackgroundColor(Color color);
+        void RenderTemplate(NativeTemplateStyle style, int widthDp, int heightDp);
     }
 }
