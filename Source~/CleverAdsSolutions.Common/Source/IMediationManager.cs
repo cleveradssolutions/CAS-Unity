@@ -9,6 +9,7 @@ namespace CAS
     public delegate void CASEventWithError(string error);
     public delegate void CASEventWithAdError(AdError error);
     public delegate void CASEventWithMeta(AdMetaData meta);
+    public delegate void CASNativeOverlayAdLoadCallback(INativeOverlayAd ad, AdError error);
 
     public delegate void CASInitCompleteEvent(InitialConfiguration config);
 
@@ -206,6 +207,16 @@ namespace CAS
         /// <param name="size">The desired size of the ad view.</param>
         /// <returns>The ad view interface for the specified size.</returns>
         IAdView GetAdView(AdSize size);
+
+        /// <summary>
+        /// Starts loading a new <see cref="INativeOverlayAd"/> on each call.
+        /// <para>The <paramref name="adLoadCallback"/> is always invoked, either with the loaded ad or with a load error.</para>
+        /// <para>A loaded ad can be shown multiple times with different sizes and styles until <see cref="INativeOverlayAd.isExpired"/> becomes <c>true</c>.</para>
+        /// <para>When the ad is no longer needed, call <see cref="IDisposable.Dispose"/> to release the associated resources and free up memory.</para>
+        /// </summary>
+        /// <param name="options">Options used to configure the native ad request.</param>
+        /// <param name="adLoadCallback">Callback invoked when the ad is loaded or fails to load. Cannot be <c>null</c>.</param>
+        void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback);
 
         #region Return to App Ads eveents
         /// <summary>

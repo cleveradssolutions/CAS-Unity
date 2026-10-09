@@ -302,6 +302,33 @@
             Geography appears as in a region with no regulation in force.
             </summary>
         </member>
+        <member name="T:CAS.EventExecutor">
+            <summary>
+            Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
+            You can use EventExecutor to schedule each calls on the next Update() loop
+            </summary>
+        </member>
+        <member name="M:CAS.EventExecutor.Initialize">
+            <summary>
+            Creation of the Executor component if needed.
+            </summary>
+        </member>
+        <member name="M:CAS.EventExecutor.IsActive">
+            <summary>
+            Is initialized already.
+            </summary>
+        </member>
+        <member name="M:CAS.EventExecutor.IsOnMainThread">
+            <summary>
+            Returns true if the current thread is the Unity main thread.
+            </summary>
+        </member>
+        <member name="M:CAS.EventExecutor.Add(System.Action)">
+            <summary>
+            Execute action on the next Update() loop in Unity Thread.
+            <para>Warning! To enable EventExecutor requires call once static <see cref="M:CAS.EventExecutor.Initialize"/> method.</para>
+            </summary>
+        </member>
         <member name="F:CAS.ConsentStatus.Undefined">
             <summary>
             Mediation ads network behavior
@@ -912,6 +939,16 @@
             <param name="size">The desired size of the ad view.</param>
             <returns>The ad view interface for the specified size.</returns>
         </member>
+        <member name="M:CAS.IMediationManager.LoadNativeOverlayAd(CAS.NativeAdOptions,CAS.CASNativeOverlayAdLoadCallback)">
+            <summary>
+            Starts loading a new <see cref="T:CAS.INativeOverlayAd"/> on each call.
+            <para>The <paramref name="adLoadCallback"/> is always invoked, either with the loaded ad or with a load error.</para>
+            <para>A loaded ad can be shown multiple times with different sizes and styles until <see cref="P:CAS.INativeOverlayAd.isExpired"/> becomes <c>true</c>.</para>
+            <para>When the ad is no longer needed, call <see cref="M:System.IDisposable.Dispose"/> to release the associated resources and free up memory.</para>
+            </summary>
+            <param name="options">Options used to configure the native ad request.</param>
+            <param name="adLoadCallback">Callback invoked when the ad is loaded or fails to load. Cannot be <c>null</c>.</param>
+        </member>
         <member name="E:CAS.IMediationManager.OnAppReturnAdShown">
             <summary>
             Called when the ad is displayed.
@@ -1103,48 +1140,6 @@
             <para>Reduces memory reservations for advertising content.</para>
             </summary>
         </member>
-        <member name="F:CAS.PriceAccuracy.Floor">
-            <summary>
-            The estimated revenue, can also be a minimum price (floor) for ad impression.
-            </summary>
-        </member>
-        <member name="F:CAS.PriceAccuracy.Bid">
-            <summary>
-            The revenue provided as part of the real-time auction.
-            </summary>
-        </member>
-        <member name="F:CAS.PriceAccuracy.Undisclosed">
-            <summary>
-            The revenue is '0', when the demand source does not agree to disclose the payout of impression.
-            </summary>
-        </member>
-        <member name="T:CAS.EventExecutor">
-            <summary>
-            Callbacks from CleverAdsSolutions are not guaranteed to be called on Unity thread.
-            You can use EventExecutor to schedule each calls on the next Update() loop
-            </summary>
-        </member>
-        <member name="M:CAS.EventExecutor.Initialize">
-            <summary>
-            Creation of the Executor component if needed.
-            </summary>
-        </member>
-        <member name="M:CAS.EventExecutor.IsActive">
-            <summary>
-            Is initialized already.
-            </summary>
-        </member>
-        <member name="M:CAS.EventExecutor.IsOnMainThread">
-            <summary>
-            Returns true if the current thread is the Unity main thread.
-            </summary>
-        </member>
-        <member name="M:CAS.EventExecutor.Add(System.Action)">
-            <summary>
-            Execute action on the next Update() loop in Unity Thread.
-            <para>Warning! To enable EventExecutor requires call once static <see cref="M:CAS.EventExecutor.Initialize"/> method.</para>
-            </summary>
-        </member>
         <member name="F:CAS.MediationExtras.tenjinSDKKey">
             <summary>
             Provide TENJIN SDK KEY with CAS SDK initialization to allow CAS initialize Tenjin SDK automatically.
@@ -1171,6 +1166,190 @@
              <para>For information about how to implement Facebook’s Limited Data Use flag in California,
              visit <a href="https://developers.facebook.com/docs/marketing-apis/data-processing-options">Facebook’s developer documentation</a>.</para>
              </summary>
+        </member>
+        <member name="T:CAS.AdChoicesPlacement">
+            <summary>
+            This determines where the AdChoices icon is displayed within the ad content.
+            </summary>
+        </member>
+        <member name="T:CAS.NativeAdOptions">
+            <summary>
+            Manages the loading of native ads with specific configurations.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeAdOptions.adChoicesPlacement">
+            <summary>
+            This determines where the AdChoices icon is displayed within the ad content.
+            Use this property to configure the placement according to your app's design and ad requirements.
+            The icon placement is applied only before ad load.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeAdOptions.isStartVideoMuted">
+            <summary>
+            Sets the initial mute state of the video.
+            By default the video will start with the audio muted.
+            The mute state is applied only before ad load.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeAdOptions.placement">
+            <summary>
+            An optional placement name for the ad instance that helps categorize
+            and track statistics across different ad placements.
+            The placement name is applied only before ad load.
+            Maximum 100 characters allowed for the placement name.
+            </summary>
+        </member>
+        <member name="E:CAS.INativeOverlayAd.OnImpression">
+            <summary>
+            Called when the ad impression detects paid revenue. 
+            </summary>
+        </member>
+        <member name="E:CAS.INativeOverlayAd.OnFailedToShow">
+            <summary>
+            Сalled when an error occurred with the ad.
+            </summary>
+        </member>
+        <member name="E:CAS.INativeOverlayAd.OnClicked">
+            <summary>
+            Called when the user clicks on the Ad.
+            </summary>
+        </member>
+        <member name="P:CAS.INativeOverlayAd.manager">
+            <summary>
+            Get the manager of the AdView.
+            </summary>
+        </member>
+        <member name="P:CAS.INativeOverlayAd.isExpired">
+             <summary>
+             Indicates whether the ad has expired.
+            
+             This property returns `true` if the ad is no longer valid or has surpassed its
+             intended display duration. An expired ad may not be shown to users, and interactions
+             with it may be restricted or disabled.
+             </summary>
+        </member>
+        <member name="P:CAS.INativeOverlayAd.rectInPixels">
+            <summary>
+            Get the real AdView rect with position and size in pixels on screen.
+            <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>
+            </summary>
+        </member>
+        <member name="M:CAS.INativeOverlayAd.RenderTemplate(CAS.NativeTemplateStyle,System.Int32,System.Int32)">
+            <summary>
+            Renders the native overlay ad with provided style and the given size in DP.
+            </summary>
+            <param name="style">Native template style.</param>
+            <param name="widthDp">Overlay width in DP.</param>
+            <param name="heightDp">Overlay height in DP.</param>
+        </member>
+        <member name="M:CAS.INativeOverlayAd.SetPosition(CAS.AdPosition)">
+            <summary>
+            The position where the AdView ad should be placed.
+            The <see cref="T:CAS.AdPosition"/> enum lists the valid ad position values.
+            <para>Default: <see cref="F:CAS.AdPosition.BottomCenter"/></para>
+            </summary>
+        </member>
+        <member name="M:CAS.INativeOverlayAd.SetPosition(System.Int32,System.Int32,CAS.AdPosition)">
+            <summary>
+            The AdView will be positioned at the X and Y values passed to the method,
+            where the origin is the selected <see cref="T:CAS.AdPosition"/> corner of the screen.
+            <para>The coordinates on the screen are determined not in pixels, but in Density-independent Pixels(DP)!</para>
+            </summary>
+            <param name="xDp">X-coordinate on screen in DP.</param>
+            <param name="yDp">Y-coordinate on screen in DP.</param>
+            <param name="position">The corner of the screen.</param>
+        </member>
+        <member name="M:CAS.INativeOverlayAd.SetPositionPx(System.Int32,System.Int32,CAS.AdPosition)">
+            <summary>
+            The AdView will be positioned at the X and Y values passed to the method,
+            where the origin is the selected <see cref="T:CAS.AdPosition"/> corner of the screen.
+            <para>The coordinates on the screen are determined in pixels.</para>
+            </summary>
+            <param name="xPx">X-coordinate on screen in pixels.</param>
+            <param name="yPx">Y-coordinate on screen in pixels.</param>
+            <param name="position">The corner of the screen.</param>
+        </member>
+        <member name="M:CAS.INativeOverlayAd.SetActive(System.Boolean)">
+            <summary>
+            Activate or deactivate the AdView
+            <para>If the AdView is active, it is displayed on the screen and user can interact with it.</para>
+            <para>When you need to hide AdView from the user, just deactivate it.</para>
+            </summary>
+        </member>
+        <member name="T:CAS.NativeTemplateFontStyle">
+            <summary>
+            Font Types for native templates.
+            </summary>
+        </member>
+        <member name="T:CAS.NativeTemplateTextStyle">
+            <summary>
+            Text style options for native templates.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateTextStyle.BackgroundColor">
+            <summary>
+            The background color.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateTextStyle.FontColor">
+            /// <summary>
+            Color of the Text to be rendered.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateTextStyle.FontSize">
+            <summary>
+            Size of the Text to be displayed.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateTextStyle.Style">
+            <summary>
+            FontStyle for the text.
+            </summary>
+        </member>
+        <member name="T:CAS.NativeTemplateStyle">
+            <summary>
+            Style options for native templates.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateStyle.MainBackgroundColor">
+            <summary>
+            The main background color.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateStyle.Headline">
+            <summary>
+            The NativeTemplateTextStyle for the headline text.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateStyle.Body">
+            <summary>
+            The NativeTemplateTextStyle for the body text.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateStyle.CallToAction">
+            <summary>
+            The NativeTemplateTextStyle for the call to action text in button.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateStyle.Other">
+            <summary>
+            The NativeTemplateTextStyle for the other text.
+            </summary>
+        </member>
+        <member name="F:CAS.PriceAccuracy.Floor">
+            <summary>
+            The estimated revenue, can also be a minimum price (floor) for ad impression.
+            </summary>
+        </member>
+        <member name="F:CAS.PriceAccuracy.Bid">
+            <summary>
+            The revenue provided as part of the real-time auction.
+            </summary>
+        </member>
+        <member name="F:CAS.PriceAccuracy.Undisclosed">
+            <summary>
+            The revenue is '0', when the demand source does not agree to disclose the payout of impression.
+            </summary>
         </member>
     </members>
 </doc>

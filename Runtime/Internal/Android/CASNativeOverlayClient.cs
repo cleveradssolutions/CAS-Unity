@@ -1,4 +1,4 @@
-//  Copyright © 2026 CAS.AI. All rights reserved.
+//  Copyright ï¿½ 2026 CAS.AI. All rights reserved.
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
 using System;
@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CAS.Android
 {
-    internal sealed class CASNativeOverlayClient :INativeOverlayAdClient, CASCallback.Handler, CASCallback.RectHandler
+    internal sealed class CASNativeOverlayClient :INativeOverlayAd, CASCallback.Handler, CASCallback.RectHandler
     {
         private readonly CASManagerBase _manager;
         private readonly CASCallback _callback;

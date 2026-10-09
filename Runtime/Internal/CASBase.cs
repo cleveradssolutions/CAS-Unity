@@ -82,6 +82,7 @@ namespace CAS
         public abstract void DisposeAd(AdType adType);
         public abstract void SetAppReturnAdsEnabled(bool enable);
         public abstract void SkipNextAppReturnAds();
+        public abstract void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback);
 
         protected abstract void SetLastPageAdContentNative(string json);
         protected abstract CASViewBase CreateAdView(AdSize size);

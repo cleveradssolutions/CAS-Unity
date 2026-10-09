@@ -30,26 +30,7 @@
     <Folder Include="Source\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Source\AdError.cs" />
-    <Compile Include="Source\AdMetaData.cs" />
-    <Compile Include="Source\AdNetwork.cs" />
-    <Compile Include="Source\AdPosition.cs" />
-    <Compile Include="Source\AdSize.cs" />
-    <Compile Include="Source\AdType.cs" />
-    <Compile Include="Source\ConsentFlow.cs" />
-    <Compile Include="Source\IAdsPreset.cs" />
-    <Compile Include="Source\IAdsSettings.cs" />
-    <Compile Include="Source\IAdView.cs" />
-    <Compile Include="Source\IManagerBuilder.cs" />
-    <Compile Include="Source\IMediationManager.cs" />
-    <Compile Include="Source\InitialConfiguration.cs" />
-    <Compile Include="Source\InitializationError.cs" />
-    <Compile Include="Source\ITargetingOptions.cs" />
-    <Compile Include="Source\LastPageAdContent.cs" />
-    <Compile Include="Source\LoadingManagerMode.cs" />
-    <Compile Include="Source\PriceAccuracy.cs" />
-    <Compile Include="Source\EventExecutor.cs" />
-    <Compile Include="Source\MediationExtras.cs" />
+    <Compile Include="Source\**\*.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

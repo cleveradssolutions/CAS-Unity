@@ -199,7 +199,7 @@ namespace CAS
                 && settings.loadingMode != LoadingManagerMode.Manual;
         }
 
-        internal static INativeOverlayAdClient CreateNativeOverlayClient(CASManagerBase manager)
+        internal static INativeOverlayAd CreateNativeOverlayClient(CASManagerBase manager)
         {
 #if PlatformAndroid
             if (Application.platform == RuntimePlatform.Android)

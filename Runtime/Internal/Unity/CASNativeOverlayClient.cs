@@ -1,4 +1,4 @@
-//  Copyright © 2025 CAS.AI. All rights reserved.
+//  Copyright ï¿½ 2025 CAS.AI. All rights reserved.
 
 #if UNITY_EDITOR
 using System;
@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CAS.Unity
 {
-    internal sealed class CASNativeOverlayClient : INativeOverlayAdClient
+    internal sealed class CASNativeOverlayClient : INativeOverlayAd
     {
         private bool _ready;
         private bool _active;

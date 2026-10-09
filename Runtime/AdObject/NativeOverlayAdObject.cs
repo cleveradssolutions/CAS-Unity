@@ -11,9 +11,32 @@ namespace CAS.AdObject
 
         [SerializeField] private AdPosition adPosition = AdPosition.BottomCenter;
         [SerializeField] private Vector2Int adOffset = Vector2Int.zero;
-        [SerializeField] private bool useDefaultSize = true;
         [SerializeField] private Vector2Int templateSize = new Vector2Int(300, 250);
-        [SerializeField] private string placement;
+
+        [SerializeField] private NativeTemplateStyle style = new NativeTemplateStyle();
+
+        /// <summary>
+        /// This determines where the AdChoices icon is displayed within the ad content.
+        /// Use this property to configure the placement according to your app's design and ad requirements.
+        /// The icon placement is applied only before ad load.
+        /// </summary>
+        public AdChoicesPlacement adChoicesPlacement = AdChoicesPlacement.TopRight;
+
+        /// <summary>
+        /// Sets the initial mute state of the video.
+        /// By default the video will start with the audio muted.
+        /// The mute state is applied only before ad load.
+        /// </summary>
+        public bool isStartVideoMuted = true;
+
+        /// <summary>
+        /// An optional placement name for the ad instance that helps categorize
+        /// and track statistics across different ad placements.
+        /// The placement name is applied only before ad load.
+        /// Maximum 100 characters allowed for the placement name.
+        /// </summary>
+        [Tooltip("An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.")]
+        public string placement = null;
 
         public UnityEvent OnAdLoaded;
         public CASUEventWithError OnAdFailedToLoad;
@@ -23,88 +46,117 @@ namespace CAS.AdObject
         public UnityEvent OnAdHidden;
         public CASUEventWithMeta OnAdImpression;
 
-        private NativeOverlayAd _ad;
-        private bool _loadWhenReady;
+        private IMediationManager manager;
+        private INativeOverlayAd ad;
+        private bool loadWhenReady;
+        private bool loading;
 
-        public bool isAdReady => _ad != null && _ad.isReady;
-        public Rect rectInPixels => _ad != null ? _ad.rectInPixels : Rect.zero;
+        /// <summary>
+        /// Get the real Overlay rect with position and size in pixels on screen.
+        /// <para>Return <see cref="Rect.zero"/> when ad view is not active.</para>
+        /// <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>
+        /// </summary>
+        public Rect rectInPixels => ad != null ? ad.rectInPixels : Rect.zero;
 
+        /// <summary>
+        /// Check ready ad to present.
+        /// </summary>
+        public bool IsAdLoaded()
+        {
+            return ad != null && !ad.isExpired;
+        }
+
+        /// <summary>
+        /// Manual load the Ad or reload current loaded Ad to skip impression.
+        /// <para>You can get a callback for the successful loading of an ad by subscribe to <see cref="OnAdLoaded"/>.</para>
+        /// </summary>
         public void LoadAd()
         {
-            if (_ad == null) _loadWhenReady = true;
-            else _ad.Load();
+            if (manager == null)
+            {
+                loadWhenReady = true;
+                return;
+            }
+            if (loading) return;
+            loading = true;
+            var options = new NativeAdOptions
+            {
+                adChoicesPlacement = adChoicesPlacement,
+                isStartVideoMuted = isStartVideoMuted,
+                placement = placement
+            };
+            manager.LoadNativeOverlayAd(options, AdLoaded);
         }
 
-        public void ShowAd()
-        {
-            if (_ad == null) return;
-            _ad.Show();
-            if (_ad.isReady) OnAdShown.Invoke();
-        }
-
-        public void HideAd()
-        {
-            if (_ad == null) return;
-            _ad.Hide();
-            OnAdHidden.Invoke();
-        }
-
+        /// <summary>
+        /// The position where the Overlay ad should be placed.
+        /// The <see cref="AdPosition"/> enum lists the valid ad position values.
+        /// </summary>
         public void SetAdPosition(AdPosition position)
         {
             adPosition = position;
             adOffset = Vector2Int.zero;
-            _ad?.SetPosition(position);
+            if (ad == null) return;
+            ad.SetPosition(position);
         }
 
+        /// <summary>
+        /// The Overlay will be positioned at the X and Y values passed to the method,
+        /// where the origin is the selected <see cref="AdPosition"/> corner of the screen.
+        /// <para>The coordinates on the screen are determined not in pixels, but in Density-independent Pixels(DP)!</para>
+        /// </summary>
+        /// <param name="x">X-coordinate on screen in DP.</param>
+        /// <param name="y">Y-coordinate on screen in DP.</param>
+        /// <param name="position">The corner of the screen.</param>
         public void SetAdPosition(int x, int y, AdPosition position = AdPosition.TopLeft)
         {
             adPosition = position;
             adOffset = new Vector2Int(x, y);
-            _ad?.SetPosition(x, y, position);
+            if (ad == null) return;
+            ad.SetPosition(x, y, position);
         }
 
         public void SetTemplateSize(int widthDp, int heightDp)
         {
-            useDefaultSize = false;
             templateSize = new Vector2Int(widthDp, heightDp);
-            _ad?.RenderTemplate(null, widthDp, heightDp);
+            if (ad == null) return;
+            ad.RenderTemplate(style, widthDp, heightDp);
         }
 
-        public void SetDefaultTemplateSize()
+        public void SetTemplateStyle(NativeTemplateStyle style, int widthDp, int heightDp)
         {
-            useDefaultSize = true;
-            _ad?.RenderTemplate();
+            this.style = style;
+            templateSize = new Vector2Int(widthDp, heightDp);
+            if (ad == null) return;
+            ad.RenderTemplate(style, widthDp, heightDp);
         }
 
-        public void SetPlacement(string value)
-        {
-            placement = value;
-            if (_ad != null) _ad.placement = value;
-        }
+        #region MonoBehaviour
 
         private void Start()
         {
-            CASFactory.TryGetManagerByIndexAsync(managerId.index, OnManagerReady);
+            if (!CASFactory.TryGetManagerByIndexAsync(managerId.index, OnManagerReady))
+                OnAdFailedToLoad.Invoke(new AdError(AdError.NotInitialized, null).ToString());
         }
 
         private void OnEnable()
         {
-            if (_ad == null) return;
-            ApplyPosition();
-            _ad.Show();
-            if (_ad.isReady) OnAdShown.Invoke();
+            if (ad == null) return;
+            ad.SetActive(true);
+            OnAdShown.Invoke();
         }
 
         private void OnDisable()
         {
-            if (_ad == null) return;
-            _ad.Hide();
+            if (ad == null) return;
+            ad.SetActive(false);
             OnAdHidden.Invoke();
         }
 
         private void OnDestroy()
         {
-            CASFactory.OnManagerStateChanged -= OnManagerReady;
+            if (manager == null)
+                CASFactory.OnManagerStateChanged -= OnManagerReady;
             Detach();
         }
 
@@ -115,45 +167,45 @@ namespace CAS.AdObject
 
             CASFactory.OnManagerStateChanged -= OnManagerReady;
 
-            _ad = new NativeOverlayAd(manager);
-            _ad.OnAdLoaded += AdLoaded;
-            _ad.OnAdFailedToLoad += AdFailedToLoad;
-            _ad.OnAdFailedToShow += AdFailedToShow;
-            _ad.OnAdClicked += OnAdClicked.Invoke;
-            _ad.OnAdImpression += OnAdImpression.Invoke;
+            this.manager = manager;
 
-            _ad.placement = placement;
-
-            if (useDefaultSize)
-                _ad.RenderTemplate();
-            else
-                _ad.RenderTemplate(null, templateSize.x, templateSize.y);
-
-            ApplyPosition();
-
-            if (isActiveAndEnabled)
-                _ad.Show();
-
-            _loadWhenReady = false;
-            _ad.Load();
+            if (loadWhenReady)
+            {
+                loadWhenReady = false;
+                LoadAd();
+            }
         }
 
-        private void ApplyPosition()
+        private void AdLoaded(INativeOverlayAd ad, AdError error)
         {
-            _ad?.SetPosition(adOffset.x, adOffset.y, adPosition);
-        }
+            if (!this)
+            {
+                // Instance destroyed already
+                ad.Dispose();
+                return;
+            }
+            loading = false;
+            if (ad == null)
+            {
+                // Ad failed to load
+                OnAdFailedToLoad.Invoke(error.GetMessage());
+                return;
+            }
 
-        private void AdLoaded()
-        {
+            Detach();
+
+            this.ad = ad;
+            ad.OnFailedToShow += AdFailedToShow;
+            ad.OnClicked += OnAdClicked.Invoke;
+            ad.OnImpression += OnAdImpression.Invoke;
+            ad.SetPosition(adOffset.x, adOffset.y, adPosition);
+            ad.RenderTemplate(null, templateSize.x, templateSize.y);
+
             OnAdLoaded.Invoke();
-            if (!isActiveAndEnabled) return;
-            _ad.Show();
-            OnAdShown.Invoke();
-        }
-
-        private void AdFailedToLoad(AdError error)
-        {
-            OnAdFailedToLoad.Invoke(error.GetMessage());
+            if (isActiveAndEnabled)
+            {
+                OnEnable();
+            }
         }
 
         private void AdFailedToShow(AdError error)
@@ -163,14 +215,10 @@ namespace CAS.AdObject
 
         private void Detach()
         {
-            if (_ad == null) return;
-            _ad.OnAdLoaded -= AdLoaded;
-            _ad.OnAdFailedToLoad -= AdFailedToLoad;
-            _ad.OnAdFailedToShow -= AdFailedToShow;
-            _ad.OnAdClicked -= OnAdClicked.Invoke;
-            _ad.OnAdImpression -= OnAdImpression.Invoke;
-            _ad.Dispose();
-            _ad = null;
+            if (ad == null) return;
+            ad.Dispose();
+            ad = null;
         }
+        #endregion
     }
 }

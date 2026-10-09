@@ -25,9 +25,15 @@ namespace CAS.AdObject
         private Vector2Int adOffset = Vector2Int.zero;
         [SerializeField]
         private AdSize adSize = AdSize.Banner;
+
+        /// <summary>
+        /// An optional placement name for the ad instance that helps categorize
+        /// and track statistics across different ad placements.
+        /// The placement name is applied only before ad load.
+        /// Maximum 100 characters allowed for the placement name.
+        /// </summary>
         [Tooltip("An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.")]
-        [SerializeField]
-        private string placement = null;
+        public string placement = null;
 
         public UnityEvent OnAdLoaded;
         public CASUEventWithError OnAdFailedToLoad;
