@@ -12,11 +12,6 @@ namespace CAS.Android
         private CASCallback _callback;
         private string _placement;
 
-
-        public void HandleRect(int x, int y, int width, int height)
-        {
-            rectInPixels = new Rect(x, y, width, height);
-        }
         public override bool isReady
         {
             get { return _bridge.Call<bool>("isReady"); }

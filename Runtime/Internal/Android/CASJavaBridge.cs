@@ -3,6 +3,7 @@
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace CAS.Android
@@ -52,7 +53,7 @@ namespace CAS.Android
 
         internal interface RectHandler
         {
-            void HandleRect(int x, int y, int width, int height);
+            Rect rectInPixels { get; set; }
         }
 
         private readonly Handler _client;
@@ -97,12 +98,10 @@ namespace CAS.Android
                         int y = (int)args[2];
                         int width = (int)args[3];
                         int height = (int)args[4];
-
-                        CASJavaBridge.ExecuteEvent(() =>
+                        if (_client is RectHandler)
                         {
-                            if (_client is RectHandler handler)
-                                handler.HandleRect(x, y, width, height);
-                        });
+                            ((RectHandler)_client).rectInPixels = new Rect(x, y, width, height);
+                        }
                     }
                     catch (Exception e)
                     {

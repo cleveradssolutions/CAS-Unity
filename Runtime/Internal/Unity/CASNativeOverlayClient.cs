@@ -6,90 +6,95 @@ using UnityEngine;
 
 namespace CAS.Unity
 {
-    internal sealed class CASNativeOverlayClient : INativeOverlayAd
+    internal sealed class CASNativeOverlayClient : CASNativeOverlayBase
     {
-        private readonly CASManagerClient _manager;
         private readonly CASManagerBehaviour _behaviour;
+        private bool _waitImpressionEvent = false;
 
-        private bool _loaded;
-        private bool _active;
+        public bool loaded;
+        public bool active;
         private bool _disposed;
+        public int lastError = AdError.Internal;
 
-        private Rect _rect;
-        private AdPosition _position = AdPosition.BottomCenter;
-        private int _offsetX;
-        private int _offsetY;
         private int _widthDp = 300;
         private int _heightDp = 250;
 
-        internal CASNativeOverlayClient(CASManagerClient manager, CASManagerBehaviour behaviour)
+        internal CASNativeOverlayClient(CASManagerClient manager, CASManagerBehaviour behaviour, CASNativeOverlayAdLoadCallback callback) : base(manager, callback)
         {
-            _manager = manager;
             _behaviour = behaviour;
         }
 
-        public event Action<AdMetaData> OnImpression;
-        public event Action<AdError> OnFailedToShow;
-        public event Action OnClicked;
-        public event Action<Rect> OnRectChanged;
+        public override bool isExpired { get { return _disposed; } }
 
-        public IMediationManager manager => _manager;
-        public bool isExpired => _disposed;
-        public Rect rectInPixels => _rect;
-
-        internal void Load(NativeAdOptions options, CASNativeOverlayAdLoadCallback callback)
+        internal void Load(NativeAdOptions options)
         {
-            _behaviour.Post(() =>
+            CallAdAction(AdActionCode.LOADED);
+        }
+
+        public override void SetActive(bool active)
+        {
+            if (!_disposed) this.active = active;
+        }
+
+        protected override void SetPositionNative(int position, int x, int y)
+        {
+            CASFactory.UnityLog("Overlay position changed to " + ((AdPosition)position).ToString() + " with offset: x=" + x + ", y=" + y);
+        }
+
+        protected override void SetPositionPxNative(int position, int x, int y)
+        {
+            if (x == 0 && y == 0)
             {
-                if (_disposed) return;
-                _loaded = true;
-                callback?.Invoke(this, default(AdError));
-            }, 0.5f);
+                SetPositionNative(position, x, y);
+            }
+            else
+            {
+                float scale = MobileAds.GetDeviceScreenScale();
+                _positionX = (int)(x / scale);
+                _positionY = (int)(y / scale);
+                SetPositionNative(position, _positionX, _positionY);
+            }
         }
 
-        public void SetActive(bool active)
-        {
-            if (!_disposed) _active = active;
-        }
-
-        public void SetPosition(AdPosition position)
-        {
-            _position = position;
-            _offsetX = 0;
-            _offsetY = 0;
-            CalculateRect();
-        }
-
-        public void SetPosition(int xDp, int yDp, AdPosition position)
-        {
-            _position = position;
-            _offsetX = xDp;
-            _offsetY = yDp;
-            CalculateRect();
-        }
-
-        public void SetPositionPx(int xPx, int yPx, AdPosition position)
-        {
-            float scale = MobileAds.GetDeviceScreenScale();
-            SetPosition((int)(xPx / scale), (int)(yPx / scale), position);
-        }
-
-        public void RenderTemplate(NativeTemplateStyle style, int widthDp, int heightDp)
+        public override void RenderTemplate(int widthDp, int heightDp, NativeTemplateStyle style)
         {
             _widthDp = widthDp > 0 ? widthDp : 300;
             _heightDp = heightDp > 0 ? heightDp : 250;
-            CalculateRect();
+            CalculateAdRectOnScreen();
         }
 
         internal void OnGUIAd(GUIStyle style)
         {
-            if (!_active || !_loaded || _disposed) return;
+            if (!active || !loaded || _disposed) return;
 
-            CalculateRect();
-            if (GUI.Button(_rect, "CAS.AI Native Overlay Ad", style)) OnClicked?.Invoke();
+            if (_waitImpressionEvent)
+            {
+                _waitImpressionEvent = false;
+                CallAdAction(AdActionCode.IMPRESSION);
+            }
+
+            CalculateAdRectOnScreen();
+            if (GUI.Button(rectInPixels, "CAS.AI Native Overlay Ad", style))
+            {
+                CallAdAction(AdActionCode.CLICKED);
+            }
         }
 
-        private void CalculateRect()
+        private void CallAdAction(int action, float delay = 0.0f)
+        {
+            _behaviour.Post(() =>
+            {
+                if (action == AdActionCode.LOADED)
+                {
+                    CalculateAdRectOnScreen();
+                    loaded = true;
+                    _waitImpressionEvent = true;
+                }
+                HandleCallback(action, 0, lastError, null, null);
+            }, delay);
+        }
+
+        private void CalculateAdRectOnScreen()
         {
             float scale = MobileAds.GetDeviceScreenScale();
             float width = _widthDp * scale;
@@ -132,25 +137,21 @@ namespace CAS.Unity
                     break;
             }
 
-            x = Mathf.Clamp(x + _offsetX * scale, safe.xMin, safe.xMax - width);
-            y = Mathf.Clamp(y + _offsetY * scale, safe.yMin, safe.yMax - height);
+            x = Mathf.Clamp(x + _positionX * scale, safe.xMin, safe.xMax - width);
+            y = Mathf.Clamp(y + _positionY * scale, safe.yMin, safe.yMax - height);
 
             var rect = new Rect(x, y, width, height);
-            if (_rect == rect) return;
-
-            _rect = rect;
-            OnRectChanged?.Invoke(_rect);
+            rectInPixels = rect;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             if (_disposed) return;
-
             _disposed = true;
-            _loaded = false;
-            _active = false;
-            _rect = Rect.zero;
-            _behaviour.RemoveNativeOverlay(this);
+            loaded = false;
+            active = false;
+            rectInPixels = Rect.zero;
+            _behaviour._nativeAdOverlays.Remove(this);
         }
     }
 }

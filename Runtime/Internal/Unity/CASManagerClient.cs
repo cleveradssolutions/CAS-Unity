@@ -95,19 +95,19 @@ namespace CAS.Unity
             return view;
         }
 
-        public override void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback)
-        {
-            if (adLoadCallback == null) throw new ArgumentNullException(nameof(adLoadCallback));
-
-            var overlay = new CASNativeOverlayClient(this, _behaviour);
-            _behaviour.AddNativeOverlay(overlay);
-            overlay.Load(options, adLoadCallback);
-        }
-
         public override void RemoveAdViewFromFactory(CASViewBase view)
         {
             base.RemoveAdViewFromFactory(view);
             _behaviour._adViews.Remove(view as CASViewClient);
+        }
+
+        public override void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback)
+        {
+            if (adLoadCallback == null) throw new ArgumentNullException(nameof(adLoadCallback));
+
+            var overlay = new CASNativeOverlayClient(this, _behaviour, adLoadCallback);
+            _behaviour._nativeAdOverlays.Add(overlay);
+            overlay.Load(options);
         }
     }
 
@@ -125,17 +125,7 @@ namespace CAS.Unity
         public CASFullscreenView _interstitial;
         public CASFullscreenView _rewarded;
         public CASFullscreenView _appOpen;
-        internal readonly List<CASNativeOverlayClient> nativeOverlays = new List<CASNativeOverlayClient>();
-
-        internal void AddNativeOverlay(CASNativeOverlayClient overlay)
-        {
-            if (!nativeOverlays.Contains(overlay)) nativeOverlays.Add(overlay);
-        }
-
-        internal void RemoveNativeOverlay(CASNativeOverlayClient overlay)
-        {
-            nativeOverlays.Remove(overlay);
-        }
+        public List<CASNativeOverlayClient> _nativeAdOverlays = new List<CASNativeOverlayClient>();
 
         public void Awake()
         {
@@ -182,8 +172,8 @@ namespace CAS.Unity
             for (int i = 0; i < _adViews.Count; i++)
                 _adViews[i].OnGUIAd(_btnStyle);
 
-            for (int i = 0; i < nativeOverlays.Count; i++)
-                nativeOverlays[i].OnGUIAd(_btnStyle);
+            for (int i = 0; i < _nativeAdOverlays.Count; i++)
+                _nativeAdOverlays[i].OnGUIAd(_btnStyle);
 
             _interstitial.OnGUIAd(_btnStyle);
             _rewarded.OnGUIAd(_btnStyle);

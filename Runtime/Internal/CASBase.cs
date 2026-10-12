@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CAS;
 using UnityEngine;
 
 namespace CAS
@@ -537,5 +538,108 @@ namespace CAS
                     throw new NotImplementedException("Action " + action);
             }
         }
+    }
+
+    internal abstract class CASNativeOverlayBase : INativeOverlayAd
+    {
+        protected CASManagerBase _manager;
+        [SerializeField]
+        protected AdPosition _position = AdPosition.BottomCenter;
+        [SerializeField]
+        protected int _positionX = 0;
+        [SerializeField]
+        protected int _positionY = 0;
+
+        public event CASEventWithMeta OnImpression;
+        public event CASEventWithError OnFailedToShow;
+        public event Action OnClicked;
+
+        internal CASNativeOverlayAdLoadCallback _loadCallback;
+
+        public IMediationManager manager { get { return _manager; } }
+        public Rect rectInPixels { get; set; }
+
+        internal CASNativeOverlayBase(CASManagerBase manager, CASNativeOverlayAdLoadCallback callback)
+        {
+            _manager = manager;
+            _loadCallback = callback;
+        }
+
+        public abstract void SetActive(bool active);
+        public abstract bool isExpired { get; }
+
+        protected abstract void SetPositionNative(int position, int x, int y);
+        protected abstract void SetPositionPxNative(int position, int x, int y);
+
+        public abstract void RenderTemplate(int widthDp, int heightDp, NativeTemplateStyle style = null);
+
+        public abstract void Dispose();
+
+
+        public void SetPosition(AdPosition position, int x, int y)
+        {
+            if (IsValidPosition(x, y, position))
+                SetPositionNative((int)position, _positionX, _positionY);
+        }
+
+        public void SetPositionPx(AdPosition position, int x, int y)
+        {
+            if (IsValidPosition(x, y, position))
+                SetPositionPxNative((int)position, _positionX, _positionY);
+        }
+
+        private bool IsValidPosition(int x, int y, AdPosition position)
+        {
+            bool isChanged = false;
+            if (position < AdPosition.Undefined && position != _position)
+            {
+                _position = position;
+                isChanged = true;
+            }
+            var absX = Math.Abs(x);
+            var absY = Math.Abs(y);
+            if (absX != _positionX || absY != _positionY)
+            {
+                _positionX = absX;
+                _positionY = absY;
+                isChanged = true;
+            }
+            return isChanged;
+        }
+
+        public void HandleCallback(int action, int type, int error, string errorMessage, object impression)
+        {
+            switch (action)
+            {
+                case AdActionCode.LOADED:
+                    CASFactory.RuntimeLog(type, "Callback Loaded ");
+                    var loaded = _loadCallback;
+                    _loadCallback = null;
+                    loaded?.Invoke(this, new AdError(AdError.Internal, null));
+                    break;
+                case AdActionCode.FAILED:
+                    CASFactory.RuntimeLog(type, "Callback Failed");
+                    var failed = _loadCallback;
+                    _loadCallback = null;
+                    var loadError = new AdError(error, errorMessage);
+                    Dispose();
+                    failed?.Invoke(null, loadError);
+                    break;
+                case AdActionCode.IMPRESSION:
+                    CASFactory.RuntimeLog(type, "Callback Impression");
+                    if (OnImpression != null)
+                        OnImpression(_manager.WrapImpression(AdType.Banner, impression));
+                    break;
+                case AdActionCode.CLICKED:
+                    CASFactory.RuntimeLog(type, "Callback Clicked");
+                    if (OnClicked != null)
+                        OnClicked();
+                    break;
+                default:
+                    throw new NotImplementedException("Action " + action);
+            }
+        }
+
+
     }
 }

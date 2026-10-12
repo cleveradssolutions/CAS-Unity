@@ -1216,7 +1216,7 @@
         </member>
         <member name="P:CAS.INativeOverlayAd.manager">
             <summary>
-            Get the manager of the AdView.
+            Get the manager of the AdOverlay.
             </summary>
         </member>
         <member name="P:CAS.INativeOverlayAd.isExpired">
@@ -1230,11 +1230,11 @@
         </member>
         <member name="P:CAS.INativeOverlayAd.rectInPixels">
             <summary>
-            Get the real AdView rect with position and size in pixels on screen.
+            Get the real AdOverlay rect with position and size in pixels on screen.
             <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>
             </summary>
         </member>
-        <member name="M:CAS.INativeOverlayAd.RenderTemplate(CAS.NativeTemplateStyle,System.Int32,System.Int32)">
+        <member name="M:CAS.INativeOverlayAd.RenderTemplate(System.Int32,System.Int32,CAS.NativeTemplateStyle)">
             <summary>
             Renders the native overlay ad with provided style and the given size in DP.
             </summary>
@@ -1242,38 +1242,31 @@
             <param name="widthDp">Overlay width in DP.</param>
             <param name="heightDp">Overlay height in DP.</param>
         </member>
-        <member name="M:CAS.INativeOverlayAd.SetPosition(CAS.AdPosition)">
+        <member name="M:CAS.INativeOverlayAd.SetPosition(CAS.AdPosition,System.Int32,System.Int32)">
             <summary>
-            The position where the AdView ad should be placed.
-            The <see cref="T:CAS.AdPosition"/> enum lists the valid ad position values.
-            <para>Default: <see cref="F:CAS.AdPosition.BottomCenter"/></para>
-            </summary>
-        </member>
-        <member name="M:CAS.INativeOverlayAd.SetPosition(System.Int32,System.Int32,CAS.AdPosition)">
-            <summary>
-            The AdView will be positioned at the X and Y values passed to the method,
+            The AdOverlay will be positioned at the X and Y values passed to the method,
             where the origin is the selected <see cref="T:CAS.AdPosition"/> corner of the screen.
             <para>The coordinates on the screen are determined not in pixels, but in Density-independent Pixels(DP)!</para>
             </summary>
-            <param name="xDp">X-coordinate on screen in DP.</param>
-            <param name="yDp">Y-coordinate on screen in DP.</param>
             <param name="position">The corner of the screen.</param>
+            <param name="xOffsetDP">X-coordinate on screen in DP.</param>
+            <param name="yOffsetDP">Y-coordinate on screen in DP.</param>
         </member>
-        <member name="M:CAS.INativeOverlayAd.SetPositionPx(System.Int32,System.Int32,CAS.AdPosition)">
+        <member name="M:CAS.INativeOverlayAd.SetPositionPx(CAS.AdPosition,System.Int32,System.Int32)">
             <summary>
-            The AdView will be positioned at the X and Y values passed to the method,
+            The AdOverlay will be positioned at the X and Y values passed to the method,
             where the origin is the selected <see cref="T:CAS.AdPosition"/> corner of the screen.
             <para>The coordinates on the screen are determined in pixels.</para>
             </summary>
-            <param name="xPx">X-coordinate on screen in pixels.</param>
-            <param name="yPx">Y-coordinate on screen in pixels.</param>
             <param name="position">The corner of the screen.</param>
+            <param name="xOffsetPX">X-coordinate on screen in pixels.</param>
+            <param name="yOffsetPX">Y-coordinate on screen in pixels.</param>
         </member>
         <member name="M:CAS.INativeOverlayAd.SetActive(System.Boolean)">
             <summary>
-            Activate or deactivate the AdView
-            <para>If the AdView is active, it is displayed on the screen and user can interact with it.</para>
-            <para>When you need to hide AdView from the user, just deactivate it.</para>
+            Activate or deactivate the AdOverlay
+            <para>If the AdOverlay is active, it is displayed on the screen and user can interact with it.</para>
+            <para>When you need to hide AdOverlay from the user, just deactivate it.</para>
             </summary>
         </member>
         <member name="T:CAS.NativeTemplateFontStyle">

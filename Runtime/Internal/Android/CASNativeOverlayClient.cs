@@ -6,103 +6,46 @@ using UnityEngine;
 
 namespace CAS.Android
 {
-    internal sealed class CASNativeOverlayClient : INativeOverlayAd, CASCallback.Handler, CASCallback.RectHandler
+    internal sealed class CASNativeOverlayClient : CASNativeOverlayBase, CASCallback.Handler, CASCallback.RectHandler
     {
-        private readonly CASManagerBase _manager;
         private readonly CASCallback _callback;
         private AndroidJavaObject _bridge;
-        private CASNativeOverlayAdLoadCallback _loadCallback;
-        private Rect _rectInPixels;
 
-        internal CASNativeOverlayClient(CASManagerBase manager)
+        internal CASNativeOverlayClient(CASManagerBase manager, CASNativeOverlayAdLoadCallback callback) : base(manager, callback)
         {
-            _manager = manager;
             _callback = new CASCallback(this);
-            _bridge = new AndroidJavaObject(CASJavaBridge.NativeOverlayClass, _callback, manager.managerID);
+            _bridge = new AndroidJavaObject(CASJavaBridge.NativeOverlayClass, _callback);
         }
 
-        public event Action<AdMetaData> OnImpression;
-        public event Action<AdError> OnFailedToShow;
-        public event Action OnClicked;
-        public event Action<Rect> OnRectChanged;
+        public override bool isExpired { get { return _bridge == null || _bridge.Call<bool>("isExpired"); } }
 
-        public IMediationManager manager => _manager;
-        public bool isExpired => _bridge == null || _bridge.Call<bool>("isExpired");
-        public Rect rectInPixels => _rectInPixels;
-
-        internal void Load(NativeAdOptions options, CASNativeOverlayAdLoadCallback callback)
+        internal void Load(NativeAdOptions options)
         {
             if (options == null) options = new NativeAdOptions();
-            _loadCallback = callback;
-            _bridge.Call("load", (int)options.adChoicesPlacement, options.isStartVideoMuted, options.placement);
+            _bridge.Call("load", _manager.managerID, (int)options.adChoicesPlacement, options.isStartVideoMuted, options.placement);
         }
 
-        public void SetActive(bool active)
+        public override void SetActive(bool active)
         {
             if (_bridge != null) _bridge.Call(active ? "show" : "hide");
         }
 
-        public void SetPosition(AdPosition position)
+        protected override void SetPositionNative(int position, int x, int y)
         {
-            if (_bridge != null) _bridge.Call("setPosition", (int)position);
+            if (_bridge != null) _bridge.Call("setPosition", (int)position, x, y);
         }
 
-        public void SetPosition(int xDp, int yDp, AdPosition position)
+        protected override void SetPositionPxNative(int position, int x, int y)
         {
-            if (_bridge != null) _bridge.Call("setPosition", (int)position, xDp, yDp);
+            if (_bridge != null) _bridge.Call("setPositionPx", (int)position, x, y);
         }
 
-        public void SetPositionPx(int xPx, int yPx, AdPosition position)
-        {
-            if (_bridge != null) _bridge.Call("setPositionPx", (int)position, xPx, yPx);
-        }
-
-        public void RenderTemplate(NativeTemplateStyle style, int widthDp, int heightDp)
+        public override void RenderTemplate(int widthDp, int heightDp, NativeTemplateStyle style)
         {
             if (_bridge != null) _bridge.Call("renderTemplate", ToBridgeStyle(style), widthDp, heightDp);
         }
 
-        public void HandleCallback(int action, int type, int error, string errorMessage, object impression)
-        {
-            if (type != AdTypeCode.NATIVE) return;
-
-            switch (action)
-            {
-                case AdActionCode.LOADED:
-                    var loaded = _loadCallback;
-                    _loadCallback = null;
-                    loaded?.Invoke(this, default(AdError));
-                    break;
-
-                case AdActionCode.FAILED:
-                    var failed = _loadCallback;
-                    _loadCallback = null;
-                    var loadError = new AdError(error, errorMessage);
-                    Dispose();
-                    failed?.Invoke(null, loadError);
-                    break;
-
-                case AdActionCode.SHOW_FAILED:
-                    OnFailedToShow?.Invoke(new AdError(error, errorMessage));
-                    break;
-
-                case AdActionCode.CLICKED:
-                    OnClicked?.Invoke();
-                    break;
-
-                case AdActionCode.IMPRESSION:
-                    OnImpression?.Invoke(_manager.WrapImpression(AdType.Native, impression));
-                    break;
-            }
-        }
-
-        public void HandleRect(int x, int y, int width, int height)
-        {
-            _rectInPixels = new Rect(x, y, width, height);
-            OnRectChanged?.Invoke(_rectInPixels);
-        }
-
-        public void Dispose()
+        public override void Dispose()
         {
             _loadCallback = null;
             if (_bridge == null) return;

@@ -10,7 +10,6 @@ namespace CAS
         Interstitial = 1,
         Rewarded = 2,
         AppOpen = 3,
-        [Obsolete("Not supported")]
         Native = 4,
         None,
     }
@@ -23,6 +22,7 @@ namespace CAS
         Interstitial = 1 << 1,
         Rewarded = 1 << 2,
         AppOpen = 1 << 3,
-        Everything = Banner | Interstitial | Rewarded | AppOpen
+        Native = 1 << 4,
+        Everything = Banner | Interstitial | Rewarded | AppOpen | Native
     }
 }

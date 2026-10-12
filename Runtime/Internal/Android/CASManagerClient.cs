@@ -58,8 +58,8 @@ namespace CAS.Android
         {
             if (adLoadCallback == null) throw new ArgumentNullException(nameof(adLoadCallback));
 
-            var client = new CASNativeOverlayClient(this);
-            client.Load(options, adLoadCallback);
+            var client = new CASNativeOverlayClient(this, adLoadCallback);
+            client.Load(options);
         }
 
         protected override void SetLastPageAdContentNative(string json)

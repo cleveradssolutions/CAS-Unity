@@ -1,3 +1,5 @@
+//  Copyright © 2026 CAS.AI. All rights reserved.
+
 using System;
 using UnityEngine;
 
