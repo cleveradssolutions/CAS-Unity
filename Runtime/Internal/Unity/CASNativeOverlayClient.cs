@@ -1,4 +1,4 @@
-//  Copyright � 2025 CAS.AI. All rights reserved.
+// Copyright © 2026 CAS.AI. All rights reserved.
 
 #if UNITY_EDITOR
 using System;
@@ -8,9 +8,13 @@ namespace CAS.Unity
 {
     internal sealed class CASNativeOverlayClient : INativeOverlayAd
     {
-        private bool _ready;
+        private readonly CASManagerClient _manager;
+        private readonly CASManagerBehaviour _behaviour;
+
+        private bool _loaded;
         private bool _active;
-        private string _placement;
+        private bool _disposed;
+
         private Rect _rect;
         private AdPosition _position = AdPosition.BottomCenter;
         private int _offsetX;
@@ -18,51 +22,34 @@ namespace CAS.Unity
         private int _widthDp = 300;
         private int _heightDp = 250;
 
-        public event Action OnAdLoaded;
-        public event Action<AdError> OnAdFailedToLoad;
-        public event Action<AdError> OnAdFailedToShow;
-        public event Action OnAdClicked;
-        public event Action<AdMetaData> OnAdImpression;
-        public event Action<Rect> OnAdRectChanged;
+        internal CASNativeOverlayClient(CASManagerClient manager, CASManagerBehaviour behaviour)
+        {
+            _manager = manager;
+            _behaviour = behaviour;
+        }
 
-        private NativeTemplateStyle _style;
+        public event Action<AdMetaData> OnImpression;
+        public event Action<AdError> OnFailedToShow;
+        public event Action OnClicked;
+        public event Action<Rect> OnRectChanged;
 
-        public bool isReady => _ready;
-        public string placement { get => _placement; set => _placement = value; }
+        public IMediationManager manager => _manager;
+        public bool isExpired => _disposed;
         public Rect rectInPixels => _rect;
-        public int widthInPixels => (int)_rect.width;
-        public int heightInPixels => (int)_rect.height;
 
-
-        public void RenderTemplate(NativeTemplateStyle style, int widthDp, int heightDp)
+        internal void Load(NativeAdOptions options, CASNativeOverlayAdLoadCallback callback)
         {
-            _style = style;
-
-            _widthDp = widthDp > 0
-                ? widthDp
-                : 300;
-
-            _heightDp = heightDp > 0
-                ? heightDp
-                : 250;
-
-            CalculateRect();
-        }
-        public void Load()
-        {
-            _ready = true;
-            CalculateRect();
-            OnAdLoaded?.Invoke();
+            _behaviour.Post(() =>
+            {
+                if (_disposed) return;
+                _loaded = true;
+                callback?.Invoke(this, default(AdError));
+            }, 0.5f);
         }
 
-        public void Show()
+        public void SetActive(bool active)
         {
-            _active = true;
-        }
-
-        public void Hide()
-        {
-            _active = false;
+            if (!_disposed) _active = active;
         }
 
         public void SetPosition(AdPosition position)
@@ -73,29 +60,33 @@ namespace CAS.Unity
             CalculateRect();
         }
 
-        public void SetPosition(int x, int y, AdPosition position)
+        public void SetPosition(int xDp, int yDp, AdPosition position)
         {
             _position = position;
-            _offsetX = x;
-            _offsetY = y;
+            _offsetX = xDp;
+            _offsetY = yDp;
             CalculateRect();
         }
 
-        public void SetPositionPx(int x, int y, AdPosition position)
+        public void SetPositionPx(int xPx, int yPx, AdPosition position)
         {
             float scale = MobileAds.GetDeviceScreenScale();
-            SetPosition((int)(x / scale), (int)(y / scale), position);
+            SetPosition((int)(xPx / scale), (int)(yPx / scale), position);
         }
 
-        public void OnGUIAd(GUIStyle style)
+        public void RenderTemplate(NativeTemplateStyle style, int widthDp, int heightDp)
         {
-            if (!_active || !_ready)
-                return;
+            _widthDp = widthDp > 0 ? widthDp : 300;
+            _heightDp = heightDp > 0 ? heightDp : 250;
+            CalculateRect();
+        }
+
+        internal void OnGUIAd(GUIStyle style)
+        {
+            if (!_active || !_loaded || _disposed) return;
 
             CalculateRect();
-
-            if (GUI.Button(_rect, "CAS.AI Native Overlay Ad", style))
-                OnAdClicked?.Invoke();
+            if (GUI.Button(_rect, "CAS.AI Native Overlay Ad", style)) OnClicked?.Invoke();
         }
 
         private void CalculateRect()
@@ -106,8 +97,6 @@ namespace CAS.Unity
             Rect safe = Screen.safeArea;
 
             float x;
-            float y;
-
             switch (_position)
             {
                 case AdPosition.TopLeft:
@@ -115,18 +104,17 @@ namespace CAS.Unity
                 case AdPosition.BottomLeft:
                     x = safe.xMin;
                     break;
-
                 case AdPosition.TopRight:
                 case AdPosition.MiddleRight:
                 case AdPosition.BottomRight:
                     x = safe.xMax - width;
                     break;
-
                 default:
                     x = safe.center.x - width * 0.5f;
                     break;
             }
 
+            float y;
             switch (_position)
             {
                 case AdPosition.TopLeft:
@@ -134,44 +122,35 @@ namespace CAS.Unity
                 case AdPosition.TopRight:
                     y = safe.yMin;
                     break;
-
                 case AdPosition.BottomLeft:
                 case AdPosition.BottomCenter:
                 case AdPosition.BottomRight:
                     y = safe.yMax - height;
                     break;
-
                 default:
                     y = safe.center.y - height * 0.5f;
                     break;
             }
 
-            x = Mathf.Clamp(
-                x + _offsetX * scale,
-                safe.xMin,
-                safe.xMax - width
-            );
+            x = Mathf.Clamp(x + _offsetX * scale, safe.xMin, safe.xMax - width);
+            y = Mathf.Clamp(y + _offsetY * scale, safe.yMin, safe.yMax - height);
 
-            y = Mathf.Clamp(
-                y + _offsetY * scale,
-                safe.yMin,
-                safe.yMax - height
-            );
+            var rect = new Rect(x, y, width, height);
+            if (_rect == rect) return;
 
-            var newRect = new Rect(x, y, width, height);
-
-            if (_rect == newRect)
-                return;
-
-            _rect = newRect;
-            OnAdRectChanged?.Invoke(_rect);
+            _rect = rect;
+            OnRectChanged?.Invoke(_rect);
         }
 
         public void Dispose()
         {
-            _ready = false;
+            if (_disposed) return;
+
+            _disposed = true;
+            _loaded = false;
             _active = false;
             _rect = Rect.zero;
+            _behaviour.RemoveNativeOverlay(this);
         }
     }
 }

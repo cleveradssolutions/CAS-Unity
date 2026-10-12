@@ -78,6 +78,11 @@ namespace CAS.iOS
             CASExterns.CASUSetDelegates(_managerRef, AdActionCallback, AdImpressionCallback);
         }
 
+        public override void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback)
+        {
+            throw new NotSupportedException("Native Overlay Add");
+        }
+
         protected override void SetLastPageAdContentNative(string json)
         {
             CASExterns.CASUSetLastPageAdContent(_managerRef, json);

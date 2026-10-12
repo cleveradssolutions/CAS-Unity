@@ -181,7 +181,7 @@ namespace CAS.AdObject
             if (!this)
             {
                 // Instance destroyed already
-                ad.Dispose();
+                ad?.Dispose();
                 return;
             }
             loading = false;
@@ -199,7 +199,7 @@ namespace CAS.AdObject
             ad.OnClicked += OnAdClicked.Invoke;
             ad.OnImpression += OnAdImpression.Invoke;
             ad.SetPosition(adOffset.x, adOffset.y, adPosition);
-            ad.RenderTemplate(null, templateSize.x, templateSize.y);
+            ad.RenderTemplate(style, templateSize.x, templateSize.y);
 
             OnAdLoaded.Invoke();
             if (isActiveAndEnabled)
@@ -216,6 +216,11 @@ namespace CAS.AdObject
         private void Detach()
         {
             if (ad == null) return;
+
+            ad.OnFailedToShow -= AdFailedToShow;
+            ad.OnClicked -= OnAdClicked.Invoke;
+            ad.OnImpression -= OnAdImpression.Invoke;
+
             ad.Dispose();
             ad = null;
         }

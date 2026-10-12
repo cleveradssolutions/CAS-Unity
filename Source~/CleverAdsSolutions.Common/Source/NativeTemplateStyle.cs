@@ -12,7 +12,7 @@ namespace CAS
         Normal = 0,
         Bold = 1,
         Italic = 2,
-        BoldItalic = 3
+        Monospace = 3
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ namespace CAS
         /// <summary>
         /// Size of the Text to be displayed.
         /// </summary>
-        public float FontSize = 14f;
+        public int FontSize = 14;
         /// <summary>
         /// FontStyle for the text.
         /// </summary>

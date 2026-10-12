@@ -95,11 +95,13 @@ namespace CAS.Unity
             return view;
         }
 
-        internal CASNativeOverlayClient CreateNativeOverlay()
+        public override void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback)
         {
-            var overlay = new CASNativeOverlayClient();
-            _behaviour.nativeOverlay = overlay;
-            return overlay;
+            if (adLoadCallback == null) throw new ArgumentNullException(nameof(adLoadCallback));
+
+            var overlay = new CASNativeOverlayClient(this, _behaviour);
+            _behaviour.AddNativeOverlay(overlay);
+            overlay.Load(options, adLoadCallback);
         }
 
         public override void RemoveAdViewFromFactory(CASViewBase view)
@@ -123,7 +125,17 @@ namespace CAS.Unity
         public CASFullscreenView _interstitial;
         public CASFullscreenView _rewarded;
         public CASFullscreenView _appOpen;
-        internal CASNativeOverlayClient nativeOverlay;
+        internal readonly List<CASNativeOverlayClient> nativeOverlays = new List<CASNativeOverlayClient>();
+
+        internal void AddNativeOverlay(CASNativeOverlayClient overlay)
+        {
+            if (!nativeOverlays.Contains(overlay)) nativeOverlays.Add(overlay);
+        }
+
+        internal void RemoveNativeOverlay(CASNativeOverlayClient overlay)
+        {
+            nativeOverlays.Remove(overlay);
+        }
 
         public void Awake()
         {
@@ -170,7 +182,8 @@ namespace CAS.Unity
             for (int i = 0; i < _adViews.Count; i++)
                 _adViews[i].OnGUIAd(_btnStyle);
 
-            nativeOverlay?.OnGUIAd(_btnStyle);
+            for (int i = 0; i < nativeOverlays.Count; i++)
+                nativeOverlays[i].OnGUIAd(_btnStyle);
 
             _interstitial.OnGUIAd(_btnStyle);
             _rewarded.OnGUIAd(_btnStyle);

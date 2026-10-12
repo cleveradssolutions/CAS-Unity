@@ -1,4 +1,4 @@
-//  Copyright � 2026 CAS.AI. All rights reserved.
+// Copyright © 2026 CAS.AI. All rights reserved.
 
 #if UNITY_ANDROID || (CASDeveloper && UNITY_EDITOR)
 using System;
@@ -6,172 +6,108 @@ using UnityEngine;
 
 namespace CAS.Android
 {
-    internal sealed class CASNativeOverlayClient :INativeOverlayAd, CASCallback.Handler, CASCallback.RectHandler
+    internal sealed class CASNativeOverlayClient : INativeOverlayAd, CASCallback.Handler, CASCallback.RectHandler
     {
         private readonly CASManagerBase _manager;
         private readonly CASCallback _callback;
-
         private AndroidJavaObject _bridge;
-
-        private string _placement;
+        private CASNativeOverlayAdLoadCallback _loadCallback;
         private Rect _rectInPixels;
 
         internal CASNativeOverlayClient(CASManagerBase manager)
         {
             _manager = manager;
             _callback = new CASCallback(this);
-
-            _bridge = new AndroidJavaObject(
-                CASJavaBridge.NativeOverlayClass,
-                _callback,
-                manager.managerID
-            );
+            _bridge = new AndroidJavaObject(CASJavaBridge.NativeOverlayClass, _callback, manager.managerID);
         }
 
-        public event Action OnAdLoaded;
-        public event Action<AdError> OnAdFailedToLoad;
-        public event Action<AdError> OnAdFailedToShow;
-        public event Action OnAdClicked;
-        public event Action<AdMetaData> OnAdImpression;
-        public event Action<Rect> OnAdRectChanged;
+        public event Action<AdMetaData> OnImpression;
+        public event Action<AdError> OnFailedToShow;
+        public event Action OnClicked;
+        public event Action<Rect> OnRectChanged;
 
-        public bool isReady
-        {
-            get
-            {
-                return _bridge != null &&
-                       _bridge.Call<bool>("isReady");
-            }
-        }
-
-        public string placement
-        {
-            get => _placement;
-
-            set
-            {
-                _placement = value;
-
-                if (_bridge != null)
-                    _bridge.Call("setPlacement", value);
-            }
-        }
-
+        public IMediationManager manager => _manager;
+        public bool isExpired => _bridge == null || _bridge.Call<bool>("isExpired");
         public Rect rectInPixels => _rectInPixels;
 
-        public int widthInPixels
+        internal void Load(NativeAdOptions options, CASNativeOverlayAdLoadCallback callback)
         {
-            get
-            {
-                if (_bridge == null)
-                    return 0;
-
-                return _bridge.Call<int>("getWidthInPixels");
-            }
+            if (options == null) options = new NativeAdOptions();
+            _loadCallback = callback;
+            _bridge.Call("load", (int)options.adChoicesPlacement, options.isStartVideoMuted, options.placement);
         }
 
-        public int heightInPixels
+        public void SetActive(bool active)
         {
-            get
-            {
-                if (_bridge == null)
-                    return 0;
-
-                return _bridge.Call<int>("getHeightInPixels");
-            }
-        }
-
-        public void Load()
-        {
-            if (_bridge != null)
-                _bridge.Call("load");
-        }
-
-        public void Show()
-        {
-            if (_bridge != null)
-                _bridge.Call("show");
-        }
-
-        public void Hide()
-        {
-            if (_bridge != null)
-                _bridge.Call("hide");
+            if (_bridge != null) _bridge.Call(active ? "show" : "hide");
         }
 
         public void SetPosition(AdPosition position)
         {
-            if (_bridge != null)
-                _bridge.Call("setPosition", (int)position);
+            if (_bridge != null) _bridge.Call("setPosition", (int)position);
         }
 
-        public void SetPosition(int x, int y, AdPosition position)
+        public void SetPosition(int xDp, int yDp, AdPosition position)
         {
-            if (_bridge != null)
-                _bridge.Call("setPosition", (int)position, x, y);
+            if (_bridge != null) _bridge.Call("setPosition", (int)position, xDp, yDp);
         }
 
-        public void SetPositionPx(int x, int y, AdPosition position)
+        public void SetPositionPx(int xPx, int yPx, AdPosition position)
         {
-            if (_bridge != null)
-                _bridge.Call("setPositionPx", (int)position, x, y);
+            if (_bridge != null) _bridge.Call("setPositionPx", (int)position, xPx, yPx);
         }
 
-        public void RenderTemplate(NativeTemplateStyle style,int widthDp,int heightDp)
+        public void RenderTemplate(NativeTemplateStyle style, int widthDp, int heightDp)
         {
-            if (_bridge == null)
-                return;
-
-            string json = style == null? null: JsonUtility.ToJson(ToBridgeStyle(style));
-
-            _bridge.Call("renderTemplate", json, widthDp, heightDp);
+            if (_bridge != null) _bridge.Call("renderTemplate", ToBridgeStyle(style), widthDp, heightDp);
         }
 
-        public void HandleCallback(int action,int type,int error,string errorMessage,object impression)
+        public void HandleCallback(int action, int type, int error, string errorMessage, object impression)
         {
-            if (type != AdTypeCode.NATIVE)
-                return;
+            if (type != AdTypeCode.NATIVE) return;
 
             switch (action)
             {
                 case AdActionCode.LOADED:
-                    OnAdLoaded?.Invoke();
+                    var loaded = _loadCallback;
+                    _loadCallback = null;
+                    loaded?.Invoke(this, default(AdError));
                     break;
 
                 case AdActionCode.FAILED:
-                    OnAdFailedToLoad?.Invoke(new AdError(error, errorMessage));
+                    var failed = _loadCallback;
+                    _loadCallback = null;
+                    var loadError = new AdError(error, errorMessage);
+                    Dispose();
+                    failed?.Invoke(null, loadError);
                     break;
 
                 case AdActionCode.SHOW_FAILED:
-                    OnAdFailedToShow?.Invoke(new AdError(error, errorMessage));
+                    OnFailedToShow?.Invoke(new AdError(error, errorMessage));
                     break;
 
                 case AdActionCode.CLICKED:
-                    OnAdClicked?.Invoke();
+                    OnClicked?.Invoke();
                     break;
 
                 case AdActionCode.IMPRESSION:
-                    OnAdImpression?.Invoke(_manager.WrapImpression(AdType.Native, impression));
+                    OnImpression?.Invoke(_manager.WrapImpression(AdType.Native, impression));
                     break;
             }
         }
 
-        public void HandleRect(int x,int y,int width,int height)
+        public void HandleRect(int x, int y, int width, int height)
         {
             _rectInPixels = new Rect(x, y, width, height);
-
-            OnAdRectChanged?.Invoke(_rectInPixels);
+            OnRectChanged?.Invoke(_rectInPixels);
         }
 
         public void Dispose()
         {
-            if (_bridge == null)
-                return;
+            _loadCallback = null;
+            if (_bridge == null) return;
 
-            try
-            {
-                _bridge.Call("destroy");
-            }
+            try { _bridge.Call("destroy"); }
             finally
             {
                 _bridge.Dispose();
@@ -179,70 +115,35 @@ namespace CAS.Android
             }
         }
 
-        private static BridgeTemplateStyle ToBridgeStyle(
-            NativeTemplateStyle style)
+        private static int[] ToBridgeStyle(NativeTemplateStyle style)
         {
-            return new BridgeTemplateStyle
-            {
-                mainBackgroundColor =ToAndroidColor(style.MainBackgroundColor),
+            if (style == null) return null;
 
-                headline = ToBridge(style.Headline),
-                body = ToBridge(style.Body),
-                advertiser = ToBridge(style.Advertiser),
-                callToAction = ToBridge(style.CallToAction),
-                store = ToBridge(style.Store),
-                price = ToBridge(style.Price),
-                reviewCount = ToBridge(style.ReviewCount),
-                adLabel = ToBridge(style.AdLabel)
-            };
+            var data = new int[18];
+            data[1] = ToAndroidColor(style.MainBackgroundColor);
+            WriteTextStyle(data, 2, 1, style.Headline);
+            WriteTextStyle(data, 6, 2, style.Body);
+            WriteTextStyle(data, 10, 4, style.CallToAction);
+            WriteTextStyle(data, 14, 8, style.Other);
+            return data;
         }
 
-        private static BridgeTextStyle ToBridge(
-            NativeTemplateTextStyle style)
+        private static void WriteTextStyle(int[] data, int offset, int flag, NativeTemplateTextStyle style)
         {
-            if (style == null)
-                return null;
+            if (style == null) return;
 
-            return new BridgeTextStyle
-            {
-                backgroundColor = ToAndroidColor(style.BackgroundColor),
-                textColor = ToAndroidColor(style.FontColor),
-                fontSize = style.FontSize,
-                fontStyle = (int)style.Style
-            };
+            data[0] |= flag;
+            data[offset] = ToAndroidColor(style.BackgroundColor);
+            data[offset + 1] = ToAndroidColor(style.FontColor);
+            data[offset + 2] = style.FontSize;
+            data[offset + 3] = (int)style.Style;
         }
 
         private static int ToAndroidColor(Color color)
         {
             Color32 value = color;
-            uint argb =((uint)value.a << 24) | ((uint)value.r << 16) | ((uint)value.g << 8) | value.b;
-
+            uint argb = ((uint)value.a << 24) | ((uint)value.r << 16) | ((uint)value.g << 8) | value.b;
             return unchecked((int)argb);
-        }
-
-        [Serializable]
-        private sealed class BridgeTemplateStyle
-        {
-            public int mainBackgroundColor;
-
-            public BridgeTextStyle headline;
-            public BridgeTextStyle body;
-            public BridgeTextStyle advertiser;
-            public BridgeTextStyle callToAction;
-            public BridgeTextStyle store;
-            public BridgeTextStyle price;
-            public BridgeTextStyle reviewCount;
-            public BridgeTextStyle adLabel;
-        }
-
-        [Serializable]
-        private sealed class BridgeTextStyle
-        {
-            public int backgroundColor;
-            public int textColor;
-
-            public float fontSize;
-            public int fontStyle;
         }
     }
 }

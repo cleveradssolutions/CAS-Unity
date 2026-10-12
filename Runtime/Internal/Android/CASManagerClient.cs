@@ -54,6 +54,14 @@ namespace CAS.Android
             }
         }
 
+        public override void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback)
+        {
+            if (adLoadCallback == null) throw new ArgumentNullException(nameof(adLoadCallback));
+
+            var client = new CASNativeOverlayClient(this);
+            client.Load(options, adLoadCallback);
+        }
+
         protected override void SetLastPageAdContentNative(string json)
         {
             _managerBridge.Call("setLastPageAdContent", json);
