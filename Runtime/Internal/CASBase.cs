@@ -113,6 +113,16 @@ namespace CAS
             }
         }
 
+        public virtual void PreloadAd(AdType adType, int count)
+        {
+            Debug.LogWarning("[CAS] Ad preloading is not supported on this platform.");
+        }
+
+        public virtual int GetPreloadedAdCount(AdType adType)
+        {
+            return 0;
+        }
+
         public bool IsEnabledAd(AdType adType)
         {
             return IsEnabledAdFlag((AdFlags)(1 << (int)adType));

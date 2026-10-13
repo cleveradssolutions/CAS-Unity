@@ -113,14 +113,14 @@ namespace CAS.AdObject
             adPosition = position;
             adOffset = new Vector2Int(x, y);
             if (ad == null) return;
-            ad.SetPosition(x, y, position);
+            ad.SetPosition(position, x, y);
         }
 
         public void SetTemplateSize(int widthDp, int heightDp)
         {
             templateSize = new Vector2Int(widthDp, heightDp);
             if (ad == null) return;
-            ad.RenderTemplate(style, widthDp, heightDp);
+            ad.RenderTemplate(widthDp, heightDp, style);
         }
 
         public void SetTemplateStyle(NativeTemplateStyle style, int widthDp, int heightDp)
@@ -128,7 +128,7 @@ namespace CAS.AdObject
             this.style = style;
             templateSize = new Vector2Int(widthDp, heightDp);
             if (ad == null) return;
-            ad.RenderTemplate(style, widthDp, heightDp);
+            ad.RenderTemplate(widthDp, heightDp, style);
         }
 
         #region MonoBehaviour
@@ -198,8 +198,8 @@ namespace CAS.AdObject
             ad.OnFailedToShow += AdFailedToShow;
             ad.OnClicked += OnAdClicked.Invoke;
             ad.OnImpression += OnAdImpression.Invoke;
-            ad.SetPosition(adOffset.x, adOffset.y, adPosition);
-            ad.RenderTemplate(style, templateSize.x, templateSize.y);
+            ad.SetPosition(adPosition, adOffset.x, adOffset.y);
+            ad.RenderTemplate(templateSize.x, templateSize.y, style);
 
             OnAdLoaded.Invoke();
             if (isActiveAndEnabled)
@@ -208,9 +208,9 @@ namespace CAS.AdObject
             }
         }
 
-        private void AdFailedToShow(AdError error)
+        private void AdFailedToShow(string error)
         {
-            OnAdFailedToShow.Invoke(error.GetMessage());
+            OnAdFailedToShow.Invoke(error);
         }
 
         private void Detach()

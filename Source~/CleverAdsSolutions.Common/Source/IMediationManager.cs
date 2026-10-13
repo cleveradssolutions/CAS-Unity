@@ -172,6 +172,16 @@ namespace CAS
         bool IsReadyAd(AdType adType);
 
         /// <summary>
+        /// Preloads Interstitial or Rewarded ads.
+        /// </summary>
+        void PreloadAd(AdType adType, int count);
+
+        /// <summary>
+        /// Returns the number of ready preloaded ads.
+        /// </summary>
+        int GetPreloadedAdCount(AdType adType);
+
+        /// <summary>
         /// Shows an ad of the specified <see cref="AdType"/>.
         /// <para>To show a banner ad, use the <see cref="IAdView.SetActive(bool)"/> method obtained from <see cref="GetAdView"/>.</para>
         /// </summary>
