@@ -32,17 +32,17 @@ namespace CAS.Android
 
         protected override void SetPositionNative(int position, int x, int y)
         {
-            if (_bridge != null) _bridge.Call("setPosition", (int)position, x, y);
+            if (_bridge != null) _bridge.Call("setPosition", position, x, y);
         }
 
         protected override void SetPositionPxNative(int position, int x, int y)
         {
-            if (_bridge != null) _bridge.Call("setPositionPx", (int)position, x, y);
+            if (_bridge != null) _bridge.Call("setPositionPx", position, x, y);
         }
 
         public override void RenderTemplate(int widthDp, int heightDp, NativeTemplateStyle style)
         {
-            if (_bridge != null) _bridge.Call("renderTemplate", ToBridgeStyle(style), widthDp, heightDp);
+            if (_bridge != null) _bridge.Call("renderTemplate", ToNativeStyleArray(style), widthDp, heightDp);
         }
 
         public override void Dispose()
@@ -58,36 +58,7 @@ namespace CAS.Android
             }
         }
 
-        private static int[] ToBridgeStyle(NativeTemplateStyle style)
-        {
-            if (style == null) return null;
-
-            var data = new int[18];
-            data[1] = ToAndroidColor(style.MainBackgroundColor);
-            WriteTextStyle(data, 2, 1, style.Headline);
-            WriteTextStyle(data, 6, 2, style.Body);
-            WriteTextStyle(data, 10, 4, style.CallToAction);
-            WriteTextStyle(data, 14, 8, style.Other);
-            return data;
-        }
-
-        private static void WriteTextStyle(int[] data, int offset, int flag, NativeTemplateTextStyle style)
-        {
-            if (style == null) return;
-
-            data[0] |= flag;
-            data[offset] = ToAndroidColor(style.BackgroundColor);
-            data[offset + 1] = ToAndroidColor(style.FontColor);
-            data[offset + 2] = style.FontSize;
-            data[offset + 3] = (int)style.Style;
-        }
-
-        private static int ToAndroidColor(Color color)
-        {
-            Color32 value = color;
-            uint argb = ((uint)value.a << 24) | ((uint)value.r << 16) | ((uint)value.g << 8) | value.b;
-            return unchecked((int)argb);
-        }
+        
     }
 }
 #endif

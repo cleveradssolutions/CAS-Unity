@@ -16,8 +16,8 @@ namespace CAS.Unity
         private bool _disposed;
         public int lastError = AdError.Internal;
 
-        private int _widthDp = 300;
-        private int _heightDp = 250;
+        public int widthDp = 300;
+        public int heightDp = 250;
 
         internal CASNativeOverlayClient(CASManagerClient manager, CASManagerBehaviour behaviour, CASNativeOverlayAdLoadCallback callback) : base(manager, callback)
         {
@@ -58,14 +58,14 @@ namespace CAS.Unity
 
         public override void RenderTemplate(int widthDp, int heightDp, NativeTemplateStyle style)
         {
-            _widthDp = widthDp > 0 ? widthDp : 300;
-            _heightDp = heightDp > 0 ? heightDp : 250;
+            this.widthDp = widthDp > 0 ? widthDp : 300;
+            this.heightDp = heightDp > 0 ? heightDp : 250;
             CalculateAdRectOnScreen();
         }
 
         internal void OnGUIAd(GUIStyle style)
         {
-            if (!active || !loaded || _disposed) return;
+            if (!active || !loaded) return;
 
             if (_waitImpressionEvent)
             {
@@ -97,8 +97,8 @@ namespace CAS.Unity
         private void CalculateAdRectOnScreen()
         {
             float scale = MobileAds.GetDeviceScreenScale();
-            float width = _widthDp * scale;
-            float height = _heightDp * scale;
+            float width = widthDp * scale;
+            float height = heightDp * scale;
             Rect safe = Screen.safeArea;
 
             float x;

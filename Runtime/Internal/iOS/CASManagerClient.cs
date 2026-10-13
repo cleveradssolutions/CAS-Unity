@@ -80,7 +80,12 @@ namespace CAS.iOS
 
         public override void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback)
         {
-            throw new NotSupportedException("Native Overlay Add");
+            if (adLoadCallback == null) throw new ArgumentNullException(nameof(adLoadCallback));
+
+            var client = new CASNativeOverlayClient(this, adLoadCallback);
+            var clientRef = (IntPtr)GCHandle.Alloc(client);
+            var overlayRef = CASExterns.CASUCreateNativeOverlayAd(_managerRef, clientRef);
+            client.Load(overlayRef, clientRef, options);
         }
 
         protected override void SetLastPageAdContentNative(string json)

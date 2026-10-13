@@ -613,17 +613,16 @@ namespace CAS
             {
                 case AdActionCode.LOADED:
                     CASFactory.RuntimeLog(type, "Callback Loaded ");
-                    var loaded = _loadCallback;
+                    var loadedCallback = _loadCallback;
                     _loadCallback = null;
-                    loaded?.Invoke(this, new AdError(AdError.Internal, null));
+                    loadedCallback?.Invoke(this, new AdError(-1, "Loaded"));
                     break;
                 case AdActionCode.FAILED:
                     CASFactory.RuntimeLog(type, "Callback Failed");
-                    var failed = _loadCallback;
+                    var failedCallback = _loadCallback;
                     _loadCallback = null;
-                    var loadError = new AdError(error, errorMessage);
                     Dispose();
-                    failed?.Invoke(null, loadError);
+                    failedCallback?.Invoke(null, new AdError(error, errorMessage));
                     break;
                 case AdActionCode.IMPRESSION:
                     CASFactory.RuntimeLog(type, "Callback Impression");
@@ -640,6 +639,34 @@ namespace CAS
             }
         }
 
+        protected static int[] ToNativeStyleArray(NativeTemplateStyle style)
+        {
+            if (style == null) return null;
 
+            var data = new int[18];
+            data[1] = ToARGBColor(style.MainBackgroundColor);
+            WriteTextStyle(data, 2, 1, style.Headline);
+            WriteTextStyle(data, 6, 2, style.Body);
+            WriteTextStyle(data, 10, 4, style.CallToAction);
+            WriteTextStyle(data, 14, 8, style.Other);
+            return data;
+        }
+
+        private static void WriteTextStyle(int[] data, int offset, int flag, NativeTemplateTextStyle style)
+        {
+            if (style == null) return;
+
+            data[0] |= flag;
+            data[offset] = ToARGBColor(style.BackgroundColor);
+            data[offset + 1] = ToARGBColor(style.FontColor);
+            data[offset + 2] = style.FontSize;
+            data[offset + 3] = (int)style.Style;
+        }
+
+        private static int ToARGBColor(Color color)
+        {
+            Color32 c = color;
+            return (c.a << 24) | (c.r << 16) | (c.g << 8) | c.b;
+        }
     }
 }

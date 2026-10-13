@@ -16,6 +16,12 @@ namespace CAS.iOS
     // Type representing a Unity AdView ad client.
     using CASViewClientRef = IntPtr;
 
+    // Type representing a CASUNativeOverlay type
+    using CASUNativeOverlayRef = IntPtr;
+
+    // Type representing a Unity NativeOverlay ad client.
+    using CASNativeOverlayClientRef = IntPtr;
+
     // Type representing a Unity MediationManager ad client.
     using CASManagerClientRef = IntPtr;
 
@@ -36,6 +42,12 @@ namespace CAS.iOS
         internal delegate void CASUViewActionCallback(CASViewClientRef view, int action, int error, string errorMessage);
         internal delegate void CASUViewImpressionCallback(CASViewClientRef view, CASImpressionRef impression);
         internal delegate void CASUViewRectCallback(CASViewClientRef view, float x, float y, float width, float height);
+        #endregion
+
+        #region CAS Native Overlay callbacks
+        internal delegate void CASUNativeOverlayAdActionCallback(CASViewClientRef overlay, int action, int error, string errorMessage);
+        internal delegate void CASUNativeOverlayAdImpressionCallback(CASViewClientRef overlay, CASImpressionRef impression);
+        internal delegate void CASUNativeOverlayAdRectCallback(CASViewClientRef overlay, float x, float y, float width, float height);
         #endregion
 
         internal delegate void CASUConsentFlowCompletion(int status);
@@ -259,7 +271,7 @@ namespace CAS.iOS
         );
 
         [DllImport("__Internal")]
-        internal static extern CASUViewRef CASUSetAdViewDelegate(
+        internal static extern void CASUSetAdViewDelegate(
             CASUViewRef viewRef,
             CASUViewActionCallback actionCallback,
             CASUViewImpressionCallback impressionCallback,
@@ -286,7 +298,7 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern void CASUSetAdViewRefreshInterval(CASUViewRef viewRef, int interval);
-        
+
         [DllImport("__Internal")]
         internal static extern void CASUSetAdViewPlacement(CASUViewRef viewRef, string placement);
 
@@ -298,6 +310,52 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern int CASUGetAdViewRefreshInterval(CASUViewRef viewRef);
+        #endregion
+
+        #region Native Overlay Ads
+
+        [DllImport("__Internal")]
+        internal static extern CASUNativeOverlayRef CASUCreateNativeOverlayAd(
+            CASUManagerRef managerRef,
+            CASNativeOverlayClientRef client
+        );
+
+        [DllImport("__Internal")]
+        internal static extern void CASUSetNativeOverlayDelegateAndLoadAd(
+            CASUNativeOverlayRef overlayRef,
+            CASUViewActionCallback actionCallback,
+            CASUViewImpressionCallback impressionCallback,
+            CASUViewRectCallback rectCallback,
+            int adChoicesPlacement,
+            bool isStartVideoMuted,
+            string placement
+        );
+
+        [DllImport("__Internal")]
+        internal static extern void CASURenderNativeOverlayAd(
+            CASUNativeOverlayRef overlayRef,
+            int widthDp, 
+            int heightDp,
+            int[] style
+        );
+
+        [DllImport("__Internal")]
+        internal static extern void CASUDestroyNativeOverlayAd(CASUNativeOverlayRef overlayRef);
+
+        [DllImport("__Internal")]
+        internal static extern void CASUPresentNativeOverlayAd(CASUNativeOverlayRef overlayRef);
+
+        [DllImport("__Internal")]
+        internal static extern void CASUHideNativeOverlayAd(CASUNativeOverlayRef overlayRef);
+
+        [DllImport("__Internal")]
+        internal static extern void CASUSetNativeOverlayAdPosition(CASUNativeOverlayRef overlayRef, int posCode, int x, int y);
+
+        [DllImport("__Internal")]
+        internal static extern void CASUSetNativeOverlayAdPositionPx(CASUNativeOverlayRef overlayRef, int posCode, int x, int y);
+
+        [DllImport("__Internal")]
+        internal static extern bool CASUIsNativeOverlayAdExpired(CASUNativeOverlayRef overlayRef);
         #endregion
 
         #region App Return Ads
