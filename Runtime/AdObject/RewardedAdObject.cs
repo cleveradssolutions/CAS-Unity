@@ -12,7 +12,7 @@ namespace CAS.AdObject
     public sealed class RewardedAdObject : MonoBehaviour
     {
         public ManagerIndex managerId;
-        
+
         [Tooltip("An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.")]
         [SerializeField]
         private string placement;
@@ -31,14 +31,24 @@ namespace CAS.AdObject
         public UnityEvent OnReward;
 
         private IMediationManager manager;
-        private bool loadAdOnAwake = false;
+        private int loadAdOnAwake = 0;
 
         /// <summary>
-        /// Check ready ad to present.
+        /// Sets the number of <see cref="AdType"/> ads that the SDK keeps loaded at all times.
+        /// <para>Loading starts immediately. After an ad is shown, a new ad is loaded automatically to keep the buffer full.</para>
+        /// <para>The <see cref="OnAdLoaded"/> is invoked once for each ad loaded into the buffer.</para>
+        /// <para>The <paramref name="size"/> is clamped to the range from 1 to 4.</para>
+        /// <para>While the buffer is active, <see cref="LoadingManagerMode.Manual"/> is ignored and ads are reloaded automatically.</para>
+        /// <para>To stop buffering, call <see cref="LoadAd"/> to load only a single ad,
+        /// or call <see cref="DestroyAd"/> to stop loading altogether.</para>
         /// </summary>
-        public bool isAdReady
+        /// <param name="size">The number of ads to keep loaded, from 1 to 4.</param>
+        public void SetPreloadedBufferSize(int size)
         {
-            get { return manager != null && manager.IsReadyAd(AdType.Rewarded); }
+            if (manager == null)
+                loadAdOnAwake = size;
+            else
+                manager.SetPreloadedBufferSize(AdType.Rewarded, size);
         }
 
         /// <summary>
@@ -49,9 +59,19 @@ namespace CAS.AdObject
         public void LoadAd()
         {
             if (manager == null)
-                loadAdOnAwake = true;
+                loadAdOnAwake = 1;
             else
                 manager.LoadAd(AdType.Rewarded);
+        }
+
+        /// <summary>
+        /// Check ready ad to present.
+        /// <para>It is not required to check this before calling <see cref="Present"/>:
+        /// if the ad cannot be shown, the <see cref="OnAdFailedToShow"/> event will be invoked.</para>
+        /// </summary>
+        public bool IsAdLoaded()
+        {
+            return manager != null && manager.IsReadyAd(AdType.Rewarded);
         }
 
         /// <summary>
@@ -66,6 +86,41 @@ namespace CAS.AdObject
             }
             OnAdShown.Invoke();
             manager.ShowAd(AdType.Rewarded, placement);
+        }
+
+        /// <summary>
+        /// Sets custom data to be included in server-side verification callbacks.
+        /// <para>Maximum 8192 characters allowed for the custom data.</para>
+        /// <para>The callbacks contain query parameters that describe the rewarded ad interaction,
+        /// including the placement and userID from CAS.targetingOptions alongside any custom data provided here.</para>
+        /// <para>This feature is currently in closed beta.</para>
+        /// </summary>
+        public void SetServerSideVerificationData(string data)
+        {
+            if (manager != null)
+            {
+                manager.SetServerSideVerificationData(data);
+            }
+        }
+
+        /// <summary>
+        /// Disposes of the ad of the Rewarded Ads.
+        /// <para>After calling this method, if you want to resume showing ads, 
+        /// you must call the <see cref="LoadAd"/> method to reload the ad. 
+        /// Note that in automatic loading mode, ads will not be automatically reloaded after Dispose. 
+        /// You need to explicitly call <see cref="LoadAd"/> to prepare the ad for future displays.</para>
+        public void DestroyAd()
+        {
+            if (manager == null) return;
+            manager.DisposeAd(AdType.Rewarded);
+        }
+
+        /// <summary>
+        /// Renamed to <see cref="IsAdLoaded"/>
+        /// </summary>
+        public bool isAdReady
+        {
+            get { return IsAdLoaded(); }
         }
 
         #region MonoBehaviour
@@ -114,10 +169,15 @@ namespace CAS.AdObject
                 {
                     OnAdLoaded.Invoke();
                 }
-                else if (loadAdOnAwake)
+                else if (loadAdOnAwake == 1)
                 {
-                    loadAdOnAwake = false;
+                    loadAdOnAwake = 0;
                     manager.LoadAd(AdType.Rewarded);
+                }
+                if (loadAdOnAwake > 1)
+                {
+                    loadAdOnAwake = 0;
+                    manager.SetPreloadedBufferSize(AdType.Rewarded, loadAdOnAwake);
                 }
             }
             catch (Exception e)

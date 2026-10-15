@@ -84,7 +84,7 @@ namespace CAS.iOS
 
             var client = new CASNativeOverlayClient(this, adLoadCallback);
             var clientRef = (IntPtr)GCHandle.Alloc(client);
-            var overlayRef = CASExterns.CASUCreateNativeOverlayAd(_managerRef, clientRef);
+            var overlayRef = CASExterns.CASUCreateNativeOverlayAd(managerID, clientRef);
             client.Load(overlayRef, clientRef, options);
         }
 
@@ -108,14 +108,19 @@ namespace CAS.iOS
             CASExterns.CASUSetSSVData(_managerRef, data);
         }
 
-        public override bool IsReadyAd(AdType adType)
-        {
-            return CASExterns.CASUIsAdReady(_managerRef, (int)adType);
-        }
-
         protected override void LoadAdNetive(AdType adType)
         {
             CASExterns.CASULoadAd(_managerRef, (int)adType);
+        }
+
+        protected override void PreloadBufferSize(AdType adType, int size)
+        {
+            CASExterns.CASUPreloadAd(_managerClient, (int)adType, size);
+        }
+
+        public override int GetPreloadedAdCount(AdType adType)
+        {
+            return CASExterns.CASUGetLoadedAdCount(_managerRef, (int)adType);
         }
 
         public override void ShowAd(AdType adType, string placement)

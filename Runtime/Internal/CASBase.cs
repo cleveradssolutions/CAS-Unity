@@ -78,12 +78,13 @@ namespace CAS
         public abstract void SetServerSideVerificationData(string data);
         public abstract void EnableAd(AdType adType);
         protected abstract void LoadAdNetive(AdType adType);
-        public abstract bool IsReadyAd(AdType adType);
         public abstract void ShowAd(AdType adType, string placement);
         public abstract void DisposeAd(AdType adType);
         public abstract void SetAppReturnAdsEnabled(bool enable);
         public abstract void SkipNextAppReturnAds();
         public abstract void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback);
+        protected abstract void PreloadBufferSize(AdType adType, int size);
+        public abstract int GetPreloadedAdCount(AdType adType);
 
         protected abstract void SetLastPageAdContentNative(string json);
         protected abstract CASViewBase CreateAdView(AdSize size);
@@ -111,16 +112,6 @@ namespace CAS
                     SetLastPageAdContentNative(json);
                 }
             }
-        }
-
-        public virtual void PreloadAd(AdType adType, int count)
-        {
-            Debug.LogWarning("[CAS] Ad preloading is not supported on this platform.");
-        }
-
-        public virtual int GetPreloadedAdCount(AdType adType)
-        {
-            return 0;
         }
 
         public bool IsEnabledAd(AdType adType)
@@ -178,6 +169,30 @@ namespace CAS
                 HandleCallback(AdActionCode.FAILED, (int)adType, AdError.ManagerIsDisabled, null, null);
         }
 
+        public void SetPreloadedBufferSize(AdType adType, int size)
+        {
+            int targetSize = size;
+            if (size < 1)
+            {
+                Debug.LogWarning("[CAS] " + adType.ToString() + " Preload count must be greater than 0");
+                targetSize = 1;
+            }
+            else if (size > 4)
+            {
+                Debug.LogWarning("[CAS] " + adType.ToString() + " Preload count " + size + " reduced to 4 (limit per format)");
+                targetSize = 4;
+            }
+            if (IsEnabledAd(adType))
+                PreloadBufferSize(adType, targetSize);
+            else
+                HandleCallback(AdActionCode.FAILED, (int)adType, AdError.ManagerIsDisabled, null, null);
+        }
+
+        public bool IsReadyAd(AdType adType)
+        {
+            return GetPreloadedAdCount(adType) > 0;
+        }
+
         public void ShowAd(AdType adType)
         {
             ShowAd(adType, null);
@@ -227,9 +242,9 @@ namespace CAS
             if (MobileAds.settings.loadingMode != LoadingManagerMode.Manual)
             {
                 if (IsEnabledAdFlag(AdFlags.Interstitial))
-                    LoadAd(AdType.Interstitial);
+                    EnableAd(AdType.Interstitial);
                 if (IsEnabledAdFlag(AdFlags.Rewarded))
-                    LoadAd(AdType.Rewarded);
+                    EnableAd(AdType.Rewarded);
             }
 
             CASFactory.OnManagerInitialized(this);
@@ -637,7 +652,7 @@ namespace CAS
                 case AdActionCode.IMPRESSION:
                     CASFactory.RuntimeLog(type, "Callback Impression");
                     if (OnImpression != null)
-                        OnImpression(_manager.WrapImpression(AdType.Banner, impression));
+                        OnImpression(_manager.WrapImpression(AdType.Native, impression));
                     break;
                 case AdActionCode.CLICKED:
                     CASFactory.RuntimeLog(type, "Callback Clicked");
@@ -654,23 +669,23 @@ namespace CAS
             if (style == null) return null;
 
             var data = new int[18];
-            data[1] = ToARGBColor(style.MainBackgroundColor);
-            WriteTextStyle(data, 2, 1, style.Headline);
-            WriteTextStyle(data, 6, 2, style.Body);
-            WriteTextStyle(data, 10, 4, style.CallToAction);
-            WriteTextStyle(data, 14, 8, style.Other);
+            data[1] = ToARGBColor(style.mainBackgroundColor);
+            WriteTextStyle(data, 2, 1, style.headline);
+            WriteTextStyle(data, 6, 2, style.body);
+            WriteTextStyle(data, 10, 4, style.callToAction);
+            WriteTextStyle(data, 14, 8, style.other);
             return data;
         }
 
         private static void WriteTextStyle(int[] data, int offset, int flag, NativeTemplateTextStyle style)
         {
-            if (style == null) return;
+            if (style == null || !style.IsModified()) return;
 
             data[0] |= flag;
-            data[offset] = ToARGBColor(style.BackgroundColor);
-            data[offset + 1] = ToARGBColor(style.FontColor);
-            data[offset + 2] = style.FontSize;
-            data[offset + 3] = (int)style.Style;
+            data[offset] = ToARGBColor(style.backgroundColor);
+            data[offset + 1] = ToARGBColor(style.fontColor);
+            data[offset + 2] = style.fontSize;
+            data[offset + 3] = (int)style.fontStyle;
         }
 
         private static int ToARGBColor(Color color)

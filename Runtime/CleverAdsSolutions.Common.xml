@@ -902,6 +902,25 @@
             <param name="adType">The type of ad to check.</param>
             <returns>True if the ad is ready to be shown; otherwise, false.</returns>
         </member>
+        <member name="M:CAS.IMediationManager.SetPreloadedBufferSize(CAS.AdType,System.Int32)">
+            <summary>
+            Sets the number of <see cref="T:CAS.AdType"/> ads that the SDK keeps loaded at all times.
+            <para>Loading starts immediately. After an ad is shown, a new ad is loaded automatically to keep the buffer full.</para>
+            <para>The loaded event (for example, OnInterstitialAdLoaded) is invoked once for each ad loaded into the buffer.</para>
+            <para>The <paramref name="size"/> is clamped to the range from 1 to 4.</para>
+            <para>While the buffer is active, <see cref="F:CAS.LoadingManagerMode.Manual"/> is ignored for the <paramref name="adType"/>
+            and ads are reloaded automatically.</para>
+            <para>To stop buffering, call <see cref="M:CAS.IMediationManager.LoadAd(CAS.AdType)"/> to load only a single ad,
+            or call <see cref="M:CAS.IMediationManager.DisposeAd(CAS.AdType)"/> to stop loading altogether.</para>
+            </summary>
+            <param name="adType">The type of ad to buffer: <see cref="F:CAS.AdType.Interstitial"/>, <see cref="F:CAS.AdType.Rewarded"/> or <see cref="F:CAS.AdType.AppOpen"/>.</param>
+            <param name="size">The number of ads to keep loaded, from 1 to 4.</param>
+        </member>
+        <member name="M:CAS.IMediationManager.GetPreloadedAdCount(CAS.AdType)">
+            <summary>
+            Returns the number of loaded ads that are ready to be shown.
+            </summary>
+        </member>
         <member name="M:CAS.IMediationManager.ShowAd(CAS.AdType)">
             <summary>
             Shows an ad of the specified <see cref="T:CAS.AdType"/>.
@@ -1279,24 +1298,24 @@
             Text style options for native templates.
             </summary>
         </member>
-        <member name="F:CAS.NativeTemplateTextStyle.BackgroundColor">
-            <summary>
-            The background color.
-            </summary>
-        </member>
-        <member name="F:CAS.NativeTemplateTextStyle.FontColor">
-            /// <summary>
-            Color of the Text to be rendered.
-            </summary>
-        </member>
-        <member name="F:CAS.NativeTemplateTextStyle.FontSize">
+        <member name="F:CAS.NativeTemplateTextStyle.fontSize">
             <summary>
             Size of the Text to be displayed.
             </summary>
         </member>
-        <member name="F:CAS.NativeTemplateTextStyle.Style">
+        <member name="F:CAS.NativeTemplateTextStyle.fontColor">
+            /// <summary>
+            Color of the Text to be rendered.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateTextStyle.fontStyle">
             <summary>
             FontStyle for the text.
+            </summary>
+        </member>
+        <member name="F:CAS.NativeTemplateTextStyle.backgroundColor">
+            <summary>
+            The background color.
             </summary>
         </member>
         <member name="T:CAS.NativeTemplateStyle">
@@ -1304,27 +1323,27 @@
             Style options for native templates.
             </summary>
         </member>
-        <member name="F:CAS.NativeTemplateStyle.MainBackgroundColor">
+        <member name="F:CAS.NativeTemplateStyle.mainBackgroundColor">
             <summary>
             The main background color.
             </summary>
         </member>
-        <member name="F:CAS.NativeTemplateStyle.Headline">
+        <member name="F:CAS.NativeTemplateStyle.headline">
             <summary>
             The NativeTemplateTextStyle for the headline text.
             </summary>
         </member>
-        <member name="F:CAS.NativeTemplateStyle.Body">
+        <member name="F:CAS.NativeTemplateStyle.body">
             <summary>
             The NativeTemplateTextStyle for the body text.
             </summary>
         </member>
-        <member name="F:CAS.NativeTemplateStyle.CallToAction">
+        <member name="F:CAS.NativeTemplateStyle.callToAction">
             <summary>
             The NativeTemplateTextStyle for the call to action text in button.
             </summary>
         </member>
-        <member name="F:CAS.NativeTemplateStyle.Other">
+        <member name="F:CAS.NativeTemplateStyle.other">
             <summary>
             The NativeTemplateTextStyle for the other text.
             </summary>

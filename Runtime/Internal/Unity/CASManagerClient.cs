@@ -51,9 +51,17 @@ namespace CAS.Unity
             CASFactory.UnityLog("Server Side Verification Data: " + data);
         }
 
-        public override bool IsReadyAd(AdType adType)
+        public override int GetPreloadedAdCount(AdType adType)
         {
-            return _behaviour.IsReadyAd(adType);
+            return _behaviour.IsReadyAd(adType) ? _behaviour.GetFullscreenView(adType).loadedCount : 0;
+        }
+
+        protected override void PreloadBufferSize(AdType adType, int size)
+        {
+            var view = _behaviour.GetFullscreenView(adType);
+            if (view == null)
+                throw new NotSupportedException("Preload buffer not support for AdType: " + adType.ToString());
+            view.SetBufferSize(size);
         }
 
         protected override void LoadAdNetive(AdType adType)
@@ -198,6 +206,20 @@ namespace CAS.Unity
                 default:
                     throw new NotSupportedException("Destroy ad function not support for AdType: " + adType.ToString());
             }
+        }
+
+        internal CASFullscreenView GetFullscreenView(AdType adType)
+        {
+            switch (adType)
+            {
+                case AdType.Interstitial:
+                    return _interstitial;
+                case AdType.Rewarded:
+                    return _rewarded;
+                case AdType.AppOpen:
+                    return _appOpen;
+            }
+            return null;
         }
 
         internal bool IsReadyAd(AdType adType)

@@ -9,11 +9,11 @@ namespace CAS.AdObject
     {
         public ManagerIndex managerId;
 
-        [SerializeField] private AdPosition adPosition = AdPosition.BottomCenter;
-        [SerializeField] private Vector2Int adOffset = Vector2Int.zero;
+        [SerializeField] private AdPosition overlayPosition = AdPosition.BottomCenter;
+        [SerializeField] private Vector2Int positionOffset = Vector2Int.zero;
         [SerializeField] private Vector2Int templateSize = new Vector2Int(300, 250);
 
-        [SerializeField] private NativeTemplateStyle style = new NativeTemplateStyle();
+        [SerializeField] private NativeTemplateStyle templateStyle = new NativeTemplateStyle();
 
         /// <summary>
         /// This determines where the AdChoices icon is displayed within the ad content.
@@ -56,7 +56,9 @@ namespace CAS.AdObject
         /// <para>Return <see cref="Rect.zero"/> when ad view is not active.</para>
         /// <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>
         /// </summary>
-        public Rect rectInPixels => ad != null ? ad.rectInPixels : Rect.zero;
+        public Rect rectInPixels {
+            get{ return ad != null ? ad.rectInPixels : Rect.zero; }
+        }
 
         /// <summary>
         /// Check ready ad to present.
@@ -94,8 +96,8 @@ namespace CAS.AdObject
         /// </summary>
         public void SetAdPosition(AdPosition position)
         {
-            adPosition = position;
-            adOffset = Vector2Int.zero;
+            overlayPosition = position;
+            positionOffset = Vector2Int.zero;
             if (ad == null) return;
             ad.SetPosition(position);
         }
@@ -110,25 +112,51 @@ namespace CAS.AdObject
         /// <param name="position">The corner of the screen.</param>
         public void SetAdPosition(int x, int y, AdPosition position = AdPosition.TopLeft)
         {
-            adPosition = position;
-            adOffset = new Vector2Int(x, y);
+            overlayPosition = position;
+            positionOffset = new Vector2Int(x, y);
             if (ad == null) return;
             ad.SetPosition(position, x, y);
         }
 
+        /// <summary>
+        /// Change the size of the native ad template.
+        /// <para>The template is re-rendered with the new size; the loaded ad content is not destroyed.</para>
+        /// </summary>
+        /// <param name="widthDp">Template width in DP.</param>
+        /// <param name="heightDp">Template height in DP.</param>
         public void SetTemplateSize(int widthDp, int heightDp)
         {
+            templateSize = new Vector2Int(widthDp, heightDp);
+            if (ad == null) return;
+            ad.RenderTemplate(widthDp, heightDp, templateStyle);
+        }
+
+        /// <summary>
+        /// Change the style and size of the native ad template.
+        /// <para>The template is re-rendered with the new style and size; the loaded ad content is not destroyed.</para>
+        /// </summary>
+        /// <param name="style">The new template style.</param>
+        /// <param name="widthDp">Template width in DP.</param>
+        /// <param name="heightDp">Template height in DP.</param>
+        public void SetTemplateStyle(NativeTemplateStyle style, int widthDp, int heightDp)
+        {
+            this.templateStyle = style;
             templateSize = new Vector2Int(widthDp, heightDp);
             if (ad == null) return;
             ad.RenderTemplate(widthDp, heightDp, style);
         }
 
-        public void SetTemplateStyle(NativeTemplateStyle style, int widthDp, int heightDp)
+        /// <summary>
+        /// Disposes of the ad of the Native Overlay Ads.
+        /// <para>After calling this method, if you want to resume showing ads, 
+        /// you must call the <see cref="LoadAd"/> method to reload the ad. 
+        /// Note that in automatic loading mode, ads will not be automatically reloaded after Dispose. 
+        /// You need to explicitly call <see cref="LoadAd"/> to prepare the ad for future displays.</para>
+        public void DestroyAd()
         {
-            this.style = style;
-            templateSize = new Vector2Int(widthDp, heightDp);
             if (ad == null) return;
-            ad.RenderTemplate(widthDp, heightDp, style);
+            ad.Dispose();
+            ad = null;
         }
 
         #region MonoBehaviour
@@ -198,8 +226,8 @@ namespace CAS.AdObject
             ad.OnFailedToShow += AdFailedToShow;
             ad.OnClicked += OnAdClicked.Invoke;
             ad.OnImpression += OnAdImpression.Invoke;
-            ad.SetPosition(adPosition, adOffset.x, adOffset.y);
-            ad.RenderTemplate(templateSize.x, templateSize.y, style);
+            ad.SetPosition(overlayPosition, positionOffset.x, positionOffset.y);
+            ad.RenderTemplate(templateSize.x, templateSize.y, templateStyle);
 
             OnAdLoaded.Invoke();
             if (isActiveAndEnabled)

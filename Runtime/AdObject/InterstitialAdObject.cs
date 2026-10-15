@@ -1,6 +1,7 @@
 ﻿//  Copyright © 2025 CAS.AI. All rights reserved.
 
 using System;
+using UnityEditor.Android;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -27,14 +28,34 @@ namespace CAS.AdObject
         public CASUEventWithMeta OnAdImpression;
 
         private IMediationManager manager;
-        private bool loadAdOnAwake = false;
+        private int loadAdOnAwake = 0;
+
+        /// <summary>
+        /// Sets the number of <see cref="AdType"/> ads that the SDK keeps loaded at all times.
+        /// <para>Loading starts immediately. After an ad is shown, a new ad is loaded automatically to keep the buffer full.</para>
+        /// <para>The <see cref="OnAdLoaded"/> is invoked once for each ad loaded into the buffer.</para>
+        /// <para>The <paramref name="size"/> is clamped to the range from 1 to 4.</para>
+        /// <para>While the buffer is active, <see cref="LoadingManagerMode.Manual"/> is ignored and ads are reloaded automatically.</para>
+        /// <para>To stop buffering, call <see cref="LoadAd"/> to load only a single ad,
+        /// or call <see cref="DestroyAd"/> to stop loading altogether.</para>
+        /// </summary>
+        /// <param name="size">The number of ads to keep loaded, from 1 to 4.</param>
+        public void SetPreloadedBufferSize(int size)
+        {
+            if (manager == null)
+                loadAdOnAwake = size;
+            else
+                manager.SetPreloadedBufferSize(AdType.Interstitial, size);
+        }
 
         /// <summary>
         /// Check ready ad to present.
+        /// <para>It is not required to check this before calling <see cref="Present"/>:
+        /// if the ad cannot be shown, the <see cref="OnAdFailedToShow"/> event will be invoked.</para>
         /// </summary>
-        public bool isAdReady
+        public bool IsAdLoaded()
         {
-            get { return manager != null && manager.IsReadyAd(AdType.Interstitial); }
+            return manager != null && manager.IsReadyAd(AdType.Interstitial);
         }
 
         /// <summary>
@@ -45,7 +66,7 @@ namespace CAS.AdObject
         public void LoadAd()
         {
             if (manager == null)
-                loadAdOnAwake = true;
+                loadAdOnAwake = 1;
             else
                 manager.LoadAd(AdType.Interstitial);
         }
@@ -62,6 +83,26 @@ namespace CAS.AdObject
             }
             OnAdShown.Invoke();
             manager.ShowAd(AdType.Interstitial, placement);
+        }
+
+        /// <summary>
+        /// Disposes of the ad of the Interstitial Ads.
+        /// <para>After calling this method, if you want to resume showing ads, 
+        /// you must call the <see cref="LoadAd"/> method to reload the ad. 
+        /// Note that in automatic loading mode, ads will not be automatically reloaded after Dispose. 
+        /// You need to explicitly call <see cref="LoadAd"/> to prepare the ad for future displays.</para>
+        public void DestroyAd()
+        {
+            if (manager == null) return;
+            manager.DisposeAd(AdType.Interstitial);
+        }
+        
+        /// <summary>
+        /// Renamed to <see cref="IsAdLoaded"/>
+        /// </summary>
+        public bool isAdReady
+        {
+            get { return IsAdLoaded(); }
         }
 
         #region MonoBehaviour
@@ -86,7 +127,6 @@ namespace CAS.AdObject
                 manager.OnInterstitialAdClosed -= OnAdClosed.Invoke;
                 manager.OnInterstitialAdImpression -= OnAdImpression.Invoke;
             }
-
         }
         #endregion
 
@@ -110,10 +150,15 @@ namespace CAS.AdObject
                 {
                     OnAdLoaded.Invoke();
                 }
-                else if (loadAdOnAwake)
+                else if (loadAdOnAwake == 1)
                 {
-                    loadAdOnAwake = false;
+                    loadAdOnAwake = 0;
                     manager.LoadAd(AdType.Interstitial);
+                }
+                if (loadAdOnAwake > 1)
+                {
+                    loadAdOnAwake = 0;
+                    manager.SetPreloadedBufferSize(AdType.Interstitial, loadAdOnAwake);
                 }
             }
             catch (Exception e)
@@ -126,6 +171,7 @@ namespace CAS.AdObject
         {
             OnAdFailedToLoad.Invoke(error.GetMessage());
         }
+
         private void AdFailedToShow(string error)
         {
             OnAdFailedToShow.Invoke(error);

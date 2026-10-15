@@ -172,12 +172,21 @@ namespace CAS
         bool IsReadyAd(AdType adType);
 
         /// <summary>
-        /// Preloads Interstitial or Rewarded ads.
+        /// Sets the number of <see cref="AdType"/> ads that the SDK keeps loaded at all times.
+        /// <para>Loading starts immediately. After an ad is shown, a new ad is loaded automatically to keep the buffer full.</para>
+        /// <para>The loaded event (for example, OnInterstitialAdLoaded) is invoked once for each ad loaded into the buffer.</para>
+        /// <para>The <paramref name="size"/> is clamped to the range from 1 to 4.</para>
+        /// <para>While the buffer is active, <see cref="LoadingManagerMode.Manual"/> is ignored for the <paramref name="adType"/>
+        /// and ads are reloaded automatically.</para>
+        /// <para>To stop buffering, call <see cref="LoadAd"/> to load only a single ad,
+        /// or call <see cref="DisposeAd"/> to stop loading altogether.</para>
         /// </summary>
-        void PreloadAd(AdType adType, int count);
+        /// <param name="adType">The type of ad to buffer: <see cref="AdType.Interstitial"/>, <see cref="AdType.Rewarded"/> or <see cref="AdType.AppOpen"/>.</param>
+        /// <param name="size">The number of ads to keep loaded, from 1 to 4.</param>
+        void SetPreloadedBufferSize(AdType adType, int size);
 
         /// <summary>
-        /// Returns the number of ready preloaded ads.
+        /// Returns the number of loaded ads that are ready to be shown.
         /// </summary>
         int GetPreloadedAdCount(AdType adType);
 

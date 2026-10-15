@@ -17,7 +17,7 @@ namespace CAS.AdObject
         public static BannerAdObject Instance { get; private set; }
 
         public ManagerIndex managerId;
-        
+
         [SerializeField]
         private AdPosition adPosition = AdPosition.BottomCenter;
         [Tooltip("For greater control over where an AdView is placed on screen. Use Density-independent Pixels (DP).")]
@@ -75,6 +75,11 @@ namespace CAS.AdObject
                 adView.SetPosition(x, y, position);
         }
 
+        /// <summary>
+        /// Change the size of the banner ad.
+        /// <para>Changing the size destroys the current AdView and loads a new ad with the new size.</para>
+        /// </summary>
+        /// <param name="size">The new banner size.</param>
         public void SetAdSize(AdSize size)
         {
             adSize = size;
@@ -98,24 +103,40 @@ namespace CAS.AdObject
         /// <para>Return <see cref="Rect.zero"/> when ad view is not active.</para>
         /// <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>
         /// </summary>
-        public Rect rectInPixels
-        {
-            get
-            {
-                if (adView == null)
-                    return Rect.zero;
-                return adView.rectInPixels;
-            }
+        public Rect rectInPixels {
+            get{ return adView != null ? adView.rectInPixels : Rect.zero; }
         }
 
+        /// <summary>
+        /// Alternative to <see cref="SetAdPosition(AdPosition)"/> for calling from the Inspector (e.g. UnityEvent),
+        /// since enum parameters are not supported there.
+        /// </summary>
+        /// <param name="enumIndex">Index of the <see cref="AdPosition"/> enum value.</param>
         public void SetAdPositionEnumIndex(int enumIndex)
         {
             SetAdPosition((AdPosition)enumIndex);
         }
 
+        /// <summary>
+        /// Alternative to <see cref="SetAdSize(AdSize)"/> for calling from the Inspector (e.g. UnityEvent),
+        /// since enum parameters are not supported there.
+        /// </summary>
+        /// <param name="enumIndex">Index of the <see cref="AdSize"/> enum value.</param>
         public void SetAdSizeEnumIndex(int enumIndex)
         {
             SetAdSize((AdSize)enumIndex);
+        }
+
+        /// <summary>
+        /// Disposes of the ad of the Banner Ads.
+        /// <para>After calling this method, if you want to resume showing ads, 
+        /// you must call the <see cref="LoadAd"/> method to reload the ad. 
+        /// Note that in automatic loading mode, ads will not be automatically reloaded after Dispose. 
+        /// You need to explicitly call <see cref="LoadAd"/> to prepare the ad for future displays.</para>
+        public void DestroyAd()
+        {
+            if (adView == null) return;
+            adView.Dispose();
         }
 
         #region MonoBehaviour

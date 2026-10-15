@@ -208,7 +208,10 @@ namespace CAS.Unity
     internal class CASFullscreenView
     {
         public bool active = false;
-        public bool loaded = false;
+        public int loadedCount = 0;
+        public int loadingCount = 0;
+        // 0 - buffer disabled, single ad mode
+        public int bufferSize = 0;
 
         public int lastError;
         public AdType type;
@@ -226,20 +229,44 @@ namespace CAS.Unity
             if (active)
                 throw new InvalidOperationException("The Ad cannot be disabled because is still displayed");
 
-            loaded = false;
+            loadedCount = 0;
+            loadingCount = 0;
+            bufferSize = 0;
             lastError = AdError.NotReady;
         }
 
         public void Load()
         {
+            bufferSize = 0;
             if (_behaviour.client.IsEnabledAd(type))
             {
-                //if (!loaded)
                 CallAdAction(AdActionCode.LOADED, 1.0f);
                 return;
             }
             lastError = AdError.ManagerIsDisabled;
             CallAdAction(AdActionCode.FAILED);
+        }
+
+        public void SetBufferSize(int size)
+        {
+            bufferSize = size;
+            FillBuffer();
+        }
+
+        private void FillBuffer()
+        {
+            if (!_behaviour.client.IsEnabledAd(type))
+            {
+                lastError = AdError.ManagerIsDisabled;
+                CallAdAction(AdActionCode.FAILED);
+                return;
+            }
+            // Simulate sequential loading: each next ad arrives 1 second later
+            for (int i = 1; loadedCount + loadingCount < bufferSize; i++)
+            {
+                loadingCount++;
+                CallAdAction(AdActionCode.LOADED, i);
+            }
         }
 
         public int GetReadyError()
@@ -251,7 +278,7 @@ namespace CAS.Unity
             if (type == AdType.Interstitial
                && _behaviour._settings.lastInterImpressionTimestamp + _behaviour._settings.interstitialInterval > Time.unscaledTime)
                 return AdError.NotPassedInterval;
-            if (!loaded)
+            if (loadedCount == 0)
                 return AdError.NotReady;
             return AdError.Internal;
         }
@@ -266,7 +293,7 @@ namespace CAS.Unity
                 return;
             }
             active = true;
-            loaded = false;
+            loadedCount--;
             lastError = AdError.NotReady;
             CallAdAction(AdActionCode.SHOWN);
             CallAdAction(AdActionCode.IMPRESSION);
@@ -310,12 +337,18 @@ namespace CAS.Unity
             {
                 if (action == AdActionCode.LOADED)
                 {
-                    loaded = true;
+                    if (loadingCount > 0)
+                        loadingCount--;
+                    // Buffer may be disposed or replaced by LoadAd while loading
+                    loadedCount = Math.Min(loadedCount + 1, Math.Max(bufferSize, 1));
                 }
                 else if (action == AdActionCode.CLOSED)
                 {
                     active = false;
-                    if (CASFactory.IsAutoload(type))
+                    // Buffer ignores LoadingManagerMode and always refills
+                    if (bufferSize > 0)
+                        FillBuffer();
+                    else if (CASFactory.IsAutoload(type))
                         Load();
                 }
                 _behaviour.client.HandleCallback(action, (int)type, lastError, null, null);

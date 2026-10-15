@@ -24,23 +24,30 @@ namespace CAS
     public sealed class NativeTemplateTextStyle
     {
         /// <summary>
-        /// The background color.
+        /// Size of the Text to be displayed.
         /// </summary>
-        public Color BackgroundColor = Color.clear;
+        public int fontSize = -1;
         /// /// <summary>
         /// Color of the Text to be rendered.
         /// </summary>
-        public Color FontColor = Color.black;
-        /// <summary>
-        /// Size of the Text to be displayed.
-        /// </summary>
-        public int FontSize = 14;
+        public Color fontColor = Color.black;
         /// <summary>
         /// FontStyle for the text.
         /// </summary>
-        public NativeTemplateFontStyle Style = NativeTemplateFontStyle.Normal;
+        public NativeTemplateFontStyle fontStyle = NativeTemplateFontStyle.Normal;
+        /// <summary>
+        /// The background color.
+        /// </summary>
+        public Color backgroundColor = Color.clear;
 
-        public NativeTemplateTextStyle() { }
+        public NativeTemplateTextStyle()
+        {
+        }
+
+        public bool IsModified()
+        {
+            return fontSize != -1;
+        }
     }
 
     /// <summary>
@@ -52,27 +59,27 @@ namespace CAS
         /// <summary>
         /// The main background color.
         /// </summary>
-        public Color MainBackgroundColor;
+        public Color mainBackgroundColor;
         /// <summary>
         /// The NativeTemplateTextStyle for the headline text.
         /// </summary>
-        public NativeTemplateTextStyle Headline;
+        public NativeTemplateTextStyle headline;
         /// <summary>
         /// The NativeTemplateTextStyle for the body text.
         /// </summary>
-        public NativeTemplateTextStyle Body;
+        public NativeTemplateTextStyle body;
         /// <summary>
         /// The NativeTemplateTextStyle for the call to action text in button.
         /// </summary>
-        public NativeTemplateTextStyle CallToAction;
+        public NativeTemplateTextStyle callToAction;
         /// <summary>
         /// The NativeTemplateTextStyle for the other text.
         /// </summary>
-        public NativeTemplateTextStyle Other;
+        public NativeTemplateTextStyle other;
 
         public NativeTemplateStyle()
         {
-            MainBackgroundColor = Color.white;
+            mainBackgroundColor = Color.white;
         }
     }
 }

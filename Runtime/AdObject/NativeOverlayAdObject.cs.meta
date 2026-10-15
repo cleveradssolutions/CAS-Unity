@@ -1,11 +1,13 @@
 fileFormatVersion: 2
 guid: 11e175b5cee8cff458a0dfc062e4938b
+labels:
+- CleverAdsSolutions
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences: []
   executionOrder: 0
-  icon: {instanceID: 0}
+  icon: {fileID: 2800000, guid: 197c2276097bd45b0ac0e0a4ef58a529, type: 3}
   userData: 
   assetBundleName: 
   assetBundleVariant: 

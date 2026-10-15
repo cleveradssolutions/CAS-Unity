@@ -253,7 +253,10 @@ namespace CAS.iOS
         internal static extern void CASULoadAd(CASUManagerRef managerRef, int type);
 
         [DllImport("__Internal")]
-        internal static extern bool CASUIsAdReady(CASUManagerRef managerRef, int type);
+        internal static extern int CASUPreloadAd(CASUManagerRef managerRef, int type, int count);
+
+        [DllImport("__Internal")]
+        internal static extern int CASUGetLoadedAdCount(CASUManagerRef managerRef, int type);
 
         [DllImport("__Internal")]
         internal static extern void CASUShowAd(CASUManagerRef managerRef, int type, string placement);
@@ -316,7 +319,7 @@ namespace CAS.iOS
 
         [DllImport("__Internal")]
         internal static extern CASUNativeOverlayRef CASUCreateNativeOverlayAd(
-            CASUManagerRef managerRef,
+            string casID,
             CASNativeOverlayClientRef client
         );
 

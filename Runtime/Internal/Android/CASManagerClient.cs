@@ -77,25 +77,19 @@ namespace CAS.Android
             _managerBridge.Call("setSSVData", data);
         }
 
-        public override bool IsReadyAd(AdType adType)
-        {
-            return _managerBridge.Call<bool>("isAdReady", (int)adType);
-        }
-
         protected override void LoadAdNetive(AdType adType)
         {
             _managerBridge.Call("loadAd", (int)adType);
         }
 
-        public override void PreloadAd(AdType adType, int count)
+        protected override void PreloadBufferSize(AdType adType, int size)
         {
-            _managerBridge.Call("preloadAd", (int)adType, count);
+            _managerBridge.Call("preloadAd", (int)adType, size);
         }
 
         public override int GetPreloadedAdCount(AdType adType)
         {
-
-            return _managerBridge.Call<int>("getPreloadedAdCount",(int)adType);
+            return _managerBridge.Call<int>("getLoadedAdCount",(int)adType);
         }
 
         public override void ShowAd(AdType adType, string placement)

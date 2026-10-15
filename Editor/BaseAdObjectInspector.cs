@@ -2,6 +2,7 @@
 
 using UnityEngine;
 using UnityEditor;
+using System.Drawing;
 
 namespace CAS.AdObject
 {
@@ -269,6 +270,93 @@ namespace CAS.AdObject
         protected override void OnFooterGUI()
         {
             EditorGUILayout.LabelField("Use `gameObject.SetActive(visible)` method to show/hide banner ad.",
+                EditorStyles.wordWrappedMiniLabel);
+        }
+    }
+
+
+    [CustomEditor(typeof(NativeOverlayAdObject))]
+    internal class NativeOverlayAdObjectInspector : BaseAdObjectInspector
+    {
+        private SerializedProperty placement;
+        private SerializedProperty isStartVideoMutedProp;
+        private SerializedProperty adChoicesPlacementProp;
+        private SerializedProperty styleProp;
+        private SerializedProperty adPositionProp;
+        private SerializedProperty adSizeProp;
+        private SerializedProperty adOffsetProp;
+        private SerializedProperty onAdFailedToShowProp;
+        private SerializedProperty onAdHiddenProp;
+        private NativeOverlayAdObject adView;
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            var obj = serializedObject;
+            adPositionProp = obj.FindProperty("overlayPosition");
+            adOffsetProp = obj.FindProperty("positionOffset");
+            adSizeProp = obj.FindProperty("templateSize");
+            styleProp = obj.FindProperty("templateStyle");
+            isStartVideoMutedProp = obj.FindProperty("isStartVideoMuted");
+            adChoicesPlacementProp = obj.FindProperty("adChoicesPlacement");
+            placement = obj.FindProperty("placement");
+
+            onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
+            onAdHiddenProp = obj.FindProperty("OnAdHidden");
+            adView = target as NativeOverlayAdObject;
+        }
+
+        protected override void OnAdditionalPropertiesGUI()
+        {
+            var isPlaying = Application.isPlaying;
+
+            EditorGUILayout.PropertyField(placement);
+            EditorGUILayout.PropertyField(isStartVideoMutedProp);
+            EditorGUILayout.PropertyField(adChoicesPlacementProp);
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(adPositionProp);
+
+            EditorGUI.indentLevel++;
+            adOffsetProp.vector2IntValue = EditorGUILayout.Vector2IntField("Offset Points", adOffsetProp.vector2IntValue);
+            if (EditorGUI.EndChangeCheck() && isPlaying)
+            {
+                var newPos = adOffsetProp.vector2IntValue;
+                adView.SetAdPosition(newPos.x, newPos.y, (AdPosition)adPositionProp.intValue);
+            }
+            if (isPlaying)
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.RectField("Rect Pixels", adView.rectInPixels);
+                EditorGUI.EndDisabledGroup();
+            }
+            EditorGUI.indentLevel--;
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(adSizeProp);
+            if (EditorGUI.EndChangeCheck() && Application.isPlaying)
+            {
+                var size = adSizeProp.vector2IntValue;
+                adView.SetTemplateSize(size.x, size.y);
+            }
+
+            EditorGUI.indentLevel++;
+            EditorGUI.BeginDisabledGroup(isPlaying);
+            EditorGUILayout.PropertyField(styleProp);
+            EditorGUI.EndDisabledGroup();
+            EditorGUI.indentLevel--;
+        }
+
+        protected override void OnCallbacksGUI()
+        {
+            EditorGUILayout.PropertyField(onAdFailedToShowProp);
+            base.OnCallbacksGUI();
+            EditorGUILayout.PropertyField(onAdHiddenProp);
+        }
+
+        protected override void OnFooterGUI()
+        {
+            EditorGUILayout.LabelField("Use `gameObject.SetActive(visible)` method to show/hide native overlay ad.",
                 EditorStyles.wordWrappedMiniLabel);
         }
     }

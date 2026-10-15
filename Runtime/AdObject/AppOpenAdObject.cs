@@ -29,7 +29,26 @@ namespace CAS.AdObject
         public CASUEventWithMeta OnAdImpression;
 
         private IMediationManager manager;
-        private bool loadAdOnAwake = false;
+        private int loadAdOnAwake = 0;
+
+
+        /// <summary>
+        /// Sets the number of <see cref="AdType"/> ads that the SDK keeps loaded at all times.
+        /// <para>Loading starts immediately. After an ad is shown, a new ad is loaded automatically to keep the buffer full.</para>
+        /// <para>The <see cref="OnAdLoaded"/> is invoked once for each ad loaded into the buffer.</para>
+        /// <para>The <paramref name="size"/> is clamped to the range from 1 to 4.</para>
+        /// <para>While the buffer is active, <see cref="LoadingManagerMode.Manual"/> is ignored and ads are reloaded automatically.</para>
+        /// <para>To stop buffering, call <see cref="Load"/> to load only a single ad,
+        /// or call <see cref="DestroyAd"/> to stop loading altogether.</para>
+        /// </summary>
+        /// <param name="size">The number of ads to keep loaded, from 1 to 4.</param>
+        public void SetPreloadedBufferSize(int size)
+        {
+            if (manager == null)
+                loadAdOnAwake = size;
+            else
+                manager.SetPreloadedBufferSize(AdType.Interstitial, size);
+        }
 
         /// <summary>
         /// Manual load Ad.
@@ -39,7 +58,7 @@ namespace CAS.AdObject
         public void Load()
         {
             if (manager == null)
-                loadAdOnAwake = true;
+                loadAdOnAwake = 1;
             else
                 manager.LoadAd(AdType.AppOpen);
         }
@@ -64,6 +83,18 @@ namespace CAS.AdObject
             }
             OnAdShown.Invoke();
             manager.ShowAd(AdType.AppOpen, placement);
+        }
+
+        /// <summary>
+        /// Disposes of the ad of the AppOpen Ads.
+        /// <para>After calling this method, if you want to resume showing ads, 
+        /// you must call the <see cref="LoadAd"/> method to reload the ad. 
+        /// Note that in automatic loading mode, ads will not be automatically reloaded after Dispose. 
+        /// You need to explicitly call <see cref="LoadAd"/> to prepare the ad for future displays.</para>
+        public void DestroyAd()
+        {
+            if (manager == null) return;
+            manager.DisposeAd(AdType.AppOpen);
         }
 
         #region MonoBehaviour
@@ -121,14 +152,15 @@ namespace CAS.AdObject
                 {
                     OnAdLoaded.Invoke();
                 }
-                else if (loadAdOnAwake)
+                else if (loadAdOnAwake == 1)
                 {
-                    loadAdOnAwake = false;
+                    loadAdOnAwake = 0;
                     manager.LoadAd(AdType.AppOpen);
                 }
-                else
+                if (loadAdOnAwake > 1)
                 {
-                    OnAdFailedToLoad.Invoke(new AdError(AdError.NotReady, null).ToString());
+                    loadAdOnAwake = 0;
+                    manager.SetPreloadedBufferSize(AdType.AppOpen, loadAdOnAwake);
                 }
             }
             catch (Exception e)
