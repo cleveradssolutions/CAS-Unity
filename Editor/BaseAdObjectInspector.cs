@@ -281,11 +281,11 @@ namespace CAS.AdObject
         private SerializedProperty placement;
         private SerializedProperty isStartVideoMutedProp;
         private SerializedProperty adChoicesPlacementProp;
+        private SerializedProperty loadOnAwakeProp;
         private SerializedProperty styleProp;
         private SerializedProperty adPositionProp;
         private SerializedProperty adSizeProp;
         private SerializedProperty adOffsetProp;
-        private SerializedProperty onAdFailedToShowProp;
         private SerializedProperty onAdHiddenProp;
         private NativeOverlayAdObject adView;
 
@@ -300,8 +300,8 @@ namespace CAS.AdObject
             isStartVideoMutedProp = obj.FindProperty("isStartVideoMuted");
             adChoicesPlacementProp = obj.FindProperty("adChoicesPlacement");
             placement = obj.FindProperty("placement");
+            loadOnAwakeProp = obj.FindProperty("loadOnAwake");
 
-            onAdFailedToShowProp = obj.FindProperty("OnAdFailedToShow");
             onAdHiddenProp = obj.FindProperty("OnAdHidden");
             adView = target as NativeOverlayAdObject;
         }
@@ -310,15 +310,16 @@ namespace CAS.AdObject
         {
             var isPlaying = Application.isPlaying;
 
-            EditorGUILayout.PropertyField(placement);
+            EditorGUILayout.PropertyField(loadOnAwakeProp);
             EditorGUILayout.PropertyField(isStartVideoMutedProp);
+            EditorGUILayout.PropertyField(placement);
             EditorGUILayout.PropertyField(adChoicesPlacementProp);
 
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(adPositionProp);
 
             EditorGUI.indentLevel++;
-            adOffsetProp.vector2IntValue = EditorGUILayout.Vector2IntField("Offset Points", adOffsetProp.vector2IntValue);
+            adOffsetProp.vector2IntValue = EditorGUILayout.Vector2IntField("Position Offset", adOffsetProp.vector2IntValue);
             if (EditorGUI.EndChangeCheck() && isPlaying)
             {
                 var newPos = adOffsetProp.vector2IntValue;
@@ -349,7 +350,6 @@ namespace CAS.AdObject
 
         protected override void OnCallbacksGUI()
         {
-            EditorGUILayout.PropertyField(onAdFailedToShowProp);
             base.OnCallbacksGUI();
             EditorGUILayout.PropertyField(onAdHiddenProp);
         }

@@ -3,16 +3,32 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
+    /// <summary>
+    /// A component that loads a Native ad and shows it as an overlay template on top of the game,
+    /// without code, using <see cref="UnityEvent"/> callbacks configured in the Inspector.
+    /// <para>The overlay is visible while this component is enabled and active,
+    /// and hidden while it is disabled.</para>
+    /// <para>Unlike other AdObjects, the loaded ad belongs to this component:
+    /// it is not shared with other AdObjects and is destroyed together with this MonoBehaviour.</para>
+    /// <para>Ads are not loaded automatically. Call <see cref="LoadAd"/> to load an ad.</para>
+    /// </summary>
     [AddComponentMenu("CleverAdsSolutions/Native Overlay Ad Object")]
     [DisallowMultipleComponent]
     public sealed class NativeOverlayAdObject : MonoBehaviour
     {
+        /// <summary>
+        /// The index of the <see cref="IMediationManager"/> that provides ads for this component.
+        /// </summary>
         public ManagerIndex managerId;
 
+        [Tooltip("The position of the overlay on the screen.")]
         [SerializeField] private AdPosition overlayPosition = AdPosition.BottomCenter;
+        [Tooltip("The offset from the selected position, in Density-independent Pixels (DP).")]
         [SerializeField] private Vector2Int positionOffset = Vector2Int.zero;
+        [Tooltip("The size of the native ad template, in Density-independent Pixels (DP).")]
         [SerializeField] private Vector2Int templateSize = new Vector2Int(300, 250);
 
+        [Tooltip("The colors and fonts of the native ad template.")]
         [SerializeField] private NativeTemplateStyle templateStyle = new NativeTemplateStyle();
 
         /// <summary>
@@ -38,45 +54,73 @@ namespace CAS.AdObject
         [Tooltip("An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.")]
         public string placement = null;
 
+        [Tooltip("Load the ad automatically on comnponent start")]
+        [SerializeField]
+        private bool loadOnAwake = false;
+
+        /// <summary>
+        /// Invoked when an ad is loaded and the template is rendered.
+        /// </summary>
         public UnityEvent OnAdLoaded;
+        /// <summary>
+        /// Invoked with the error message when an ad fails to load,
+        /// or when the loaded ad fails to show.
+        /// </summary>
         public CASUEventWithError OnAdFailedToLoad;
-        public CASUEventWithError OnAdFailedToShow;
+        /// <summary>
+        /// Invoked when the overlay becomes visible:
+        /// when an ad is loaded while the component is enabled,
+        /// or when the component is enabled with a loaded ad.
+        /// </summary>
         public UnityEvent OnAdShown;
+        /// <summary>
+        /// Invoked when the user clicks the ad.
+        /// </summary>
         public UnityEvent OnAdClicked;
+        /// <summary>
+        /// Invoked when the overlay is hidden because the component is disabled.
+        /// </summary>
         public UnityEvent OnAdHidden;
+        /// <summary>
+        /// Invoked when the ad impression is recorded, with the ad metadata for revenue tracking.
+        /// </summary>
         public CASUEventWithMeta OnAdImpression;
 
         private IMediationManager manager;
         private INativeOverlayAd ad;
-        private bool loadWhenReady;
         private bool loading;
 
         /// <summary>
-        /// Get the real Overlay rect with position and size in pixels on screen.
-        /// <para>Return <see cref="Rect.zero"/> when ad view is not active.</para>
-        /// <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>
+        /// The actual position and size of the overlay on the screen, in pixels.
+        /// <para>Returns <see cref="Rect.zero"/> when no ad is loaded.</para>
+        /// <para>The position includes the insets for display cutouts.</para>
         /// </summary>
         public Rect rectInPixels {
             get{ return ad != null ? ad.rectInPixels : Rect.zero; }
         }
 
         /// <summary>
-        /// Check ready ad to present.
+        /// Checks whether an ad is loaded and not expired.
         /// </summary>
+        /// <returns><c>true</c> if a loaded ad can be shown; otherwise <c>false</c>.</returns>
         public bool IsAdLoaded()
         {
             return ad != null && !ad.isExpired;
         }
 
         /// <summary>
-        /// Manual load the Ad or reload current loaded Ad to skip impression.
-        /// <para>You can get a callback for the successful loading of an ad by subscribe to <see cref="OnAdLoaded"/>.</para>
+        /// Loads a new Native ad. When it is loaded, it replaces the current ad, which is destroyed.
+        /// <para>The call is ignored while a previous load is still in progress.
+        /// If the manager is not initialized yet, loading starts once it is ready.</para>
+        /// <para><see cref="adChoicesPlacement"/>, <see cref="isStartVideoMuted"/> and <see cref="placement"/>
+        /// are applied when this method is called.</para>
+        /// <para>Subscribe to <see cref="OnAdLoaded"/> and <see cref="OnAdFailedToLoad"/> to get the result.</para>
         /// </summary>
         public void LoadAd()
         {
             if (manager == null)
             {
-                loadWhenReady = true;
+                loadOnAwake = true;
                 return;
             }
             if (loading) return;
@@ -87,13 +131,14 @@ namespace CAS.AdObject
                 isStartVideoMuted = isStartVideoMuted,
                 placement = placement
             };
-            manager.LoadNativeOverlayAd(options, AdLoaded);
+            manager.LoadNativeOverlayAd(options, AdLoadingResult);
         }
 
         /// <summary>
-        /// The position where the Overlay ad should be placed.
-        /// The <see cref="AdPosition"/> enum lists the valid ad position values.
+        /// Sets the position of the overlay on the screen and resets the offset set by
+        /// <see cref="SetAdPosition(int, int, AdPosition)"/>.
         /// </summary>
+        /// <param name="position">The position on the screen.</param>
         public void SetAdPosition(AdPosition position)
         {
             overlayPosition = position;
@@ -147,14 +192,19 @@ namespace CAS.AdObject
         }
 
         /// <summary>
-        /// Disposes of the ad of the Native Overlay Ads.
-        /// <para>After calling this method, if you want to resume showing ads, 
-        /// you must call the <see cref="LoadAd"/> method to reload the ad. 
-        /// Note that in automatic loading mode, ads will not be automatically reloaded after Dispose. 
-        /// You need to explicitly call <see cref="LoadAd"/> to prepare the ad for future displays.</para>
+        /// Destroys the loaded Native ad and removes the overlay from the screen.
+        /// <para>The ad is also destroyed automatically together with this MonoBehaviour,
+        /// so call this method only to release the ad earlier.</para>
+        /// <para>To show ads again, call <see cref="LoadAd"/>.</para>
+        /// </summary>
         public void DestroyAd()
         {
             if (ad == null) return;
+
+            ad.OnFailedToShow -= AdFailedToShow;
+            ad.OnClicked -= OnAdClicked.Invoke;
+            ad.OnImpression -= OnAdImpression.Invoke;
+
             ad.Dispose();
             ad = null;
         }
@@ -185,7 +235,7 @@ namespace CAS.AdObject
         {
             if (manager == null)
                 CASFactory.OnManagerStateChanged -= OnManagerReady;
-            Detach();
+            DestroyAd();
         }
 
         private void OnManagerReady(int index, CASManagerBase manager)
@@ -197,14 +247,14 @@ namespace CAS.AdObject
 
             this.manager = manager;
 
-            if (loadWhenReady)
+            if (loadOnAwake)
             {
-                loadWhenReady = false;
+                loadOnAwake = false;
                 LoadAd();
             }
         }
 
-        private void AdLoaded(INativeOverlayAd ad, AdError error)
+        private void AdLoadingResult(INativeOverlayAd ad, AdError error)
         {
             if (!this)
             {
@@ -220,7 +270,7 @@ namespace CAS.AdObject
                 return;
             }
 
-            Detach();
+            DestroyAd();
 
             this.ad = ad;
             ad.OnFailedToShow += AdFailedToShow;
@@ -238,19 +288,9 @@ namespace CAS.AdObject
 
         private void AdFailedToShow(string error)
         {
-            OnAdFailedToShow.Invoke(error);
-        }
-
-        private void Detach()
-        {
-            if (ad == null) return;
-
-            ad.OnFailedToShow -= AdFailedToShow;
-            ad.OnClicked -= OnAdClicked.Invoke;
-            ad.OnImpression -= OnAdImpression.Invoke;
-
-            ad.Dispose();
-            ad = null;
+            DestroyAd();
+            OnAdHidden.Invoke();
+            OnAdFailedToLoad.Invoke(error);
         }
         #endregion
     }

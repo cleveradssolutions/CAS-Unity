@@ -6,18 +6,43 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
+    /// <summary>
+    /// A component that shows the user consent form without code,
+    /// using <see cref="UnityEvent"/> callbacks configured in the Inspector.
+    /// <para>Link it to <see cref="ManagerAdObject.consentFlow"/> to show the form during manager initialization,
+    /// or call <see cref="Show"/> from a privacy options button.</para>
+    /// </summary>
     [AddComponentMenu("CleverAdsSolutions/Consent Flow Ad Object")]
     [DisallowMultipleComponent]
     [HelpURL("https://docs.page/cleveradssolutions/docs/Unity/User-Consent-Flow#inspector-implementation")]
     public class ConsentFlowAdObject : MonoBehaviour
     {
+        [Tooltip("Call ShowIfRequired on Start. Ignored when this component is linked to a ManagerAdObject.")]
         [SerializeField]
         internal bool showOnAwakeIfRequired = false;
+        /// <summary>
+        /// The user location to emulate for testing the consent form on test devices.
+        /// </summary>
         public ConsentFlow.DebugGeography debugGeography = ConsentFlow.DebugGeography.EEA;
+        /// <summary>
+        /// The URL of the app privacy policy shown in the consent form.
+        /// </summary>
         public string privacyPolicyUrl = "";
 
+        /// <summary>
+        /// Invoked when the consent flow is completed:
+        /// the consent is obtained, not required, or the form is unavailable.
+        /// </summary>
         public UnityEvent OnCompleted;
+        /// <summary>
+        /// Invoked with the <see cref="ConsentFlow.Status"/> name when the consent flow fails.
+        /// </summary>
         public CASUEventWithError OnFailed;
+        /// <summary>
+        /// Invoked with <c>true</c> when the consent is obtained and the user can change it later,
+        /// so a privacy options button that calls <see cref="Show"/> should be visible.
+        /// Invoked with <c>false</c> otherwise.
+        /// </summary>
         public CASUToggleEvent EnableOptionsButton;
 
         /// <summary>
@@ -31,16 +56,18 @@ namespace CAS.AdObject
         }
 
         /// <summary>
-        /// Force Shows the consent form.
-        /// Some consent forms require the user to modify their consent at any time. 
-        /// When a user interacts with your UI element, call function to show the form 
-        /// so the user can update their privacy options at any time. 
+        /// Shows the consent form even if the user has already responded.
+        /// <para>Some regulations require the user to be able to change their consent at any time.
+        /// Call this from a privacy options button so the user can update their choice.</para>
         /// </summary>
         public void Show()
         {
             CreateFlow().Show();
         }
 
+        /// <summary>
+        /// Creates a <see cref="ConsentFlow"/> with the settings and callbacks of this component.
+        /// </summary>
         public ConsentFlow CreateFlow()
         {
             return new ConsentFlow()

@@ -87,7 +87,7 @@ namespace CAS.Android
             _managerBridge.Call("preloadAd", (int)adType, size);
         }
 
-        public override int GetPreloadedAdCount(AdType adType)
+        public override int GetLoadedAdCount(AdType adType)
         {
             return _managerBridge.Call<int>("getLoadedAdCount",(int)adType);
         }

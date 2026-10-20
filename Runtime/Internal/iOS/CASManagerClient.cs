@@ -118,7 +118,7 @@ namespace CAS.iOS
             CASExterns.CASUPreloadAd(_managerClient, (int)adType, size);
         }
 
-        public override int GetPreloadedAdCount(AdType adType)
+        public override int GetLoadedAdCount(AdType adType)
         {
             return CASExterns.CASUGetLoadedAdCount(_managerRef, (int)adType);
         }

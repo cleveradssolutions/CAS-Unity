@@ -889,7 +889,27 @@
             <para>To receive a callback when the ad is successfully loaded, subscribe to the OnLoadedAd events.</para>
             <para>For loading banner ads, use <see cref="M:CAS.IAdView.Load"/> obtained from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
             </summary>
-            <param name="adType">The type of ad to load.</param>
+            <param name="adType">The type of ad to load: <see cref="F:CAS.AdType.Interstitial"/>, <see cref="F:CAS.AdType.Rewarded"/> or <see cref="F:CAS.AdType.AppOpen"/></param>
+        </member>
+        <member name="M:CAS.IMediationManager.SetPreloadedAdBufferSize(CAS.AdType,System.Int32)">
+            <summary>
+            Sets the number of <see cref="T:CAS.AdType"/> ads that the SDK keeps loaded at all times.
+            <para>Loading starts immediately. After an ad is shown, a new ad is loaded automatically to keep the buffer full.</para>
+            <para>The loaded event (for example, OnInterstitialAdLoaded) is invoked once for each ad loaded into the buffer.</para>
+            <para>The maximum <paramref name="size"/> is 4; larger values are clamped to 4.
+            A <paramref name="size"/> less than 1 disables the buffer.</para>
+            <para>While the buffer is active, <see cref="F:CAS.LoadingManagerMode.Manual"/> is ignored for the <paramref name="adType"/>
+            and ads are reloaded automatically.</para>
+            <para>To stop buffering, pass a <paramref name="size"/> less than 1 or call <see cref="M:CAS.IMediationManager.DisposeAd(CAS.AdType)"/> to stop loading altogether.</para>
+            </summary>
+            <param name="adType">The type of ad to buffer: <see cref="F:CAS.AdType.Interstitial"/>, <see cref="F:CAS.AdType.Rewarded"/> or <see cref="F:CAS.AdType.AppOpen"/>.</param>
+            <param name="size">The number of ads to keep loaded, up to 4. A value less than 1 disables the buffer.</param>
+        </member>
+        <member name="M:CAS.IMediationManager.GetLoadedAdCount(CAS.AdType)">
+            <summary>
+            Returns the number of loaded ads that are ready to be shown.
+            <param name="adType">The type of ad to check: <see cref="F:CAS.AdType.Interstitial"/>, <see cref="F:CAS.AdType.Rewarded"/> or <see cref="F:CAS.AdType.AppOpen"/></param>
+            </summary>
         </member>
         <member name="M:CAS.IMediationManager.IsReadyAd(CAS.AdType)">
             <summary>
@@ -899,41 +919,22 @@
             This event provides insights into errors that may prevent the ad from being displayed.</para>
             <para>For checking if a banner ad is ready, use the <see cref="P:CAS.IAdView.isReady"/> property from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
             </summary>
-            <param name="adType">The type of ad to check.</param>
+            <param name="adType">The type of ad to check: <see cref="F:CAS.AdType.Interstitial"/>, <see cref="F:CAS.AdType.Rewarded"/> or <see cref="F:CAS.AdType.AppOpen"/></param>
             <returns>True if the ad is ready to be shown; otherwise, false.</returns>
-        </member>
-        <member name="M:CAS.IMediationManager.SetPreloadedBufferSize(CAS.AdType,System.Int32)">
-            <summary>
-            Sets the number of <see cref="T:CAS.AdType"/> ads that the SDK keeps loaded at all times.
-            <para>Loading starts immediately. After an ad is shown, a new ad is loaded automatically to keep the buffer full.</para>
-            <para>The loaded event (for example, OnInterstitialAdLoaded) is invoked once for each ad loaded into the buffer.</para>
-            <para>The <paramref name="size"/> is clamped to the range from 1 to 4.</para>
-            <para>While the buffer is active, <see cref="F:CAS.LoadingManagerMode.Manual"/> is ignored for the <paramref name="adType"/>
-            and ads are reloaded automatically.</para>
-            <para>To stop buffering, call <see cref="M:CAS.IMediationManager.LoadAd(CAS.AdType)"/> to load only a single ad,
-            or call <see cref="M:CAS.IMediationManager.DisposeAd(CAS.AdType)"/> to stop loading altogether.</para>
-            </summary>
-            <param name="adType">The type of ad to buffer: <see cref="F:CAS.AdType.Interstitial"/>, <see cref="F:CAS.AdType.Rewarded"/> or <see cref="F:CAS.AdType.AppOpen"/>.</param>
-            <param name="size">The number of ads to keep loaded, from 1 to 4.</param>
-        </member>
-        <member name="M:CAS.IMediationManager.GetPreloadedAdCount(CAS.AdType)">
-            <summary>
-            Returns the number of loaded ads that are ready to be shown.
-            </summary>
         </member>
         <member name="M:CAS.IMediationManager.ShowAd(CAS.AdType)">
             <summary>
             Shows an ad of the specified <see cref="T:CAS.AdType"/>.
             <para>To show a banner ad, use the <see cref="M:CAS.IAdView.SetActive(System.Boolean)"/> method obtained from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
             </summary>
-            <param name="adType">The type of ad to show.</param>
+            <param name="adType">The type of ad to show: <see cref="F:CAS.AdType.Interstitial"/>, <see cref="F:CAS.AdType.Rewarded"/> or <see cref="F:CAS.AdType.AppOpen"/></param>
         </member>
         <member name="M:CAS.IMediationManager.ShowAd(CAS.AdType,System.String)">
             <summary>
             Shows an ad of the specified <see cref="T:CAS.AdType"/>.
             <para>To show a banner ad, use the <see cref="M:CAS.IAdView.SetActive(System.Boolean)"/> method obtained from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
             </summary>
-            <param name="adType">The type of ad to show.</param>
+            <param name="adType">The type of ad to show: <see cref="F:CAS.AdType.Interstitial"/>, <see cref="F:CAS.AdType.Rewarded"/> or <see cref="F:CAS.AdType.AppOpen"/></param>
             <param name="placement">An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.</param>
         </member>
         <member name="M:CAS.IMediationManager.DisposeAd(CAS.AdType)">
@@ -945,7 +946,7 @@
             You need to explicitly call <see cref="M:CAS.IMediationManager.LoadAd(CAS.AdType)"/> to prepare the ad for future displays.</para>
             <para>For disposing of a banner ad, use the <see cref="M:System.IDisposable.Dispose"/> method obtained from <see cref="M:CAS.IMediationManager.GetAdView(CAS.AdSize)"/>.</para>
             </summary>
-            <param name="adType">The type of ad to dispose.</param>
+            <param name="adType">The type of ad to dispose: <see cref="F:CAS.AdType.Interstitial"/>, <see cref="F:CAS.AdType.Rewarded"/> or <see cref="F:CAS.AdType.AppOpen"/></param>
         </member>
         <member name="M:CAS.IMediationManager.GetAdView(CAS.AdSize)">
             <summary>

@@ -6,23 +6,42 @@ using UnityEngine.Events;
 
 namespace CAS.AdObject
 {
+    /// <summary>
+    /// A component that loads and shows a Banner ad without code,
+    /// using <see cref="UnityEvent"/> callbacks configured in the Inspector.
+    /// <para>The banner is visible while this component is enabled and active,
+    /// and hidden while it is disabled.</para>
+    /// <para>The component gets the <see cref="IAdView"/> of the selected size from the
+    /// <see cref="IMediationManager"/> with <see cref="managerId"/> once the manager is initialized.
+    /// Calls made before that are deferred until it is ready.</para>
+    /// <para>The AdView belongs to the manager, not to this component.
+    /// Destroying the component only hides the banner and does not destroy the loaded ad,
+    /// so different BannerAdObjects with the same <see cref="AdSize"/> share the same AdView.
+    /// Call <see cref="DestroyAd"/> to release it.</para>
+    /// </summary>
     [AddComponentMenu("CleverAdsSolutions/Banner Ad Object")]
     [DisallowMultipleComponent]
     [HelpURL("https://docs.page/cleveradssolutions/docs/Unity/Banner-Ad-object")]
     public sealed class BannerAdObject : MonoBehaviour
     {
         /// <summary>
-        /// Last active Banner Ad object. May be is null!
+        /// The most recently awakened Banner Ad object.
+        /// <para>It is <c>null</c> when there is no such object, or after it is destroyed.</para>
         /// </summary>
         public static BannerAdObject Instance { get; private set; }
 
+        /// <summary>
+        /// The index of the <see cref="IMediationManager"/> that provides ads for this component.
+        /// </summary>
         public ManagerIndex managerId;
 
+        [Tooltip("The position of the banner on the screen.")]
         [SerializeField]
         private AdPosition adPosition = AdPosition.BottomCenter;
         [Tooltip("For greater control over where an AdView is placed on screen. Use Density-independent Pixels (DP).")]
         [SerializeField]
         private Vector2Int adOffset = Vector2Int.zero;
+        [Tooltip("The size of the banner. Changing the size at runtime loads a new ad.")]
         [SerializeField]
         private AdSize adSize = AdSize.Banner;
 
@@ -35,12 +54,35 @@ namespace CAS.AdObject
         [Tooltip("An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.")]
         public string placement = null;
 
+        /// <summary>
+        /// Invoked when an ad is loaded.
+        /// <para>Also invoked right after initialization or a size change if the AdView already has a loaded ad.</para>
+        /// </summary>
         public UnityEvent OnAdLoaded;
+        /// <summary>
+        /// Invoked with the error message when an ad fails to load,
+        /// or when the manager could not be found on <c>Start</c>.
+        /// </summary>
         public CASUEventWithError OnAdFailedToLoad;
+        /// <summary>
+        /// Invoked when the banner becomes visible:
+        /// when an ad is loaded while the component is enabled,
+        /// or when the component is enabled with a loaded ad.
+        /// </summary>
         public UnityEvent OnAdShown;
+        /// <summary>
+        /// Invoked when the user clicks the ad.
+        /// </summary>
         public UnityEvent OnAdClicked;
+        /// <summary>
+        /// Invoked when the banner is hidden:
+        /// when the component is disabled, or when an ad fails to load while the component is enabled.
+        /// </summary>
         public UnityEvent OnAdHidden;
 
+        /// <summary>
+        /// Invoked when the ad impression is recorded, with the ad metadata for revenue tracking.
+        /// </summary>
         public CASUEventWithMeta OnAdImpression;
 
         private IMediationManager manager;
@@ -48,9 +90,10 @@ namespace CAS.AdObject
         private bool loadAdOnAwake = false;
 
         /// <summary>
-        /// The position where the AdView ad should be placed.
-        /// The <see cref="AdPosition"/> enum lists the valid ad position values.
+        /// Sets the position of the banner on the screen and resets the offset set by
+        /// <see cref="SetAdPosition(int, int, AdPosition)"/>.
         /// </summary>
+        /// <param name="position">The position on the screen.</param>
         public void SetAdPosition(AdPosition position)
         {
             adOffset = Vector2Int.zero;
@@ -76,8 +119,9 @@ namespace CAS.AdObject
         }
 
         /// <summary>
-        /// Change the size of the banner ad.
-        /// <para>Changing the size destroys the current AdView and loads a new ad with the new size.</para>
+        /// Changes the size of the banner ad.
+        /// <para>The component switches to the AdView of the new size from the manager.
+        /// The previous AdView is hidden but not destroyed.</para>
         /// </summary>
         /// <param name="size">The new banner size.</param>
         public void SetAdSize(AdSize size)
@@ -87,8 +131,9 @@ namespace CAS.AdObject
         }
 
         /// <summary>
-        /// Manual load the Ad or reload current loaded Ad to skip impression.
-        /// <para>You can get a callback for the successful loading of an ad by subscribe to <see cref="OnAdLoaded"/>.</para>
+        /// Loads an ad, or replaces the currently loaded ad with a new one.
+        /// <para>If the manager is not initialized yet, loading starts once it is ready.</para>
+        /// <para>Subscribe to <see cref="OnAdLoaded"/> and <see cref="OnAdFailedToLoad"/> to get the result.</para>
         /// </summary>
         public void LoadAd()
         {
@@ -99,9 +144,9 @@ namespace CAS.AdObject
         }
 
         /// <summary>
-        /// Get the real AdView rect with position and size in pixels on screen.
-        /// <para>Return <see cref="Rect.zero"/> when ad view is not active.</para>
-        /// <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>
+        /// The actual position and size of the AdView on the screen, in pixels.
+        /// <para>Returns <see cref="Rect.zero"/> when the AdView is not active.</para>
+        /// <para>The position includes the insets for display cutouts.</para>
         /// </summary>
         public Rect rectInPixels {
             get{ return adView != null ? adView.rectInPixels : Rect.zero; }
@@ -128,11 +173,13 @@ namespace CAS.AdObject
         }
 
         /// <summary>
-        /// Disposes of the ad of the Banner Ads.
-        /// <para>After calling this method, if you want to resume showing ads, 
-        /// you must call the <see cref="LoadAd"/> method to reload the ad. 
-        /// Note that in automatic loading mode, ads will not be automatically reloaded after Dispose. 
-        /// You need to explicitly call <see cref="LoadAd"/> to prepare the ad for future displays.</para>
+        /// Destroys the AdView with the loaded Banner ad.
+        /// <para>The loaded ad is not destroyed together with this MonoBehaviour.
+        /// Different BannerAdObjects with the same <see cref="AdSize"/> use the same AdView.
+        /// Call this method if you want to release the resources of the loaded ad.</para>
+        /// <para>To show ads again, call <see cref="LoadAd"/>.
+        /// Ads are not reloaded automatically after this call, even in automatic loading mode.</para>
+        /// </summary>
         public void DestroyAd()
         {
             if (adView == null) return;

@@ -249,7 +249,7 @@ namespace CAS.Unity
 
         public void SetBufferSize(int size)
         {
-            bufferSize = size;
+            bufferSize = size < 1 ? 0 : size;
             FillBuffer();
         }
 

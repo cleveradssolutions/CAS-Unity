@@ -51,7 +51,7 @@ namespace CAS.Unity
             CASFactory.UnityLog("Server Side Verification Data: " + data);
         }
 
-        public override int GetPreloadedAdCount(AdType adType)
+        public override int GetLoadedAdCount(AdType adType)
         {
             return _behaviour.IsReadyAd(adType) ? _behaviour.GetFullscreenView(adType).loadedCount : 0;
         }

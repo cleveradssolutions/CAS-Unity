@@ -84,7 +84,7 @@ namespace CAS
         public abstract void SkipNextAppReturnAds();
         public abstract void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback);
         protected abstract void PreloadBufferSize(AdType adType, int size);
-        public abstract int GetPreloadedAdCount(AdType adType);
+        public abstract int GetLoadedAdCount(AdType adType);
 
         protected abstract void SetLastPageAdContentNative(string json);
         protected abstract CASViewBase CreateAdView(AdSize size);
@@ -169,15 +169,10 @@ namespace CAS
                 HandleCallback(AdActionCode.FAILED, (int)adType, AdError.ManagerIsDisabled, null, null);
         }
 
-        public void SetPreloadedBufferSize(AdType adType, int size)
+        public void SetPreloadedAdBufferSize(AdType adType, int size)
         {
             int targetSize = size;
-            if (size < 1)
-            {
-                Debug.LogWarning("[CAS] " + adType.ToString() + " Preload count must be greater than 0");
-                targetSize = 1;
-            }
-            else if (size > 4)
+            if (size > 4)
             {
                 Debug.LogWarning("[CAS] " + adType.ToString() + " Preload count " + size + " reduced to 4 (limit per format)");
                 targetSize = 4;
@@ -190,7 +185,7 @@ namespace CAS
 
         public bool IsReadyAd(AdType adType)
         {
-            return GetPreloadedAdCount(adType) > 0;
+            return GetLoadedAdCount(adType) > 0;
         }
 
         public void ShowAd(AdType adType)

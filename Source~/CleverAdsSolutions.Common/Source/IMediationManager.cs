@@ -157,8 +157,28 @@ namespace CAS
         /// <para>To receive a callback when the ad is successfully loaded, subscribe to the OnLoadedAd events.</para>
         /// <para>For loading banner ads, use <see cref="IAdView.Load"/> obtained from <see cref="GetAdView"/>.</para>
         /// </summary>
-        /// <param name="adType">The type of ad to load.</param>
+        /// <param name="adType">The type of ad to load: <see cref="AdType.Interstitial"/>, <see cref="AdType.Rewarded"/> or <see cref="AdType.AppOpen"/></param>
         void LoadAd(AdType adType);
+
+        /// <summary>
+        /// Sets the number of <see cref="AdType"/> ads that the SDK keeps loaded at all times.
+        /// <para>Loading starts immediately. After an ad is shown, a new ad is loaded automatically to keep the buffer full.</para>
+        /// <para>The loaded event (for example, OnInterstitialAdLoaded) is invoked once for each ad loaded into the buffer.</para>
+        /// <para>The maximum <paramref name="size"/> is 4; larger values are clamped to 4.
+        /// A <paramref name="size"/> less than 1 disables the buffer.</para>
+        /// <para>While the buffer is active, <see cref="LoadingManagerMode.Manual"/> is ignored for the <paramref name="adType"/>
+        /// and ads are reloaded automatically.</para>
+        /// <para>To stop buffering, pass a <paramref name="size"/> less than 1 or call <see cref="DisposeAd"/> to stop loading altogether.</para>
+        /// </summary>
+        /// <param name="adType">The type of ad to buffer: <see cref="AdType.Interstitial"/>, <see cref="AdType.Rewarded"/> or <see cref="AdType.AppOpen"/>.</param>
+        /// <param name="size">The number of ads to keep loaded, up to 4. A value less than 1 disables the buffer.</param>
+        void SetPreloadedAdBufferSize(AdType adType, int size);
+
+        /// <summary>
+        /// Returns the number of loaded ads that are ready to be shown.
+        /// <param name="adType">The type of ad to check: <see cref="AdType.Interstitial"/>, <see cref="AdType.Rewarded"/> or <see cref="AdType.AppOpen"/></param>
+        /// </summary>
+        int GetLoadedAdCount(AdType adType);
 
         /// <summary>
         /// Checks whether the specified <see cref="AdType"/> ad is ready to be shown.
@@ -167,41 +187,22 @@ namespace CAS
         /// This event provides insights into errors that may prevent the ad from being displayed.</para>
         /// <para>For checking if a banner ad is ready, use the <see cref="IAdView.isReady"/> property from <see cref="GetAdView"/>.</para>
         /// </summary>
-        /// <param name="adType">The type of ad to check.</param>
+        /// <param name="adType">The type of ad to check: <see cref="AdType.Interstitial"/>, <see cref="AdType.Rewarded"/> or <see cref="AdType.AppOpen"/></param>
         /// <returns>True if the ad is ready to be shown; otherwise, false.</returns>
         bool IsReadyAd(AdType adType);
-
-        /// <summary>
-        /// Sets the number of <see cref="AdType"/> ads that the SDK keeps loaded at all times.
-        /// <para>Loading starts immediately. After an ad is shown, a new ad is loaded automatically to keep the buffer full.</para>
-        /// <para>The loaded event (for example, OnInterstitialAdLoaded) is invoked once for each ad loaded into the buffer.</para>
-        /// <para>The <paramref name="size"/> is clamped to the range from 1 to 4.</para>
-        /// <para>While the buffer is active, <see cref="LoadingManagerMode.Manual"/> is ignored for the <paramref name="adType"/>
-        /// and ads are reloaded automatically.</para>
-        /// <para>To stop buffering, call <see cref="LoadAd"/> to load only a single ad,
-        /// or call <see cref="DisposeAd"/> to stop loading altogether.</para>
-        /// </summary>
-        /// <param name="adType">The type of ad to buffer: <see cref="AdType.Interstitial"/>, <see cref="AdType.Rewarded"/> or <see cref="AdType.AppOpen"/>.</param>
-        /// <param name="size">The number of ads to keep loaded, from 1 to 4.</param>
-        void SetPreloadedBufferSize(AdType adType, int size);
-
-        /// <summary>
-        /// Returns the number of loaded ads that are ready to be shown.
-        /// </summary>
-        int GetPreloadedAdCount(AdType adType);
 
         /// <summary>
         /// Shows an ad of the specified <see cref="AdType"/>.
         /// <para>To show a banner ad, use the <see cref="IAdView.SetActive(bool)"/> method obtained from <see cref="GetAdView"/>.</para>
         /// </summary>
-        /// <param name="adType">The type of ad to show.</param>
+        /// <param name="adType">The type of ad to show: <see cref="AdType.Interstitial"/>, <see cref="AdType.Rewarded"/> or <see cref="AdType.AppOpen"/></param>
         void ShowAd(AdType adType);
 
         /// <summary>
         /// Shows an ad of the specified <see cref="AdType"/>.
         /// <para>To show a banner ad, use the <see cref="IAdView.SetActive(bool)"/> method obtained from <see cref="GetAdView"/>.</para>
         /// </summary>
-        /// <param name="adType">The type of ad to show.</param>
+        /// <param name="adType">The type of ad to show: <see cref="AdType.Interstitial"/>, <see cref="AdType.Rewarded"/> or <see cref="AdType.AppOpen"/></param>
         /// <param name="placement">An optional placement name for the ad instance that helps categorize and track statistics across different ad placements.</param>
         void ShowAd(AdType adType, string placement);
 
@@ -213,7 +214,7 @@ namespace CAS
         /// You need to explicitly call <see cref="LoadAd"/> to prepare the ad for future displays.</para>
         /// <para>For disposing of a banner ad, use the <see cref="IDisposable.Dispose"/> method obtained from <see cref="GetAdView"/>.</para>
         /// </summary>
-        /// <param name="adType">The type of ad to dispose.</param>
+        /// <param name="adType">The type of ad to dispose: <see cref="AdType.Interstitial"/>, <see cref="AdType.Rewarded"/> or <see cref="AdType.AppOpen"/></param>
         void DisposeAd(AdType adType);
 
         /// <summary>
