@@ -1,7 +1,12 @@
 # CAS.AI Unity Plugin Change Log
 
-# [4.9.0-alpha3] - 2026-08-06
-- Updated the Android SDK to 4.9.0-alpha3 and iOS SDK to 4.9.0-alpha3.
+# [4.9.0-beta2] - 2026-10-26
+- Updated the [Android SDK to 4.9.0-beta2](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.9.0-beta2](https://github.com/cleveradssolutions/CAS-iOS/releases).
+
+
+# [4.8.4-beta1] - 2026-10-26
+- Updated the [Android SDK to 4.8.4-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.4-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added new adapter for BidMachine (closed beta).
 
 # [4.8.3-beta1] - 2026-09-30
 - Updated the [Android SDK to 4.8.3-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.3-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).

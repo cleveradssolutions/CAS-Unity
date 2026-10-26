@@ -30,6 +30,7 @@ namespace CAS
         Monetrix = 71,
         Mintegral = 28,
         Pangle = 30,
+        BidMachine = 43,
         YsoNetwork = 52,
         Prado = 57,
         Maticoo = 62,
@@ -77,6 +78,7 @@ namespace CAS
                 case AdNetwork.Maticoo: return "Mtc";
                 case AdNetwork.PubMatic: return "PM";
                 case AdNetwork.Verve: return "Vr";
+                case AdNetwork.BidMachine: return "BMc";
                 case AdNetwork.DisplayIO: return "DIO";
                 case AdNetwork.Bidease: return "Bse";
                 case AdNetwork.Moloco: return "Mol";
