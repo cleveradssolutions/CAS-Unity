@@ -38,6 +38,7 @@ namespace CAS
         DSPExchange = 30,
         LastPage = 31,
 
+        BidMachine = 43,
         DisplayIO = 73,
         Bidease = 74,
         Moloco = 76,
@@ -78,6 +79,7 @@ namespace CAS
                 case AdNetwork.Maticoo: return "Mtc";
                 case AdNetwork.PubMatic: return "PM";
                 case AdNetwork.Verve: return "Vr";
+                case AdNetwork.BidMachine: return "BMc";
                 case AdNetwork.DisplayIO: return "DIO";
                 case AdNetwork.Bidease: return "Bse";
                 case AdNetwork.Moloco: return "Mol";
