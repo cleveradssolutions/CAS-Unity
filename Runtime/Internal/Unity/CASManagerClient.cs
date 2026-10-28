@@ -56,6 +56,11 @@ namespace CAS.Unity
             return _behaviour.IsReadyAd(adType);
         }
 
+        public override AdMetaData GetAdContentInfo(AdType adType)
+        {
+            return null;
+        }
+
         protected override void LoadAdNetive(AdType adType)
         {
             _behaviour.LoadAd(adType);

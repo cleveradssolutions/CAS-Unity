@@ -59,6 +59,7 @@ namespace CAS.Android
             if (adLoadCallback == null) throw new ArgumentNullException(nameof(adLoadCallback));
 
             var client = new CASNativeOverlayClient(this, adLoadCallback);
+            RegisterNativeOverlay(client);
             client.Load(options);
         }
 
@@ -82,6 +83,33 @@ namespace CAS.Android
             return _managerBridge.Call<bool>("isAdReady", (int)adType);
         }
 
+        public override AdMetaData GetAdContentInfo(AdType adType)
+        {
+            switch (adType)
+            {
+                case AdType.Banner:
+                case AdType.Native: return GetAdContentInfoFromViews(adType);
+                case AdType.Interstitial:
+                case AdType.Rewarded:
+                case AdType.AppOpen:
+                    if (_managerBridge == null)
+                        return null;
+
+                    using (var nativeInfo = _managerBridge.Call<AndroidJavaObject>("getAdContentInfo", (int)adType))
+                    {
+                        if (nativeInfo == null)
+                            return null;
+
+                        var info = new CASImpressionClient(adType, nativeInfo);
+
+                        return new CASAdMetaDataSnapshot(info);
+                    }
+
+                default:
+                    return null;
+            }
+        }
+
         protected override void LoadAdNetive(AdType adType)
         {
             _managerBridge.Call("loadAd", (int)adType);
@@ -95,7 +123,7 @@ namespace CAS.Android
         public override int GetPreloadedAdCount(AdType adType)
         {
 
-            return _managerBridge.Call<int>("getPreloadedAdCount",(int)adType);
+            return _managerBridge.Call<int>("getLoadedAdCount",(int)adType);
         }
 
         public override void ShowAd(AdType adType, string placement)

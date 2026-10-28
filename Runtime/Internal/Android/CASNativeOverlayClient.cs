@@ -19,6 +19,26 @@ namespace CAS.Android
 
         public override bool isExpired { get { return _bridge == null || _bridge.Call<bool>("isExpired"); } }
 
+        
+        public override AdMetaData adContentInfo
+        {
+            get
+            {
+                if (_bridge == null || isExpired)
+                    return null;
+
+                using (var nativeInfo = _bridge.Call<AndroidJavaObject>("getAdContentInfo"))
+                {
+                    if (nativeInfo == null)
+                        return null;
+
+                    var info = new CASImpressionClient(AdType.Native, nativeInfo);
+
+                    return new CASAdMetaDataSnapshot(info);
+                }
+            }
+        }
+
         internal void Load(NativeAdOptions options)
         {
             if (options == null) options = new NativeAdOptions();
@@ -47,6 +67,8 @@ namespace CAS.Android
 
         public override void Dispose()
         {
+             _manager.UnregisterNativeOverlay(this);
+            
             _loadCallback = null;
             if (_bridge == null) return;
 

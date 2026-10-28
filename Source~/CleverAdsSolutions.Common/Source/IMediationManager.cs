@@ -161,6 +161,13 @@ namespace CAS
         void LoadAd(AdType adType);
 
         /// <summary>
+        /// Returns metadata for the highest revenue
+        /// currently loaded ad of the specified format
+        /// Returns null if no ad is loaded
+        /// </summary>
+        AdMetaData GetAdContentInfo(AdType adType);
+
+        /// <summary>
         /// Checks whether the specified <see cref="AdType"/> ad is ready to be shown.
         /// <para>To get detailed information about why an ad may not be shown, 
         /// subscribe to the OnAdFailedToShow event instead of relying solely on this method. 

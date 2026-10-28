@@ -33,6 +33,11 @@ namespace CAS
     {
         private AdFlags enabledFormats;
         private readonly List<CASViewBase> adViews = new List<CASViewBase>();
+        private readonly List<CASNativeOverlayBase> nativeOverlays = new List<CASNativeOverlayBase>();
+
+        internal void RegisterNativeOverlay(CASNativeOverlayBase overlay) { nativeOverlays.Add(overlay); }
+        internal void UnregisterNativeOverlay(CASNativeOverlayBase overlay) { nativeOverlays.Remove(overlay); }
+
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get; private set; }
@@ -79,6 +84,7 @@ namespace CAS
         public abstract void EnableAd(AdType adType);
         protected abstract void LoadAdNetive(AdType adType);
         public abstract bool IsReadyAd(AdType adType);
+        public abstract AdMetaData GetAdContentInfo(AdType adType);
         public abstract void ShowAd(AdType adType, string placement);
         public abstract void DisposeAd(AdType adType);
         public abstract void SetAppReturnAdsEnabled(bool enable);
@@ -169,6 +175,44 @@ namespace CAS
                 }
             }
         }
+
+
+
+        protected AdMetaData GetAdContentInfoFromViews(AdType adType)
+        {
+            AdMetaData best = null;
+
+            if (adType == AdType.Banner)
+            {
+                for (int i = 0; i < adViews.Count; i++)
+                {
+                    var candidate = adViews[i].adContentInfo;
+
+                    if (candidate == null)
+                        continue;
+
+                    if (best == null || candidate.revenue > best.revenue)
+                        best = candidate;
+                }
+            }
+            else if (adType == AdType.Native)
+            {
+                for (int i = 0; i < nativeOverlays.Count; i++)
+                {
+                    var candidate = nativeOverlays[i].adContentInfo;
+
+                    if (candidate == null)
+                        continue;
+
+                    if (best == null || candidate.revenue > best.revenue)
+                        best = candidate;
+                }
+            }
+
+            return best;
+        }
+
+
 
         public void LoadAd(AdType adType)
         {
@@ -464,6 +508,7 @@ namespace CAS
         public abstract int refreshInterval { get; set; }
         public abstract string placement { get; set; }
         public abstract bool isReady { get; }
+        public abstract AdMetaData adContentInfo { get; }
 
         internal abstract void DestroyNative();
         protected abstract void SetPositionNative(int position, int x, int y);
@@ -569,6 +614,8 @@ namespace CAS
         public IMediationManager manager { get { return _manager; } }
         public Rect rectInPixels { get; set; }
 
+        public abstract AdMetaData adContentInfo { get; }
+
         internal CASNativeOverlayBase(CASManagerBase manager, CASNativeOverlayAdLoadCallback callback)
         {
             _manager = manager;
@@ -637,7 +684,7 @@ namespace CAS
                 case AdActionCode.IMPRESSION:
                     CASFactory.RuntimeLog(type, "Callback Impression");
                     if (OnImpression != null)
-                        OnImpression(_manager.WrapImpression(AdType.Banner, impression));
+                        OnImpression(_manager.WrapImpression(AdType.Native, impression));
                     break;
                 case AdActionCode.CLICKED:
                     CASFactory.RuntimeLog(type, "Callback Clicked");

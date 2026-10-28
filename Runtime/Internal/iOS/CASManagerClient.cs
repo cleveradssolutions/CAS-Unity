@@ -112,6 +112,11 @@ namespace CAS.iOS
         {
             return CASExterns.CASUIsAdReady(_managerRef, (int)adType);
         }
+        
+        public override AdMetaData GetAdContentInfo(AdType adType)
+        {
+            return null;
+        }
 
         protected override void LoadAdNetive(AdType adType)
         {

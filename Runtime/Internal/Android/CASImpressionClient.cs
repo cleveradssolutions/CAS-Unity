@@ -22,12 +22,12 @@ namespace CAS.Android
 
         public override double revenue
         {
-            get { return cpm / 1000.0; }
+            get { return impression.Call<double>("getRevenue"); }
         }
 
         public override double cpm
         {
-            get { return impression.Call<long>( "getCpm" ) / 1000.0; }
+           get { return revenue * 1000.0; }
         }
 
         public override PriceAccuracy priceAccuracy

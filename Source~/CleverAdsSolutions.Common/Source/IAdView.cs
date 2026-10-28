@@ -53,6 +53,12 @@ namespace CAS
         bool isReady { get; }
 
         /// <summary>
+        /// Returns metadata of the loaded ad
+        /// Returns null if no ad is loaded
+        /// </summary>
+        AdMetaData adContentInfo { get; }
+
+        /// <summary>
         /// Set the number of seconds an ad is displayed before a new ad is shown.
         /// After the interval has passed, a new advertisement will be automatically loaded.
         /// <para>This value will override global <see cref="IAdsSettings.bannerRefreshInterval"/></para>

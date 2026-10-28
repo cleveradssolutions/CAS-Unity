@@ -18,6 +18,11 @@ namespace CAS.iOS
             get { return CASExterns.CASUIsAdViewReady(_viewRef); }
         }
 
+        public override AdMetaData adContentInfo
+        {
+            get { return null; }
+        }
+
         public override int refreshInterval
         {
             get { return CASExterns.CASUGetAdViewRefreshInterval(_viewRef); }
