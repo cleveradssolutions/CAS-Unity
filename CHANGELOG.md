@@ -1,19 +1,14 @@
 # CAS.AI Unity Plugin Change Log
 
-# [4.8.3-beta1] - 2026-09-30
-- Updated the [Android SDK to 4.8.3-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.3-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
-- [Android] Fixed an issue where the Google App ID was not added to the Android Manifest when using the GoogleAdsNext adapter.
+# [4.8.3] - 2026-10-28
+- Updated the [Android SDK to 4.8.3](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.3](https://github.com/cleveradssolutions/CAS-iOS/releases).
+- Added an option to include the Tenjin SDK without a Unity plugin. The CAS SDK can initialize Tenjin automatically.
+- Added a new `CAS.MobileAds.ReportPurchase(PurchaseInfo)` function for collecting in-app purchase information with automatic reporting to Tenjin.
+- Added new adapter for BlueSea
+- Added Moloco adapter to Optimal Ads Solutions
+- Added Bidease and BlueSea adapters to VPN Compliant Ads Solutions
+- Removed Maticoo adapter from Optimal Ads Solutions
 - [iOS] Raised the minimum supported iOS version to 15.0, as required by Xcode 27. The minimum supported Xcode version remains 26.2.
-
-# [4.8.2-beta1] - 2026-09-07
-- Updated the [Android SDK to 4.8.2-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.2-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
-- Added new adapter for BlueSea (closed beta).
-
-# [4.8.1-beta2] - 2026-09-02
-- [Android] Fixed `java.lang.NoSuchMethodError` from new `CAS.MobileAds.ReportPurchase(PurchaseInfo)` function.
-- [Android] Fixed Yso Network build error with Unity 2022.
-- [iOS] Fixed Monetrix dependency.
-- Added features from 4.8.0 release.
 
 # [4.8.0] - 2026-08-26
 - Updated the [Android SDK to 4.8.0](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.0](https://github.com/cleveradssolutions/CAS-iOS/releases).
@@ -23,13 +18,6 @@
 - [iOS] This release requires **a minimum Xcode version of 26.2**.
 - [Android] This release requires **a minimum Android API level of 24**.
 - [iOS] Fixed conflicting types for UnityIsPaused with Unity 6.5.
-
-# [4.8.1-beta1] - 2026-08-04
-- Updated the [Android SDK to 4.8.1-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.1-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
-- Added a new `CAS.MobileAds.ReportPurchase(PurchaseInfo)` function for collecting in-app purchase information with automatic reporting to Tenjin.
-- Added an option to include the Tenjin SDK without a Unity plugin. The CAS SDK can initialize Tenjin automatically.
-- [iOS] The following adapters now **require a minimum of iOS 15**: Audience Network, DTExchange.
-- Removed Madex adapter from mediation.
 
 # [4.7.4] - 2026-06-16
 - Updated the [Android SDK to 4.7.4](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.7.4](https://github.com/cleveradssolutions/CAS-iOS/releases).
