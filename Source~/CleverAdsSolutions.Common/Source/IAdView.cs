@@ -52,6 +52,9 @@ namespace CAS
         /// </summary>
         bool isReady { get; }
 
+        /// <summary>Returns metadata of the loaded ad or null.</summary>
+        AdMetaData adContentInfo { get; }
+
         /// <summary>
         /// Set the number of seconds an ad is displayed before a new ad is shown.
         /// After the interval has passed, a new advertisement will be automatically loaded.

@@ -26,6 +26,8 @@ namespace CAS.Unity
 
         public override bool isExpired { get { return _disposed; } }
 
+        public override AdMetaData adContentInfo { get { return null; } }
+
         internal void Load(NativeAdOptions options)
         {
             CallAdAction(AdActionCode.LOADED);

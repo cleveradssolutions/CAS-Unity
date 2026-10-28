@@ -64,6 +64,11 @@ namespace CAS.Unity
             view.SetBufferSize(size);
         }
 
+        public override AdMetaData GetAdContentInfo(AdType adType)
+        {
+            return null;
+        }
+
         protected override void LoadAdNetive(AdType adType)
         {
             _behaviour.LoadAd(adType);

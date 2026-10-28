@@ -161,6 +161,12 @@ namespace CAS
         void LoadAd(AdType adType);
 
         /// <summary>
+        /// Returns metadata of the highest-revenue currently loaded ad for this format.
+        /// Returns null if no ad is loaded.
+        /// </summary>
+        AdMetaData GetAdContentInfo(AdType adType);
+
+        /// <summary>
         /// Sets the number of <see cref="AdType"/> ads that the SDK keeps loaded at all times.
         /// <para>Loading starts immediately. After an ad is shown, a new ad is loaded automatically to keep the buffer full.</para>
         /// <para>The loaded event (for example, OnInterstitialAdLoaded) is invoked once for each ad loaded into the buffer.</para>

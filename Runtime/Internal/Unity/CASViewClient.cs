@@ -25,6 +25,8 @@ namespace CAS.Unity
 
         public override bool isReady { get { return loaded; } }
 
+        public override AdMetaData adContentInfo { get { return null; } }
+
         internal CASViewClient(CASManagerClient client, CASManagerBehaviour behaviour, AdSize size) : base(client, size)
         {
             this._behaviour = behaviour;

@@ -17,6 +17,19 @@ namespace CAS.Android
             get { return _bridge.Call<bool>("isReady"); }
         }
 
+        public override AdMetaData adContentInfo
+        {
+            get
+            {
+                using (var nativeInfo = _bridge.Call<AndroidJavaObject>("getAdContentInfo"))
+                {
+                    if (nativeInfo == null)
+                        return null;
+                    return new CASAdMetaDataSnapshot(new CASImpressionClient(AdType.Banner, nativeInfo));
+                }
+            }
+        }
+
         public override int refreshInterval
         {
             get { return _bridge.Call<int>("getRefreshInterval"); }

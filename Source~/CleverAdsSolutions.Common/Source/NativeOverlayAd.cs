@@ -34,6 +34,9 @@ namespace CAS
         /// </summary>
         bool isExpired { get; }
 
+        /// <summary>Returns metadata of the loaded ad or null when unavailable or expired.</summary>
+        AdMetaData adContentInfo { get; }
+
         /// <summary>
         /// Get the real AdOverlay rect with position and size in pixels on screen.
         /// <para>The position on the screen is calculated with the addition of indents for the cutouts.</para>

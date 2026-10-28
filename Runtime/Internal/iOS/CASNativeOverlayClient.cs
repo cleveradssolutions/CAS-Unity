@@ -62,6 +62,8 @@ namespace CAS.iOS
         }
 
 
+        public override AdMetaData adContentInfo { get { return null; } }
+
         public override void SetActive(bool active)
         {
             if (active)
