@@ -29,7 +29,7 @@ namespace CAS.Android
                 {
                     if (nativeInfo == null)
                         return null;
-                    return new CASAdMetaDataSnapshot(new CASImpressionClient(AdType.Native, nativeInfo));
+                    return new CASAdMetaDataSnapshot(new CASImpressionClient(nativeInfo));
                 }
             }
         }

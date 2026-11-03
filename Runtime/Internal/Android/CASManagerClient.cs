@@ -78,28 +78,32 @@ namespace CAS.Android
             _managerBridge.Call("setSSVData", data);
         }
 
-        public override AdMetaData GetAdContentInfo(AdType adType)
+
+        public override AdMetaData GetAdContentInfo(AdFormat format)
         {
-            switch (adType)
+            switch (format)
             {
-                case AdType.Banner:
-                case AdType.Native:
-                    return GetAdContentInfoFromViews(adType);
-                case AdType.Interstitial:
-                case AdType.Rewarded:
-                case AdType.AppOpen:
+                case AdFormat.Banner:
+                case AdFormat.MediumRectangle:
+                case AdFormat.Native: return GetAdContentInfoFromViews(format);
+                case AdFormat.Interstitial:
+                case AdFormat.Rewarded:
+                case AdFormat.AppOpen:
                     if (_managerBridge == null)
                         return null;
-                    using (var nativeInfo = _managerBridge.Call<AndroidJavaObject>("getAdContentInfo", (int)adType))
+
+                    using (var nativeInfo = _managerBridge.Call<AndroidJavaObject>("getAdContentInfo", (int)format))
                     {
                         if (nativeInfo == null)
                             return null;
-                        return new CASAdMetaDataSnapshot(new CASImpressionClient(adType, nativeInfo));
+
+                        return new CASAdMetaDataSnapshot(new CASImpressionClient(nativeInfo));
                     }
-                default:
-                    return null;
+
+                default:  return null;
             }
         }
+
 
         protected override void LoadAdNetive(AdType adType)
         {
@@ -149,7 +153,7 @@ namespace CAS.Android
 
         public override AdMetaData WrapImpression(AdType adType, object impression)
         {
-            return new CASImpressionClient(adType, (AndroidJavaObject)impression);
+            return new CASImpressionClient((AndroidJavaObject)impression);
         }
     }
 }

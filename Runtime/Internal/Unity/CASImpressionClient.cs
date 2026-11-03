@@ -8,7 +8,7 @@ namespace CAS.Unity
     {
         private static int depth = 0;
 
-        public CASImpressionClient(AdType type) : base(type)
+        public CASImpressionClient(AdType type) : base(AdFormatUtils.FromAdType(type))
         {
             depth++;
         }
@@ -51,6 +51,11 @@ namespace CAS.Unity
         public override double lifetimeRevenue
         {
             get { return depth * 0.001; }
+        }
+
+        public override string SourceName
+        {
+            get { return null; }
         }
     }
 }

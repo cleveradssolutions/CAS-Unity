@@ -8,14 +8,19 @@ namespace CAS
     public abstract class AdMetaData
     {
         /// <summary>
-        /// The Format Type of the impression.
+        /// Format of the advertisement.
         /// </summary>
-        public readonly AdType type;
+        public readonly AdFormat format;
 
         /// <summary>
         /// The mediated network’s name that purchased the impression.
         /// </summary>
         public abstract AdNetwork network { get; }
+
+        /// <summary>
+        /// Display name of the mediated ad source.
+        /// </summary>
+        public abstract string SourceName { get; }
 
         /// <summary>
         /// The revenue generated for the impression (USD). 
@@ -58,15 +63,15 @@ namespace CAS
         [System.Obsolete("Renamed to sourceUnitId")]
         public string identifier { get { return sourceUnitId; } }
 
-        public AdMetaData(AdType type)
+        protected AdMetaData(AdFormat format)
         {
-            this.type = type;
+            this.format = format;
         }
 
         public override string ToString()
         {
             var result = new StringBuilder("Impression of the ")
-                .Append(type)
+                .Append(format)
                 .Append(" ads with ");
 
             var precision = priceAccuracy;

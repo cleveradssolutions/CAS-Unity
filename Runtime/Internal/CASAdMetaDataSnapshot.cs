@@ -15,9 +15,10 @@ namespace CAS
 		private readonly string _sourceUnitId;
 		private readonly int _impressionDepth;
 		private readonly double _lifetimeRevenue;
+        private readonly string _sourceName;
 
-		internal CASAdMetaDataSnapshot(AdMetaData source)
-			: base(source.type)
+        internal CASAdMetaDataSnapshot(AdMetaData source)
+			: base(source.format)
 		{
 			_network = source.network;
 			_revenue = source.revenue;
@@ -27,7 +28,8 @@ namespace CAS
 			_sourceUnitId = source.sourceUnitId;
 			_impressionDepth = source.impressionDepth;
 			_lifetimeRevenue = source.lifetimeRevenue;
-		}
+            _sourceName = source.SourceName;
+        }
 
 		public override AdNetwork network
 		{
@@ -68,5 +70,10 @@ namespace CAS
 		{
 			get { return _lifetimeRevenue; }
 		}
-	}
+
+        public override string SourceName
+        {
+            get { return _sourceName; }
+        }
+    }
 }

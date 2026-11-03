@@ -10,7 +10,7 @@ namespace CAS.Android
     {
         private readonly AndroidJavaObject impression;
 
-        public CASImpressionClient( AdType type, AndroidJavaObject impression ) : base( type )
+        public CASImpressionClient(AndroidJavaObject impression) : base(GetAdFormat(impression))
         {
             this.impression = impression;
         }
@@ -18,6 +18,11 @@ namespace CAS.Android
         public override AdNetwork network
         {
             get { return (AdNetwork)impression.Call<int>( "getNetwork" ); }
+        }
+
+        public override string SourceName
+        {
+            get { return impression.Call<string>("getSourceName"); }
         }
 
         public override double revenue
@@ -54,6 +59,17 @@ namespace CAS.Android
         {
             get { return impression.Call<long>( "getLifetimeRevenue" ) / 1000000.0; }
         }
+
+        private static AdFormat GetAdFormat(AndroidJavaObject impression)
+        {
+            int format = impression.Call<int>("getFormatValue");
+
+            if (format == 6)
+                return AdFormat.Banner;
+
+            return (AdFormat)format;
+        }
+
     }
 }
 
