@@ -56,10 +56,10 @@ namespace CAS.Android
 
         public override void LoadNativeOverlayAd(NativeAdOptions options, CASNativeOverlayAdLoadCallback adLoadCallback)
         {
-            if (adLoadCallback == null) throw new ArgumentNullException(nameof(adLoadCallback));
+            if (adLoadCallback == null)
+                throw new ArgumentNullException(nameof(adLoadCallback));
 
             var client = new CASNativeOverlayClient(this, adLoadCallback);
-            RegisterNativeOverlay(client);
             client.Load(options);
         }
 
@@ -78,32 +78,26 @@ namespace CAS.Android
             _managerBridge.Call("setSSVData", data);
         }
 
-
-        public override AdMetaData GetAdContentInfo(AdFormat format)
+        public override AdMetaData GetAdContentInfo(AdType adType)
         {
-            switch (format)
+            switch (adType)
             {
-                case AdFormat.Banner:
-                case AdFormat.MediumRectangle:
-                case AdFormat.Native: return GetAdContentInfoFromViews(format);
-                case AdFormat.Interstitial:
-                case AdFormat.Rewarded:
-                case AdFormat.AppOpen:
-                    if (_managerBridge == null)
-                        return null;
-
-                    using (var nativeInfo = _managerBridge.Call<AndroidJavaObject>("getAdContentInfo", (int)format))
-                    {
-                        if (nativeInfo == null)
-                            return null;
-
-                        return new CASAdMetaDataSnapshot(new CASImpressionClient(nativeInfo));
-                    }
-
-                default:  return null;
+                case AdType.Interstitial:
+                case AdType.Rewarded:
+                case AdType.AppOpen: break;
+                default: return null;
             }
-        }
 
+            if (_managerBridge == null)
+                return null;
+
+            var nativeInfo = _managerBridge.Call<AndroidJavaObject>("getAdContentInfo", (int)adType);
+
+            if (nativeInfo == null)
+                return null;
+
+            return new CASImpressionClient(nativeInfo);
+        }
 
         protected override void LoadAdNetive(AdType adType)
         {

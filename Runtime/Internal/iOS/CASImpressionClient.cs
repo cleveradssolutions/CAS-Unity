@@ -10,7 +10,7 @@ namespace CAS.iOS
         // Native refs are not needed for free.
         private IntPtr impressionRef;
 
-        public CASImpressionClient(AdType type, IntPtr impressionRef) : base(AdFormatUtils.FromAdType(type))
+        public CASImpressionClient(AdType type, IntPtr impressionRef) : base((AdFormat)type)
         {
             this.impressionRef = impressionRef;
         }
@@ -57,7 +57,7 @@ namespace CAS.iOS
 
         public override string SourceName
         {
-            get { return null; }
+            get { return network.ToString(); }
         }
     }
 }

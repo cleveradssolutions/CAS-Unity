@@ -13,6 +13,12 @@ namespace CAS
         public readonly AdFormat format;
 
         /// <summary>
+        /// Legacy ad type. Use format instead.
+        /// </summary>
+        [System.Obsolete("Use format instead")]
+        public readonly AdType type;
+
+        /// <summary>
         /// The mediated network’s name that purchased the impression.
         /// </summary>
         public abstract AdNetwork network { get; }
@@ -63,10 +69,32 @@ namespace CAS
         [System.Obsolete("Renamed to sourceUnitId")]
         public string identifier { get { return sourceUnitId; } }
 
+
         protected AdMetaData(AdFormat format)
         {
             this.format = format;
+
+            #pragma warning disable 0618
+            this.type = format == AdFormat.MediumRectangle
+                ? AdType.Banner
+                : (AdType)format;
+            #pragma warning restore 0618
         }
+
+
+        [System.Obsolete("Use AdMetaData(AdFormat) instead")]
+        public AdMetaData(AdType type)
+        {
+            #pragma warning disable 0618
+            this.type = type;
+            #pragma warning restore 0618
+
+            this.format = type == AdType.None
+                ? (AdFormat)(-1)
+                : (AdFormat)type;
+        }
+
+
 
         public override string ToString()
         {

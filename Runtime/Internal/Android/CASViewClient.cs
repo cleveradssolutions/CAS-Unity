@@ -21,12 +21,12 @@ namespace CAS.Android
         {
             get
             {
-                using (var nativeInfo = _bridge.Call<AndroidJavaObject>("getAdContentInfo"))
-                {
-                    if (nativeInfo == null)
-                        return null;
-                    return new CASAdMetaDataSnapshot(new CASImpressionClient(nativeInfo));
-                }
+                var nativeInfo = _bridge.Call<AndroidJavaObject>("getAdContentInfo");
+
+                if (nativeInfo == null)
+                    return null;
+
+                return new CASImpressionClient(nativeInfo);
             }
         }
 

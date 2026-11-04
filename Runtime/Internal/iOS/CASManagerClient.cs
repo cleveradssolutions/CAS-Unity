@@ -108,7 +108,7 @@ namespace CAS.iOS
             CASExterns.CASUSetSSVData(_managerRef, data);
         }
 
-        public override AdMetaData GetAdContentInfo(AdFormat format)
+        public override AdMetaData GetAdContentInfo(AdType adType)
         {
             return null;
         }

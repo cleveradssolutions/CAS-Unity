@@ -64,7 +64,7 @@ namespace CAS.Unity
             view.SetBufferSize(size);
         }
 
-        public override AdMetaData GetAdContentInfo(AdFormat format)
+        public override AdMetaData GetAdContentInfo(AdType adType)
         {
             return null;
         }

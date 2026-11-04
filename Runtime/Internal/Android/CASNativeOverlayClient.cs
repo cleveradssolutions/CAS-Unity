@@ -25,12 +25,13 @@ namespace CAS.Android
             {
                 if (_bridge == null || isExpired)
                     return null;
-                using (var nativeInfo = _bridge.Call<AndroidJavaObject>("getAdContentInfo"))
-                {
-                    if (nativeInfo == null)
-                        return null;
-                    return new CASAdMetaDataSnapshot(new CASImpressionClient(nativeInfo));
-                }
+
+                var nativeInfo = _bridge.Call<AndroidJavaObject>("getAdContentInfo");
+
+                if (nativeInfo == null)
+                    return null;
+
+                return new CASImpressionClient(nativeInfo);
             }
         }
 
@@ -62,7 +63,6 @@ namespace CAS.Android
 
         public override void Dispose()
         {
-            _manager.UnregisterNativeOverlay(this);
             _loadCallback = null;
             if (_bridge == null) return;
 

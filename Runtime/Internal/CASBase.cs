@@ -33,17 +33,6 @@ namespace CAS
     {
         private AdFlags enabledFormats;
         private readonly List<CASViewBase> adViews = new List<CASViewBase>();
-        private readonly List<CASNativeOverlayBase> nativeOverlays = new List<CASNativeOverlayBase>();
-
-        internal void RegisterNativeOverlay(CASNativeOverlayBase overlay)
-        {
-            nativeOverlays.Add(overlay);
-        }
-
-        internal void UnregisterNativeOverlay(CASNativeOverlayBase overlay)
-        {
-            nativeOverlays.Remove(overlay);
-        }
 
         public string managerID { get; private set; }
         public bool isTestAdMode { get; private set; }
@@ -171,30 +160,6 @@ namespace CAS
                     DisposeAd(adType);
                 }
             }
-        }
-
-        protected AdMetaData GetAdContentInfoFromViews(AdType adType)
-        {
-            AdMetaData best = null;
-            if (adType == AdType.Banner)
-            {
-                for (int i = 0; i < adViews.Count; i++)
-                {
-                    var candidate = adViews[i].adContentInfo;
-                    if (candidate != null && (best == null || candidate.revenue > best.revenue))
-                        best = candidate;
-                }
-            }
-            else if (adType == AdType.Native)
-            {
-                for (int i = 0; i < nativeOverlays.Count; i++)
-                {
-                    var candidate = nativeOverlays[i].adContentInfo;
-                    if (candidate != null && (best == null || candidate.revenue > best.revenue))
-                        best = candidate;
-                }
-            }
-            return best;
         }
 
         public void LoadAd(AdType adType)
