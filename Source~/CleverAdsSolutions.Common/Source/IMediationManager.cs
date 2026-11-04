@@ -161,12 +161,13 @@ namespace CAS
         void LoadAd(AdType adType);
 
         /// <summary>
-        /// Returns metadata of the highest-revenue
-        /// currently loaded ad for the specified format
-        /// Returns null if no ad is loaded
+        /// Returns metadata of the highest-revenue loaded Screen Ad.
+        /// Returns null if no ad is loaded.
         /// </summary>
-        /// <param name="format">Ad format</param>
-        AdMetaData GetAdContentInfo(AdFormat format);
+        /// <param name="adType">
+        /// Interstitial, Rewarded or AppOpen.
+        /// </param>
+        AdMetaData GetAdContentInfo(AdType adType);
 
         /// <summary>
         /// Sets the number of <see cref="AdType"/> ads that the SDK keeps loaded at all times.
