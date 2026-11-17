@@ -1,12 +1,7 @@
 # CAS.AI Unity Plugin Change Log
 
-# [4.9.0-beta3] - 2026-11-10
-- Updated the [Android SDK to 4.9.0-beta3](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.9.0-beta3](https://github.com/cleveradssolutions/CAS-iOS/releases).
-
-
-# [4.9.0-beta2] - 2026-10-26
-- Updated the [Android SDK to 4.9.0-beta2](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.9.0-beta2](https://github.com/cleveradssolutions/CAS-iOS/releases).
-
+# [4.9.0-beta4] - 2026-11-17
+- Updated the [Android SDK to 4.9.0-beta4](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.9.0-beta4](https://github.com/cleveradssolutions/CAS-iOS/releases).
 
 # [4.8.4-beta1] - 2026-10-26
 - Updated the [Android SDK to 4.8.4-beta1](https://github.com/cleveradssolutions/CAS-Android/releases) and [iOS SDK to 4.8.4-beta1](https://github.com/cleveradssolutions/CAS-iOS/releases).
