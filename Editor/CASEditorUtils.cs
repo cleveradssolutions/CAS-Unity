@@ -271,6 +271,30 @@ namespace CAS.UEditor
             return editorFolderPath + "/" + GetDependencyName(name, platform) + ".xml";
         }
 
+        public static string GetConsolidatedDependencyName(BuildTarget platform)
+        {
+            return "CAS" + platform.ToString() + "Dependencies";
+        }
+
+        public static string GetConsolidatedDependencyPath(BuildTarget platform)
+        {
+            var depFileName = GetConsolidatedDependencyName(platform);
+            var foundDepFiles = AssetDatabase.FindAssets(depFileName);
+            for (int i = 0; i < foundDepFiles.Length; i++)
+            {
+                var pathToFile = AssetDatabase.GUIDToAssetPath(foundDepFiles[i]);
+                if (pathToFile.EndsWith(depFileName + ".xml") && pathToFile.StartsWith("Assets/"))
+                    return pathToFile;
+            }
+            return null;
+        }
+
+        public static string GetConsolidatedDependencyPathOrDefault(BuildTarget platform)
+        {
+            return GetConsolidatedDependencyPath(platform)
+                ?? editorFolderPath + "/" + GetConsolidatedDependencyName(platform) + ".xml";
+        }
+
         public static KeyValuePair[] DefaultUserTrackingUsageDescription()
         {
             return new KeyValuePair[]{

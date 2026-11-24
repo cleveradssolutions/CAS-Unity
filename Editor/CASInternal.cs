@@ -65,6 +65,8 @@ namespace CAS.UEditor
             if (managerToInit == null)
                 return;
 
+            EnsureConsolidatedDependencies(platform);
+
             for (int i = 0; i < deprecated.Length; i++)
             {
                 var destination = Utils.GetDependencyPath(deprecated[i], platform);
@@ -106,6 +108,83 @@ namespace CAS.UEditor
                     Debug.LogException(e);
                 }
             }
+        }
+
+        internal void WriteConsolidated(BuildTarget platform)
+        {
+            string depTag = platform == BuildTarget.Android ? "androidPackage" : "iosPod";
+            string sourcesTag = platform == BuildTarget.Android ? "repositories" : "sources";
+
+            var sources = new StringBuilder();
+            var packages = new StringBuilder();
+
+            AppendBaseDependency(platform, sources, packages);
+
+            for (int i = 0; i < simple.Length; i++)
+                if (!string.IsNullOrEmpty(simple[i].installedVersion))
+                    simple[i].AppendTo(platform, this, sources, packages);
+            for (int i = 0; i < adapters.Length; i++)
+                if (!string.IsNullOrEmpty(adapters[i].installedVersion))
+                    adapters[i].AppendTo(platform, this, sources, packages);
+
+            var builder = new StringBuilder();
+            builder.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
+                   .AppendLine("<dependencies>")
+                   .Append("  <").Append(depTag).Append("s>").AppendLine();
+            if (sources.Length > 0)
+            {
+                builder.Append("    <").Append(sourcesTag).Append('>').AppendLine()
+                       .Append(sources)
+                       .Append("    </").Append(sourcesTag).Append('>').AppendLine();
+            }
+            builder.Append(packages);
+            builder.Append("  </").Append(depTag).Append("s>").AppendLine()
+                   .AppendLine("</dependencies>");
+
+            Utils.WriteToAsset(Utils.GetConsolidatedDependencyPathOrDefault(platform), builder.ToString());
+        }
+
+        private void AppendBaseDependency(BuildTarget platform, StringBuilder sources, StringBuilder packages)
+        {
+            packages.Append("    ").Append(Dependency.consolidatedMarkerPrefix)
+                    .Append(Dependency.adBaseName).Append(" version=\"").Append(version).Append("\" -->").AppendLine();
+            if (platform == BuildTarget.Android)
+            {
+                packages.Append("    <androidPackage spec=\"com.cleveradssolutions:cas-sdk:")
+                        .Append(version).Append("\" version=\"").Append(version).Append("\" />").AppendLine();
+                packages.Append("    <androidPackage spec=\"androidx.lifecycle:lifecycle-process:2.6.2\" version=\"2.6.2\" />").AppendLine();
+            }
+            else
+            {
+                sources.Append("      <source>https://github.com/cleveradssolutions/CAS-Specs.git</source>").AppendLine();
+                packages.Append("    <iosPod name=\"CleverAdsSolutions-Base\" version=\"")
+                        .Append(version).Append("\" minTargetSdk=\"15.0\" />").AppendLine();
+            }
+        }
+
+        private void EnsureConsolidatedDependencies(BuildTarget platform)
+        {
+            if (Utils.GetConsolidatedDependencyPath(platform) != null)
+                return;
+
+            WriteConsolidated(platform);
+            RemoveLegacyDependencyFiles(platform);
+        }
+
+        private void RemoveLegacyDependencyFiles(BuildTarget platform)
+        {
+            DeleteLegacyDependencyFile(Dependency.adBaseName, platform);
+            for (int i = 0; i < simple.Length; i++)
+                DeleteLegacyDependencyFile(simple[i].name, platform);
+            for (int i = 0; i < adapters.Length; i++)
+                DeleteLegacyDependencyFile(adapters[i].name, platform);
+        }
+
+        private static void DeleteLegacyDependencyFile(string name, BuildTarget platform)
+        {
+            var path = Utils.GetDependencyPath(name, platform);
+            if (path != null && path.StartsWith("Assets/") && File.Exists(path))
+                AssetDatabase.DeleteAsset(path);
         }
 
         private void OnHeaderGUI()
@@ -279,8 +358,12 @@ namespace CAS.UEditor
 
         internal static string FindInstalledVersion(string name, BuildTarget platform)
         {
+            var consolidated = Utils.GetConsolidatedDependencyPath(platform);
+            if (consolidated != null && File.Exists(consolidated))
+                return FindVersionInConsolidated(File.ReadAllText(consolidated), name);
+
             var path = Utils.GetDependencyPath(name, platform);
-            if (File.Exists(path))
+            if (path != null && File.Exists(path))
             {
                 var dependency = File.ReadAllText(path);
                 const string line = "version=\"";
@@ -292,6 +375,21 @@ namespace CAS.UEditor
                 }
             }
             return null;
+        }
+
+        internal const string consolidatedMarkerPrefix = "<!-- CAS ";
+
+        internal static string FindVersionInConsolidated(string content, string name)
+        {
+            var marker = consolidatedMarkerPrefix + name + " version=\"";
+            var beginIndex = content.IndexOf(marker);
+            if (beginIndex < 0)
+                return null;
+            beginIndex += marker.Length;
+            var endIndex = content.IndexOf('\"', beginIndex);
+            if (endIndex < 0)
+                return null;
+            return content.Substring(beginIndex, endIndex - beginIndex);
         }
 
         internal void Init(BuildTarget platform, DependencyManager mediation)
@@ -497,78 +595,45 @@ namespace CAS.UEditor
 
         public void DisableDependencies(BuildTarget platform, DependencyManager mediation = null)
         {
-            var destination = Utils.GetDependencyPath(name, platform);
-            if (File.Exists(destination))
-            {
-                AssetDatabase.DeleteAsset(destination);
-                installedVersion = "";
-                if (mediation != null)
-                {
-                    DependencyManager.isDirt = true;
-                    mediation.Init(platform);
-                }
-            }
+            if (string.IsNullOrEmpty(installedVersion))
+                return;
+            installedVersion = "";
+            if (mediation == null)
+                return;
+            mediation.WriteConsolidated(platform);
+            DependencyManager.isDirt = true;
+            mediation.Init(platform);
         }
 
         public void ActivateDependencies(BuildTarget platform, DependencyManager mediation = null)
         {
             if (locked)
-            {
                 return;
-            }
 
-            string depTagName = platform == BuildTarget.Android ? "androidPackage" : "iosPod";
-            var destination = Utils.GetDependencyPathOrDefault(name, platform);
-            EditorUtility.DisplayProgressBar("Create dependency", destination, 0.2f);
-
-            try
-            {
-                var builder = new StringBuilder();
-                builder.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
-                       .AppendLine("<dependencies>")
-                       .Append("  <").Append(depTagName).Append("s>").AppendLine();
-
-                if (libs.Length == 0)
-                {
-                    builder.Append("    <!-- ").Append(name).Append(" version=\"").Append(version).Append("\" -->").AppendLine();
-                }
-                
-                var sourcesBuilder = new StringBuilder();
-                AppendSources(platform, sourcesBuilder, mediation);
-
-                if (sourcesBuilder.Length > 0)
-                {
-                    var sourcesTagName = platform == BuildTarget.Android ? "repositories" : "sources";
-                    builder.Append("    <").Append(sourcesTagName).Append('>').AppendLine();
-                    builder.Append(sourcesBuilder);
-                    builder.Append("    </").Append(sourcesTagName).Append('>').AppendLine();
-                }
-
-                AppendSDK(platform, mediation, builder);
-
-                builder.Append("  </").Append(depTagName).Append("s>").AppendLine()
-                       .AppendLine("</dependencies>");
-
-                Utils.WriteToAsset(destination, builder.ToString());
-
-                Init(platform, mediation);
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-            }
+            installedVersion = version;
 
             if (mediation == null)
                 return;
 
-            DependencyManager.isDirt = true;
             var requireItem = mediation.Find(require);
             if (requireItem != null)
             {
                 requireItem.isRequired = true;
-                if (!requireItem.IsInstalled())
-                    requireItem.ActivateDependencies(platform, mediation);
+                if (string.IsNullOrEmpty(requireItem.installedVersion))
+                    requireItem.installedVersion = requireItem.version;
             }
+
+            mediation.WriteConsolidated(platform);
+            DependencyManager.isDirt = true;
+            mediation.Init(platform);
+        }
+
+        internal void AppendTo(BuildTarget platform, DependencyManager mediation, StringBuilder sources, StringBuilder packages)
+        {
+            packages.Append("    ").Append(consolidatedMarkerPrefix)
+                    .Append(name).Append(" version=\"").Append(version).Append("\" -->").AppendLine();
+            AppendSources(platform, sources, mediation);
+            AppendSDK(platform, mediation, packages);
         }
 
         private void AppendSDK(BuildTarget platform, DependencyManager mediation, StringBuilder builder)
