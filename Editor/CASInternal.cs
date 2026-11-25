@@ -18,6 +18,11 @@ namespace CAS.UEditor
         [SerializeField]
         private string version;
 #pragma warning restore CS0414
+        // Default Swift Package for CAS pods. Individual libs may override via SDK.spmUrl/spmVersion.
+        [SerializeField]
+        private string spmUrl;
+        [SerializeField]
+        private string spmVersion;
         [SerializeField]
         private Dependency[] simple;
         [SerializeField]
@@ -138,10 +143,95 @@ namespace CAS.UEditor
                        .Append("    </").Append(sourcesTag).Append('>').AppendLine();
             }
             builder.Append(packages);
-            builder.Append("  </").Append(depTag).Append("s>").AppendLine()
-                   .AppendLine("</dependencies>");
+            builder.Append("  </").Append(depTag).Append("s>").AppendLine();
+
+            if (platform == BuildTarget.iOS)
+                AppendSwiftPackages(packages.ToString(), builder);
+
+            builder.AppendLine("</dependencies>");
 
             Utils.WriteToAsset(Utils.GetConsolidatedDependencyPathOrDefault(platform), builder.ToString());
+        }
+
+        private void AppendSwiftPackages(string iosPodsContent, StringBuilder builder)
+        {
+            var libByPod = new Dictionary<string, Dependency.SDK>();
+            CollectLibs(simple, libByPod);
+            CollectLibs(adapters, libByPod);
+
+            // One remoteSwiftPackage per distinct package (url + version), in first-seen order,
+            // so pods hosted outside the CAS-iOS package (e.g. Tenjin) land in their own block.
+            var order = new List<string>();
+            var groups = new Dictionary<string, StringBuilder>();
+
+            const string marker = "<iosPod name=\"";
+            var index = iosPodsContent.IndexOf(marker);
+            while (index >= 0)
+            {
+                index += marker.Length;
+                var end = iosPodsContent.IndexOf('"', index);
+                if (end < 0)
+                    break;
+                var pod = iosPodsContent.Substring(index, end - index);
+                index = iosPodsContent.IndexOf(marker, end);
+
+                string product, url, ver;
+                bool isBase = pod == "CleverAdsSolutions-Base";
+                if (isBase)
+                {
+                    product = "CleverAdsSolutionsSPM";
+                    url = spmUrl;
+                    ver = spmVersion;
+                }
+                else
+                {
+                    Dependency.SDK sdk;
+                    if (!libByPod.TryGetValue(pod, out sdk) || string.IsNullOrEmpty(sdk.spm))
+                        continue; // pod has no SPM alternative
+                    product = sdk.spm;
+                    url = string.IsNullOrEmpty(sdk.spmUrl) ? spmUrl : sdk.spmUrl;
+                    ver = string.IsNullOrEmpty(sdk.spmVersion) ? spmVersion : sdk.spmVersion;
+                }
+
+                if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(ver))
+                    continue;
+
+                var key = url + "\n" + ver;
+                StringBuilder group;
+                if (!groups.TryGetValue(key, out group))
+                {
+                    group = new StringBuilder();
+                    groups[key] = group;
+                    order.Add(key);
+                }
+                group.Append("    <swiftPackage name=\"").Append(product)
+                     .Append("\" replacesPod=\"").Append(pod).Append('"');
+                if (!isBase)
+                    group.Append(" target=\"Main\"");
+                group.Append("/>").AppendLine();
+            }
+
+            for (int i = 0; i < order.Count; i++)
+            {
+                var key = order[i];
+                var sep = key.IndexOf('\n');
+                builder.Append("  <remoteSwiftPackage url=\"").Append(key.Substring(0, sep))
+                       .Append("\" version=\"").Append(key.Substring(sep + 1)).Append("\">").AppendLine();
+                builder.Append(groups[key]);
+                builder.AppendLine("  </remoteSwiftPackage>");
+            }
+        }
+
+        private static void CollectLibs(Dependency[] deps, Dictionary<string, Dependency.SDK> map)
+        {
+            for (int i = 0; i < deps.Length; i++)
+            {
+                var libs = deps[i].libs;
+                if (libs == null)
+                    continue;
+                for (int j = 0; j < libs.Length; j++)
+                    map[libs[j].name] = libs[j];
+            }
         }
 
         private void AppendBaseDependency(BuildTarget platform, StringBuilder sources, StringBuilder packages)

@@ -45,7 +45,8 @@ namespace CAS.UEditor
 
         public static System.Version minEDM4UVersion
         {
-            get { return new System.Version(1, 2, 183); }
+            // 1.2.186 is the first EDM4U with Swift Package Manager support (remoteSwiftPackage).
+            get { return new System.Version(1, 2, 186); }
         }
 
         private static System.Version edmVersion;
