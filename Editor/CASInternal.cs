@@ -18,11 +18,6 @@ namespace CAS.UEditor
         [SerializeField]
         private string version;
 #pragma warning restore CS0414
-        // Default Swift Package for CAS pods. Individual libs may override via SDK.spmUrl/spmVersion.
-        [SerializeField]
-        private string spmUrl;
-        [SerializeField]
-        private string spmVersion;
         [SerializeField]
         private Dependency[] simple;
         [SerializeField]
@@ -180,17 +175,22 @@ namespace CAS.UEditor
                 if (isBase)
                 {
                     product = "CleverAdsSolutionsSPM";
-                    url = spmUrl;
-                    ver = spmVersion;
+                    url = CASEditorUtils.casSpmUrl;
+                    ver = version;
                 }
                 else
                 {
                     Dependency.SDK sdk;
-                    if (!libByPod.TryGetValue(pod, out sdk) || string.IsNullOrEmpty(sdk.spm))
-                        continue; // pod has no SPM alternative
-                    product = sdk.spm;
-                    url = string.IsNullOrEmpty(sdk.spmUrl) ? spmUrl : sdk.spmUrl;
-                    ver = string.IsNullOrEmpty(sdk.spmVersion) ? spmVersion : sdk.spmVersion;
+                    if (!libByPod.TryGetValue(pod, out sdk))
+                        continue;
+                    // A pod ships an SPM product when it names one (spm) or lives in its own
+                    // package (spmUrl). Pods without either have no SPM alternative.
+                    if (string.IsNullOrEmpty(sdk.spm) && string.IsNullOrEmpty(sdk.spmUrl))
+                        continue;
+                    product = string.IsNullOrEmpty(sdk.spm) ? pod : sdk.spm;
+                    // Pods in their own package carry their own version; CAS pods use the plugin version.
+                    url = string.IsNullOrEmpty(sdk.spmUrl) ? CASEditorUtils.casSpmUrl : sdk.spmUrl;
+                    ver = string.IsNullOrEmpty(sdk.spmUrl) ? version : sdk.version;
                 }
 
                 if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(ver))

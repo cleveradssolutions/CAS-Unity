@@ -226,11 +226,11 @@ namespace CAS.UEditor
             public string version;
             public bool embed;
 
-            // Swift Package Manager. Empty spm means the pod has no SPM alternative.
-            // spmUrl/spmVersion are optional overrides for pods hosted outside the CAS-iOS package.
+            // Swift Package Manager. A pod has an SPM product when it names one (spm) or lives in
+            // its own package (spmUrl). spm defaults to the pod name; spmUrl defaults to the CAS
+            // package; the SPM version is this lib's version for its own package, else the plugin version.
             public string spm = string.Empty;
             public string spmUrl = string.Empty;
-            public string spmVersion = string.Empty;
 
             public SDK(string name, string version, bool addToAllTargets = false)
             {

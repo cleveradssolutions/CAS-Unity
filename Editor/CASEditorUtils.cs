@@ -25,6 +25,8 @@ namespace CAS.UEditor
         public const int targetIOSVersion = 15;
 
         public const string gitRootURL = "https://github.com/cleveradssolutions/";
+        // The only Swift Package CAS pods are hosted in. Version matches the plugin version.
+        public const string casSpmUrl = gitRootURL + "CAS-iOS.git";
         private const string docsURL = "https://docs.page/cleveradssolutions/docs/Unity";
         public const string websiteURL = "https://cas.ai";
 
