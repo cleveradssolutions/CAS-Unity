@@ -49,6 +49,29 @@ namespace CAS.UEditor
             };
         }
 
+        /// <summary>
+        /// Reads only the root version from the platform Mediation.list, without a full init.
+        /// Falls back to the plugin version when the list is missing or unreadable.
+        /// </summary>
+        public static string GetMediationVersion(BuildTarget platform)
+        {
+            string listPath = CASEditorUtils.GetPluginComponentPath("CAS" + platform.ToString() + "Mediation.list");
+            if (listPath != null)
+            {
+                try
+                {
+                    var mediation = JsonUtility.FromJson<DependencyManager>(File.ReadAllText(listPath));
+                    if (mediation != null && !string.IsNullOrEmpty(mediation.version))
+                        return mediation.version;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning(CASEditorUtils.logTag + "Read Mediation.list version: " + e.Message);
+                }
+            }
+            return MobileAds.wrapperVersion;
+        }
+
         // Reflection target
         [UnityEngine.Scripting.Preserve]
         public static string GetActiveMediationPattern()

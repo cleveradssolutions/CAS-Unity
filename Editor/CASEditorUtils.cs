@@ -371,6 +371,42 @@ namespace CAS.UEditor
             return currentParts.Length < targetParts.Length;
         }
 
+        /// <summary>
+        /// A version is valid when it is a dot-separated list of non-negative integers,
+        /// optionally followed by a prerelease suffix (e.g. "4.8.5" or "4.8.5-beta1").
+        /// </summary>
+        public static bool IsValidVersion(string version)
+        {
+            if (string.IsNullOrEmpty(version))
+                return false;
+            int beta = version.IndexOf('-');
+            string core = beta < 0 ? version : version.Substring(0, beta);
+            if (beta == 0 || core.Length == 0)
+                return false;
+            string[] parts = core.Split('.');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                int n;
+                if (!int.TryParse(parts[i], out n) || n < 0)
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Returns <paramref name="requested"/> when it is valid and not lower than
+        /// <paramref name="mediationVersion"/>; otherwise falls back to the Mediation.list version.
+        /// </summary>
+        public static string ResolveBaseSdkVersion(string requested, string mediationVersion)
+        {
+            if (!IsValidVersion(requested))
+                return mediationVersion;
+            // IsVersionNewer(requested, mediationVersion) is true when requested is lower.
+            if (IsVersionNewer(requested, mediationVersion))
+                return mediationVersion;
+            return requested;
+        }
+
         public static bool IsPackageExist(string package, string manifest = null)
         {
             return AssetDatabase.IsValidFolder("Packages/" + package);

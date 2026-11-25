@@ -236,19 +236,21 @@ namespace CAS.UEditor
 
         private void AppendBaseDependency(BuildTarget platform, StringBuilder sources, StringBuilder packages)
         {
+            // The base SDK version may be overridden in CASEditorSettings, but never below Mediation.list.
+            var baseVersion = Utils.ResolveBaseSdkVersion(CASEditorSettings.Load().sdkVersion, version);
             packages.Append("    ").Append(Dependency.consolidatedMarkerPrefix)
-                    .Append(Dependency.adBaseName).Append(" version=\"").Append(version).Append("\" -->").AppendLine();
+                    .Append(Dependency.adBaseName).Append(" version=\"").Append(baseVersion).Append("\" -->").AppendLine();
             if (platform == BuildTarget.Android)
             {
                 packages.Append("    <androidPackage spec=\"com.cleveradssolutions:cas-sdk:")
-                        .Append(version).Append("\" version=\"").Append(version).Append("\" />").AppendLine();
+                        .Append(baseVersion).Append("\" version=\"").Append(baseVersion).Append("\" />").AppendLine();
                 packages.Append("    <androidPackage spec=\"androidx.lifecycle:lifecycle-process:2.6.2\" version=\"2.6.2\" />").AppendLine();
             }
             else
             {
                 sources.Append("      <source>https://github.com/cleveradssolutions/CAS-Specs.git</source>").AppendLine();
                 packages.Append("    <iosPod name=\"CleverAdsSolutions-Base\" version=\"")
-                        .Append(version).Append("\" minTargetSdk=\"").Append(Utils.targetIOSVersion).Append(".0\" />").AppendLine();
+                        .Append(baseVersion).Append("\" minTargetSdk=\"").Append(Utils.targetIOSVersion).Append(".0\" />").AppendLine();
             }
         }
 

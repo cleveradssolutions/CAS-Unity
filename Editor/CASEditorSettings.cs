@@ -12,6 +12,12 @@ namespace CAS.UEditor
         public bool autoCheckForUpdatesEnabled = true;
         public bool buildPreprocessEnabled = true;
 
+        /// <summary>
+        /// Overrides the CAS base SDK version used in the generated native dependencies.
+        /// Empty, invalid, or lower than the Mediation.list version falls back to Mediation.list.
+        /// </summary>
+        public string sdkVersion = "";
+
         public Permission permissionAdId = Permission.Auto;
 
         public bool generateIOSDeepLinksForPromo = true;
@@ -73,6 +79,9 @@ namespace CAS.UEditor
     [CustomEditor(typeof(CASEditorSettings))]
     internal class CASEditorSettingsInspector : Editor
     {
+        private string sdkVersionInput;
+        private bool sdkVersionInited;
+
         protected override void OnHeaderGUI()
         {
             EditorGUILayout.Space();
@@ -88,6 +97,44 @@ namespace CAS.UEditor
             EditorGUILayout.HelpBox("This Asset is created automatically to store Unity Editor behavior settings.", MessageType.Info);
             EditorGUILayout.HelpBox("Use the 'Assets > CleverAdsSolutions > [Platform] Settings' menu to change the settings.", MessageType.Info);
             EditorGUILayout.HelpBox("Feel free to move this and other assets from 'CleverAdsSolutions/Editor' to any Editor folder in the project that is convenient for you.", MessageType.Info);
+
+            DrawSdkVersion();
+        }
+
+        private void DrawSdkVersion()
+        {
+            var settings = (CASEditorSettings)target;
+            var platform = EditorUserBuildSettings.activeBuildTarget == BuildTarget.iOS
+                ? BuildTarget.iOS : BuildTarget.Android;
+            var mediationVersion = DependencyManager.GetMediationVersion(platform);
+
+            if (!sdkVersionInited)
+            {
+                sdkVersionInput = string.IsNullOrEmpty(settings.sdkVersion) ? mediationVersion : settings.sdkVersion;
+                sdkVersionInited = true;
+            }
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("CAS SDK Version", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+            sdkVersionInput = EditorGUILayout.TextField(sdkVersionInput);
+            if (GUILayout.Button("Save", GUILayout.ExpandWidth(false)))
+            {
+                var resolved = CASEditorUtils.ResolveBaseSdkVersion(sdkVersionInput, mediationVersion);
+                if (resolved != sdkVersionInput)
+                    Debug.LogWarning(CASEditorUtils.logTag + "CAS SDK Version '" + sdkVersionInput +
+                        "' is invalid or lower than Mediation.list, replaced with " + resolved);
+                sdkVersionInput = resolved;
+                settings.sdkVersion = resolved;
+                EditorUtility.SetDirty(settings);
+                AssetDatabase.SaveAssets();
+                DependencyManager.isDirt = true;
+                GUI.FocusControl(null);
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.HelpBox("Used as the CAS base SDK version in the generated native dependencies. " +
+                "A value lower than the Mediation.list version (" + mediationVersion + ") or an invalid one is replaced by it.",
+                MessageType.None);
         }
     }
 }
