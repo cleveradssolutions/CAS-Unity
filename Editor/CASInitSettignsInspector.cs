@@ -39,6 +39,9 @@ namespace CAS.UEditor
         private SerializedProperty permissionAdIdProp;
         private SerializedProperty attributionReportEndpointProp;
         private SerializedProperty userTrackingUsageDescriptionProp;
+        private SerializedProperty sdkVersionProp;
+        private string sdkVersionInput;
+        private bool sdkVersionInited;
 
 #if CAS_OVERRIDE_GRADLE_VERSION
         private SerializedProperty overrideGradleWrapperVersionProp;
@@ -139,6 +142,9 @@ namespace CAS.UEditor
             permissionAdIdProp = editorSettingsObj.FindProperty("permissionAdId");
 
             attributionReportEndpointProp = editorSettingsObj.FindProperty("attributionReportEndpoint");
+
+            sdkVersionProp = editorSettingsObj.FindProperty(platform == BuildTarget.iOS ? "sdkVersionIOS" : "sdkVersionAndroid");
+            sdkVersionInited = false;
 
 #if CAS_OVERRIDE_GRADLE_VERSION
             overrideGradleWrapperVersionProp = editorSettingsObj.FindProperty("overrideGradleWrapperVersion");
@@ -335,6 +341,8 @@ namespace CAS.UEditor
                     "Auto check for CAS updates enabled",
                     tooltip: "Checks for CAS plugin updates and notifies you when an update is available"),
                 autoCheckForUpdatesEnabledProp.boolValue);
+
+            DrawSdkVersion();
 
             if (platform == BuildTarget.Android)
             {
@@ -553,6 +561,44 @@ namespace CAS.UEditor
                 EditorGUI.indentLevel += 2;
                 EditorGUILayout.HelpBox("The AppOpen Ad format does not support auto preloading. Please use the LoadAd() method before each ShowAd().", MessageType.None);
                 EditorGUI.indentLevel -= 2;
+            }
+        }
+
+        private void DrawSdkVersion()
+        {
+            var mediationVersion = DependencyManager.GetMediationVersion(platform);
+            if (!sdkVersionInited)
+            {
+                sdkVersionInput = string.IsNullOrEmpty(sdkVersionProp.stringValue)
+                    ? mediationVersion : sdkVersionProp.stringValue;
+                sdkVersionInited = true;
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            sdkVersionInput = EditorGUILayout.TextField(
+                HelpStyles.GetContent("CAS SDK Version",
+                    tooltip: "The CAS base SDK version used in the generated native dependencies for " + platform +
+                    ". A value lower than the Mediation.list version or an invalid one is replaced by it."),
+                sdkVersionInput);
+            if (GUILayout.Button("Save", GUILayout.ExpandWidth(false)))
+            {
+                var resolved = Utils.ResolveBaseSdkVersion(sdkVersionInput, mediationVersion);
+                if (resolved != sdkVersionInput)
+                    Debug.LogWarning(Utils.logTag + "CAS SDK Version '" + sdkVersionInput +
+                        "' is invalid or lower than Mediation.list, replaced with " + resolved);
+                sdkVersionInput = resolved;
+                sdkVersionProp.stringValue = resolved;
+                DependencyManager.isDirt = true;
+                GUI.FocusControl(null);
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (sdkVersionInput != mediationVersion)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.HelpBox("Overrides the CAS base SDK version " + mediationVersion +
+                    " from Mediation.list. Press Save to validate and apply.", MessageType.None);
+                EditorGUI.indentLevel--;
             }
         }
 

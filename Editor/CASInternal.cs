@@ -236,8 +236,8 @@ namespace CAS.UEditor
 
         private void AppendBaseDependency(BuildTarget platform, StringBuilder sources, StringBuilder packages)
         {
-            // The base SDK version may be overridden in CASEditorSettings, but never below Mediation.list.
-            var baseVersion = Utils.ResolveBaseSdkVersion(CASEditorSettings.Load().sdkVersion, version);
+            // The base SDK version may be overridden per platform in the settings, but never below Mediation.list.
+            var baseVersion = Utils.ResolveBaseSdkVersion(CASEditorSettings.Load().GetSdkVersion(platform), version);
             packages.Append("    ").Append(Dependency.consolidatedMarkerPrefix)
                     .Append(Dependency.adBaseName).Append(" version=\"").Append(baseVersion).Append("\" -->").AppendLine();
             if (platform == BuildTarget.Android)
