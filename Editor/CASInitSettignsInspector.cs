@@ -226,6 +226,7 @@ namespace CAS.UEditor
             else
             {
                 OnWarningsAreaGUI();
+                DrawSdkVersion();
                 dependencyManager.OnGUI(platform, this);
                 OnEDMAreaGUI();
             }
@@ -341,8 +342,6 @@ namespace CAS.UEditor
                     "Auto check for CAS updates enabled",
                     tooltip: "Checks for CAS plugin updates and notifies you when an update is available"),
                 autoCheckForUpdatesEnabledProp.boolValue);
-
-            DrawSdkVersion();
 
             if (platform == BuildTarget.Android)
             {
@@ -566,7 +565,7 @@ namespace CAS.UEditor
 
         private void DrawSdkVersion()
         {
-            var mediationVersion = DependencyManager.GetMediationVersion(platform);
+            var mediationVersion = dependencyManager != null ? dependencyManager.version : MobileAds.wrapperVersion;
             if (!sdkVersionInited)
             {
                 sdkVersionInput = string.IsNullOrEmpty(sdkVersionProp.stringValue)
