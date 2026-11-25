@@ -158,7 +158,7 @@ namespace CAS.UEditor
             {
                 sources.Append("      <source>https://github.com/cleveradssolutions/CAS-Specs.git</source>").AppendLine();
                 packages.Append("    <iosPod name=\"CleverAdsSolutions-Base\" version=\"")
-                        .Append(version).Append("\" minTargetSdk=\"15.0\" />").AppendLine();
+                        .Append(version).Append("\" minTargetSdk=\"").Append(Utils.targetIOSVersion).Append(".0\" />").AppendLine();
             }
         }
 
@@ -173,18 +173,20 @@ namespace CAS.UEditor
 
         private void RemoveLegacyDependencyFiles(BuildTarget platform)
         {
-            DeleteLegacyDependencyFile(Dependency.adBaseName, platform);
-            for (int i = 0; i < simple.Length; i++)
-                DeleteLegacyDependencyFile(simple[i].name, platform);
-            for (int i = 0; i < adapters.Length; i++)
-                DeleteLegacyDependencyFile(adapters[i].name, platform);
-        }
-
-        private static void DeleteLegacyDependencyFile(string name, BuildTarget platform)
-        {
-            var path = Utils.GetDependencyPath(name, platform);
-            if (path != null && path.StartsWith("Assets/") && File.Exists(path))
-                AssetDatabase.DeleteAsset(path);
+            var consolidatedName = Utils.GetConsolidatedDependencyName(platform);
+            var platformPrefix = "CAS" + platform.ToString();
+            var baseName = "CAS" + Dependency.adBaseName + "Dependencies";
+            foreach (var guid in AssetDatabase.FindAssets("Dependencies"))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!path.EndsWith("Dependencies.xml") || !path.StartsWith("Assets/"))
+                    continue;
+                var fileName = Path.GetFileNameWithoutExtension(path);
+                if (fileName == consolidatedName)
+                    continue;
+                if (fileName.StartsWith(platformPrefix) || fileName == baseName)
+                    AssetDatabase.DeleteAsset(path);
+            }
         }
 
         private void OnHeaderGUI()
@@ -367,7 +369,7 @@ namespace CAS.UEditor
             {
                 var dependency = File.ReadAllText(path);
                 const string line = "version=\"";
-                var beginIndex = dependency.IndexOf(line, 45);
+                var beginIndex = dependency.Length > 45 ? dependency.IndexOf(line, 45) : -1;
                 if (beginIndex > 0)
                 {
                     beginIndex += line.Length;
