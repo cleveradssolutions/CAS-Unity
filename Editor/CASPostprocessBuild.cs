@@ -57,6 +57,7 @@ namespace CAS.UEditor
                 var appTargetGuid = project.GetAppGUID();
                 var frameworkTargetGuid = project.GetFrameworkGUID();
                 project.EnableSwiftLibraries(appTargetGuid, frameworkTargetGuid);
+                project.AddLinkerFlagForCAS(appTargetGuid, "-ObjC");
                 project.FixLibrariesExecutablePath(appTargetGuid, depManager);
                 project.AddCASConfigResources(buildPath, appTargetGuid, initSettings);
 
@@ -386,6 +387,22 @@ namespace CAS.UEditor
         private static void SetBitcodeEnabled(this PBXProject project, string targetGuid, bool enabled)
         {
             project.SetBuildProperty(targetGuid, "ENABLE_BITCODE", enabled ? "YES" : "NO");
+        }
+
+        // Appends a linker flag (e.g. -ObjC) to the Main target's OTHER_LDFLAGS without rewriting
+        // the whole list, so flags added by other plugins are preserved. Skips it when already set.
+        private static void AddLinkerFlagForCAS(this PBXProject project, string targetGuid, string flag)
+        {
+            var current = project.GetBuildPropertyForAnyConfig(targetGuid, "OTHER_LDFLAGS");
+            if (!string.IsNullOrEmpty(current))
+            {
+                foreach (var value in current.Split(' ', '\t', '\n'))
+                {
+                    if (value == flag)
+                        return;
+                }
+            }
+            project.AddBuildProperty(targetGuid, "OTHER_LDFLAGS", flag);
         }
 
         private static void EnableSwiftLibraries(this PBXProject project, string mainTargetGuid, string frameworkTargetGuid)
