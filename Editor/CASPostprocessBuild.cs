@@ -118,7 +118,7 @@ namespace CAS.UEditor
                 project.LocalizeUserTrackingDescription(buildPath, appTargetGuid, editorSettings.userTrackingUsageDescription);
 
 #if EmbedDynamicFrameworks
-                if (IsStaticPodInstallUsed(buildPath))
+                if (!IsSwiftPackageManagerUsed() && IsStaticPodInstallUsed(buildPath))
                 {
                     var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
                     project.AddEmbeddablePaths(appTargetGuid, depManager);
@@ -136,10 +136,13 @@ namespace CAS.UEditor
             });
 
 #if DisableBitcode
-            EditXCProject(Path.Combine(buildPath, "Pods"), "Pods", (project) =>
+            if (!IsSwiftPackageManagerUsed())
             {
-                project.SetBitcodeEnabled(project.ProjectGuid(), false);
-            });
+                EditXCProject(Path.Combine(buildPath, "Pods"), "Pods", (project) =>
+                {
+                    project.SetBitcodeEnabled(project.ProjectGuid(), false);
+                });
+            }
 #endif
         }
 
@@ -148,7 +151,7 @@ namespace CAS.UEditor
             var path = Path.Combine(buildPath, "Podfile");
             if (!File.Exists(path))
             {
-                Debug.LogError(CASEditorUtils.logTag + "Not found: " + path);
+                // No Podfile (e.g. an SPM build) means there is nothing to patch.
                 return;
             }
             try
@@ -498,14 +501,21 @@ namespace CAS.UEditor
             }
         }
 
+        // CocoaPods embeds dynamic frameworks from the Pods path; an SPM build embeds its own,
+        // so the Pods-based embedding is skipped when EDM4U resolves iOS with Swift Package Manager.
+        private static bool IsSwiftPackageManagerUsed()
+        {
+            return CASEditorUtils.GetIOSResolverSetting<bool>("SwiftPackageManagerEnabled");
+        }
+
 #if EmbedDynamicFrameworks
         private static bool IsStaticPodInstallUsed(string buildPath)
         {
             var podPath = Path.Combine(buildPath, "Podfile");
             if (!File.Exists(podPath))
             {
-                Debug.LogWarning(CASEditorUtils.logTag + "IsStaticPodInstallUsed Not found path: " + podPath);
-                return true;
+                // No Podfile means no CocoaPods install, so there is nothing to embed from Pods.
+                return false;
             }
             try
             {
