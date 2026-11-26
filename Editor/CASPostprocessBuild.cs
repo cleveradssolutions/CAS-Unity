@@ -94,6 +94,9 @@ namespace CAS.UEditor
             var editorSettings = CASEditorSettings.Load();
             var depManager = DependencyManager.Create(BuildTarget.iOS, Audience.Mixed, true);
 
+#if CAS_USE_SWIFT_CONFIGURATOR
+            CASSwiftConfigurator.Configure(buildPath, initSettings, editorSettings, depManager);
+#else
             EditPList(buildPath, (plist) =>
             {
                 plist.SetGADAppIdForCAS(initSettings, depManager);
@@ -104,6 +107,7 @@ namespace CAS.UEditor
                 plist.AddSKAdNetworkItemsForCAS();
                 plist.AddAttributionAdNetworksForCAS();
             });
+#endif
 
             EditXCProject(buildPath, unityProjectName, (project) =>
             {
