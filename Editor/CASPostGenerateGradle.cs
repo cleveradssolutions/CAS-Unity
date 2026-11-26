@@ -384,7 +384,8 @@ namespace CAS.UEditor
             if (string.IsNullOrEmpty(casVersion))
                 casVersion = MobileAds.wrapperVersion;
 
-            AddMavenRepositories(path, repoUrls);
+            // Disabled: EDM adds the repositories via the base androidPackage.
+            // AddMavenRepositories(path, repoUrls);
             AddPluginClasspath(path, casVersion);
             ApplyCASPlugin(path, initSettings, editorSettings, includeFlags, adapterFlags);
         }

@@ -176,6 +176,8 @@ namespace CAS.UEditor
                        .Append(repositories)
                        .AppendLine("    </repositories>");
             }
+            builder.Append("    <androidPackage spec=\"com.cleveradssolutions:cas-sdk:").Append(baseVersion)
+                   .Append("\" version=\"").Append(baseVersion).Append("\" />").AppendLine();
             builder.AppendLine("  </androidPackages>");
             builder.AppendLine("  <casAdapters>")
                    .Append(casAdapters)
