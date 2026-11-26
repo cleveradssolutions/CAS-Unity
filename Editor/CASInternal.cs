@@ -110,8 +110,11 @@ namespace CAS.UEditor
 
         internal void WriteConsolidated(BuildTarget platform)
         {
-            string depTag = platform == BuildTarget.Android ? "androidPackage" : "iosPod";
-            string sourcesTag = platform == BuildTarget.Android ? "repositories" : "sources";
+            if (platform == BuildTarget.Android)
+            {
+                WriteConsolidatedAndroid();
+                return;
+            }
 
             var sources = new StringBuilder();
             var packages = new StringBuilder();
@@ -128,22 +131,58 @@ namespace CAS.UEditor
             var builder = new StringBuilder();
             builder.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
                    .AppendLine("<dependencies>")
-                   .Append("  <").Append(depTag).Append("s>").AppendLine();
+                   .AppendLine("  <iosPods>");
             if (sources.Length > 0)
             {
-                builder.Append("    <").Append(sourcesTag).Append('>').AppendLine()
+                builder.AppendLine("    <sources>")
                        .Append(sources)
-                       .Append("    </").Append(sourcesTag).Append('>').AppendLine();
+                       .AppendLine("    </sources>");
             }
             builder.Append(packages);
-            builder.Append("  </").Append(depTag).Append("s>").AppendLine();
+            builder.AppendLine("  </iosPods>");
 
-            if (platform == BuildTarget.iOS)
-                AppendSwiftPackages(packages.ToString(), builder);
+            AppendSwiftPackages(packages.ToString(), builder);
 
             builder.AppendLine("</dependencies>");
 
-            Utils.WriteToAsset(Utils.GetConsolidatedDependencyPathOrDefault(platform), builder.ToString());
+            Utils.WriteToAsset(Utils.GetConsolidatedDependencyPathOrDefault(BuildTarget.iOS), builder.ToString());
+        }
+
+        private void WriteConsolidatedAndroid()
+        {
+            var repositories = new StringBuilder();
+            var casAdapters = new StringBuilder();
+
+            var baseVersion = Utils.ResolveBaseSdkVersion(CASEditorSettings.Load().GetSdkVersion(BuildTarget.Android), version);
+            casAdapters.Append("    ").Append(Dependency.consolidatedMarkerPrefix)
+                       .Append(Dependency.adBaseName).Append(" version=\"").Append(baseVersion).Append("\" -->").AppendLine();
+            casAdapters.Append("    <casAdapter name=\"").Append(Dependency.adBaseName)
+                       .Append("\" version=\"").Append(baseVersion).Append("\" />").AppendLine();
+
+            for (int i = 0; i < simple.Length; i++)
+                if (!string.IsNullOrEmpty(simple[i].installedVersion))
+                    simple[i].AppendAndroidConsolidated(this, repositories, casAdapters);
+            for (int i = 0; i < adapters.Length; i++)
+                if (!string.IsNullOrEmpty(adapters[i].installedVersion))
+                    adapters[i].AppendAndroidConsolidated(this, repositories, casAdapters);
+
+            var builder = new StringBuilder();
+            builder.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
+                   .AppendLine("<dependencies>")
+                   .AppendLine("  <androidPackages>");
+            if (repositories.Length > 0)
+            {
+                builder.AppendLine("    <repositories>")
+                       .Append(repositories)
+                       .AppendLine("    </repositories>");
+            }
+            builder.AppendLine("  </androidPackages>");
+            builder.AppendLine("  <casAdapters>")
+                   .Append(casAdapters)
+                   .AppendLine("  </casAdapters>");
+            builder.AppendLine("</dependencies>");
+
+            Utils.WriteToAsset(Utils.GetConsolidatedDependencyPathOrDefault(BuildTarget.Android), builder.ToString());
         }
 
         private void AppendSwiftPackages(string iosPodsContent, StringBuilder builder)
@@ -726,6 +765,15 @@ namespace CAS.UEditor
                     .Append(name).Append(" version=\"").Append(version).Append("\" -->").AppendLine();
             AppendSources(platform, sources, mediation);
             AppendSDK(platform, mediation, packages);
+        }
+
+        internal void AppendAndroidConsolidated(DependencyManager mediation, StringBuilder repositories, StringBuilder casAdapters)
+        {
+            casAdapters.Append("    ").Append(consolidatedMarkerPrefix)
+                       .Append(name).Append(" version=\"").Append(version).Append("\" -->").AppendLine();
+            casAdapters.Append("    <casAdapter name=\"").Append(name)
+                       .Append("\" version=\"").Append(version).Append("\" />").AppendLine();
+            AppendSources(BuildTarget.Android, repositories, mediation);
         }
 
         private void AppendSDK(BuildTarget platform, DependencyManager mediation, StringBuilder builder)

@@ -89,6 +89,7 @@ namespace CAS.UEditor
             UpdateGradleWrapper(path, editorSettings);
             UpdateRootGradleBuild(path, initSettings, editorSettings, depManager);
             UpdateGradleBuild(path);
+            AddCASGradlePlugin(path, initSettings, editorSettings);
             UpdateGradleProperties(path);
             UpdateAppManifest(path, initSettings, editorSettings, depManager);
             AddCASConfigResources(path, initSettings);
@@ -307,6 +308,213 @@ namespace CAS.UEditor
 
             if (gradleChanged)
                 File.WriteAllText(gradlePath, mainGradle);
+        }
+
+        private const string casGradlePluginId = "com.cleveradssolutions.gradle-plugin";
+
+        private static readonly Dictionary<string, string> casSolutionToInclude = new Dictionary<string, string>
+        {
+            { "OptimalAds", "includeOptimalAds" },
+            { "FamiliesAds", "includeFamiliesAds" },
+            { "PublishingAds", "includePublishingAds" },
+            { "TenjinMMP", "includeTenjinSDK" },
+        };
+
+        private static readonly Dictionary<string, string> casAdapterToDsl = new Dictionary<string, string>
+        {
+            { "GoogleAds", "googleAds" }, { "GoogleAdsNext", "googleAdsNext" }, { "UnityAds", "unityAds" },
+            { "IronSource", "ironSource" }, { "LiftoffMonetize", "liftoffMonetize" }, { "InMobi", "inMobi" },
+            { "Chartboost", "chartboost" }, { "DTExchange", "dtExchange" }, { "Kidoz", "kidoz" },
+            { "SuperAwesome", "superAwesome" }, { "Mintegral", "mintegral" }, { "AppLovin", "appLovin" },
+            { "Pangle", "pangle" }, { "Bigo", "bigoAds" }, { "YangoAds", "yangoAds" },
+            { "AudienceNetwork", "audienceNetwork" }, { "YsoNetwork", "ysoNetwork" }, { "CASExchange", "casExchange" },
+            { "CrossPromo", "crossPromo" }, { "StartIO", "startIO" }, { "HyprMX", "hyprMX" },
+            { "Ogury", "ogury" }, { "Prado", "prado" }, { "Smaato", "smaato" }, { "Maticoo", "maticoo" },
+            { "Verve", "verve" }, { "Monetrix", "monetrix" }, { "PubMatic", "pubmatic" },
+            { "DisplayIO", "displayIO" }, { "Bidease", "bidease" }, { "Moloco", "moloco" },
+            { "BlueSea", "bluesea" }, { "BidMachine", "bidmachine" },
+        };
+
+        private void AddCASGradlePlugin(string path, CASInitSettings initSettings, CASEditorSettings editorSettings)
+        {
+            var xmlPath = Utils.GetConsolidatedDependencyPath(BuildTarget.Android);
+            if (xmlPath == null || !File.Exists(xmlPath))
+            {
+                Debug.LogError(Utils.logTag + "CAS Android dependencies are not generated. " +
+                    "Open 'Assets > CleverAdsSolutions > Android Settings' to configure the integration.");
+                return;
+            }
+
+            var xml = XDocument.Load(xmlPath);
+
+            var repoUrls = new List<string>();
+            foreach (var repo in xml.Descendants("repository"))
+            {
+                var url = ((string)repo.Value ?? "").Trim();
+                if (!string.IsNullOrEmpty(url) && !repoUrls.Contains(url))
+                    repoUrls.Add(url);
+            }
+
+            string casVersion = null;
+            var includeFlags = new List<string>();
+            var adapterFlags = new List<string>();
+            foreach (var element in xml.Descendants("casAdapter"))
+            {
+                var name = (string)element.Attribute("name");
+                if (string.IsNullOrEmpty(name))
+                    continue;
+                if (name == Dependency.adBaseName)
+                {
+                    casVersion = (string)element.Attribute("version");
+                    continue;
+                }
+                string include;
+                if (casSolutionToInclude.TryGetValue(name, out include))
+                {
+                    includeFlags.Add(include);
+                    continue;
+                }
+                string dsl;
+                if (casAdapterToDsl.TryGetValue(name, out dsl))
+                    adapterFlags.Add(dsl);
+                else
+                    Debug.LogWarning(Utils.logTag + "No CAS Gradle Plugin mapping for adapter: " + name);
+            }
+
+            if (string.IsNullOrEmpty(casVersion))
+                casVersion = MobileAds.wrapperVersion;
+
+            AddMavenRepositories(path, repoUrls);
+            AddPluginClasspath(path, casVersion);
+            ApplyCASPlugin(path, initSettings, editorSettings, includeFlags, adapterFlags);
+        }
+
+        private void AddMavenRepositories(string path, List<string> repoUrls)
+        {
+            if (repoUrls.Count == 0)
+                return;
+#if UNITY_2019_3_OR_NEWER
+            var rootDir = Path.Combine(path, "..");
+#else
+            var rootDir = path;
+#endif
+            var settingsPath = Path.Combine(rootDir, "settings.gradle");
+            if (TryInsertRepositories(settingsPath, "dependencyResolutionManagement", repoUrls))
+                return;
+            if (TryInsertRepositories(Path.Combine(rootDir, "build.gradle"), "allprojects", repoUrls))
+                return;
+            Debug.LogError(Utils.logTag + "Could not add maven repositories: no repositories block found in settings.gradle or build.gradle.");
+        }
+
+        private bool TryInsertRepositories(string gradlePath, string blockKeyword, List<string> repoUrls)
+        {
+            if (!File.Exists(gradlePath))
+                return false;
+            var lines = new List<string>(File.ReadAllLines(gradlePath));
+
+            var blockLine = lines.FindIndex(l => l.Contains(blockKeyword));
+            if (blockLine < 0)
+                return false;
+            var reposLine = lines.FindIndex(blockLine, l => l.Contains("repositories {"));
+            if (reposLine < 0)
+                return false;
+
+            var indent = lines[reposLine].Substring(0, lines[reposLine].Length - lines[reposLine].TrimStart().Length) + "    ";
+            var insertAt = reposLine + 1;
+            var added = false;
+            foreach (var url in repoUrls)
+            {
+                var entry = indent + "maven { url \"" + url + "\" }";
+                if (lines.Any(l => l.Contains(url)))
+                    continue;
+                lines.Insert(insertAt++, entry);
+                added = true;
+            }
+            if (added)
+            {
+                File.WriteAllLines(gradlePath, lines);
+                Utils.Log("Added " + repoUrls.Count + " maven repositories in: " + gradlePath);
+            }
+            return true;
+        }
+
+        private void AddPluginClasspath(string path, string casVersion)
+        {
+#if UNITY_2019_3_OR_NEWER
+            path = Path.Combine(path, "..");
+#endif
+            var gradlePath = Path.Combine(path, "build.gradle");
+            if (!File.Exists(gradlePath))
+            {
+                Debug.LogError(Utils.logTag + "Required file is missing: " + gradlePath);
+                return;
+            }
+
+            var lines = new List<string>(File.ReadAllLines(gradlePath));
+            if (lines.Any(line => line.Contains(casGradlePluginId)))
+                return;
+
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var indent = lines[i].Substring(0, lines[i].Length - lines[i].TrimStart().Length);
+                if (lines[i].Contains("com.android.tools.build:gradle"))
+                {
+                    lines.Insert(i + 1, indent + "classpath 'com.cleveradssolutions:gradle-plugin:" + casVersion + "'");
+                    File.WriteAllLines(gradlePath, lines);
+                    Utils.Log("Added CAS Gradle Plugin " + casVersion + " classpath in: " + gradlePath);
+                    return;
+                }
+                if (lines[i].Contains("id 'com.android.application'") || lines[i].Contains("id 'com.android.library'"))
+                {
+                    lines.Insert(i + 1, indent + "id '" + casGradlePluginId + "' version '" + casVersion + "' apply false");
+                    File.WriteAllLines(gradlePath, lines);
+                    Utils.Log("Added CAS Gradle Plugin " + casVersion + " to plugins block in: " + gradlePath);
+                    return;
+                }
+            }
+            Debug.LogError(Utils.logTag + "Could not add the CAS Gradle Plugin: no Android Gradle Plugin declaration found in " + gradlePath);
+        }
+
+        private void ApplyCASPlugin(string path, CASInitSettings initSettings, CASEditorSettings editorSettings,
+            List<string> includeFlags, List<string> adapterFlags)
+        {
+            var gradlePath = Path.Combine(path, "build.gradle");
+            if (!File.Exists(gradlePath))
+            {
+                Debug.LogError(Utils.logTag + "Required file is missing: " + gradlePath);
+                return;
+            }
+
+            var content = File.ReadAllText(gradlePath);
+            if (content.Contains(casGradlePluginId))
+                return;
+
+            var block = new StringBuilder();
+            block.AppendLine().Append("apply plugin: '").Append(casGradlePluginId).Append('\'').AppendLine();
+            block.AppendLine("cas {");
+
+            if (initSettings != null && initSettings.managersCount > 0 && !string.IsNullOrEmpty(initSettings.GetManagerId(0)))
+                block.Append("    casId = \"").Append(initSettings.GetManagerId(0)).Append('"').AppendLine();
+            else
+                Debug.LogError(Utils.logTag + "CAS Manager ID is not set. The CAS Gradle Plugin requires `cas.casId` in a library module.");
+
+            if (initSettings != null && editorSettings.isUseAdvertiserIdLimited(initSettings.defaultAudienceTagged))
+                block.AppendLine("    useAdvertisingId = false");
+
+            foreach (var include in includeFlags)
+                block.Append("    ").Append(include).AppendLine(" = true");
+
+            if (adapterFlags.Count > 0)
+            {
+                block.AppendLine("    adapters {");
+                foreach (var adapter in adapterFlags)
+                    block.Append("        ").Append(adapter).AppendLine(" = true");
+                block.AppendLine("    }");
+            }
+            block.AppendLine("}");
+
+            File.WriteAllText(gradlePath, content + Environment.NewLine + block);
+            Utils.Log("Applied CAS Gradle Plugin configuration in: " + gradlePath + Utils.logAutoFeature);
         }
 
         private void UpdateGradleProperties(string path)
