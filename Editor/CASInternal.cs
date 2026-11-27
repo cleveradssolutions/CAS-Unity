@@ -131,13 +131,16 @@ namespace CAS.UEditor
             builder.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
                    .AppendLine("<dependencies>")
                    .Append("  <").Append(depTag).Append("s>").AppendLine();
-            if (sources.Length > 0)
+            if (platform != BuildTarget.iOS)
             {
-                builder.Append("    <").Append(sourcesTag).Append('>').AppendLine()
-                       .Append(sources)
-                       .Append("    </").Append(sourcesTag).Append('>').AppendLine();
+                if (sources.Length > 0)
+                {
+                    builder.Append("    <").Append(sourcesTag).Append('>').AppendLine()
+                           .Append(sources)
+                           .Append("    </").Append(sourcesTag).Append('>').AppendLine();
+                }
+                builder.Append(packages);
             }
-            builder.Append(packages);
             builder.Append("  </").Append(depTag).Append("s>").AppendLine();
 
             if (platform == BuildTarget.iOS)

@@ -130,11 +130,15 @@ namespace CAS.UEditor
         private static void ConfigureIOS()
         {
 #if UNITY_IOS || CASDeveloper
-            if (!Utils.GetIOSResolverSetting<bool>("PodfileStaticLinkFrameworks"))
+            var edmVersion = Utils.GetEDM4UVersion(BuildTarget.iOS);
+            if (edmVersion != null && edmVersion < Utils.minEDM4UVersion)
             {
-                Debug.LogWarning(Utils.logTag + "Please enable 'Add use_frameworks!' and 'Link frameworks statically' found under " +
-                        "'Assets -> External Dependency Manager -> iOS Resolver -> Settings' menu.\n" +
-                        "Failing to do this step may result in undefined behavior of the plugin and doubled import of frameworks.");
+                Utils.DialogOrCancelBuild("The External Dependency Manager is outdated. CAS iOS requires " +
+                    Utils.minEDM4UVersion + " or later for Swift Package Manager support.", BuildTarget.NoTarget);
+            }
+            else
+            {
+                Utils.SetIOSResolverSetting("SwiftPackageManagerEnabled", true);
             }
 
 

@@ -549,6 +549,24 @@ namespace CAS.UEditor
             }
             return default(T);
         }
+
+        public static void SetIOSResolverSetting(string property, object value)
+        {
+            const string assemblyName = "Google.IOSResolver";
+            const string settingsTypeName = "Google.IOSResolver, " + assemblyName;
+            try
+            {
+                var settingsType = Type.GetType(settingsTypeName, false);
+                var prop = settingsType == null ? null
+                    : settingsType.GetProperty(property, BindingFlags.Public | BindingFlags.Static);
+                if (prop != null && prop.CanWrite)
+                    prop.SetValue(null, value, null);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(logTag + settingsTypeName + " set error: " + e.Message);
+            }
+        }
         #endregion
 
         #region Internal API
