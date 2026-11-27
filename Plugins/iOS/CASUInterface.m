@@ -245,7 +245,7 @@ void CASUSetMediationExtras(const char **extraKeys, const char **extraValues,
 }
 
 void CASUSetConsentFlow(BOOL isEnabled, int geography, const char *policyUrl,
-                        CASUConsentFlowCompletion completion) {
+                        const char *consentSyncId, CASUConsentFlowCompletion completion) {
     if (![CASUPluginUtil sharedInstance].builder) {
         [CASUPluginUtil sharedInstance].builder = [CAS buildManager];
     }
@@ -255,6 +255,7 @@ void CASUSetConsentFlow(BOOL isEnabled, int geography, const char *policyUrl,
     CASConsentFlow *flow = [[CASConsentFlow alloc] initWithEnabled:isEnabled];
 
     flow.privacyPolicyUrl = CASUStringFromUnity(policyUrl);
+    flow.consentSyncId = CASUStringFromUnity(consentSyncId);
     flow.debugGeography = (CASUserDebugGeography)geography;
 
     if (completion) {
@@ -537,10 +538,11 @@ double CASUGetImpressionLifetimeRevenue(CASImpressionRef impression) {
 #pragma mark - Consent Flow
 
 void CASUShowConsentFlow(BOOL ifRequired, BOOL testing, int geography, const char *policy,
-                         CASUConsentFlowCompletion completion) {
+                         const char *consentSyncId, CASUConsentFlowCompletion completion) {
     CASConsentFlow *flow = [[CASConsentFlow alloc] init];
 
     flow.privacyPolicyUrl = CASUStringFromUnity(policy);
+    flow.consentSyncId = CASUStringFromUnity(consentSyncId);
     flow.debugGeography = (CASUserDebugGeography)geography;
     flow.forceTesting = testing;
 

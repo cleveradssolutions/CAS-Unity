@@ -45,6 +45,7 @@ namespace CAS.iOS
                         consentFlow.isEnabled,
                         (int)consentFlow.debugGeography,
                         consentFlow.privacyPolicyUrl,
+                        consentFlow.consentSyncId,
                         CASExternCallbacks.ConsentFlowCompletion);
                 }
                 else

@@ -196,6 +196,8 @@ namespace CAS.Android
                 obj.Call("forceTesting");
             if (!string.IsNullOrEmpty(flow.privacyPolicyUrl))
                 obj.Call("withPrivacyPolicy", flow.privacyPolicyUrl);
+            if (!string.IsNullOrEmpty(flow.consentSyncId))
+                obj.Call("withConsentSyncId", flow.consentSyncId);
             if (flow.OnResult != null)
                 obj.Call("withDismissListener", new CASConsentFlowCallback(flow.OnResult));
         }

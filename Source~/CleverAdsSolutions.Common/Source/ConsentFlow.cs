@@ -37,6 +37,7 @@ namespace CAS
         public string privacyPolicyUrl = null;
         public Action<ConsentFlow.Status> OnResult = null;
         public DebugGeography debugGeography = DebugGeography.EEA;
+        public string consentSyncId = null;
 
         /// <summary>
         /// Create Conset flow configuration
@@ -74,6 +75,26 @@ namespace CAS
         public ConsentFlow WithDebugGeography(DebugGeography debugGeography)
         {
             this.debugGeography = debugGeography;
+            return this;
+        }
+
+        /// <summary>
+        /// The consent sync ID used to sync the user consent status.
+        /// </summary>
+        /// <remarks>
+        /// <para>The consent sync ID must meet the following requirements:</para>
+        /// <list type="bullet">
+        /// <item><description>Constructed as a UUID string as matches the regular expression
+        /// (regex) ^[0-9a-zA-Z+.=/_-$,{}]{22,150}$</description></item>
+        /// <item><description>A minimum of 22 characters.</description></item>
+        /// <item><description>A maximum of 150 characters.</description></item>
+        /// </list>
+        /// <para>Failure to meet the requirements results in the consent sync ID not being set and
+        /// the UMP SDK logging a warning to the console.</para>
+        /// </remarks>
+        public ConsentFlow WithConsentSyncId(string consentSyncId)
+        {
+            this.consentSyncId = consentSyncId;
             return this;
         }
 

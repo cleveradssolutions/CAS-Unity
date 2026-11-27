@@ -190,6 +190,7 @@ namespace CAS.iOS
             bool isEnabled,
             int geography,
             string privacyUrl,
+            string consentSyncId,
             CASUConsentFlowCompletion completion
         );
 
@@ -344,6 +345,7 @@ namespace CAS.iOS
             bool testing,
             int geography,
             string policy,
+            string consentSyncId,
             CASUConsentFlowCompletion completion
         );
 
